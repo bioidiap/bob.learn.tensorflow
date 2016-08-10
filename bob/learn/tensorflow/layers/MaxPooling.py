@@ -10,4 +10,11 @@ from .Layer import Layer
 
 class MaxPooling(Layer):
 
-    
+    def __init__(self, input, use_gpu=False):
+        """
+        Constructor
+        """
+        super(MaxPooling, self).__init__(input, use_gpu=False)
+
+    def get_graph(self):
+        tf.nn.max_pool(self.input, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
