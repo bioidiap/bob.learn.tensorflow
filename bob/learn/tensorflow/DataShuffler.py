@@ -4,7 +4,7 @@
 # @date: Wed 11 May 2016 09:39:36 CEST 
 
 import numpy
-
+import tensorflow as tf
 
 def scale_mean_norm(data, scale=0.00390625):
     mean = numpy.mean(data)
@@ -14,7 +14,7 @@ def scale_mean_norm(data, scale=0.00390625):
 
 
 class DataShuffler(object):
-    def __init__(self, perc_train=0.9, scale=True):
+    def __init__(self, data, labels, perc_train=0.9, scale=True, train_batch_size=1, validation_batch_size=1):
         """
          Some base functions for neural networks
 
@@ -25,38 +25,51 @@ class DataShuffler(object):
         self.perc_train = perc_train
         self.scale = True
         self.scale_value = 0.00390625
+        self.train_batch_size = train_batch_size
+        self.validation_batch_size = validation_batch_size
+        self.data = data
+        self.labels =labels
 
+        self.n_samples = self.data.shape[0]
+        self.width = self.data.shape[1]
+        self.height = self.data.shape[2]
+        self.channels = self.data.shape[3]
+        self.start_shuffler()
 
-    def start_shuffler(self, data, labels):
+    def get_placeholders(self, name=""):
+        data = tf.placeholder(tf.float32, shape=(self.train_batch_size, self.width,
+                                                 self.height, self.channels), name=name)
+
+        labels = tf.placeholder(tf.int64, shape=self.train_batch_size)
+
+        return data, labels
+
+    def start_shuffler(self):
         """
          Some base functions for neural networks
 
          **Parameters**
            data:
         """
-        scale_value = 0.00390625
 
-        total_samples = data.shape[0]
-
-        indexes = numpy.array(range(total_samples))
+        indexes = numpy.array(range(self.n_samples))
         numpy.random.shuffle(indexes)
 
         # Spliting train and validation
-        train_samples = int(round(total_samples * self.perc_train))
-        validation_samples = total_samples - train_samples
-        data = numpy.reshape(data, (data.shape[0], 28, 28, 1))
+        train_samples = int(round(self.n_samples * self.perc_train))
+        validation_samples = self.n_samples - train_samples
 
-        self.train_data = data[indexes[0:train_samples], :, :, :]
-        self.train_labels = labels[indexes[0:train_samples]]
+        self.train_data = self.data[indexes[0:train_samples], :, :, :]
+        self.train_labels = self.labels[indexes[0:train_samples]]
 
-        self.validation_data = data[indexes[train_samples:train_samples + validation_samples], :, :, :]
-        self.validation_labels = labels[indexes[train_samples:train_samples + validation_samples]]
+        self.validation_data = self.data[indexes[train_samples:train_samples + validation_samples], :, :, :]
+        self.validation_labels = self.labels[indexes[train_samples:train_samples + validation_samples]]
         self.total_labels = 10
 
         if self.scale:
             # data = scale_minmax_norm(data,lower_bound = -1, upper_bound = 1)
             self.train_data, self.mean = scale_mean_norm(self.train_data)
-            self.validation_data = (self.validation_data - self.mean) * scale_value
+            self.validation_data = (self.validation_data - self.mean) * self.scale_value
 
     def get_batch(self, n_samples, train_dataset=True):
 

@@ -3,9 +3,10 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 # @date: Wed 11 May 2016 17:38 CEST
 
-import tensoflow as tf
+import tensorflow as tf
 from bob.learn.tensorflow.util import *
 from .Layer import Layer
+from operator import mul
 
 
 class FullyConnected(Layer):
@@ -14,7 +15,7 @@ class FullyConnected(Layer):
     2D Convolution
     """
 
-    def __init__(self, input, activation=None,
+    def __init__(self, name, output_dim, activation=None,
                  initialization='xavier',
                  use_gpu=False,
                  seed=10
@@ -29,23 +30,36 @@ class FullyConnected(Layer):
         use_gpu: Store data in the GPU
         seed: Seed for the Random number generation
         """
-        super(FullyConnected, self).__init__(input, initialization='xavier', use_gpu=False, seed=10)
-        self.activation = activation
+        super(FullyConnected, self).__init__(name, activation=activation,
+                                             initialization=initialization, use_gpu=use_gpu, seed=seed)
+        self.output_dim = output_dim
+        self.W = None
+        self.b = None
 
+    def create_variables(self, input):
+        self.input = input
+        if self.W is None:
+            input_dim = reduce(mul, self.input.get_shape().as_list())
 
-        if len(input.get_shape())==4:
-            self.W = create_weight_variables([kernel_size, kernel_size, 1, filters],
-                                         seed=seed, name="conv", use_gpu=use_gpu)
-
-        if activation is not None:
-            self.b = create_bias_variables([filters], name="bias", use_gpu=self.use_gpu)
+            self.W = create_weight_variables([input_dim, self.output_dim],
+                                             seed=self.seed, name=str(self.name), use_gpu=self.use_gpu)
+            if self.activation is not None:
+                self.b = create_bias_variables([self.output_dim], name=str(self.name)+"_bias", use_gpu=self.use_gpu)
 
     def get_graph(self):
         with tf.name_scope('fc'):
-            conv = tf.nn.conv2d(self.input, self.W, strides=[1, 1, 1, 1], padding='SAME')
+
+            if len(self.input.get_shape()) == 4:
+                shape = self.input.get_shape().as_list()
+                fc = tf.reshape(self.input, [shape[0], shape[1] * shape[2] * shape[3]])
 
         if self.activation is not None:
             with tf.name_scope('activation'):
-                non_linearity = tf.nn.tanh(tf.nn.bias_add(conv, self.b))
+                non_linear_fc = tf.nn.tanh(tf.matmul(fc, self.W) + self.b)
+                self.output = non_linear_fc
+        else:
+            self.output = fc
 
-        return non_linearity
+        return self.output
+
+

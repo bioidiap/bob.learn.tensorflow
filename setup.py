@@ -41,11 +41,11 @@ setup(
 
     # This is the basic information about your project. Modify all this
     # information before releasing code publicly.
-    name = 'tensorflow.examples',
+    name = 'bob.learn.tensorflow',
     version = open("version.txt").read().rstrip(),
     description = 'Hands on with tensor flow',
 
-    url = 'https://www.github.com/tiagofrepereira2012/tensorflow.examples',
+    url = '',
     license = 'BSD',
     author = 'Tiago de Freitas Pereira',
     author_email = 'tiago.pereira@idiap.ch',
@@ -68,16 +68,15 @@ setup(
         'docopt',
         'ipython',
         'bob.db.mnist',
-        'tfdebugger'
     ],
 
     entry_points = {
 
       # scripts should be declared using this entry:
       'console_scripts': [
-        'train_mnist.py        = examples.tensorflow.script.train_mnist:main',
-        'train_mnist_siamese.py = examples.tensorflow.script.train_mnist_siamese:main',
-        'train_mnist_triplet.py = examples.tensorflow.script.train_mnist_triplet:main',
+        'train_mnist.py        = bob.learn.tensorflow.script.train_mnist:main',
+        'train_mnist_siamese.py = bob.learn.tensorflow.script.train_mnist_siamese:main',
+        'train_mnist_triplet.py = bob.learn.tensorflow.script.train_mnist_triplet:main',
       ],
 
 

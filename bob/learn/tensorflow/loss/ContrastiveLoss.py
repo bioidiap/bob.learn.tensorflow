@@ -6,7 +6,7 @@
 import logging
 logger = logging.getLogger("bob.learn.tensorflow")
 import tensorflow as tf
-from bob.learn.tensorflow.loss.Baseloss as Baseloss
+from .Baseloss import Baseloss
 
 
 class ContrastiveLoss(BaseLoss):
