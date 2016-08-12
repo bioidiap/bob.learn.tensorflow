@@ -14,7 +14,7 @@ def scale_mean_norm(data, scale=0.00390625):
 
 
 class DataShuffler(object):
-    def __init__(self, data, labels, perc_train=0.9, scale=True, train_batch_size=1, validation_batch_size=1):
+    def __init__(self, data, labels, perc_train=0.9, scale=True, train_batch_size=1, validation_batch_size=100):
         """
          Some base functions for neural networks
 
@@ -36,11 +36,14 @@ class DataShuffler(object):
         self.channels = self.data.shape[3]
         self.start_shuffler()
 
-    def get_placeholders(self, name=""):
-        data = tf.placeholder(tf.float32, shape=(self.train_batch_size, self.width,
+    def get_placeholders(self, name="", train_dataset=True):
+
+        batch = self.train_batch_size if train_dataset else self.validation_batch_size
+
+        data = tf.placeholder(tf.float32, shape=(batch, self.width,
                                                  self.height, self.channels), name=name)
 
-        labels = tf.placeholder(tf.int64, shape=self.train_batch_size)
+        labels = tf.placeholder(tf.int64, shape=batch)
 
         return data, labels
 
@@ -71,7 +74,12 @@ class DataShuffler(object):
             self.train_data, self.mean = scale_mean_norm(self.train_data)
             self.validation_data = (self.validation_data - self.mean) * self.scale_value
 
-    def get_batch(self, n_samples, train_dataset=True):
+    def get_batch(self, train_dataset=True):
+
+        if train_dataset:
+            n_samples = self.train_batch_size
+        else:
+            n_samples = self.validation_batch_size
 
         if train_dataset:
             data = self.train_data

@@ -13,7 +13,7 @@ import abc
 import six
 
 from collections import OrderedDict
-from bob.learn.tensorflow.layers import *
+from bob.learn.tensorflow.layers import Layer
 
 
 class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
@@ -38,18 +38,10 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
 
     def compute_graph(self, input_data):
 
-
         input_offset = input_data
         for k in self.sequence_net.keys():
-            print k
-            import ipdb;
-            ipdb.set_trace();
-
             current_layer = self.sequence_net[k]
             current_layer.create_variables(input_offset)
-            input_offset = current_layer.get_graph
+            input_offset = current_layer.get_graph()
 
         return input_offset
-
-
-

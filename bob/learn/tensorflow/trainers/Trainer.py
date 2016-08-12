@@ -8,6 +8,8 @@ logger = logging.getLogger("bob.learn.tensorflow")
 from ..DataShuffler import DataShuffler
 import tensorflow as tf
 from ..network import SequenceNetwork
+import numpy
+from bob.learn.tensorflow.layers import InputLayer
 
 
 class Trainer(object):
@@ -49,26 +51,37 @@ class Trainer(object):
         """
 
         train_placeholder_data, train_placeholder_labels = data_shuffler.get_placeholders(name="train")
-        validation_placeholder_data, validation_placeholder_labels = data_shuffler.get_placeholders(name="validation")
+        validation_placeholder_data, validation_placeholder_labels = data_shuffler.get_placeholders(name="validation",
+                                                                                                    train_dataset=False)
 
         # Creating the architecture for train and validation
         if not isinstance(self.architecture, SequenceNetwork):
             raise ValueError("The variable `architecture` must be an instance of "
                              "`bob.learn.tensorflow.network.SequenceNetwork`")
 
+        #input_layer = InputLayer(name="input", input_data=train_placeholder_data)
+
+        import ipdb;
+        ipdb.set_trace();
+
         train_graph = self.architecture.compute_graph(train_placeholder_data)
-        loss_instance = tf.reduce_mean(self.loss(train_graph))
+
+        validation_graph = self.architecture.compute_graph(validation_placeholder_data)
+
+        loss_train = tf.reduce_mean(self.loss(train_graph, train_placeholder_labels))
+        loss_validation = tf.reduce_mean(self.loss(validation_graph, validation_placeholder_labels))
 
         batch = tf.Variable(0)
         learning_rate = tf.train.exponential_decay(
             self.base_lr,  # Learning rate
-            batch * self.train_batch_size,
+            batch * data_shuffler.train_batch_size,
             data_shuffler.train_data.shape[0],
             self.weight_decay  # Decay step
         )
-        optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(self.loss_instance,
+        optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss_train,
                                                                               global_step=batch)
         train_prediction = tf.nn.softmax(train_graph)
+        validation_prediction = tf.nn.softmax(validation_graph)
 
         print("Initializing !!")
         # Training
@@ -76,22 +89,26 @@ class Trainer(object):
             tf.initialize_all_variables().run()
             for step in range(self.iterations):
 
-                train_data, train_labels = data_shuffler.get_batch(self.train_batch_size)
+                train_data, train_labels = data_shuffler.get_batch()
 
                 feed_dict = {train_placeholder_data: train_data,
                              train_placeholder_labels: train_labels}
 
-                _, l, lr, predictions = session.run([self.optimizer, self.loss_instance,
-                                                     self.learning_rate, train_prediction], feed_dict=feed_dict)
+                _, l, lr, _ = session.run([optimizer, loss_train,
+                                          learning_rate, train_prediction], feed_dict=feed_dict)
 
                 if step % self.snapshot == 0:
-                    validation_data, validation_labels = data_shuffler.get_batch(data_shuffler.validation_data.shape[0],
-                                                                                 train_dataset=False)
+                    validation_data, validation_labels = data_shuffler.get_batch(train_dataset=False)
                     feed_dict = {validation_placeholder_data: validation_data,
                                  validation_placeholder_labels: validation_labels}
 
-                    l, predictions = session.run([self.loss_instance, train_prediction], feed_dict=feed_dict)
-                    print("Step {0}. Loss = {1}, Lr={2}".format(step, l, predictions))
+                    import ipdb;
+                    ipdb.set_trace();
+
+                    l, predictions = session.run([loss_validation, validation_prediction], feed_dict=feed_dict)
+                    accuracy = 100. * numpy.sum(numpy.argmax(predictions, 1) == validation_labels) / predictions.shape[0]
+
+                    print "Step {0}. Loss = {1}, Acc Validation={2}".format(step, l, accuracy)
 
                     #accuracy = util.evaluate_softmax(validation_data, validation_labels, session, validation_prediction,
                     #                                 validation_data_node)

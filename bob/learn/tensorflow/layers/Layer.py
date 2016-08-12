@@ -25,18 +25,11 @@ class Layer(object):
         self.use_gpu = use_gpu
         self.seed = seed
 
-        self.input = None
-        self.activation = None
-        self.output = None
+        self.input_layer = None
+        self.activation = activation
 
-    def create_variables(self, input):
+    def create_variables(self, input_layer):
         NotImplementedError("Please implement this function in derived classes")
 
     def get_graph(self):
         NotImplementedError("Please implement this function in derived classes")
-
-    def get_shape(self):
-        if self.output is None:
-            NotImplementedError("This class was not implemented properly")
-        else:
-            return self.output.get_shape()

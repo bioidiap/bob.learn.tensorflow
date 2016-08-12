@@ -8,20 +8,18 @@ from bob.learn.tensorflow.util import *
 from .Layer import Layer
 
 
-class MaxPooling(Layer):
+class InputLayer(Layer):
 
-    def __init__(self, name, use_gpu=False):
+    def __init__(self, name, input_data, use_gpu=False):
         """
         Constructor
         """
-        super(MaxPooling, self).__init__(name, use_gpu=False)
+        super(InputLayer, self).__init__(name, use_gpu=False)
+        self.original_layer = input_data
+        self.__shape = input_data.get_shape()
 
     def create_variables(self, input_layer):
-        self.input_layer = input_layer
         return
 
     def get_graph(self):
-        with tf.name_scope(str(self.name)):
-            output = tf.nn.max_pool(self.input_layer, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
-
-        return output
+        return self.original_layer

@@ -43,9 +43,9 @@ class Lenet(SequenceNetwork):
         """
         super(Lenet, self).__init__()
 
-        self.add(Conv2D(name="conv1", kernel_size=conv1_kernel_size, filters=conv1_output))
+        self.add(Conv2D(name="conv1", kernel_size=conv1_kernel_size, filters=conv1_output, activation=True))
         self.add(MaxPooling(name="pooling1"))
-        self.add(Conv2D(name="conv2", kernel_size=conv2_kernel_size, filters=conv2_output))
+        self.add(Conv2D(name="conv2", kernel_size=conv2_kernel_size, filters=conv2_output, activation=True))
         self.add(MaxPooling(name="pooling2"))
         self.add(FullyConnected(name="fc1", output_dim=fc1_output, activation=True))
-        self.add(FullyConnected(name="fc1", output_dim=n_classes, activation=False))
+        self.add(FullyConnected(name="fc2", output_dim=n_classes, activation=None))
