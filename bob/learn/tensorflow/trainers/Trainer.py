@@ -61,8 +61,8 @@ class Trainer(object):
 
         #input_layer = InputLayer(name="input", input_data=train_placeholder_data)
 
-        import ipdb;
-        ipdb.set_trace();
+        #import ipdb;
+        #ipdb.set_trace();
 
         train_graph = self.architecture.compute_graph(train_placeholder_data)
 
@@ -80,12 +80,18 @@ class Trainer(object):
         )
         optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss_train,
                                                                               global_step=batch)
+
+
         train_prediction = tf.nn.softmax(train_graph)
         validation_prediction = tf.nn.softmax(validation_graph)
 
         print("Initializing !!")
         # Training
         with tf.Session() as session:
+
+            train_writer = tf.train.SummaryWriter('./LOGS/train',
+                                                  session.graph)
+
             tf.initialize_all_variables().run()
             for step in range(self.iterations):
 
@@ -95,15 +101,15 @@ class Trainer(object):
                              train_placeholder_labels: train_labels}
 
                 _, l, lr, _ = session.run([optimizer, loss_train,
-                                          learning_rate, train_prediction], feed_dict=feed_dict)
+                                            learning_rate, train_prediction], feed_dict=feed_dict)
 
                 if step % self.snapshot == 0:
                     validation_data, validation_labels = data_shuffler.get_batch(train_dataset=False)
                     feed_dict = {validation_placeholder_data: validation_data,
                                  validation_placeholder_labels: validation_labels}
 
-                    import ipdb;
-                    ipdb.set_trace();
+                    #import ipdb;
+                    #ipdb.set_trace();
 
                     l, predictions = session.run([loss_validation, validation_prediction], feed_dict=feed_dict)
                     accuracy = 100. * numpy.sum(numpy.argmax(predictions, 1) == validation_labels) / predictions.shape[0]
@@ -114,3 +120,4 @@ class Trainer(object):
                     #                                 validation_data_node)
                     #print("Step {0}. Loss = {1}, Lr={2}, Accuracy validation = {3}".format(step, l, lr, accuracy))
                     #sys.stdout.flush()
+            train_writer.close()

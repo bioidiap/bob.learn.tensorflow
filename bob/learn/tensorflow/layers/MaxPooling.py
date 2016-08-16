@@ -24,4 +24,4 @@ class MaxPooling(Layer):
         with tf.name_scope(str(self.name)):
             output = tf.nn.max_pool(self.input_layer, ksize=[1, 2, 2, 1], strides=[1, 2, 2, 1], padding='SAME')
 
-        return output
+            return output

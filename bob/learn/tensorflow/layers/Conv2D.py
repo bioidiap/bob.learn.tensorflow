@@ -63,11 +63,10 @@ class Conv2D(Layer):
         with tf.name_scope(str(self.name)):
             conv2d = tf.nn.conv2d(self.input_layer, self.W, strides=[1, 1, 1, 1], padding='SAME')
 
-        if self.activation is not None:
-            with tf.name_scope(str(self.name) + 'activation'):
+            if self.activation is not None:
                 non_linear_conv2d = tf.nn.tanh(tf.nn.bias_add(conv2d, self.b))
                 output = non_linear_conv2d
-        else:
-            output = conv2d
+            else:
+                output = conv2d
 
-        return output
+            return output

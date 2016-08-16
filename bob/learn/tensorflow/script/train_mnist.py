@@ -44,7 +44,7 @@ def main():
     lenet = Lenet()
 
     loss = tf.nn.sparse_softmax_cross_entropy_with_logits
-    trainer = Trainer(architecture=lenet, loss=loss)
+    trainer = Trainer(architecture=lenet, loss=loss, iterations=ITERATIONS)
     trainer.train(data_shuffler)
 
 

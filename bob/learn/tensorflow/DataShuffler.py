@@ -14,7 +14,7 @@ def scale_mean_norm(data, scale=0.00390625):
 
 
 class DataShuffler(object):
-    def __init__(self, data, labels, perc_train=0.9, scale=True, train_batch_size=1, validation_batch_size=100):
+    def __init__(self, data, labels, perc_train=0.9, scale=True, train_batch_size=1, validation_batch_size=300):
         """
          Some base functions for neural networks
 

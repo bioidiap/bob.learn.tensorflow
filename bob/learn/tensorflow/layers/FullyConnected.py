@@ -44,21 +44,23 @@ class FullyConnected(Layer):
 
             self.W = create_weight_variables([input_dim, self.output_dim],
                                              seed=self.seed, name=str(self.name), use_gpu=self.use_gpu)
-            if self.activation is not None:
-                self.b = create_bias_variables([self.output_dim], name=str(self.name)+"_bias", use_gpu=self.use_gpu)
+            #if self.activation is not None:
+            self.b = create_bias_variables([self.output_dim], name=str(self.name)+"_bias", use_gpu=self.use_gpu)
 
     def get_graph(self):
-        with tf.name_scope('fc'):
+
+        with tf.name_scope(str(self.name)):
 
             if len(self.input_layer.get_shape()) == 4:
                 shape = self.input_layer.get_shape().as_list()
                 fc = tf.reshape(self.input_layer, [shape[0], shape[1] * shape[2] * shape[3]])
+            else:
+                fc = self.input_layer
 
-        if self.activation is not None:
-            with tf.name_scope('activation'):
+            if self.activation is not None:
                 non_linear_fc = tf.nn.tanh(tf.matmul(fc, self.W) + self.b)
                 output = non_linear_fc
-        else:
-            output = fc
+            else:
+                output = tf.matmul(fc, self.W) + self.b
 
-        return output
+            return output
