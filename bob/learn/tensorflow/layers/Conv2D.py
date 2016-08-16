@@ -54,9 +54,9 @@ class Conv2D(Layer):
 
         if self.W is None:
             self.W = create_weight_variables([self.kernel_size, self.kernel_size, n_channels, self.filters],
-                                             seed=self.seed, name=str(self.name), use_gpu=self.use_gpu)
+                                             seed=self.seed, name="w_" + str(self.name), use_gpu=self.use_gpu)
             if self.activation is not None:
-                self.b = create_bias_variables([self.filters], name=str(self.name) + "bias", use_gpu=self.use_gpu)
+                self.b = create_bias_variables([self.filters], name="b_" + str(self.name) + "bias", use_gpu=self.use_gpu)
 
     def get_graph(self):
 
@@ -64,7 +64,7 @@ class Conv2D(Layer):
             conv2d = tf.nn.conv2d(self.input_layer, self.W, strides=[1, 1, 1, 1], padding='SAME')
 
             if self.activation is not None:
-                non_linear_conv2d = tf.nn.tanh(tf.nn.bias_add(conv2d, self.b))
+                non_linear_conv2d = self.activation(tf.nn.bias_add(conv2d, self.b))
                 output = non_linear_conv2d
             else:
                 output = conv2d

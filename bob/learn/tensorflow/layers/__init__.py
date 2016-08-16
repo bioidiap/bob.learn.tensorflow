@@ -9,4 +9,6 @@ from .FullyConnected import FullyConnected
 from .MaxPooling import MaxPooling
 from .InputLayer import InputLayer
 
+# gets sphinx autodoc done right - don't remove it
+__all__ = [_ for _ in dir() if not _.startswith('_')]
 

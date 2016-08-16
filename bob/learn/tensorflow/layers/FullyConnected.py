@@ -43,9 +43,9 @@ class FullyConnected(Layer):
             input_dim = reduce(mul, self.input_layer.get_shape().as_list())
 
             self.W = create_weight_variables([input_dim, self.output_dim],
-                                             seed=self.seed, name=str(self.name), use_gpu=self.use_gpu)
+                                             seed=self.seed, name="W_" + str(self.name), use_gpu=self.use_gpu)
             #if self.activation is not None:
-            self.b = create_bias_variables([self.output_dim], name=str(self.name)+"_bias", use_gpu=self.use_gpu)
+            self.b = create_bias_variables([self.output_dim], name="b_" + str(self.name), use_gpu=self.use_gpu)
 
     def get_graph(self):
 
@@ -58,7 +58,7 @@ class FullyConnected(Layer):
                 fc = self.input_layer
 
             if self.activation is not None:
-                non_linear_fc = tf.nn.tanh(tf.matmul(fc, self.W) + self.b)
+                non_linear_fc = self.activation(tf.matmul(fc, self.W) + self.b)
                 output = non_linear_fc
             else:
                 output = tf.matmul(fc, self.W) + self.b

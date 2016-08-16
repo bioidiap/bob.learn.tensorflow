@@ -17,8 +17,11 @@ class Layer(object):
         Base constructor
 
         **Parameters**
-        input: Layer input
-
+          name: Name of the layer
+          activation: Tensorflow activation operation (https://www.tensorflow.org/versions/r0.10/api_docs/python/nn.html)
+          initialization: STILL TO BE DONE.
+          use_gpu: I think this is not necessary to explain
+          seed: Initialization seed set in Tensor flow
         """
         self.name = name
         self.initialization = initialization
