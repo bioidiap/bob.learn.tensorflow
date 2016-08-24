@@ -40,8 +40,7 @@ class FullyConnected(Layer):
     def create_variables(self, input_layer):
         self.input_layer = input_layer
         if self.W is None:
-            input_dim = reduce(mul, self.input_layer.get_shape().as_list())
-
+            input_dim = reduce(mul, self.input_layer.get_shape().as_list()[1:])
             self.W = create_weight_variables([input_dim, self.output_dim],
                                              seed=self.seed, name="W_" + str(self.name), use_gpu=self.use_gpu)
             #if self.activation is not None:

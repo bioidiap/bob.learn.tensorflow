@@ -6,7 +6,9 @@
 import logging
 logger = logging.getLogger("bob.learn.tensorflow")
 import tensorflow as tf
-from .Baseloss import Baseloss
+
+from .BaseLoss import BaseLoss
+from bob.learn.tensorflow.util import compute_euclidean_distance
 
 
 class ContrastiveLoss(BaseLoss):
@@ -17,10 +19,6 @@ class ContrastiveLoss(BaseLoss):
 
     L = 0.5 * (Y) * D^2 + 0.5 * (1-Y) * {max(0, margin - D)}^2
 
-    OR MAYBE THAT
-
-    L = 0.5 * (1-Y) * D^2 + 0.5 * (Y) * {max(0, margin - D)}^2
-
     **Parameters**
      left_feature: First element of the pair
      right_feature: Second element of the pair
@@ -29,21 +27,20 @@ class ContrastiveLoss(BaseLoss):
 
     """
 
-    def __init__(self, label, left_feature, right_feature, margin):
+    def __init__(self):
+        return
 
+    def __call__(self, label, left_feature, right_feature, margin):
         with tf.name_scope("contrastive_loss"):
             label = tf.to_float(label)
             one = tf.constant(1.0)
 
-            d = bob.learn.tensorflow.util.compute_euclidean_distance(left_feature, right_feature)
-            # first_part = tf.mul(one - label, tf.square(d))  # (Y-1)*(d^2)
-            # first_part = tf.mul(label, tf.square(d))  # (Y-1)*(d^2)
+            d = compute_euclidean_distance(left_feature, right_feature)
             between_class = tf.exp(tf.mul(one - label, tf.square(d)))  # (1-Y)*(d^2)
             max_part = tf.square(tf.maximum(margin - d, 0))
 
             within_class = tf.mul(label, max_part)  # (Y) * max((margin - d)^2, 0)
-            # second_part = tf.mul(one-label, max_part)  # (Y) * max((margin - d)^2, 0)
 
-            self.loss = 0.5 * tf.reduce_mean(within_class + between_class)
+            loss = 0.5 * tf.reduce_mean(within_class + between_class)
 
-            self.within_class = tf.reduce_mean(within_class), tf.reduce_mean(between_class)
+            return tf.reduce_mean(loss), tf.reduce_mean(between_class), tf.reduce_mean(within_class)
