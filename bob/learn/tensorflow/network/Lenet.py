@@ -24,6 +24,7 @@ class Lenet(SequenceNetwork):
 
                  fc1_output=400,
                  n_classes=10,
+                 feature_layer="fc2",
 
                  seed=10, use_gpu = False):
         """
@@ -41,7 +42,7 @@ class Lenet(SequenceNetwork):
 
             seed = 10
         """
-        super(Lenet, self).__init__(feature_layer="fc2")
+        super(Lenet, self).__init__(feature_layer=feature_layer)
 
         self.add(Conv2D(name="conv1", kernel_size=conv1_kernel_size, filters=conv1_output, activation=tf.nn.tanh))
         self.add(MaxPooling(name="pooling1"))

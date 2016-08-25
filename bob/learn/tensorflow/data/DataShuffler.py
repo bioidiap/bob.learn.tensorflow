@@ -23,7 +23,7 @@ class DataShuffler(object):
         """
 
         self.perc_train = perc_train
-        self.scale = True
+        self.scale = scale
         self.scale_value = 0.00390625
         self.train_batch_size = train_batch_size
         self.validation_batch_size = validation_batch_size

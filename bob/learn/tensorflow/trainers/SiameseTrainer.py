@@ -42,6 +42,7 @@ class SiameseTrainer(object):
         self.weight_decay = weight_decay
         self.convergence_threshold = convergence_threshold
 
+
     def train(self, data_shuffler):
         """
         Do the loop forward --> backward --|
@@ -64,10 +65,9 @@ class SiameseTrainer(object):
         train_right_graph = self.architecture.compute_graph(train_placeholder_right_data)
         feature_graph = self.architecture.compute_graph(feature_placeholder, cut=True)
 
-        loss_train, between_class, within_class = self.loss(train_placeholder_labels,
+        loss_train, within_class, between_class = self.loss(train_placeholder_labels,
                                                             train_left_graph,
-                                                            train_right_graph,
-                                                            0.2)
+                                                            train_right_graph)
 
         batch = tf.Variable(0)
         learning_rate = tf.train.exponential_decay(
@@ -76,8 +76,10 @@ class SiameseTrainer(object):
             data_shuffler.train_data.shape[0],
             self.weight_decay  # Decay step
         )
-        optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss_train,
-                                                                              global_step=batch)
+        #optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss_train,
+        #                                                                      global_step=batch)
+        optimizer = tf.train.MomentumOptimizer(learning_rate, momentum=0.99, use_locking=False,
+                                               name='Momentum').minimize(loss_train, global_step=batch)
 
         #train_prediction = tf.nn.softmax(train_graph)
         #validation_prediction = tf.nn.softmax(validation_graph)
@@ -112,5 +114,7 @@ class SiameseTrainer(object):
 
                 if step % self.snapshot == 0:
                     analizer()
+                    print str(step) + " - " + str(analizer.eer[-1])
+
 
             train_writer.close()

@@ -46,6 +46,7 @@ class Analizer:
     def extract_features(self):
         data, labels = self.data_shuffler.get_batch(train_dataset=False)
         feed_dict = {self.feature_placeholder: data}
+
         return self.session.run([self.graph], feed_dict=feed_dict)[0], labels
 
     def __call__(self):
@@ -98,7 +99,7 @@ class Analizer:
         threshold = bob.measure.eer_threshold(negative_scores, positive_scores)
         far, frr = bob.measure.farfrr(negative_scores, positive_scores, threshold)
         eer = (far + frr) / 2.
-        self.eer .append(eer)
+        self.eer.append(eer)
 
         # Computing FAR 10
         threshold = bob.measure.far_threshold(negative_scores, positive_scores, far_value=0.1)
@@ -115,4 +116,4 @@ class Analizer:
         far, frr = bob.measure.farfrr(negative_scores, positive_scores, threshold)
         self.far1000.append(frr)
 
-        print eer
+        return
