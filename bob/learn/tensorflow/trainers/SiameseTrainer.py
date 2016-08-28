@@ -63,7 +63,6 @@ class SiameseTrainer(object):
 
         train_left_graph = self.architecture.compute_graph(train_placeholder_left_data)
         train_right_graph = self.architecture.compute_graph(train_placeholder_right_data)
-        feature_graph = self.architecture.compute_graph(feature_placeholder, cut=True)
 
         loss_train, within_class, between_class = self.loss(train_placeholder_labels,
                                                             train_left_graph,
@@ -88,7 +87,7 @@ class SiameseTrainer(object):
         print("Initializing !!")
         # Training
         with tf.Session() as session:
-            analizer = Analizer(data_shuffler, feature_graph, feature_placeholder, session)
+            analizer = Analizer(data_shuffler, self.architecture, feature_placeholder, session)
 
             train_writer = tf.train.SummaryWriter('./LOGS/train',
                                                   session.graph)

@@ -26,18 +26,29 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         Base constructor
 
         **Parameters**
-        input: Place Holder
+        feature_layer:
         """
 
         self.sequence_net = OrderedDict()
         self.feature_layer = feature_layer
 
     def add(self, layer):
+        """
+        Add a layer in the sequence network
+
+        """
         if not isinstance(layer, Layer):
             raise ValueError("Input `layer` must be an instance of `bob.learn.tensorflow.layers.Layer`")
         self.sequence_net[layer.name] = layer
 
     def compute_graph(self, input_data, cut=False):
+        """
+        Given the current network, return the Tensorflow graph
+
+         **Parameter**
+          input_data:
+          cut:
+        """
 
         input_offset = input_data
         for k in self.sequence_net.keys():
@@ -49,3 +60,10 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
                 return input_offset
 
         return input_offset
+
+    def compute_projection_graph(self, placeholder):
+        return self.compute_graph(placeholder, cut=True)
+
+    def __call__(self, feed_dict, session):
+        #placeholder
+        return session.run([self.graph], feed_dict=feed_dict)[0]

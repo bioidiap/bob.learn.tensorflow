@@ -21,7 +21,7 @@ class Analizer:
 
     """
 
-    def __init__(self, data_shuffler, graph, feature_placeholder, session):
+    def __init__(self, data_shuffler, machine, feature_placeholder, session):
         """
         Use the CNN as feature extractor for a n-class classification
 
@@ -33,7 +33,7 @@ class Analizer:
         """
 
         self.data_shuffler = data_shuffler
-        self.graph = graph
+        self.machine = machine
         self.feature_placeholder = feature_placeholder
         self.session = session
 
@@ -47,7 +47,7 @@ class Analizer:
         data, labels = self.data_shuffler.get_batch(train_dataset=False)
         feed_dict = {self.feature_placeholder: data}
 
-        return self.session.run([self.graph], feed_dict=feed_dict)[0], labels
+        return self.machine(feed_dict, self.session)
 
     def __call__(self):
 
