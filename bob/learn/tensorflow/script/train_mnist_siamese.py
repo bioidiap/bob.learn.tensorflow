@@ -47,7 +47,12 @@ def main():
     lenet = Lenet(feature_layer="fc2")
 
     loss = ContrastiveLoss()
-    trainer = SiameseTrainer(architecture=lenet, loss=loss, iterations=ITERATIONS, base_lr=0.00001)
+    trainer = SiameseTrainer(architecture=lenet,
+                             loss=loss,
+                             iterations=ITERATIONS,
+                             base_lr=0.00001,
+                             save_intermediate=False,
+                             snapshot=VALIDATION_TEST)
     trainer.train(data_shuffler)
 
 

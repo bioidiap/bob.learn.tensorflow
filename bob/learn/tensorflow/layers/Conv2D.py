@@ -45,11 +45,9 @@ class Conv2D(Layer):
         self.input_layer = input_layer
 
         # TODO: Do an assert here
-
         if len(input_layer.get_shape().as_list()) != 4:
             raise ValueError("The input as a convolutional layer must have 4 dimensions, "
                              "but {0} were provided".format(len(input_layer.get_shape().as_list())))
-
         n_channels = input_layer.get_shape().as_list()[3]
 
         if self.W is None:

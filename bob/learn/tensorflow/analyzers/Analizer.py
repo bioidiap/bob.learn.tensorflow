@@ -21,7 +21,7 @@ class Analizer:
 
     """
 
-    def __init__(self, data_shuffler, machine, feature_placeholder, session):
+    def __init__(self, data_shuffler, machine, session):
         """
         Use the CNN as feature extractor for a n-class classification
 
@@ -34,7 +34,6 @@ class Analizer:
 
         self.data_shuffler = data_shuffler
         self.machine = machine
-        self.feature_placeholder = feature_placeholder
         self.session = session
 
         # Statistics
@@ -43,17 +42,17 @@ class Analizer:
         self.far100 = []
         self.far1000 = []
 
-    def extract_features(self):
-        data, labels = self.data_shuffler.get_batch(train_dataset=False)
-        feed_dict = {self.feature_placeholder: data}
-
-        return self.machine(feed_dict, self.session)
-
     def __call__(self):
 
-        # Extracting features
-        enroll_features, enroll_labels = self.extract_features()
-        probe_features, probe_labels = self.extract_features()
+        # Extracting features for enrollment
+        enroll_data, enroll_labels = self.data_shuffler.get_batch(train_dataset=False)
+        enroll_features = self.machine(enroll_data, self.session)
+        del enroll_data
+
+        # Extracting features for probing
+        probe_data, probe_labels = self.data_shuffler.get_batch(train_dataset=False)
+        probe_features = self.machine(probe_data, self.session)
+        del probe_data
 
         # Creating models
         models = []
@@ -64,7 +63,6 @@ class Analizer:
         # Probing
         positive_scores = numpy.zeros(shape=0)
         negative_scores = numpy.zeros(shape=0)
-
         for i in range(self.data_shuffler.total_labels):
             # Positive scoring
             indexes = probe_labels == i

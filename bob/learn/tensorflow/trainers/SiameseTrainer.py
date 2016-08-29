@@ -8,6 +8,8 @@ logger = logging.getLogger("bob.learn.tensorflow")
 import tensorflow as tf
 from ..analyzers import Analizer
 from ..network import SequenceNetwork
+import bob.io.base
+import os
 
 
 class SiameseTrainer(object):
@@ -17,6 +19,8 @@ class SiameseTrainer(object):
                  architecture=None,
                  use_gpu=False,
                  loss=None,
+                 temp_dir="",
+                 save_intermediate=False,
 
                  ###### training options ##########
                  convergence_threshold = 0.01,
@@ -31,6 +35,8 @@ class SiameseTrainer(object):
         self.loss = loss
         self.loss_instance = None
         self.optimizer = None
+        self.temp_dir = temp_dir
+        self.save_intermediate = save_intermediate
 
         self.architecture = architecture
         self.use_gpu = use_gpu
@@ -42,16 +48,16 @@ class SiameseTrainer(object):
         self.weight_decay = weight_decay
         self.convergence_threshold = convergence_threshold
 
-
     def train(self, data_shuffler):
         """
         Do the loop forward --> backward --|
                       ^--------------------|
         """
 
+        bob.io.base.create_directories_safe(os.path.join(self.temp_dir, 'OUTPUT'))
         train_placeholder_left_data, train_placeholder_labels = data_shuffler.get_placeholders(name="train_left")
         train_placeholder_right_data, _ = data_shuffler.get_placeholders(name="train_right")
-        feature_placeholder, _ = data_shuffler.get_placeholders(name="feature", train_dataset=False)
+        # feature_placeholder, _ = data_shuffler.get_placeholders(name="feature", train_dataset=False)
 
         #validation_placeholder_data, validation_placeholder_labels = data_shuffler.get_placeholders(name="validation",
         #                                                                                            train_dataset=False)
@@ -87,10 +93,9 @@ class SiameseTrainer(object):
         print("Initializing !!")
         # Training
         with tf.Session() as session:
-            analizer = Analizer(data_shuffler, self.architecture, feature_placeholder, session)
+            analizer = Analizer(data_shuffler, self.architecture, session)
 
-            train_writer = tf.train.SummaryWriter('./LOGS/train',
-                                                  session.graph)
+            train_writer = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'LOGS'), session.graph)
 
             # Tensorboard data
             tf.scalar_summary('loss', loss_train)
@@ -113,7 +118,10 @@ class SiameseTrainer(object):
 
                 if step % self.snapshot == 0:
                     analizer()
+                    if self.save_intermediate:
+                        self.architecture.save(session, os.path.join(self.temp_dir, 'OUTPUT'), step)
+
                     print str(step) + " - " + str(analizer.eer[-1])
 
-
+            self.architecture.save(session, os.path.join(self.temp_dir, 'OUTPUT'))
             train_writer.close()
