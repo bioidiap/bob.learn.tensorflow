@@ -92,6 +92,7 @@ class SiameseTrainer(object):
 
         print("Initializing !!")
         # Training
+        hdf5 = bob.io.base.HDF5File(os.path.join(self.temp_dir, 'model.hdf5'), 'w')
         with tf.Session() as session:
             analizer = Analizer(data_shuffler, self.architecture, session)
 
@@ -119,9 +120,9 @@ class SiameseTrainer(object):
                 if step % self.snapshot == 0:
                     analizer()
                     if self.save_intermediate:
-                        self.architecture.save(session, os.path.join(self.temp_dir, 'OUTPUT'), step)
-
+                        self.architecture.save(hdf5, step)
                     print str(step) + " - " + str(analizer.eer[-1])
 
-            self.architecture.save(session, os.path.join(self.temp_dir, 'OUTPUT'))
+            self.architecture.save(hdf5)
+            del hdf5
             train_writer.close()
