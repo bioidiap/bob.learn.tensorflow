@@ -44,7 +44,7 @@ def main():
     data_shuffler = PairDataShuffler(data, labels)
 
     # Preparing the architecture
-    lenet = Lenet(feature_layer="fc2")
+    lenet = Lenet(default_feature_layer="fc2")
 
     loss = ContrastiveLoss()
     trainer = SiameseTrainer(architecture=lenet,

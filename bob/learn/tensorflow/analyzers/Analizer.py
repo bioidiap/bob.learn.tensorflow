@@ -46,12 +46,12 @@ class Analizer:
 
         # Extracting features for enrollment
         enroll_data, enroll_labels = self.data_shuffler.get_batch(train_dataset=False)
-        enroll_features = self.machine(enroll_data, self.session)
+        enroll_features = self.machine(enroll_data, session=self.session)
         del enroll_data
 
         # Extracting features for probing
         probe_data, probe_labels = self.data_shuffler.get_batch(train_dataset=False)
-        probe_features = self.machine(probe_data, self.session)
+        probe_features = self.machine(probe_data, session=self.session)
         del probe_data
 
         # Creating models
