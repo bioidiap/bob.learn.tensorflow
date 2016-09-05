@@ -4,8 +4,9 @@
 # @date: Wed 11 May 2016 17:38 CEST
 
 import tensorflow as tf
-from bob.learn.tensorflow.util import *
 from .Layer import Layer
+from bob.learn.tensorflow.initialization import Xavier
+from bob.learn.tensorflow.initialization import Constant
 
 
 class Conv2D(Layer):
@@ -17,7 +18,8 @@ class Conv2D(Layer):
     def __init__(self, name, activation=None,
                  kernel_size=3,
                  filters=8,
-                 initialization='xavier',
+                 weights_initialization=Xavier(),
+                 bias_initialization=Constant(),
                  use_gpu=False,
                  seed=10
                  ):
@@ -33,11 +35,14 @@ class Conv2D(Layer):
         use_gpu: Store data in the GPU
         seed: Seed for the Random number generation
         """
-        super(Conv2D, self).__init__(name, activation=activation, initialization='xavier',
-                                     use_gpu=use_gpu, seed=seed)
+        super(Conv2D, self).__init__(name=name,
+                                     activation=activation,
+                                     weights_initialization=weights_initialization,
+                                     bias_initialization=bias_initialization,
+                                     use_gpu=use_gpu,
+                                     seed=seed)
         self.kernel_size = kernel_size
         self.filters = filters
-        self.initialization = initialization
         self.W = None
         self.b = None
 
@@ -51,10 +56,12 @@ class Conv2D(Layer):
         n_channels = input_layer.get_shape().as_list()[3]
 
         if self.W is None:
-            self.W = create_weight_variables([self.kernel_size, self.kernel_size, n_channels, self.filters],
-                                             seed=self.seed, name="w_" + str(self.name), use_gpu=self.use_gpu)
+            self.W = self.weights_initialization(shape=[self.kernel_size, self.kernel_size, n_channels, self.filters],
+                                                 name="w_" + str(self.name))
+
             if self.activation is not None:
-                self.b = create_bias_variables([self.filters], name="b_" + str(self.name) + "bias", use_gpu=self.use_gpu)
+                self.b = self.bias_initialization(shape=[self.filters],
+                                                  name="b_" + str(self.name) + "bias")
 
     def get_graph(self):
 

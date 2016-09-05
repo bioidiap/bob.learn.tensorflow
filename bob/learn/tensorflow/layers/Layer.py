@@ -4,6 +4,8 @@
 # @date: Wed 11 May 2016 17:38 CEST
 
 import tensorflow as tf
+from bob.learn.tensorflow.initialization import Xavier
+from bob.learn.tensorflow.initialization import Constant
 
 
 class Layer(object):
@@ -12,19 +14,26 @@ class Layer(object):
     Layer base class
     """
 
-    def __init__(self, name, activation=None, initialization='xavier', use_gpu=False, seed=10):
+    def __init__(self, name,
+                 activation=None,
+                 weights_initialization=Xavier(),
+                 bias_initialization=Constant(),
+                 use_gpu=False,
+                 seed=10):
         """
         Base constructor
 
         **Parameters**
           name: Name of the layer
           activation: Tensorflow activation operation (https://www.tensorflow.org/versions/r0.10/api_docs/python/nn.html)
-          initialization: STILL TO BE DONE.
+          weights_initialization: Initialization for the weights
+          bias_initialization: Initialization for the biases
           use_gpu: I think this is not necessary to explain
           seed: Initialization seed set in Tensor flow
         """
         self.name = name
-        self.initialization = initialization
+        self.weights_initialization = weights_initialization
+        self.bias_initialization = bias_initialization
         self.use_gpu = use_gpu
         self.seed = seed
 

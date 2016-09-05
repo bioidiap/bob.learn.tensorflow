@@ -7,11 +7,10 @@
 Class that creates the lenet architecture
 """
 
-from ..util import *
 import tensorflow as tf
 from .SequenceNetwork import SequenceNetwork
 from ..layers import Conv2D, FullyConnected, MaxPooling
-
+import bob.learn.tensorflow
 
 class Lenet(SequenceNetwork):
 
@@ -44,7 +43,8 @@ class Lenet(SequenceNetwork):
         """
         super(Lenet, self).__init__(default_feature_layer=default_feature_layer)
 
-        self.add(Conv2D(name="conv1", kernel_size=conv1_kernel_size, filters=conv1_output, activation=tf.nn.tanh))
+        self.add(Conv2D(name="conv1", kernel_size=conv1_kernel_size,
+                        filters=conv1_output, activation=tf.nn.tanh))
         self.add(MaxPooling(name="pooling1"))
         self.add(Conv2D(name="conv2", kernel_size=conv2_kernel_size, filters=conv2_output, activation=tf.nn.tanh))
         self.add(MaxPooling(name="pooling2"))

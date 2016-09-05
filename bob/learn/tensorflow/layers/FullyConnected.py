@@ -4,9 +4,11 @@
 # @date: Wed 11 May 2016 17:38 CEST
 
 import tensorflow as tf
-from bob.learn.tensorflow.util import *
 from .Layer import Layer
 from operator import mul
+from bob.learn.tensorflow.initialization import Xavier
+from bob.learn.tensorflow.initialization import Constant
+
 
 
 class FullyConnected(Layer):
@@ -15,8 +17,11 @@ class FullyConnected(Layer):
     2D Convolution
     """
 
-    def __init__(self, name, output_dim, activation=None,
-                 initialization='xavier',
+    def __init__(self, name,
+                 output_dim,
+                 activation=None,
+                 weights_initialization=Xavier(),
+                 bias_initialization=Constant(),
                  use_gpu=False,
                  seed=10
                  ):
@@ -30,8 +35,14 @@ class FullyConnected(Layer):
         use_gpu: Store data in the GPU
         seed: Seed for the Random number generation
         """
-        super(FullyConnected, self).__init__(name, activation=activation,
-                                             initialization=initialization, use_gpu=use_gpu, seed=seed)
+
+        super(FullyConnected, self).__init__(name=name,
+                                     activation=activation,
+                                     weights_initialization=weights_initialization,
+                                     bias_initialization=bias_initialization,
+                                     use_gpu=use_gpu,
+                                     seed=seed)
+
         self.output_dim = output_dim
         self.W = None
         self.b = None
@@ -41,10 +52,11 @@ class FullyConnected(Layer):
         self.input_layer = input_layer
         if self.W is None:
             input_dim = reduce(mul, self.input_layer.get_shape().as_list()[1:])
-            self.W = create_weight_variables([input_dim, self.output_dim],
-                                             seed=self.seed, name="W_" + str(self.name), use_gpu=self.use_gpu)
-            #if self.activation is not None:
-            self.b = create_bias_variables([self.output_dim], name="b_" + str(self.name), use_gpu=self.use_gpu)
+            self.W = self.weights_initialization(shape=[input_dim, self.output_dim],
+                                                 name="W_" + str(self.name))
+            # if self.activation is not None:
+            self.b = self.bias_initialization(shape=[self.output_dim],
+                                              name="b_" + str(self.name))
 
     def get_graph(self):
 
