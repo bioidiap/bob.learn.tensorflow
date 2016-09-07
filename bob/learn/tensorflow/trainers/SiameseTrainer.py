@@ -75,6 +75,7 @@ class SiameseTrainer(object):
                                                             train_right_graph)
 
         batch = tf.Variable(0)
+
         learning_rate = tf.train.exponential_decay(
             self.base_lr,  # Learning rate
             batch * data_shuffler.train_batch_size,
@@ -89,10 +90,10 @@ class SiameseTrainer(object):
         #train_prediction = tf.nn.softmax(train_graph)
         #validation_prediction = tf.nn.softmax(validation_graph)
 
-
         print("Initializing !!")
         # Training
         hdf5 = bob.io.base.HDF5File(os.path.join(self.temp_dir, 'model.hdf5'), 'w')
+
         with tf.Session() as session:
             analizer = Analizer(data_shuffler, self.architecture, session)
 

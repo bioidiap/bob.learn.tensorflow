@@ -2,8 +2,10 @@
 from pkgutil import extend_path
 __path__ = extend_path(__path__, __name__)
 
-from .DataShuffler import DataShuffler
-from .PairDataShuffler import PairDataShuffler
+from .BaseDataShuffler import BaseDataShuffler
+from .MemoryDataShuffler import MemoryDataShuffler
+from .MemoryPairDataShuffler import MemoryPairDataShuffler
+from .TextDataShuffler import TextDataShuffler
 
 # gets sphinx autodoc done right - don't remove it
 __all__ = [_ for _ in dir() if not _.startswith('_')]
