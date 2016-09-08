@@ -21,7 +21,7 @@ from docopt import docopt
 import tensorflow as tf
 from .. import util
 SEED = 10
-from bob.learn.tensorflow.data import MemoryPairDataShuffler, TextDataShuffler
+from bob.learn.tensorflow.data import MemoryDataShuffler, TextDataShuffler
 from bob.learn.tensorflow.network import Lenet
 from bob.learn.tensorflow.trainers import SiameseTrainer
 from bob.learn.tensorflow.loss import ContrastiveLoss
@@ -40,11 +40,11 @@ def main():
     # Loading data
     data, labels = util.load_mnist(data_dir="./src/bob.db.mnist/bob/db/mnist/")
     data = numpy.reshape(data, (data.shape[0], 28, 28, 1))
-    data_shuffler = MemoryPairDataShuffler(data, labels,
-                                           input_shape=[28, 28, 1],
-                                           train_batch_size=BATCH_SIZE,
-                                           validation_batch_size=BATCH_SIZE*1000
-                                           )
+    data_shuffler = MemoryDataShuffler(data, labels,
+                                               input_shape=[28, 28, 1],
+                                               scale=True,
+                                               train_batch_size=BATCH_SIZE,
+                                               validation_batch_size=BATCH_SIZE*1000)
 
     #db = bob.db.mobio.Database()
     #objects = db.objects(protocol="male")
@@ -54,11 +54,11 @@ def main():
     #    directory="/remote/lustre/2/temp/tpereira/FACEREC_EXPERIMENTS/mobio_male/lda/preprocessed",
     #    extension=".hdf5")
     #              for o in objects]
+
     #data_shuffler = TextDataShuffler(file_names, labels,
     #                                 input_shape=[80, 64, 1],
     #                                 train_batch_size=BATCH_SIZE,
-    #                                 validation_batch_size=BATCH_SIZE*100)
-
+    #                                 validation_batch_size=BATCH_SIZE*500)
 
     # Preparing the architecture
     lenet = Lenet(default_feature_layer="fc2")

@@ -49,6 +49,8 @@ class Analizer:
         enroll_features = self.machine(enroll_data, session=self.session)
         del enroll_data
 
+        #import ipdb; ipdb.set_trace();
+
         # Extracting features for probing
         probe_data, probe_labels = self.data_shuffler.get_batch(train_dataset=False)
         probe_features = self.machine(probe_data, session=self.session)
@@ -56,22 +58,23 @@ class Analizer:
 
         # Creating models
         models = []
-        for i in range(self.data_shuffler.total_labels):
-            indexes_model = numpy.where(enroll_labels == i)[0]
+        for i in range(len(self.data_shuffler.possible_labels)):
+            indexes_model = numpy.where(enroll_labels == self.data_shuffler.possible_labels[i])[0]
             models.append(numpy.mean(enroll_features[indexes_model, :], axis=0))
 
         # Probing
         positive_scores = numpy.zeros(shape=0)
         negative_scores = numpy.zeros(shape=0)
-        for i in range(self.data_shuffler.total_labels):
+        for i in range(len(self.data_shuffler.possible_labels)):
+            #for i in self.data_shuffler.possible_labels:
             # Positive scoring
-            indexes = probe_labels == i
+            indexes = probe_labels == self.data_shuffler.possible_labels[i]
             positive_data = probe_features[indexes, :]
             p = [cosine(models[i], positive_data[j]) for j in range(positive_data.shape[0])]
             positive_scores = numpy.hstack((positive_scores, p))
 
             # negative scoring
-            indexes = probe_labels != i
+            indexes = probe_labels != self.data_shuffler.possible_labels[i]
             negative_data = probe_features[indexes, :]
             n = [cosine(models[i], negative_data[j]) for j in range(negative_data.shape[0])]
             negative_scores = numpy.hstack((negative_scores, n))

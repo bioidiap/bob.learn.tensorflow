@@ -8,7 +8,13 @@ import tensorflow as tf
 
 
 class BaseDataShuffler(object):
-    def __init__(self, data, labels, input_shape, perc_train=0.9, scale=True, train_batch_size=1, validation_batch_size=300):
+    def __init__(self, data, labels,
+                 input_shape,
+                 input_dtype="float64",
+                 perc_train=0.9,
+                 scale=True,
+                 train_batch_size=1,
+                 validation_batch_size=300):
         """
          The class provide base functionoalies to shuffle the data
 
@@ -23,6 +29,7 @@ class BaseDataShuffler(object):
 
         self.scale = scale
         self.scale_value = 0.00390625
+        self.input_dtype = input_dtype
 
         # TODO: Check if the bacth size is higher than the input data
         self.train_batch_size = train_batch_size
@@ -34,9 +41,9 @@ class BaseDataShuffler(object):
 
         # TODO: Check if the labels goes from O to N-1
         self.labels = labels
-        self.total_labels = max(labels) + 1
+        self.possible_labels = list(set(self.labels))
 
-        # Spliting in train and validation
+        # Computing the data samples fro train and validation
         self.n_samples = len(self.labels)
         self.n_train_samples = int(round(self.n_samples * perc_train))
         self.n_validation_samples = self.n_samples - self.n_train_samples
@@ -44,6 +51,15 @@ class BaseDataShuffler(object):
         # Shuffling all the indexes
         self.indexes = numpy.array(range(self.n_samples))
         numpy.random.shuffle(self.indexes)
+
+        # Spliting the data between train and validation
+        self.train_data = self.data[self.indexes[0:self.n_train_samples], ...]
+        self.train_labels = self.labels[self.indexes[0:self.n_train_samples]]
+
+        self.validation_data = self.data[self.indexes[self.n_train_samples:
+                                         self.n_train_samples + self.n_validation_samples], ...]
+        self.validation_labels = self.labels[self.indexes[self.n_train_samples:
+                                         self.n_train_samples + self.n_validation_samples]]
 
     def get_placeholders_forprefetch(self, name="", train_dataset=True):
         """
@@ -66,3 +82,35 @@ class BaseDataShuffler(object):
         labels = tf.placeholder(tf.int64, shape=shape[0])
 
         return data, labels
+
+    def get_genuine_or_not(self, input_data, input_labels, genuine=True):
+        if genuine:
+            # Getting a client
+            index = numpy.random.randint(len(self.possible_labels))
+            index = self.possible_labels[index]
+
+            # Getting the indexes of the data from a particular client
+            indexes = numpy.where(input_labels == index)[0]
+            numpy.random.shuffle(indexes)
+
+            # Picking a pair
+            data = input_data[indexes[0], ...]
+            data_p = input_data[indexes[1], ...]
+
+        else:
+            # Picking a pair of labels from different clients
+            index = numpy.random.choice(len(self.possible_labels), 2, replace=False)
+            index[0] = self.possible_labels[index[0]]
+            index[1] = self.possible_labels[index[1]]
+
+            # Getting the indexes of the two clients
+            indexes = numpy.where(input_labels == index[0])[0]
+            indexes_p = numpy.where(input_labels == index[1])[0]
+            numpy.random.shuffle(indexes)
+            numpy.random.shuffle(indexes_p)
+
+            # Picking a pair
+            data = input_data[indexes[0], ...]
+            data_p = input_data[indexes_p[0], ...]
+
+        return data, data_p

@@ -39,26 +39,28 @@ def main():
     perc_train = 0.9
 
     # Loading data
-    data, labels = util.load_mnist(data_dir="./src/bob.db.mnist/bob/db/mnist/")
-    data = numpy.reshape(data, (data.shape[0], 28, 28, 1))
-    data_shuffler = MemoryDataShuffler(data, labels,
-                                       input_shape=[28, 28, 1],
-                                       train_batch_size=BATCH_SIZE,
-                                       validation_batch_size=BATCH_SIZE*100)
+    #data, labels = util.load_mnist(data_dir="./src/bob.db.mnist/bob/db/mnist/")
+    #data = numpy.reshape(data, (data.shape[0], 28, 28, 1))
+
+    #data_shuffler = MemoryDataShuffler(data, labels,
+    #                                   input_shape=[28, 28, 1],
+    #                                   train_batch_size=BATCH_SIZE,
+    #                                   validation_batch_size=BATCH_SIZE*100)
 
 
-    #db = bob.db.mobio.Database()
-    #objects = db.objects(protocol="male")
+    db = bob.db.mobio.Database()
+    objects = db.objects(protocol="male")
 
-    #labels = [o.client_id for o in objects]
-    #file_names = [o.make_path(
-    #    directory="/remote/lustre/2/temp/tpereira/FACEREC_EXPERIMENTS/mobio_male/lda/preprocessed",
-    #    extension=".hdf5")
-    #              for o in objects]
-    #data_shuffler = TextDataShuffler(file_names, labels,
-    #                                 input_shape=[80, 64, 1],
-    #                                 train_batch_size=BATCH_SIZE,
-    #                                 validation_batch_size=BATCH_SIZE*100)
+    labels = [o.client_id for o in objects]
+    file_names = [o.make_path(
+        directory="/remote/lustre/2/temp/tpereira/FACEREC_EXPERIMENTS/mobio_male/lda/preprocessed",
+        extension=".hdf5")
+                  for o in objects]
+
+    data_shuffler = TextDataShuffler(file_names, labels,
+                                     input_shape=[80, 64, 1],
+                                     train_batch_size=BATCH_SIZE,
+                                     validation_batch_size=BATCH_SIZE*100)
 
     # Preparing the architecture
     lenet = Lenet()
