@@ -11,10 +11,8 @@ class BaseDataShuffler(object):
     def __init__(self, data, labels,
                  input_shape,
                  input_dtype="float64",
-                 perc_train=0.9,
                  scale=True,
-                 train_batch_size=1,
-                 validation_batch_size=300):
+                 batch_size=1):
         """
          The class provide base functionoalies to shuffle the data
 
@@ -32,54 +30,36 @@ class BaseDataShuffler(object):
         self.input_dtype = input_dtype
 
         # TODO: Check if the bacth size is higher than the input data
-        self.train_batch_size = train_batch_size
-        self.validation_batch_size = validation_batch_size
+        self.batch_size = batch_size
 
         self.data = data
-        self.train_shape = tuple([train_batch_size] + input_shape)
-        self.validation_shape = tuple([validation_batch_size] + input_shape)
+        self.shape = tuple([batch_size] + input_shape)
 
-        # TODO: Check if the labels goes from O to N-1
         self.labels = labels
         self.possible_labels = list(set(self.labels))
 
         # Computing the data samples fro train and validation
         self.n_samples = len(self.labels)
-        self.n_train_samples = int(round(self.n_samples * perc_train))
-        self.n_validation_samples = self.n_samples - self.n_train_samples
 
         # Shuffling all the indexes
         self.indexes = numpy.array(range(self.n_samples))
         numpy.random.shuffle(self.indexes)
 
-        # Spliting the data between train and validation
-        self.train_data = self.data[self.indexes[0:self.n_train_samples], ...]
-        self.train_labels = self.labels[self.indexes[0:self.n_train_samples]]
-
-        self.validation_data = self.data[self.indexes[self.n_train_samples:
-                                         self.n_train_samples + self.n_validation_samples], ...]
-        self.validation_labels = self.labels[self.indexes[self.n_train_samples:
-                                         self.n_train_samples + self.n_validation_samples]]
-
-    def get_placeholders_forprefetch(self, name="", train_dataset=True):
+    def get_placeholders_forprefetch(self, name=""):
         """
         Returns a place holder with the size of your batch
         """
-
-        shape = self.train_shape if train_dataset else self.validation_shape
-        data = tf.placeholder(tf.float32, shape=tuple([None] + list(shape[1:])), name=name)
+        data = tf.placeholder(tf.float32, shape=tuple([None] + list(self.shape[1:])), name=name)
         labels = tf.placeholder(tf.int64, shape=[None, ])
 
         return data, labels
 
-    def get_placeholders(self, name="", train_dataset=True):
+    def get_placeholders(self, name=""):
         """
         Returns a place holder with the size of your batch
         """
-
-        shape = self.train_shape if train_dataset else self.validation_shape
-        data = tf.placeholder(tf.float32, shape=shape, name=name)
-        labels = tf.placeholder(tf.int64, shape=shape[0])
+        data = tf.placeholder(tf.float32, shape=self.shape, name=name)
+        labels = tf.placeholder(tf.int64, shape=self.shape[0])
 
         return data, labels
 

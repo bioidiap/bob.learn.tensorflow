@@ -8,11 +8,12 @@
 Simple script that trains MNIST with LENET using Tensor flow
 
 Usage:
-  train_mnist_siamese.py [--batch-size=<arg> --iterations=<arg> --validation-interval=<arg> --use-gpu]
+  train_mnist_siamese.py [--batch-size=<arg> --validation-batch-size=<arg> --iterations=<arg> --validation-interval=<arg> --use-gpu]
   train_mnist_siamese.py -h | --help
 Options:
   -h --help     Show this screen.
   --batch-size=<arg>  [default: 1]
+  --validation-batch-size=<arg>   [default:128]
   --iterations=<arg>  [default: 30000]
   --validation-interval=<arg>  [default: 100]
 """
@@ -32,36 +33,63 @@ def main():
     args = docopt(__doc__, version='Mnist training with TensorFlow')
 
     BATCH_SIZE = int(args['--batch-size'])
+    VALIDATION_BATCH_SIZE = int(args['--validation-batch-size'])
     ITERATIONS = int(args['--iterations'])
     VALIDATION_TEST = int(args['--validation-interval'])
     USE_GPU = args['--use-gpu']
     perc_train = 0.9
 
     # Loading data
-    data, labels = util.load_mnist(data_dir="./src/bob.db.mnist/bob/db/mnist/")
-    data = numpy.reshape(data, (data.shape[0], 28, 28, 1))
-    data_shuffler = MemoryDataShuffler(data, labels,
-                                               input_shape=[28, 28, 1],
-                                               scale=True,
-                                               train_batch_size=BATCH_SIZE,
-                                               validation_batch_size=BATCH_SIZE*1000)
+    mnist = False
 
-    #db = bob.db.mobio.Database()
-    #objects = db.objects(protocol="male")
+    if mnist:
+        train_data, train_labels, validation_data, validation_labels = \
+            util.load_mnist(data_dir="./src/bob.db.mnist/bob/db/mnist/")
+        train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
+        validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
 
-    #labels = [o.client_id for o in objects]
-    #file_names = [o.make_path(
-    #    directory="/remote/lustre/2/temp/tpereira/FACEREC_EXPERIMENTS/mobio_male/lda/preprocessed",
-    #    extension=".hdf5")
-    #              for o in objects]
+        train_data_shuffler = MemoryDataShuffler(train_data, train_labels,
+                                                 input_shape=[28, 28, 1],
+                                                 scale=True,
+                                                 batch_size=BATCH_SIZE)
 
-    #data_shuffler = TextDataShuffler(file_names, labels,
-    #                                 input_shape=[80, 64, 1],
-    #                                 train_batch_size=BATCH_SIZE,
-    #                                 validation_batch_size=BATCH_SIZE*500)
+        validation_data_shuffler = MemoryDataShuffler(validation_data, validation_labels,
+                                                      input_shape=[28, 28, 1],
+                                                      scale=True,
+                                                      batch_size=VALIDATION_BATCH_SIZE)
+
+    else:
+
+        import bob.db.mobio
+        db = bob.db.mobio.Database()
+
+        # Preparing train set
+        train_objects = db.objects(protocol="male", groups="world")
+        train_labels = [o.client_id for o in train_objects]
+        train_file_names = [o.make_path(
+            directory="/remote/lustre/2/temp/tpereira/FACEREC_EXPERIMENTS/mobio_male/lda/preprocessed",
+            extension=".hdf5")
+                            for o in train_objects]
+
+        train_data_shuffler = TextDataShuffler(train_file_names, train_labels,
+                                               input_shape=[80, 64, 1],
+                                               batch_size=BATCH_SIZE)
+
+        # Preparing train set
+        validation_objects = db.objects(protocol="male", groups="dev")
+        validation_labels = [o.client_id for o in validation_objects]
+        validation_file_names = [o.make_path(
+            directory="/remote/lustre/2/temp/tpereira/FACEREC_EXPERIMENTS/mobio_male/lda/preprocessed",
+            extension=".hdf5")
+                                 for o in validation_objects]
+
+        validation_data_shuffler = TextDataShuffler(validation_file_names, validation_labels,
+                                                    input_shape=[80, 64, 1],
+                                                    batch_size=VALIDATION_BATCH_SIZE)
 
     # Preparing the architecture
-    lenet = Lenet(default_feature_layer="fc2")
+    n_classes = len(train_data_shuffler.possible_labels)
+    lenet = Lenet(default_feature_layer="fc2", n_classes=n_classes)
 
     loss = ContrastiveLoss()
     trainer = SiameseTrainer(architecture=lenet,
@@ -70,6 +98,6 @@ def main():
                              base_lr=0.0001,
                              save_intermediate=False,
                              snapshot=VALIDATION_TEST)
-    trainer.train(data_shuffler)
+    trainer.train(train_data_shuffler, validation_data_shuffler)
 
 

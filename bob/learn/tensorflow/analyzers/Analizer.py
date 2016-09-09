@@ -45,14 +45,14 @@ class Analizer:
     def __call__(self):
 
         # Extracting features for enrollment
-        enroll_data, enroll_labels = self.data_shuffler.get_batch(train_dataset=False)
+        enroll_data, enroll_labels = self.data_shuffler.get_batch()
         enroll_features = self.machine(enroll_data, session=self.session)
         del enroll_data
 
         #import ipdb; ipdb.set_trace();
 
         # Extracting features for probing
-        probe_data, probe_labels = self.data_shuffler.get_batch(train_dataset=False)
+        probe_data, probe_labels = self.data_shuffler.get_batch()
         probe_features = self.machine(probe_data, session=self.session)
         del probe_data
 

@@ -144,7 +144,7 @@ def evaluate_softmax(data, labels, session, network, data_node):
     return 100. * numpy.sum(predictions == labels) / predictions.shape[0]
 
 
-def load_mnist(data_dir="./src/bob.db.mnist/bob/db/mnist/"):
+def load_mnist(data_dir="./src/bob.db.mnist/bob/db/mnist/", perc_train=0.9):
 
     import bob.db.mnist
     db = bob.db.mnist.Database(data_dir)
@@ -154,7 +154,22 @@ def load_mnist(data_dir="./src/bob.db.mnist/bob/db/mnist/"):
     data = raw_data[0]
     labels = raw_data[1]
 
-    return data, labels
+    # Shuffling
+    total_samples = data.shape[0]
+    indexes = numpy.array(range(total_samples))
+    numpy.random.shuffle(indexes)
+
+    # Spliting train and validation
+    n_train = int(perc_train*indexes.shape[0])
+    n_validation = total_samples - n_train
+
+    train_data = data[0:n_train, :]
+    train_labels = labels[0:n_train]
+
+    validation_data = data[n_train:n_train+n_validation, :]
+    validation_labels = labels[n_train:n_train+n_validation]
+
+    return train_data, train_labels, validation_data, validation_labels
 
 
 def plot_embedding_pca(features, labels):
