@@ -10,44 +10,41 @@ import threading
 from ..analyzers import Analizer
 from ..network import SequenceNetwork
 import bob.io.base
+from .Trainer import Trainer
 import os
 
 
-class SiameseTrainer(object):
+class SiameseTrainer(Trainer):
 
     def __init__(self,
-
-                 architecture=None,
+                 architecture,
+                 optimizer=tf.train.AdamOptimizer(),
                  use_gpu=False,
                  loss=None,
                  temp_dir="",
-                 save_intermediate=False,
+
+                 # Learning rate
+                 base_learning_rate=0.001,
+                 weight_decay=0.9,
 
                  ###### training options ##########
-                 convergence_threshold = 0.01,
+                 convergence_threshold=0.01,
                  iterations=5000,
-                 base_lr=0.001,
-                 momentum=0.9,
-                 weight_decay=0.95,
-
-                 # The learning rate policy
                  snapshot=100):
 
-        self.loss = loss
-        self.loss_instance = None
-        self.optimizer = None
-        self.temp_dir = temp_dir
-        self.save_intermediate = save_intermediate
+        super(SiameseTrainer, self).__init__(
+            architecture=architecture,
+            optimizer=optimizer,
+            use_gpu=use_gpu,
+            loss=loss,
+            temp_dir=temp_dir,
+            base_learning_rate=base_learning_rate,
+            weight_decay=weight_decay,
+            convergence_threshold=convergence_threshold,
+            iterations=iterations,
+            snapshot=snapshot
+        )
 
-        self.architecture = architecture
-        self.use_gpu = use_gpu
-
-        self.iterations = iterations
-        self.snapshot = snapshot
-        self.base_lr = base_lr
-        self.momentum = momentum
-        self.weight_decay = weight_decay
-        self.convergence_threshold = convergence_threshold
 
     def train(self, train_data_shuffler, validation_data_shuffler=None):
         """
@@ -76,6 +73,14 @@ class SiameseTrainer(object):
                              train_placeholder_labels: labels}
 
                 session.run(enqueue_op, feed_dict=feed_dict)
+
+        # TODO: find an elegant way to provide this as a parameter of the trainer
+        learning_rate = tf.train.exponential_decay(
+            self.base_learning_rate,  # Learning rate
+            train_data_shuffler.batch_size,
+            train_data_shuffler.n_samples,
+            self.weight_decay  # Decay step
+        )
 
         bob.io.base.create_directories_safe(os.path.join(self.temp_dir, 'OUTPUT'))
 
@@ -110,18 +115,9 @@ class SiameseTrainer(object):
                                                             train_left_graph,
                                                             train_right_graph)
 
-        batch = tf.Variable(0)
-
-        learning_rate = tf.train.exponential_decay(
-            self.base_lr,  # Learning rate
-            batch * train_data_shuffler.batch_size,
-            train_data_shuffler.n_samples,
-            self.weight_decay  # Decay step
-        )
-        #optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss_train,
-        #                                                                      global_step=batch)
-        optimizer = tf.train.MomentumOptimizer(learning_rate, momentum=0.99, use_locking=False,
-                                               name='Momentum').minimize(loss_train, global_step=batch)
+        # Preparing the optimizer
+        self.optimizer._learning_rate = learning_rate
+        optimizer = self.optimizer.minimize(loss_train, global_step=tf.Variable(0))
 
         print("Initializing !!")
         # Training
@@ -154,8 +150,8 @@ class SiameseTrainer(object):
 
                 if validation_data_shuffler is not None and step % self.snapshot == 0:
                     analizer()
-                    if self.save_intermediate:
-                        self.architecture.save(hdf5, step)
+                    #if self.save_intermediate:
+                    #    self.architecture.save(hdf5, step)
                     print str(step) + " - " + str(analizer.eer[-1])
 
             self.architecture.save(hdf5)

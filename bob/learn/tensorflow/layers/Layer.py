@@ -18,8 +18,7 @@ class Layer(object):
                  activation=None,
                  weights_initialization=Xavier(),
                  bias_initialization=Constant(),
-                 use_gpu=False,
-                 seed=10):
+                 use_gpu=False):
         """
         Base constructor
 
@@ -35,7 +34,6 @@ class Layer(object):
         self.weights_initialization = weights_initialization
         self.bias_initialization = bias_initialization
         self.use_gpu = use_gpu
-        self.seed = seed
 
         self.input_layer = None
         self.activation = activation

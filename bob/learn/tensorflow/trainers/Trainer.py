@@ -16,36 +16,46 @@ import bob.io.base
 class Trainer(object):
 
     def __init__(self,
-
-                 architecture=None,
+                 architecture,
+                 optimizer=tf.train.AdamOptimizer(),
                  use_gpu=False,
                  loss=None,
                  temp_dir="",
 
+                 # Learning rate
+                 base_learning_rate=0.001,
+                 weight_decay=0.9,
+
                  ###### training options ##########
-                 convergence_threshold = 0.01,
+                 convergence_threshold=0.01,
                  iterations=5000,
-                 base_lr=0.001,
-                 momentum=0.9,
-                 weight_decay=0.95,
-
-                 # The learning rate policy
                  snapshot=100):
+        """
 
-        self.loss = loss
-        self.loss_instance = None
-        self.optimizer = None
-        self.temp_dir=temp_dir
-
+        **Parameters**
+          architecture: The architecture that you want to run. Should be a :py:class`bob.learn.tensorflow.network.SequenceNetwork`
+          optimizer: One of the tensorflow optimizers https://www.tensorflow.org/versions/r0.10/api_docs/python/train.html
+          use_gpu: Use GPUs in the training
+          loss: Loss
+          temp_dir:
+          iterations:
+          snapshot:
+          convergence_threshold:
+        """
+        if not isinstance(architecture, SequenceNetwork):
+            raise ValueError("`architecture` should be instance of `SequenceNetwork`")
 
         self.architecture = architecture
+        self.optimizer = optimizer
         self.use_gpu = use_gpu
+        self.loss = loss
+        self.temp_dir = temp_dir
+
+        self.base_learning_rate = base_learning_rate
+        self.weight_decay = weight_decay
 
         self.iterations = iterations
         self.snapshot = snapshot
-        self.base_lr = base_lr
-        self.momentum = momentum
-        self.weight_decay = weight_decay
         self.convergence_threshold = convergence_threshold
 
     def train(self, train_data_shuffler, validation_data_shuffler=None):
@@ -77,6 +87,14 @@ class Trainer(object):
 
                 session.run(enqueue_op, feed_dict=feed_dict)
 
+        # TODO: find an elegant way to provide this as a parameter of the trainer
+        learning_rate = tf.train.exponential_decay(
+            self.base_learning_rate,  # Learning rate
+            train_data_shuffler.batch_size,
+            train_data_shuffler.n_samples,
+            self.weight_decay  # Decay step
+        )
+
         # Defining place holders
         train_placeholder_data, train_placeholder_labels = train_data_shuffler.get_placeholders_forprefetch(name="train")
         if validation_data_shuffler is not None:
@@ -105,15 +123,9 @@ class Trainer(object):
             loss_validation = self.loss(validation_graph, validation_placeholder_labels)
             validation_prediction = tf.nn.softmax(validation_graph)
 
-        batch = tf.Variable(0)
-        learning_rate = tf.train.exponential_decay(
-            self.base_lr,  # Learning rate
-            batch * train_data_shuffler.batch_size,
-            train_data_shuffler.n_samples,
-            self.weight_decay  # Decay step
-        )
-        optimizer = tf.train.GradientDescentOptimizer(learning_rate).minimize(loss_train,
-                                                                              global_step=batch)
+        # Preparing the optimizer
+        self.optimizer._learning_rate = learning_rate
+        optimizer = self.optimizer.minimize(loss_train, global_step=tf.Variable(0))
 
         print("Initializing !!")
         # Training

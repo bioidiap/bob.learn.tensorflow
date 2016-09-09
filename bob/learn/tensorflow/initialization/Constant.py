@@ -22,7 +22,7 @@ class Constant(Initialization):
 
     """
 
-    def __init__(self, constant_value=0.1, use_gpu=False):
+    def __init__(self, constant_value=0.1, use_gpu=False, seed=None):
 
         self.constant_value = constant_value
         super(Constant, self).__init__(seed=None, use_gpu=use_gpu)

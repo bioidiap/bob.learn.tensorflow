@@ -10,7 +10,6 @@ from bob.learn.tensorflow.initialization import Xavier
 from bob.learn.tensorflow.initialization import Constant
 
 
-
 class FullyConnected(Layer):
 
     """
@@ -23,7 +22,6 @@ class FullyConnected(Layer):
                  weights_initialization=Xavier(),
                  bias_initialization=Constant(),
                  use_gpu=False,
-                 seed=10
                  ):
         """
         Constructor
@@ -40,8 +38,7 @@ class FullyConnected(Layer):
                                      activation=activation,
                                      weights_initialization=weights_initialization,
                                      bias_initialization=bias_initialization,
-                                     use_gpu=use_gpu,
-                                     seed=seed)
+                                     use_gpu=use_gpu)
 
         self.output_dim = output_dim
         self.W = None

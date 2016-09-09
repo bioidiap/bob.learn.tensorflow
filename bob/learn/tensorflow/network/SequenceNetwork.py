@@ -21,7 +21,8 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
     Base class to create architectures using TensorFlow
     """
 
-    def __init__(self, default_feature_layer=None):
+    def __init__(self,
+                 default_feature_layer=None):
         """
         Base constructor
 
@@ -72,13 +73,8 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         if session is None:
             session = tf.Session()
 
-        batch_size = data.shape[0]
-        width = data.shape[1]
-        height = data.shape[2]
-        channels = data.shape[3]
-
         # Feeding the placeholder
-        feature_placeholder = tf.placeholder(tf.float32, shape=(batch_size, width, height, channels), name="feature")
+        feature_placeholder = tf.placeholder(tf.float32, shape=data.shape, name="feature")
         feed_dict = {feature_placeholder: data}
 
         if feature_layer is None:

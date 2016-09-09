@@ -23,10 +23,9 @@ import tensorflow as tf
 from .. import util
 SEED = 10
 from bob.learn.tensorflow.data import MemoryDataShuffler, TextDataShuffler
-from bob.learn.tensorflow.network import Lenet
+from bob.learn.tensorflow.network import Lenet, MLP
 from bob.learn.tensorflow.trainers import SiameseTrainer
 from bob.learn.tensorflow.loss import ContrastiveLoss
-import bob.db.mobio
 import numpy
 
 def main():
@@ -40,7 +39,7 @@ def main():
     perc_train = 0.9
 
     # Loading data
-    mnist = False
+    mnist = True
 
     if mnist:
         train_data, train_labels, validation_data, validation_labels = \
@@ -89,15 +88,25 @@ def main():
 
     # Preparing the architecture
     n_classes = len(train_data_shuffler.possible_labels)
-    lenet = Lenet(default_feature_layer="fc2", n_classes=n_classes)
 
-    loss = ContrastiveLoss()
-    trainer = SiameseTrainer(architecture=lenet,
-                             loss=loss,
-                             iterations=ITERATIONS,
-                             base_lr=0.0001,
-                             save_intermediate=False,
-                             snapshot=VALIDATION_TEST)
-    trainer.train(train_data_shuffler, validation_data_shuffler)
+    cnn = True
+    if cnn:
 
+        lenet = Lenet(default_feature_layer="fc2", n_classes=n_classes)
+
+        loss = ContrastiveLoss()
+        trainer = SiameseTrainer(architecture=lenet,
+                                 loss=loss,
+                                 iterations=ITERATIONS,
+                                 snapshot=VALIDATION_TEST)
+        trainer.train(train_data_shuffler, validation_data_shuffler)
+    else:
+        mlp = MLP(n_classes, hidden_layers=[15, 20])
+
+        loss = ContrastiveLoss()
+        trainer = SiameseTrainer(architecture=mlp,
+                                 loss=loss,
+                                 iterations=ITERATIONS,
+                                 snapshot=VALIDATION_TEST)
+        trainer.train(train_data_shuffler, validation_data_shuffler)
 

@@ -20,8 +20,7 @@ class Conv2D(Layer):
                  filters=8,
                  weights_initialization=Xavier(),
                  bias_initialization=Constant(),
-                 use_gpu=False,
-                 seed=10
+                 use_gpu=False
                  ):
         """
         Constructor
@@ -39,8 +38,8 @@ class Conv2D(Layer):
                                      activation=activation,
                                      weights_initialization=weights_initialization,
                                      bias_initialization=bias_initialization,
-                                     use_gpu=use_gpu,
-                                     seed=seed)
+                                     use_gpu=use_gpu
+                                     )
         self.kernel_size = kernel_size
         self.filters = filters
         self.W = None
@@ -57,7 +56,8 @@ class Conv2D(Layer):
 
         if self.W is None:
             self.W = self.weights_initialization(shape=[self.kernel_size, self.kernel_size, n_channels, self.filters],
-                                                 name="w_" + str(self.name))
+                                                 name="w_" + str(self.name)
+                                                 )
 
             if self.activation is not None:
                 self.b = self.bias_initialization(shape=[self.filters],
