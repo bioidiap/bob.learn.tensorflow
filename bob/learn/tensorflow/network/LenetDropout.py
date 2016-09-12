@@ -9,13 +9,13 @@ Class that creates the lenet architecture
 
 import tensorflow as tf
 from .SequenceNetwork import SequenceNetwork
-from ..layers import Conv2D, FullyConnected, MaxPooling
+from ..layers import Conv2D, FullyConnected, MaxPooling, Dropout
 import bob.learn.tensorflow
 from bob.learn.tensorflow.initialization import Xavier
 from bob.learn.tensorflow.initialization import Constant
 
 
-class Lenet(SequenceNetwork):
+class LenetDropout(SequenceNetwork):
 
     def __init__(self,
                  conv1_kernel_size=5,
@@ -45,8 +45,8 @@ class Lenet(SequenceNetwork):
 
             seed = 10
         """
-        super(Lenet, self).__init__(default_feature_layer=default_feature_layer,
-                                    use_gpu=use_gpu)
+        super(LenetDropout, self).__init__(default_feature_layer=default_feature_layer,
+                                           use_gpu=use_gpu)
 
         self.add(Conv2D(name="conv1", kernel_size=conv1_kernel_size,
                         filters=conv1_output,
@@ -62,6 +62,8 @@ class Lenet(SequenceNetwork):
                         bias_initialization=Constant(use_gpu=self.use_gpu)
                         ))
         self.add(MaxPooling(name="pooling2"))
+        self.add(MaxPooling(name="pooling2"))
+        self.add(Dropout(name="dropout"))
         self.add(FullyConnected(name="fc1", output_dim=fc1_output,
                                 activation=tf.nn.tanh,
                                 weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),

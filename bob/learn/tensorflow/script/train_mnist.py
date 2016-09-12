@@ -64,7 +64,7 @@ def main():
         train_objects = db.objects(protocol="male", groups="world")
         train_labels = [o.client_id for o in train_objects]
         train_file_names = [o.make_path(
-            directory="/remote/lustre/2/temp/tpereira/FACEREC_EXPERIMENTS/mobio_male/lda/preprocessed",
+            directory="/idiap/user/tpereira/face/baselines/eigenface/preprocessed",
             extension=".hdf5")
                       for o in train_objects]
 
@@ -77,7 +77,7 @@ def main():
         validation_objects = db.objects(protocol="male", groups="dev")
         validation_labels = [o.client_id for o in validation_objects]
         validation_file_names = [o.make_path(
-            directory="/remote/lustre/2/temp/tpereira/FACEREC_EXPERIMENTS/mobio_male/lda/preprocessed",
+            directory="/idiap/user/tpereira/face/baselines/eigenface/preprocessed",
             extension=".hdf5")
                             for o in validation_objects]
 

@@ -7,6 +7,7 @@ from .Layer import Layer
 from .Conv2D import Conv2D
 from .FullyConnected import FullyConnected
 from .MaxPooling import MaxPooling
+from .Dropout import Dropout
 from .InputLayer import InputLayer
 
 # gets sphinx autodoc done right - don't remove it

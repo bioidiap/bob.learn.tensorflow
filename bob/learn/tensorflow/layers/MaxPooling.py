@@ -10,7 +10,7 @@ from .Layer import Layer
 
 class MaxPooling(Layer):
 
-    def __init__(self, name, use_gpu=False):
+    def __init__(self, name):
         """
         Constructor
         """

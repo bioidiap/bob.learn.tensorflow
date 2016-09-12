@@ -37,7 +37,7 @@ class Gaussian(Initialization):
                                           seed=self.seed)
 
         if self.use_gpu:
-            with tf.device("/gpu"):
+            with tf.device("/gpu:0"):
                 return tf.get_variable(name, initializer=initializer, dtype=tf.float32)
         else:
             with tf.device("/cpu"):

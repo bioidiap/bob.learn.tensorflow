@@ -23,7 +23,7 @@ import tensorflow as tf
 from .. import util
 SEED = 10
 from bob.learn.tensorflow.data import MemoryDataShuffler, TextDataShuffler
-from bob.learn.tensorflow.network import Lenet, MLP
+from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout
 from bob.learn.tensorflow.trainers import SiameseTrainer
 from bob.learn.tensorflow.loss import ContrastiveLoss
 import numpy
@@ -39,7 +39,7 @@ def main():
     perc_train = 0.9
 
     # Loading data
-    mnist = True
+    mnist = False
 
     if mnist:
         train_data, train_labels, validation_data, validation_labels = \
@@ -66,7 +66,7 @@ def main():
         train_objects = db.objects(protocol="male", groups="world")
         train_labels = [o.client_id for o in train_objects]
         train_file_names = [o.make_path(
-            directory="/remote/lustre/2/temp/tpereira/FACEREC_EXPERIMENTS/mobio_male/lda/preprocessed",
+            directory="/idiap/user/tpereira/face/baselines/eigenface/preprocessed",
             extension=".hdf5")
                             for o in train_objects]
 
@@ -78,7 +78,7 @@ def main():
         validation_objects = db.objects(protocol="male", groups="dev")
         validation_labels = [o.client_id for o in validation_objects]
         validation_file_names = [o.make_path(
-            directory="/remote/lustre/2/temp/tpereira/FACEREC_EXPERIMENTS/mobio_male/lda/preprocessed",
+            directory="/idiap/user/tpereira/face/baselines/eigenface/preprocessed",
             extension=".hdf5")
                                  for o in validation_objects]
 
@@ -92,7 +92,8 @@ def main():
     cnn = True
     if cnn:
 
-        lenet = Lenet(default_feature_layer="fc2", n_classes=n_classes)
+        lenet = Lenet(default_feature_layer="fc2", n_classes=n_classes, conv1_output=4, conv2_output=8,use_gpu=USE_GPU)
+        #lenet = LenetDropout(default_feature_layer="fc2", n_classes=n_classes, conv1_output=4, conv2_output=8, use_gpu=USE_GPU)
 
         loss = ContrastiveLoss()
         trainer = SiameseTrainer(architecture=lenet,

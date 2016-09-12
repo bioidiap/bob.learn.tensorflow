@@ -45,7 +45,6 @@ class SiameseTrainer(Trainer):
             snapshot=snapshot
         )
 
-
     def train(self, train_data_shuffler, validation_data_shuffler=None):
         """
         Do the loop forward --> backward --|
@@ -116,8 +115,11 @@ class SiameseTrainer(Trainer):
                                                             train_right_graph)
 
         # Preparing the optimizer
+        step = tf.Variable(0)
         self.optimizer._learning_rate = learning_rate
-        optimizer = self.optimizer.minimize(loss_train, global_step=tf.Variable(0))
+        optimizer = self.optimizer.minimize(loss_train, global_step=step)
+        #optimizer = tf.train.MomentumOptimizer(learning_rate, momentum=0.99, use_locking=False,
+        #                                       name='Momentum').minimize(loss_train, global_step=step)
 
         print("Initializing !!")
         # Training
@@ -146,6 +148,7 @@ class SiameseTrainer(Trainer):
             for step in range(self.iterations):
 
                 _, l, lr, summary = session.run([optimizer, loss_train, learning_rate, merged])
+                #_, l, lr= session.run([optimizer, loss_train, learning_rate])
                 train_writer.add_summary(summary, step)
 
                 if validation_data_shuffler is not None and step % self.snapshot == 0:
@@ -160,4 +163,3 @@ class SiameseTrainer(Trainer):
 
             thread_pool.request_stop()
             thread_pool.join(threads)
-

@@ -13,7 +13,7 @@ import six
 import os
 
 from collections import OrderedDict
-from bob.learn.tensorflow.layers import Layer, MaxPooling
+from bob.learn.tensorflow.layers import Layer, MaxPooling, Dropout
 
 
 class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
@@ -22,7 +22,8 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
     """
 
     def __init__(self,
-                 default_feature_layer=None):
+                 default_feature_layer=None,
+                 use_gpu=False):
         """
         Base constructor
 
@@ -34,6 +35,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         self.default_feature_layer = default_feature_layer
         self.input_divide = 1.
         self.input_subtract = 0.
+        self.use_gpu=use_gpu
         #self.saver = None
 
     def add(self, layer):
@@ -45,7 +47,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
             raise ValueError("Input `layer` must be an instance of `bob.learn.tensorflow.layers.Layer`")
         self.sequence_net[layer.name] = layer
 
-    def compute_graph(self, input_data, feature_layer=None):
+    def compute_graph(self, input_data, feature_layer=None, training=True):
         """
         Given the current network, return the Tensorflow graph
 
@@ -57,11 +59,13 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         input_offset = input_data
         for k in self.sequence_net.keys():
             current_layer = self.sequence_net[k]
-            current_layer.create_variables(input_offset)
-            input_offset = current_layer.get_graph()
 
-            if feature_layer is not None and k == feature_layer:
-                return input_offset
+            if training or not isinstance(current_layer, Dropout):
+                current_layer.create_variables(input_offset)
+                input_offset = current_layer.get_graph()
+
+                if feature_layer is not None and k == feature_layer:
+                    return input_offset
 
         return input_offset
 
@@ -80,14 +84,14 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         if feature_layer is None:
             feature_layer = self.default_feature_layer
 
-        return session.run([self.compute_graph(feature_placeholder, feature_layer)], feed_dict=feed_dict)[0]
+        return session.run([self.compute_graph(feature_placeholder, feature_layer, training=False)], feed_dict=feed_dict)[0]
 
     def dump_variables(self):
 
         variables = {}
         for k in self.sequence_net:
             # TODO: IT IS NOT SMART TESTING ALONG THIS PAGE
-            if not isinstance(self.sequence_net[k], MaxPooling):
+            if not isinstance(self.sequence_net[k], MaxPooling) and not isinstance(self.sequence_net[k], Dropout):
                 variables[self.sequence_net[k].W.name] = self.sequence_net[k].W
                 variables[self.sequence_net[k].b.name] = self.sequence_net[k].b
 

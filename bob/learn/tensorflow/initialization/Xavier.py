@@ -35,12 +35,12 @@ class Xavier(Initialization):
             in_out = shape[0] + shape[1]
 
         import math
-        stddev = math.sqrt(2.0 / in_out)  # XAVIER INITIALIZER (GAUSSIAN)
+        stddev = math.sqrt(3.0 / in_out)  # XAVIER INITIALIZER (GAUSSIAN)
 
         initializer = tf.truncated_normal(shape, stddev=stddev, seed=self.seed)
 
         if self.use_gpu:
-            with tf.device("/gpu"):
+            with tf.device("/gpu:0"):
                 return tf.get_variable(name, initializer=initializer, dtype=tf.float32)
         else:
             with tf.device("/cpu"):
