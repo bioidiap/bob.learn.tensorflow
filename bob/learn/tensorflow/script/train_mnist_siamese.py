@@ -39,7 +39,7 @@ def main():
     perc_train = 0.9
 
     # Loading data
-    mnist = False
+    mnist = True
 
     if mnist:
         train_data, train_labels, validation_data, validation_labels = \
