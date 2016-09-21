@@ -7,7 +7,7 @@ import logging
 logger = logging.getLogger("bob.learn.tensorflow")
 import tensorflow as tf
 import threading
-from ..analyzers import Analizer
+from ..analyzers import ExperimentAnalizer
 from ..network import SequenceNetwork
 import bob.io.base
 from .Trainer import Trainer
@@ -21,7 +21,7 @@ class SiameseTrainer(Trainer):
                  optimizer=tf.train.AdamOptimizer(),
                  use_gpu=False,
                  loss=None,
-                 temp_dir="",
+                 temp_dir="cnn",
 
                  # Learning rate
                  base_learning_rate=0.001,
@@ -81,7 +81,8 @@ class SiameseTrainer(Trainer):
             self.weight_decay  # Decay step
         )
 
-        bob.io.base.create_directories_safe(os.path.join(self.temp_dir, 'OUTPUT'))
+        # Creating directory
+        bob.io.base.create_directories_safe(self.temp_dir)
 
         # Creating two graphs
         train_placeholder_left_data, train_placeholder_labels = train_data_shuffler.\
@@ -127,7 +128,7 @@ class SiameseTrainer(Trainer):
 
         with tf.Session() as session:
             if validation_data_shuffler is not None:
-                analizer = Analizer(validation_data_shuffler, self.architecture, session)
+                analizer = ExperimentAnalizer(validation_data_shuffler, self.architecture, session)
 
             tf.initialize_all_variables().run()
 
@@ -136,14 +137,21 @@ class SiameseTrainer(Trainer):
             tf.train.start_queue_runners(coord=thread_pool)
             threads = start_thread()
 
+            # TENSOR BOARD SUMMARY
             train_writer = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'LOGS'), session.graph)
 
-            # Tensorboard data
+            # Siamese specific summary
             tf.scalar_summary('loss', loss_train)
             tf.scalar_summary('between_class', between_class)
             tf.scalar_summary('within_class', within_class)
             tf.scalar_summary('lr', learning_rate)
             merged = tf.merge_all_summaries()
+
+            # Architecture summary
+            self.architecture.generate_summaries()
+            merged_validation = tf.merge_all_summaries()
+
+
 
             for step in range(self.iterations):
 
@@ -152,10 +160,13 @@ class SiameseTrainer(Trainer):
                 train_writer.add_summary(summary, step)
 
                 if validation_data_shuffler is not None and step % self.snapshot == 0:
-                    analizer()
-                    #if self.save_intermediate:
-                    #    self.architecture.save(hdf5, step)
-                    print str(step) + " - " + str(analizer.eer[-1])
+
+                    summary = session.run(merged_validation)
+                    train_writer.add_summary(summary, step)
+
+                    summary = analizer()
+                    train_writer.add_summary(summary, step)
+                    print str(step)
 
             self.architecture.save(hdf5)
             del hdf5

@@ -23,7 +23,7 @@ import tensorflow as tf
 from .. import util
 SEED = 10
 from bob.learn.tensorflow.data import MemoryDataShuffler, TextDataShuffler
-from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout
+from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra
 from bob.learn.tensorflow.trainers import SiameseTrainer
 from bob.learn.tensorflow.loss import ContrastiveLoss
 import numpy
@@ -58,32 +58,43 @@ def main():
                                                       batch_size=VALIDATION_BATCH_SIZE)
 
     else:
+        import bob.db.atnt
+        db = bob.db.atnt.Database()
 
-        import bob.db.mobio
-        db = bob.db.mobio.Database()
+        #import bob.db.mobio
+        #db = bob.db.mobio.Database()
 
         # Preparing train set
-        train_objects = db.objects(protocol="male", groups="world")
+        #train_objects = db.objects(protocol="male", groups="world")
+        train_objects = db.objects(groups="world")
         train_labels = [o.client_id for o in train_objects]
+        #directory = "/idiap/user/tpereira/face/baselines/eigenface/preprocessed",
         train_file_names = [o.make_path(
-            directory="/idiap/user/tpereira/face/baselines/eigenface/preprocessed",
-            extension=".hdf5")
+            directory="/idiap/group/biometric/databases/orl",
+            extension=".pgm")
                             for o in train_objects]
 
+        #train_data_shuffler = TextDataShuffler(train_file_names, train_labels,
+        #                                       input_shape=[80, 64, 1],
+        #                                       batch_size=BATCH_SIZE)
         train_data_shuffler = TextDataShuffler(train_file_names, train_labels,
-                                               input_shape=[80, 64, 1],
+                                               input_shape=[56, 46, 1],
                                                batch_size=BATCH_SIZE)
 
         # Preparing train set
-        validation_objects = db.objects(protocol="male", groups="dev")
+        #validation_objects = db.objects(protocol="male", groups="dev")
+        validation_objects = db.objects(groups="dev")
         validation_labels = [o.client_id for o in validation_objects]
         validation_file_names = [o.make_path(
-            directory="/idiap/user/tpereira/face/baselines/eigenface/preprocessed",
-            extension=".hdf5")
+            directory="/idiap/group/biometric/databases/orl",
+            extension=".pgm")
                                  for o in validation_objects]
 
+        #validation_data_shuffler = TextDataShuffler(validation_file_names, validation_labels,
+        #                                           input_shape=[80, 64, 1],
+        #                                            batch_size=VALIDATION_BATCH_SIZE)
         validation_data_shuffler = TextDataShuffler(validation_file_names, validation_labels,
-                                                    input_shape=[80, 64, 1],
+                                                    input_shape=[56, 46, 1],
                                                     batch_size=VALIDATION_BATCH_SIZE)
 
     # Preparing the architecture
@@ -92,11 +103,16 @@ def main():
     cnn = True
     if cnn:
 
-        lenet = Lenet(default_feature_layer="fc2", n_classes=n_classes, conv1_output=4, conv2_output=8,use_gpu=USE_GPU)
-        #lenet = LenetDropout(default_feature_layer="fc2", n_classes=n_classes, conv1_output=4, conv2_output=8, use_gpu=USE_GPU)
+        # LENET PAPER CHOPRA
+        #architecture = Chopra(default_feature_layer="fc7")
+        architecture = Lenet(default_feature_layer="fc2", n_classes=n_classes, conv1_output=4, conv2_output=8,use_gpu=USE_GPU)
+        #architecture = VGG(n_classes=n_classes, use_gpu=USE_GPU)
+
+        #architecture = LenetDropout(default_feature_layer="fc2", n_classes=n_classes, conv1_output=4, conv2_output=8, use_gpu=USE_GPU)
 
         loss = ContrastiveLoss()
-        trainer = SiameseTrainer(architecture=lenet,
+        #optimizer = tf.train.GradientDescentOptimizer(0.0001)
+        trainer = SiameseTrainer(architecture=architecture,
                                  loss=loss,
                                  iterations=ITERATIONS,
                                  snapshot=VALIDATION_TEST)

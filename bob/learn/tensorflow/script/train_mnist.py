@@ -23,7 +23,7 @@ import tensorflow as tf
 from .. import util
 SEED = 10
 from bob.learn.tensorflow.data import MemoryDataShuffler, TextDataShuffler
-from bob.learn.tensorflow.network import Lenet, MLP
+from bob.learn.tensorflow.network import Lenet, MLP, Dummy
 from bob.learn.tensorflow.trainers import Trainer
 from bob.learn.tensorflow.loss import BaseLoss
 
@@ -89,9 +89,10 @@ def main():
     # Preparing the architecture
     cnn = True
     if cnn:
-        lenet = Lenet(seed=SEED)
+        #architecture = Lenet(seed=SEED)
+        architecture = Dummy(seed=SEED)
         loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
-        trainer = Trainer(architecture=lenet, loss=loss, iterations=ITERATIONS)
+        trainer = Trainer(architecture=architecture, loss=loss, iterations=ITERATIONS)
         trainer.train(train_data_shuffler, validation_data_shuffler)
     else:
         mlp = MLP(10, hidden_layers=[15, 20])

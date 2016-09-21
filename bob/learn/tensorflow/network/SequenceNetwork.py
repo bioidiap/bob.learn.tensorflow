@@ -10,10 +10,11 @@ Class that creates the lenet architecture
 import tensorflow as tf
 import abc
 import six
+import numpy
 import os
 
 from collections import OrderedDict
-from bob.learn.tensorflow.layers import Layer, MaxPooling, Dropout
+from bob.learn.tensorflow.layers import Layer, MaxPooling, Dropout, Conv2D, FullyConnected
 
 
 class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
@@ -145,6 +146,65 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
                 session.run(self.sequence_net[k].W)
                 self.sequence_net[k].b.assign(hdf5.read(self.sequence_net[k].b.name)).eval(session=session)
                 session.run(self.sequence_net[k].b)
+
+    def variable_summaries(self, var, name):
+        """Attach a lot of summaries to a Tensor."""
+        with tf.name_scope('summaries'):
+            mean = tf.reduce_mean(var)
+            tf.scalar_summary('mean/' + name, mean)
+            with tf.name_scope('stddev'):
+                stddev = tf.sqrt(tf.reduce_sum(tf.square(var - mean)))
+            tf.scalar_summary('sttdev/' + name, stddev)
+            tf.scalar_summary('max/' + name, tf.reduce_max(var))
+            tf.scalar_summary('min/' + name, tf.reduce_min(var))
+            tf.histogram_summary(name, var)
+
+    def generate_summaries(self):
+
+        for k in self.sequence_net.keys():
+            current_layer = self.sequence_net[k]
+
+            if not isinstance(self.sequence_net[k], MaxPooling) and not isinstance(self.sequence_net[k], Dropout):
+                self.variable_summaries(current_layer.W, current_layer.name + '/weights')
+                self.variable_summaries(current_layer.b, current_layer.name + '/bias')
+
+    def compute_magic_number(self, hypothetic_image_dimensions=(28, 28, 1)):
+        """
+
+        Here it is done an estimative of the capacity of CNN.
+
+        :param hypothetic_sample_number: an ar
+        :param hypothetic_image_dimensions:
+        :return:
+        """
+
+        stride = 1# ALWAYS EQUALS TO ONE
+
+        current_image_dimensions = list(hypothetic_image_dimensions)
+
+        samples_per_sample = 0
+        flatten_dimension = numpy.prod(current_image_dimensions)
+        for k in self.sequence_net.keys():
+            current_layer = self.sequence_net[k]
+
+            if isinstance(current_layer, Conv2D):
+                #samples_per_sample += current_layer.filters * current_layer.kernel_size * current_image_dimensions[0] + current_layer.filters
+                #samples_per_sample += current_layer.filters * current_layer.kernel_size * current_image_dimensions[1] + current_layer.filters
+                samples_per_sample += current_layer.filters * current_image_dimensions[0] * current_image_dimensions[1] + current_layer.filters
+
+                current_image_dimensions[2] = current_layer.filters
+                flatten_dimension = numpy.prod(current_image_dimensions)
+
+            if isinstance(current_layer, MaxPooling):
+                current_image_dimensions[0] /= 2
+                current_image_dimensions[1] /= 2
+                flatten_dimension = current_image_dimensions[0] * current_image_dimensions[1] * current_image_dimensions[2]
+
+            if isinstance(current_layer, FullyConnected):
+                samples_per_sample += flatten_dimension * current_layer.output_dim + current_layer.output_dim
+                flatten_dimension = current_layer.output_dim
+
+        return samples_per_sample
 
 
         #if self.saver is None:

@@ -34,6 +34,8 @@ class BaseDataShuffler(object):
 
         self.data = data
         self.shape = tuple([batch_size] + input_shape)
+        self.input_shape = tuple(input_shape)
+
 
         self.labels = labels
         self.possible_labels = list(set(self.labels))

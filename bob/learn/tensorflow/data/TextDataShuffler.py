@@ -6,6 +6,7 @@
 import numpy
 import bob.io.base
 import bob.io.image
+import bob.ip.base
 import tensorflow as tf
 
 from .BaseDataShuffler import BaseDataShuffler
@@ -27,12 +28,12 @@ class TextDataShuffler(BaseDataShuffler):
          Shuffler that deal with file list
 
          **Parameters**
-           data:
-           labels:
-           perc_train:
-           scale:
-           train_batch_size:
-           validation_batch_size:
+         data:
+         labels:
+         input_shape: Shape of the input. `input_shape != data.shape`, the data will be reshaped
+         input_dtype="float64":
+         scale=True:
+         batch_size=1:
         """
 
         if isinstance(data, list):
@@ -52,11 +53,14 @@ class TextDataShuffler(BaseDataShuffler):
 
     def load_from_file(self, file_name, shape):
         d = bob.io.base.load(file_name)
+        #import ipdb; ipdb.set_trace();
         if len(d.shape) == 2:
-            data = numpy.zeros(shape=tuple(shape[1:]))
+            data = numpy.zeros(shape=(d.shape[0], d.shape[1], 1))
             data[:, :, 0] = d
         else:
             data = d
+
+        data = self.rescale(data)
 
         return data
 
@@ -79,6 +83,27 @@ class TextDataShuffler(BaseDataShuffler):
         selected_labels = self.labels[indexes[0:self.batch_size]]
 
         return selected_data.astype("float32"), selected_labels
+
+    def rescale(self, data):
+        """
+        Reescale a single sample with input_shape
+
+        """
+        if self.input_shape != data.shape:
+            # TODO: Implement a better way to do this reescaling
+            # If it is gray scale
+            if self.input_shape[2] == 1:
+                copy = data[:, :, 0].copy()
+                dst = numpy.zeros(shape=self.input_shape[0:2])
+                bob.ip.base.scale(copy, dst)
+                dst = numpy.reshape(dst, self.input_shape)
+            else:
+                dst = numpy.resize(data, self.input_shape) # Scaling with numpy, because bob is c,w,d instead of w,h,c
+                #bob.ip.base.scale(data, dst)
+
+            return dst
+        else:
+            return data
 
     def get_pair(self, zero_one_labels=True):
         """

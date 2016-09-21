@@ -8,9 +8,11 @@ Neural net work error rates analizer
 """
 import numpy
 import bob.measure
+from tensorflow.core.framework import summary_pb2
 from scipy.spatial.distance import cosine
 
-class Analizer:
+
+class ExperimentAnalizer:
     """
     Analizer.
 
@@ -21,7 +23,7 @@ class Analizer:
 
     """
 
-    def __init__(self, data_shuffler, machine, session):
+    def __init__(self, data_shuffler, machine, session, convergence_threshold=0.01, convergence_reference='eer'):
         """
         Use the CNN as feature extractor for a n-class classification
 
@@ -29,6 +31,10 @@ class Analizer:
 
           data_shuffler:
           graph:
+          session:
+          convergence_threshold:
+          convergence_reference: References to analize the convergence. Possible values are `eer`, `far10`, `far10`
+
 
         """
 
@@ -48,8 +54,6 @@ class Analizer:
         enroll_data, enroll_labels = self.data_shuffler.get_batch()
         enroll_features = self.machine(enroll_data, session=self.session)
         del enroll_data
-
-        #import ipdb; ipdb.set_trace();
 
         # Extracting features for probing
         probe_data, probe_labels = self.data_shuffler.get_batch()
@@ -79,9 +83,9 @@ class Analizer:
             n = [cosine(models[i], negative_data[j]) for j in range(negative_data.shape[0])]
             negative_scores = numpy.hstack((negative_scores, n))
 
-        self.compute_stats((-1)*negative_scores, (-1) * positive_scores)
+        return self.__compute_tensorflow_summary((-1)*negative_scores, (-1) * positive_scores)
 
-    def compute_stats(self, negative_scores, positive_scores):
+    def __compute_tensorflow_summary(self, negative_scores, positive_scores):
         """
         Compute some stats with the scores, such as:
           - EER
@@ -96,25 +100,31 @@ class Analizer:
           positive_scores:
         """
 
+        summaries = []
+
         # Compute EER
         threshold = bob.measure.eer_threshold(negative_scores, positive_scores)
         far, frr = bob.measure.farfrr(negative_scores, positive_scores, threshold)
         eer = (far + frr) / 2.
+        summaries.append(summary_pb2.Summary.Value(tag="EER", simple_value=eer))
         self.eer.append(eer)
 
         # Computing FAR 10
         threshold = bob.measure.far_threshold(negative_scores, positive_scores, far_value=0.1)
         far, frr = bob.measure.farfrr(negative_scores, positive_scores, threshold)
+        summaries.append(summary_pb2.Summary.Value(tag="FAR 10", simple_value=frr))
         self.far10.append(frr)
 
         # Computing FAR 100
         threshold = bob.measure.far_threshold(negative_scores, positive_scores, far_value=0.01)
         far, frr = bob.measure.farfrr(negative_scores, positive_scores, threshold)
+        summaries.append(summary_pb2.Summary.Value(tag="FAR 100", simple_value=frr))
         self.far100.append(frr)
 
         # Computing FAR 1000
         threshold = bob.measure.far_threshold(negative_scores, positive_scores, far_value=0.001)
         far, frr = bob.measure.farfrr(negative_scores, positive_scores, threshold)
+        summaries.append(summary_pb2.Summary.Value(tag="FAR 1000", simple_value=frr))
         self.far1000.append(frr)
 
-        return
+        return summary_pb2.Summary(value=summaries)

@@ -4,6 +4,9 @@ __path__ = extend_path(__path__, __name__)
 
 from .SequenceNetwork import SequenceNetwork
 from .Lenet import Lenet
+from .Chopra import Chopra
+from .Dummy import Dummy
+from .VGG import VGG
 from .LenetDropout import LenetDropout
 from .MLP import MLP
 
