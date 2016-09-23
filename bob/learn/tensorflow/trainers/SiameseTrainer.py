@@ -12,7 +12,7 @@ from ..network import SequenceNetwork
 import bob.io.base
 from .Trainer import Trainer
 import os
-
+import sys
 
 class SiameseTrainer(Trainer):
 
@@ -64,7 +64,8 @@ class SiameseTrainer(Trainer):
             """
             Injecting data in the place holder queue
             """
-            for i in range(self.iterations):
+            #for i in range(self.iterations+5):
+            while not thread_pool.should_stop():
                 batch_left, batch_right, labels = train_data_shuffler.get_pair()
 
                 feed_dict = {train_placeholder_left_data: batch_left,
@@ -151,13 +152,13 @@ class SiameseTrainer(Trainer):
             self.architecture.generate_summaries()
             merged_validation = tf.merge_all_summaries()
 
-
-
             for step in range(self.iterations):
 
                 _, l, lr, summary = session.run([optimizer, loss_train, learning_rate, merged])
                 #_, l, lr= session.run([optimizer, loss_train, learning_rate])
                 train_writer.add_summary(summary, step)
+                print str(step)
+                sys.stdout.flush()
 
                 if validation_data_shuffler is not None and step % self.snapshot == 0:
 
@@ -167,7 +168,9 @@ class SiameseTrainer(Trainer):
                     summary = analizer()
                     train_writer.add_summary(summary, step)
                     print str(step)
+                sys.stdout.flush()
 
+            print("#######DONE##########")
             self.architecture.save(hdf5)
             del hdf5
             train_writer.close()

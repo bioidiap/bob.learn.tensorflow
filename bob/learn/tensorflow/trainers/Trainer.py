@@ -79,7 +79,8 @@ class Trainer(object):
             """
 
             #while not thread_pool.should_stop():
-            for i in range(self.iterations):
+            #for i in range(self.iterations):
+            while not thread_pool.should_stop():
                 train_data, train_labels = train_data_shuffler.get_batch()
 
                 feed_dict = {train_placeholder_data: train_data,

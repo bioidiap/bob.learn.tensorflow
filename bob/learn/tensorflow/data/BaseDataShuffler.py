@@ -66,10 +66,11 @@ class BaseDataShuffler(object):
         return data, labels
 
     def get_genuine_or_not(self, input_data, input_labels, genuine=True):
+
         if genuine:
             # Getting a client
             index = numpy.random.randint(len(self.possible_labels))
-            index = self.possible_labels[index]
+            index = int(self.possible_labels[index])
 
             # Getting the indexes of the data from a particular client
             indexes = numpy.where(input_labels == index)[0]
@@ -82,8 +83,8 @@ class BaseDataShuffler(object):
         else:
             # Picking a pair of labels from different clients
             index = numpy.random.choice(len(self.possible_labels), 2, replace=False)
-            index[0] = self.possible_labels[index[0]]
-            index[1] = self.possible_labels[index[1]]
+            index[0] = self.possible_labels[int(index[0])]
+            index[1] = self.possible_labels[int(index[1])]
 
             # Getting the indexes of the two clients
             indexes = numpy.where(input_labels == index[0])[0]

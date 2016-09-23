@@ -89,8 +89,8 @@ def main():
     # Preparing the architecture
     cnn = True
     if cnn:
-        #architecture = Lenet(seed=SEED)
-        architecture = Dummy(seed=SEED)
+        architecture = Lenet(seed=SEED)
+        #architecture = Dummy(seed=SEED)
         loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
         trainer = Trainer(architecture=architecture, loss=loss, iterations=ITERATIONS)
         trainer.train(train_data_shuffler, validation_data_shuffler)

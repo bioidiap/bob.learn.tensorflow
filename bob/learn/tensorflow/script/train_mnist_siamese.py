@@ -23,7 +23,7 @@ import tensorflow as tf
 from .. import util
 SEED = 10
 from bob.learn.tensorflow.data import MemoryDataShuffler, TextDataShuffler
-from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra
+from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra, Dummy
 from bob.learn.tensorflow.trainers import SiameseTrainer
 from bob.learn.tensorflow.loss import ContrastiveLoss
 import numpy
@@ -39,7 +39,7 @@ def main():
     perc_train = 0.9
 
     # Loading data
-    mnist = True
+    mnist = False
 
     if mnist:
         train_data, train_labels, validation_data, validation_labels = \
@@ -58,55 +58,70 @@ def main():
                                                       batch_size=VALIDATION_BATCH_SIZE)
 
     else:
-        import bob.db.atnt
-        db = bob.db.atnt.Database()
+        import bob.db.mobio
+        db_mobio = bob.db.mobio.Database()
 
-        #import bob.db.mobio
-        #db = bob.db.mobio.Database()
+        import bob.db.casia_webface
+        db_casia = bob.db.casia_webface.Database()
 
         # Preparing train set
-        #train_objects = db.objects(protocol="male", groups="world")
-        train_objects = db.objects(groups="world")
-        train_labels = [o.client_id for o in train_objects]
-        #directory = "/idiap/user/tpereira/face/baselines/eigenface/preprocessed",
-        train_file_names = [o.make_path(
-            directory="/idiap/group/biometric/databases/orl",
-            extension=".pgm")
-                            for o in train_objects]
+        train_objects = db_casia.objects(groups="world")
+        #train_objects = db.objects(groups="world")
+        train_labels = [int(o.client_id) for o in train_objects]
+        directory = "/idiap/resource/database/CASIA-WebFace/CASIA-WebFace"
 
-        #train_data_shuffler = TextDataShuffler(train_file_names, train_labels,
-        #                                       input_shape=[80, 64, 1],
-        #                                       batch_size=BATCH_SIZE)
+        train_file_names = [o.make_path(
+            directory=directory,
+            extension="")
+                            for o in train_objects]
+        #import ipdb;
+        #ipdb.set_trace();
+
+        #train_file_names = [o.make_path(
+        #    directory="/idiap/group/biometric/databases/orl",
+        #    extension=".pgm")
+        #                    for o in train_objects]
+
         train_data_shuffler = TextDataShuffler(train_file_names, train_labels,
-                                               input_shape=[56, 46, 1],
+                                               input_shape=[250, 250, 3],
                                                batch_size=BATCH_SIZE)
 
+        #train_data_shuffler = TextDataShuffler(train_file_names, train_labels,
+        #                                       input_shape=[56, 46, 1],
+        #                                       batch_size=BATCH_SIZE)
+
         # Preparing train set
-        #validation_objects = db.objects(protocol="male", groups="dev")
-        validation_objects = db.objects(groups="dev")
+        directory = "/idiap/temp/tpereira/DEEP_FACE/CASIA/preprocessed"
+        validation_objects = db_mobio.objects(protocol="male", groups="dev")
         validation_labels = [o.client_id for o in validation_objects]
+        #validation_file_names = [o.make_path(
+        #    directory="/idiap/group/biometric/databases/orl",
+        #    extension=".pgm")
+        #                         for o in validation_objects]
+
         validation_file_names = [o.make_path(
-            directory="/idiap/group/biometric/databases/orl",
-            extension=".pgm")
+            directory=directory,
+            extension=".hdf5")
                                  for o in validation_objects]
 
-        #validation_data_shuffler = TextDataShuffler(validation_file_names, validation_labels,
-        #                                           input_shape=[80, 64, 1],
-        #                                            batch_size=VALIDATION_BATCH_SIZE)
         validation_data_shuffler = TextDataShuffler(validation_file_names, validation_labels,
-                                                    input_shape=[56, 46, 1],
+                                                    input_shape=[250, 250, 3],
                                                     batch_size=VALIDATION_BATCH_SIZE)
+        #validation_data_shuffler = TextDataShuffler(validation_file_names, validation_labels,
+        #                                            input_shape=[56, 46, 1],
+        #                                            batch_size=VALIDATION_BATCH_SIZE)
 
     # Preparing the architecture
     n_classes = len(train_data_shuffler.possible_labels)
-
+    n_classes = 200
     cnn = True
     if cnn:
 
         # LENET PAPER CHOPRA
         #architecture = Chopra(default_feature_layer="fc7")
-        architecture = Lenet(default_feature_layer="fc2", n_classes=n_classes, conv1_output=4, conv2_output=8,use_gpu=USE_GPU)
+        architecture = Lenet(default_feature_layer="fc2", n_classes=n_classes, conv1_output=8, conv2_output=16,use_gpu=USE_GPU)
         #architecture = VGG(n_classes=n_classes, use_gpu=USE_GPU)
+        #architecture = Dummy(seed=SEED)
 
         #architecture = LenetDropout(default_feature_layer="fc2", n_classes=n_classes, conv1_output=4, conv2_output=8, use_gpu=USE_GPU)
 
@@ -115,7 +130,8 @@ def main():
         trainer = SiameseTrainer(architecture=architecture,
                                  loss=loss,
                                  iterations=ITERATIONS,
-                                 snapshot=VALIDATION_TEST)
+                                 snapshot=VALIDATION_TEST,
+                                 )
         trainer.train(train_data_shuffler, validation_data_shuffler)
     else:
         mlp = MLP(n_classes, hidden_layers=[15, 20])
