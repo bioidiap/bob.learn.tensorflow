@@ -113,7 +113,7 @@ def main():
 
     # Preparing the architecture
     n_classes = len(train_data_shuffler.possible_labels)
-    n_classes = 200
+    #n_classes = 200
     cnn = True
     if cnn:
 

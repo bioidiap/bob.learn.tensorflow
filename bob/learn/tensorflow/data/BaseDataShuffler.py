@@ -97,3 +97,25 @@ class BaseDataShuffler(object):
             data_p = input_data[indexes_p[0], ...]
 
         return data, data_p
+
+    def get_one_triplet(self, input_data, input_labels):
+        # Getting a pair of clients
+        index = numpy.random.choice(len(self.possible_labels), 2, replace=False)
+        label_positive = index[0]
+        label_negative = index[1]
+
+        # Getting the indexes of the data from a particular client
+        indexes = numpy.where(input_labels == index[0])[0]
+        numpy.random.shuffle(indexes)
+
+        # Picking a positive pair
+        data_anchor = input_data[indexes[0], ...]
+        data_positive = input_data[indexes[1], ...]
+
+        # Picking a negative sample
+        indexes = numpy.where(input_labels == index[1])[0]
+        numpy.random.shuffle(indexes)
+        data_negative = input_data[indexes[0], ...]
+
+        return data_anchor, data_positive, data_negative
+

@@ -4,6 +4,7 @@ __path__ = extend_path(__path__, __name__)
 
 from .Trainer import Trainer
 from .SiameseTrainer import SiameseTrainer
+from .TripletTrainer import TripletTrainer
 
 import numpy
 
