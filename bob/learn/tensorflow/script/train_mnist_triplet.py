@@ -132,8 +132,8 @@ def main():
                                  iterations=ITERATIONS,
                                  snapshot=VALIDATION_TEST,
                                  optimizer=optimizer)
-        trainer.train(train_data_shuffler, validation_data_shuffler)
-        #trainer.train(train_data_shuffler)
+        #trainer.train(train_data_shuffler, validation_data_shuffler)
+        trainer.train(train_data_shuffler)
     else:
         mlp = MLP(n_classes, hidden_layers=[15, 20])
 
