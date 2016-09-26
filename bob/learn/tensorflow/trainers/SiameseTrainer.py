@@ -64,7 +64,7 @@ class SiameseTrainer(Trainer):
             """
             Injecting data in the place holder queue
             """
-            #for i in range(self.iterations+5):
+            # for i in range(self.iterations+5):
             while not thread_pool.should_stop():
                 batch_left, batch_right, labels = train_data_shuffler.get_pair()
 
@@ -112,7 +112,7 @@ class SiameseTrainer(Trainer):
         train_left_graph = self.architecture.compute_graph(train_left_feature_batch)
         train_right_graph = self.architecture.compute_graph(train_right_label_batch)
 
-        loss_train, within_class, between_class = self.loss(train_labels_batch,
+        loss_train, between_class, within_class = self.loss(train_labels_batch,
                                                             train_left_graph,
                                                             train_right_graph)
 
@@ -154,21 +154,25 @@ class SiameseTrainer(Trainer):
 
             for step in range(self.iterations):
 
-                _, l, lr, summary = session.run([optimizer, loss_train, learning_rate, merged])
+                _, l, lr, summary = session.run(
+                    [optimizer, loss_train, learning_rate, merged])
+                #_, l, lr,b,w, summary = session.run([optimizer, loss_train, learning_rate,between_class,within_class, merged])
                 #_, l, lr= session.run([optimizer, loss_train, learning_rate])
                 train_writer.add_summary(summary, step)
-                print str(step)
+                #print str(step) + " loss: {0}, bc: {1}, wc: {2}".format(l, b, w)
+                #print str(step) + " loss: {0}".format(l)
                 sys.stdout.flush()
+                #import ipdb; ipdb.set_trace();
 
                 if validation_data_shuffler is not None and step % self.snapshot == 0:
+                    print str(step)
+                    sys.stdout.flush()
 
                     summary = session.run(merged_validation)
                     train_writer.add_summary(summary, step)
 
                     summary = analizer()
                     train_writer.add_summary(summary, step)
-                    print str(step)
-                sys.stdout.flush()
 
             print("#######DONE##########")
             self.architecture.save(hdf5)

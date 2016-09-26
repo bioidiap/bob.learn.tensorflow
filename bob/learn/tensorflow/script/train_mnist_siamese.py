@@ -112,8 +112,8 @@ def main():
         #                                            batch_size=VALIDATION_BATCH_SIZE)
 
     # Preparing the architecture
-    n_classes = len(train_data_shuffler.possible_labels)
-    #n_classes = 200
+    #n_classes = len(train_data_shuffler.possible_labels)
+    n_classes = 50
     cnn = True
     if cnn:
 
@@ -125,14 +125,17 @@ def main():
 
         #architecture = LenetDropout(default_feature_layer="fc2", n_classes=n_classes, conv1_output=4, conv2_output=8, use_gpu=USE_GPU)
 
-        loss = ContrastiveLoss()
-        #optimizer = tf.train.GradientDescentOptimizer(0.0001)
+        loss = ContrastiveLoss(contrastive_margin=3.)
+        optimizer = tf.train.GradientDescentOptimizer(0.00001)
         trainer = SiameseTrainer(architecture=architecture,
                                  loss=loss,
                                  iterations=ITERATIONS,
                                  snapshot=VALIDATION_TEST,
-                                 )
+                                 optimizer=optimizer)
+
+
         trainer.train(train_data_shuffler, validation_data_shuffler)
+        #trainer.train(train_data_shuffler)
     else:
         mlp = MLP(n_classes, hidden_layers=[15, 20])
 

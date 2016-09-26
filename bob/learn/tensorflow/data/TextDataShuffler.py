@@ -57,12 +57,25 @@ class TextDataShuffler(BaseDataShuffler):
         if len(d.shape) == 2:
             data = numpy.zeros(shape=(d.shape[0], d.shape[1], 1))
             data[:, :, 0] = d
+            data = self.rescale(data)
         else:
-            data = d
-
-        data = self.rescale(data)
+            data = self.bob2skimage(d)
 
         return data
+
+
+    def bob2skimage(self, bob_image):
+        """
+        Convert bob color image to the skcit image
+        """
+
+        skimage = numpy.zeros(shape=(bob_image.shape[1], bob_image.shape[2], 3))
+
+        skimage[:,:,0] = bob_image[0,:,:] #Copying red
+        skimage[:,:,1] = bob_image[1,:,:] #Copying green
+        skimage[:,:,2] = bob_image[2,:,:] #Copying blue
+
+        return skimage
 
     def get_batch(self):
 
