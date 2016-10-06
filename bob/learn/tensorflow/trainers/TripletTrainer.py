@@ -87,35 +87,28 @@ class TripletTrainer(Trainer):
         bob.io.base.create_directories_safe(self.temp_dir)
 
         # Creating two graphs
-        #train_placeholder_anchor_data, _ = train_data_shuffler.get_placeholders_forprefetch(name="train_anchor")
-        #train_placeholder_positive_data, _ = train_data_shuffler.get_placeholders_forprefetch(name="train_positive")
-        #train_placeholder_negative_data, _ = train_data_shuffler.get_placeholders_forprefetch(name="train_negative")
+        train_placeholder_anchor_data, _ = train_data_shuffler.get_placeholders_forprefetch(name="train_anchor")
+        train_placeholder_positive_data, _ = train_data_shuffler.get_placeholders_forprefetch(name="train_positive")
+        train_placeholder_negative_data, _ = train_data_shuffler.get_placeholders_forprefetch(name="train_negative")
 
         # Defining a placeholder queue for prefetching
-        #queue = tf.FIFOQueue(capacity=100,
-        #                     dtypes=[tf.float32, tf.float32, tf.float32],
-        #                     shapes=[train_placeholder_anchor_data.get_shape().as_list()[1:],
-        #                             train_placeholder_positive_data.get_shape().as_list()[1:],
-        #                             train_placeholder_negative_data.get_shape().as_list()[1:]])
+        queue = tf.FIFOQueue(capacity=100,
+                             dtypes=[tf.float32, tf.float32, tf.float32],
+                             shapes=[train_placeholder_anchor_data.get_shape().as_list()[1:],
+                                     train_placeholder_positive_data.get_shape().as_list()[1:],
+                                     train_placeholder_negative_data.get_shape().as_list()[1:]])
 
         # Fetching the place holders from the queue
-        #enqueue_op = queue.enqueue_many([train_placeholder_anchor_data,
-        #                                 train_placeholder_positive_data,
-        #                                 train_placeholder_negative_data])
-        #train_anchor_feature_batch, train_positive_label_batch, train_negative_label_batch = \
-        #    queue.dequeue_many(train_data_shuffler.batch_size)
+        enqueue_op = queue.enqueue_many([train_placeholder_anchor_data,
+                                         train_placeholder_positive_data,
+                                         train_placeholder_negative_data])
+        train_anchor_feature_batch, train_positive_feature_batch, train_negative_feature_batch = \
+            queue.dequeue_many(train_data_shuffler.batch_size)
 
         # Creating the architecture for train and validation
         if not isinstance(self.architecture, SequenceNetwork):
             raise ValueError("The variable `architecture` must be an instance of "
                              "`bob.learn.tensorflow.network.SequenceNetwork`")
-
-
-        #############
-        train_anchor_feature_batch, _ = train_data_shuffler.get_placeholders(name="train_anchor")
-        train_positive_feature_batch, _ = train_data_shuffler.get_placeholders(name="train_positive")
-        train_negative_feature_batch, _ = train_data_shuffler.get_placeholders(name="train_negative")
-        #############
 
         # Creating the siamese graph
         #import ipdb; ipdb.set_trace();
@@ -145,9 +138,9 @@ class TripletTrainer(Trainer):
             tf.initialize_all_variables().run()
 
             # Start a thread to enqueue data asynchronously, and hide I/O latency.
-            #thread_pool = tf.train.Coordinator()
-            #tf.train.start_queue_runners(coord=thread_pool)
-            #threads = start_thread()
+            thread_pool = tf.train.Coordinator()
+            tf.train.start_queue_runners(coord=thread_pool)
+            threads = start_thread()
 
             # TENSOR BOARD SUMMARY
             train_writer = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'LOGS'), session.graph)
@@ -165,18 +158,24 @@ class TripletTrainer(Trainer):
 
             for step in range(self.iterations):
 
-                batch_anchor, batch_positive, batch_negative = train_data_shuffler.get_random_triplet()
+                #batch_anchor, batch_positive, batch_negative = train_data_shuffler.get_random_triplet()
 
-                feed_dict = {train_anchor_feature_batch: batch_anchor,
-                             train_positive_feature_batch: batch_positive,
-                             train_negative_feature_batch: batch_negative}
+                #feed_dict = {train_anchor_feature_batch: batch_anchor,
+                #             train_positive_feature_batch: batch_positive,
+                #             train_negative_feature_batch: batch_negative}
 
 
+                #_, l, lr, summary, pos, neg = session.run([optimizer, loss_train, learning_rate, merged, within_class, between_class], feed_dict=feed_dict)
 
-                _, l, lr, summary = session.run([optimizer, loss_train, learning_rate, merged], feed_dict=feed_dict)
-                #_, l, lr= session.run([optimizer, loss_train, learning_rate])
+                #_, l, lr, pos, neg, f_anchor, f_positive, f_negative = session.run(
+                #    [optimizer, loss_train, learning_rate, within_class, between_class, train_anchor_feature_batch, train_positive_feature_batch, train_negative_feature_batch], feed_dict=feed_dict)
+
+                #import ipdb; ipdb.set_trace();
+
+                _, l, lr, summary = session.run([optimizer, loss_train, learning_rate, merged])
                 train_writer.add_summary(summary, step)
-                print str(step) + " -- loss: " + str(l)
+                #print str(step) + " -- loss: " + str(l)
+                #print str(step) + " -- loss: {0}; pos: {1}; neg: {2}".format(l, pos, neg)
                 sys.stdout.flush()
 
                 if validation_data_shuffler is not None and step % self.snapshot == 0:

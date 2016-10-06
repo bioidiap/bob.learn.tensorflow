@@ -150,3 +150,30 @@ class TextDataShuffler(BaseDataShuffler):
 
         return data, data_p, labels_siamese
 
+    def get_random_triplet(self):
+        """
+        Get a random pair of samples
+
+        **Parameters**
+            is_target_set_train: Defining the target set to get the batch
+
+        **Return**
+        """
+
+        data_a = numpy.zeros(shape=self.shape, dtype='float32')
+        data_p = numpy.zeros(shape=self.shape, dtype='float32')
+        data_n = numpy.zeros(shape=self.shape, dtype='float32')
+
+        for i in range(self.shape[0]):
+            file_name_a, file_name_p, file_name_n = self.get_one_triplet(self.data, self.labels)
+            data_a[i, ...] = self.load_from_file(str(file_name_a), self.shape)
+            data_p[i, ...] = self.load_from_file(str(file_name_p), self.shape)
+            data_n[i, ...] = self.load_from_file(str(file_name_n), self.shape)
+
+        if self.scale:
+            data_a *= self.scale_value
+            data_p *= self.scale_value
+            data_n *= self.scale_value
+
+        return data_a, data_p, data_n
+

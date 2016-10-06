@@ -30,7 +30,7 @@ class TripletLoss(BaseLoss):
 
     """
 
-    def __init__(self, margin=2.0):
+    def __init__(self, margin=5.0):
         self.margin = margin
 
     def __call__(self, anchor_feature, positive_feature, negative_feature):
@@ -41,5 +41,5 @@ class TripletLoss(BaseLoss):
             d_negative = tf.square(compute_euclidean_distance(anchor_feature, negative_feature))
 
             loss = tf.maximum(0., d_positive - d_negative + self.margin)
-
             return tf.reduce_mean(loss), tf.reduce_mean(d_positive), tf.reduce_mean(d_negative)
+            #return loss, d_positive, d_negative

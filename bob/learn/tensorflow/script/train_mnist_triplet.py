@@ -39,7 +39,7 @@ def main():
     perc_train = 0.9
 
     # Loading data
-    mnist = True
+    mnist = False
 
     if mnist:
         train_data, train_labels, validation_data, validation_labels = \
@@ -125,15 +125,15 @@ def main():
         #architecture = LenetDropout(default_feature_layer="fc2", n_classes=n_classes, conv1_output=4, conv2_output=8, use_gpu=USE_GPU)
 
         loss = TripletLoss()
-        optimizer = tf.train.GradientDescentOptimizer(0.0001)
-
+        optimizer = tf.train.GradientDescentOptimizer(0.000001)
         trainer = TripletTrainer(architecture=architecture,
                                  loss=loss,
                                  iterations=ITERATIONS,
                                  snapshot=VALIDATION_TEST,
-                                 optimizer=optimizer)
-        #trainer.train(train_data_shuffler, validation_data_shuffler)
-        trainer.train(train_data_shuffler)
+                                 optimizer=optimizer
+                                 )
+        trainer.train(train_data_shuffler, validation_data_shuffler)
+        #trainer.train(train_data_shuffler)
     else:
         mlp = MLP(n_classes, hidden_layers=[15, 20])
 

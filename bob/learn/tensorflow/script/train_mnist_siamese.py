@@ -39,7 +39,7 @@ def main():
     perc_train = 0.9
 
     # Loading data
-    mnist = False
+    mnist = True
 
     if mnist:
         train_data, train_labels, validation_data, validation_labels = \
@@ -118,8 +118,8 @@ def main():
     if cnn:
 
         # LENET PAPER CHOPRA
-        #architecture = Chopra(default_feature_layer="fc7")
-        architecture = Lenet(default_feature_layer="fc2", n_classes=n_classes, conv1_output=8, conv2_output=16,use_gpu=USE_GPU)
+        architecture = Chopra(seed=SEED)
+        #architecture = Lenet(default_feature_layer="fc2", n_classes=n_classes, conv1_output=8, conv2_output=16,use_gpu=USE_GPU)
         #architecture = VGG(n_classes=n_classes, use_gpu=USE_GPU)
         #architecture = Dummy(seed=SEED)
 

@@ -82,7 +82,7 @@ class MemoryDataShuffler(BaseDataShuffler):
 
         return data, data_p, labels_siamese
 
-    def get_random_triplet(self, n_triplets=1):
+    def get_random_triplet(self):
         """
         Get a random triplet
 
@@ -96,7 +96,7 @@ class MemoryDataShuffler(BaseDataShuffler):
         data_p = numpy.zeros(shape=self.shape, dtype='float32')
         data_n = numpy.zeros(shape=self.shape, dtype='float32')
 
-        for i in range(n_triplets):
+        for i in range(self.shape[0]):
             data_a[i, ...], data_p[i, ...], data_n[i, ...] = self.get_one_triplet(self.data, self.labels)
 
         return data_a, data_p, data_n

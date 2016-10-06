@@ -101,8 +101,8 @@ class BaseDataShuffler(object):
     def get_one_triplet(self, input_data, input_labels):
         # Getting a pair of clients
         index = numpy.random.choice(len(self.possible_labels), 2, replace=False)
-        label_positive = index[0]
-        label_negative = index[1]
+        index[0] = self.possible_labels[index[0]]
+        index[1] = self.possible_labels[index[1]]
 
         # Getting the indexes of the data from a particular client
         indexes = numpy.where(input_labels == index[0])[0]
