@@ -145,4 +145,3 @@ def main():
                                  iterations=ITERATIONS,
                                  snapshot=VALIDATION_TEST)
         trainer.train(train_data_shuffler, validation_data_shuffler)
-

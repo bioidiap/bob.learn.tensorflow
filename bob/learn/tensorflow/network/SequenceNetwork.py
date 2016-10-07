@@ -3,9 +3,6 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 # @date: Thu 11 Aug 2016 09:39:36 CEST
 
-"""
-Class that creates the lenet architecture
-"""
 
 import tensorflow as tf
 import abc
@@ -19,29 +16,28 @@ from bob.learn.tensorflow.layers import Layer, MaxPooling, Dropout, Conv2D, Full
 
 class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
     """
-    Base class to create architectures using TensorFlow
+    Sequential model is a linear stack of :py:mod:`bob.learn.tensorflow.layers`.
+
+    **Parameters**
+
+        default_feature_layer: Default layer name (:py:obj:`str`) used as a feature layer.
+
+        use_gpu: If ``True`` uses the GPU in the computation.
     """
 
     def __init__(self,
                  default_feature_layer=None,
                  use_gpu=False):
-        """
-        Base constructor
-
-        **Parameters**
-        feature_layer:
-        """
 
         self.sequence_net = OrderedDict()
         self.default_feature_layer = default_feature_layer
         self.input_divide = 1.
         self.input_subtract = 0.
-        self.use_gpu=use_gpu
-        #self.saver = None
+        self.use_gpu = use_gpu
 
     def add(self, layer):
         """
-        Add a layer in the sequence network
+        Add a :py:class:`bob.learn.tensorflow.layers.Layer` in the sequence network
 
         """
         if not isinstance(layer, Layer):
@@ -49,12 +45,16 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         self.sequence_net[layer.name] = layer
 
     def compute_graph(self, input_data, feature_layer=None, training=True):
-        """
-        Given the current network, return the Tensorflow graph
+        """Given the current network, return the Tensorflow graph
 
          **Parameter**
-          input_data:
-          cut: Name of the layer that you want to cut.
+
+          input_data: tensorflow placeholder as input data
+
+          feature_layer: Name of the :py:class:`bob.learn.tensorflow.layer.Layer` that you want to "cut".
+                         If `None` will run the graph until the end.
+
+          training: If `True` will generating the graph for training
         """
 
         input_offset = input_data
@@ -71,9 +71,26 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         return input_offset
 
     def compute_projection_graph(self, placeholder):
+        """Generate a graph for feature extraction
+
+        **Parameters**
+
+        placeholder: tensorflow placeholder as input data
+        """
         return self.compute_graph(placeholder)
 
     def __call__(self, data, session=None, feature_layer=None):
+        """Run a graph
+
+        **Parameters**
+
+        data: tensorflow placeholder as input data
+
+        session: tensorflow `session <https://www.tensorflow.org/versions/r0.11/api_docs/python/client.html#Session>`_
+
+        feature_layer: Name of the :py:class:`bob.learn.tensorflow.layer.Layer` that you want to "cut".
+                       If `None` will run the graph until the end.
+        """
 
         if session is None:
             session = tf.Session()
@@ -88,6 +105,9 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         return session.run([self.compute_graph(feature_placeholder, feature_layer, training=False)], feed_dict=feed_dict)[0]
 
     def dump_variables(self):
+        """Return all the tensorflow `variables <https://www.tensorflow.org/versions/r0.11/api_docs/python/state_ops.html#Variable>`_ used in the graph
+        """
+
 
         variables = {}
         for k in self.sequence_net:
@@ -99,8 +119,14 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         return variables
 
     def save(self, hdf5, step=None):
-        """
-        Save the state of the network in HDF5 format
+        """Save the state of the network in HDF5 format
+
+        **Parameters**
+
+            hdf5: An opened :py:class:`bob.io.base.HDF5File`
+
+            step: The current training step. If not `None`, will create a HDF5 group with the current step.
+
         """
 
         # Directory that stores the tensorflow variables
@@ -124,6 +150,16 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         hdf5.set('input_subtract', self.input_subtract)
 
     def load(self, hdf5, shape, session=None):
+        """Load the network
+
+        **Parameters**
+
+            hdf5: The saved network in the :py:class:`bob.io.base.HDF5File` format
+
+            shape: Input shape of the network
+
+            session: tensorflow `session <https://www.tensorflow.org/versions/r0.11/api_docs/python/client.html#Session>`_
+        """
 
         if session is None:
             session = tf.Session()
@@ -160,7 +196,6 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
             tf.histogram_summary(name, var)
 
     def generate_summaries(self):
-
         for k in self.sequence_net.keys():
             current_layer = self.sequence_net[k]
 
@@ -171,15 +206,14 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
     def compute_magic_number(self, hypothetic_image_dimensions=(28, 28, 1)):
         """
 
-        Here it is done an estimative of the capacity of CNN.
+        Here it is done an estimative of the capacity of DNN.
 
-        :param hypothetic_sample_number: an ar
-        :param hypothetic_image_dimensions:
-        :return:
+        **Parameters**
+
+            hypothetic_image_dimensions: Possible image dimentions `w, h, c` (width x height x channels)
         """
 
         stride = 1# ALWAYS EQUALS TO ONE
-
         current_image_dimensions = list(hypothetic_image_dimensions)
 
         samples_per_sample = 0

@@ -59,9 +59,8 @@ class Conv2D(Layer):
                                                  name="w_" + str(self.name)
                                                  )
 
-            if self.activation is not None:
-                self.b = self.bias_initialization(shape=[self.filters],
-                                                  name="b_" + str(self.name) + "bias")
+            self.b = self.bias_initialization(shape=[self.filters],
+                                              name="b_" + str(self.name) + "bias")
 
     def get_graph(self):
 
@@ -69,9 +68,8 @@ class Conv2D(Layer):
             conv2d = tf.nn.conv2d(self.input_layer, self.W, strides=[1, 1, 1, 1], padding='SAME')
 
             if self.activation is not None:
-                non_linear_conv2d = self.activation(tf.nn.bias_add(conv2d, self.b))
-                output = non_linear_conv2d
+                output = self.activation(tf.nn.bias_add(conv2d, self.b))
             else:
-                output = conv2d
+                output = tf.nn.bias_add(conv2d, self.b)
 
             return output

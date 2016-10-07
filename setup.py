@@ -77,6 +77,8 @@ setup(
         'train_mnist.py        = bob.learn.tensorflow.script.train_mnist:main',
         'train_mnist_siamese.py = bob.learn.tensorflow.script.train_mnist_siamese:main',
         'train_mnist_triplet.py = bob.learn.tensorflow.script.train_mnist_triplet:main',
+
+        'train_siamese_casia_webface.py = bob.learn.tensorflow.script.train_siamese_casia_webface:main',
       ],
 
 

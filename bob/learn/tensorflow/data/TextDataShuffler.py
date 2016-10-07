@@ -51,18 +51,20 @@ class TextDataShuffler(BaseDataShuffler):
             batch_size=batch_size
         )
 
+        # TODO: very bad solution to deal with bob.shape images an tf shape images
+        self.bob_shape = tuple([input_shape[2]] + list(input_shape[0:2]))
+
     def load_from_file(self, file_name, shape):
         d = bob.io.base.load(file_name)
-        #import ipdb; ipdb.set_trace();
-        if len(d.shape) == 2:
+        if d.shape[0] != 3 and self.input_shape[2] != 3: # GRAY SCALE IMAGE
             data = numpy.zeros(shape=(d.shape[0], d.shape[1], 1))
             data[:, :, 0] = d
             data = self.rescale(data)
         else:
+            d = self.rescale(d)
             data = self.bob2skimage(d)
 
         return data
-
 
     def bob2skimage(self, bob_image):
         """
@@ -71,9 +73,9 @@ class TextDataShuffler(BaseDataShuffler):
 
         skimage = numpy.zeros(shape=(bob_image.shape[1], bob_image.shape[2], 3))
 
-        skimage[:,:,0] = bob_image[0,:,:] #Copying red
-        skimage[:,:,1] = bob_image[1,:,:] #Copying green
-        skimage[:,:,2] = bob_image[2,:,:] #Copying blue
+        skimage[:, :, 0] = bob_image[0, :, :] #Copying red
+        skimage[:, :, 1] = bob_image[1, :, :] #Copying green
+        skimage[:, :, 2] = bob_image[2, :, :] #Copying blue
 
         return skimage
 
@@ -102,7 +104,9 @@ class TextDataShuffler(BaseDataShuffler):
         Reescale a single sample with input_shape
 
         """
-        if self.input_shape != data.shape:
+        #if self.input_shape != data.shape:
+        if self.bob_shape != data.shape:
+
             # TODO: Implement a better way to do this reescaling
             # If it is gray scale
             if self.input_shape[2] == 1:
@@ -111,8 +115,18 @@ class TextDataShuffler(BaseDataShuffler):
                 bob.ip.base.scale(copy, dst)
                 dst = numpy.reshape(dst, self.input_shape)
             else:
-                dst = numpy.resize(data, self.input_shape) # Scaling with numpy, because bob is c,w,d instead of w,h,c
-                #bob.ip.base.scale(data, dst)
+                #dst = numpy.resize(data, self.bob_shape) # Scaling with numpy, because bob is c,w,d instead of w,h,c
+                dst = numpy.zeros(shape=self.bob_shape)
+
+                # TODO: LAME SOLUTION
+                if data.shape[0] != 3: # GRAY SCALE IMAGES IN A RGB DATABASE
+                    step_data = numpy.zeros(shape=(3, data.shape[0], data.shape[1]))
+                    step_data[0, ...] = data[:, :]
+                    step_data[1, ...] = data[:, :]
+                    step_data[2, ...] = data[:, :]
+                    data = step_data
+
+                bob.ip.base.scale(data, dst)
 
             return dst
         else:
@@ -176,4 +190,3 @@ class TextDataShuffler(BaseDataShuffler):
             data_n *= self.scale_value
 
         return data_a, data_p, data_n
-
