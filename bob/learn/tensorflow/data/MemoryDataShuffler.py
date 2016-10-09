@@ -56,7 +56,7 @@ class MemoryDataShuffler(BaseDataShuffler):
         selected_data = self.data[indexes[0:self.batch_size], :, :, :]
         selected_labels = self.labels[indexes[0:self.batch_size]]
 
-        return selected_data.astype("float32"), selected_labels
+        return selected_data, selected_labels.astype("int64")
 
     def get_pair(self, zero_one_labels=True):
         """
