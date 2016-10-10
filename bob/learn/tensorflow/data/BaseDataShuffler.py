@@ -47,23 +47,27 @@ class BaseDataShuffler(object):
         self.indexes = numpy.array(range(self.n_samples))
         numpy.random.shuffle(self.indexes)
 
+        self.data_placeholder = None
+        self.label_placeholder = None
+
     def get_placeholders_forprefetch(self, name=""):
         """
         Returns a place holder with the size of your batch
         """
-        data = tf.placeholder(tf.float32, shape=tuple([None] + list(self.shape[1:])), name=name)
-        labels = tf.placeholder(tf.int64, shape=[None, ])
-
-        return data, labels
+        if self.data_placeholder is None:
+            self.data_placeholder = tf.placeholder(tf.float32, shape=tuple([None] + list(self.shape[1:])), name=name)
+            self.label_placeholder = tf.placeholder(tf.int64, shape=[None, ])
+        return self.data_placeholder, self.label_placeholder
 
     def get_placeholders(self, name=""):
         """
         Returns a place holder with the size of your batch
         """
-        data = tf.placeholder(tf.float32, shape=self.shape, name=name)
-        labels = tf.placeholder(tf.int64, shape=self.shape[0])
 
-        return data, labels
+        if self.data_placeholder is None:
+            self.data_placeholder = tf.placeholder(tf.float32, shape=self.shape, name=name)
+            self.label_placeholder = tf.placeholder(tf.int64, shape=self.shape[0])
+        return self.data_placeholder, self.label_placeholder
 
     def get_genuine_or_not(self, input_data, input_labels, genuine=True):
 

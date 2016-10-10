@@ -9,17 +9,16 @@ Neural net work error rates analizer
 import numpy
 import bob.measure
 from tensorflow.core.framework import summary_pb2
-from scipy.spatial.distance import cosine
 
 
-class ExperimentAnalizer:
+class SoftmaxAnalizer:
     """
     Analizer.
     """
 
     def __init__(self, data_shuffler, machine, session):
         """
-        Use the CNN as feature extractor for a n-class classification
+        Softmax analizer
 
         ** Parameters **
 
@@ -36,15 +35,26 @@ class ExperimentAnalizer:
         self.machine = machine
         self.session = session
 
+
+        """
+
         placeholder_data, placeholder_labels = data_shuffler.get_placeholders(name="validation")
         graph = machine.compute_graph(placeholder_data)
 
-
         loss_validation = self.loss(validation_graph, validation_placeholder_labels)
-        tf.scalar_summary('loss', loss_validation, name="validation")
+        tf.scalar_summary('accuracy', loss_validation, name="validation")
         merged_validation = tf.merge_all_summaries()
+        """
 
-    def __call__(self):
+    def __call__(self, graph=None):
+
+        validation_graph = self.compute_graph(self.data_shuffler, name="validation")
+
+        predictions = numpy.argmax(self.session.run(network,
+            feed_dict={data_node: data[:]}), 1)
+
+        return 100. * numpy.sum(predictions == labels) / predictions.shape[0]
+
 
         data, labels = self.data_shuffler.get_batch()
 

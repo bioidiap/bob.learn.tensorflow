@@ -95,6 +95,7 @@ def main():
         loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
         trainer = Trainer(architecture=architecture, loss=loss, iterations=ITERATIONS)
         trainer.train(train_data_shuffler, validation_data_shuffler)
+        #trainer.train(train_data_shuffler)
     else:
         mlp = MLP(10, hidden_layers=[15, 20])
         loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
