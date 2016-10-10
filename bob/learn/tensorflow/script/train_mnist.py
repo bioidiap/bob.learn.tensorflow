@@ -87,18 +87,18 @@ def main():
                                                     batch_size=VALIDATION_BATCH_SIZE)
 
     # Preparing the architecture
-    cnn = True
+    cnn = False
     if cnn:
         architecture = Chopra(seed=SEED)
         #architecture = Lenet(seed=SEED)
         #architecture = Dummy(seed=SEED)
         loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
-        trainer = Trainer(architecture=architecture, loss=loss, iterations=ITERATIONS)
+        trainer = Trainer(architecture=architecture, loss=loss, iterations=ITERATIONS, prefetch=False, temp_dir="cnn")
         trainer.train(train_data_shuffler, validation_data_shuffler)
         #trainer.train(train_data_shuffler)
     else:
         mlp = MLP(10, hidden_layers=[15, 20])
         loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
-        trainer = Trainer(architecture=mlp, loss=loss, iterations=ITERATIONS)
+        trainer = Trainer(architecture=mlp, loss=loss, iterations=ITERATIONS, temp_dir="./LOGS/dnn")
         trainer.train(train_data_shuffler, validation_data_shuffler)
 
