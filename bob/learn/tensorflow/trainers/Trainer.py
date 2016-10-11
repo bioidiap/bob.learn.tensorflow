@@ -4,21 +4,42 @@
 # @date: Tue 09 Aug 2016 15:25:22 CEST
 
 import logging
-logger = logging.getLogger("bob.learn.tensorflow")
 import tensorflow as tf
 from ..network import SequenceNetwork
 import threading
-import numpy
 import os
 import bob.io.base
 import bob.core
 from ..analyzers import SoftmaxAnalizer
 from tensorflow.core.framework import summary_pb2
+import time
 
 logger = bob.core.log.setup("bob.learn.tensorflow")
 
-class Trainer(object):
 
+class Trainer(object):
+    """
+    One graph trainer.
+    Use this trainer when your CNN is composed by one graph
+
+    **Parameters**
+      architecture: The architecture that you want to run. Should be a :py:class`bob.learn.tensorflow.network.SequenceNetwork`
+      optimizer: One of the tensorflow optimizers https://www.tensorflow.org/versions/r0.10/api_docs/python/train.html
+      use_gpu: Use GPUs in the training
+      loss: Loss
+      temp_dir: The output directory
+
+      base_learning_rate: Initial learning rate
+      weight_decay:
+      convergence_threshold:
+
+      iterations: Maximum number of iterations
+      snapshot: Will take a snapshot of the network at every `n` iterations
+      prefetch: Use extra Threads to deal with the I/O
+      analizer: Neural network analizer :py:mod:`bob.learn.tensorflow.analyzers`
+      verbosity_level:
+
+    """
     def __init__(self,
                  architecture,
                  optimizer=tf.train.AdamOptimizer(),
@@ -37,22 +58,10 @@ class Trainer(object):
                  prefetch=False,
 
                  ## Analizer
-                 analizer = SoftmaxAnalizer(),
-
+                 analizer=SoftmaxAnalizer(),
 
                  verbosity_level=2):
-        """
 
-        **Parameters**
-          architecture: The architecture that you want to run. Should be a :py:class`bob.learn.tensorflow.network.SequenceNetwork`
-          optimizer: One of the tensorflow optimizers https://www.tensorflow.org/versions/r0.10/api_docs/python/train.html
-          use_gpu: Use GPUs in the training
-          loss: Loss
-          temp_dir:
-          iterations:
-          snapshot:
-          convergence_threshold:
-        """
         if not isinstance(architecture, SequenceNetwork):
             raise ValueError("`architecture` should be instance of `SequenceNetwork`")
 
@@ -78,6 +87,7 @@ class Trainer(object):
         self.train_data_shuffler = None
         self.summaries_train = None
         self.train_summary_writter = None
+        self.thread_pool = None
 
         # Validation data
         self.validation_graph = None
@@ -91,23 +101,21 @@ class Trainer(object):
 
         bob.core.log.set_verbosity_level(logger, verbosity_level)
 
-    def compute_graph(self, data_shuffler, name=""):
+    def compute_graph(self, data_shuffler, prefetch=False, name=""):
         """
         Computes the graph for the trainer.
+
 
         ** Parameters **
 
             data_shuffler: Data shuffler
+            prefetch:
             name: Name of the graph
         """
 
         # Defining place holders
-        if self.prefetch:
+        if prefetch:
             placeholder_data, placeholder_labels = data_shuffler.get_placeholders_forprefetch(name=name)
-
-            #if validation_data_shuffler is not None:
-            #    validation_placeholder_data, validation_placeholder_labels = \
-            #        validation_data_shuffler.get_placeholders(name="validation")
 
             # Defining a placeholder queue for prefetching
             queue = tf.FIFOQueue(capacity=10,
@@ -133,10 +141,9 @@ class Trainer(object):
 
     def get_feed_dict(self, data_shuffler):
         """
-        Computes the feed_dict for the graph
+        Given a data shuffler prepared the dictionary to be injected in the graph
 
         ** Parameters **
-
             data_shuffler:
 
         """
@@ -147,7 +154,16 @@ class Trainer(object):
                      label_placeholder: labels}
         return feed_dict
 
-    def __fit(self, session, step):
+    def fit(self, session, step):
+        """
+        Run one iteration (`forward` and `backward`)
+
+        ** Parameters **
+            session: Tensorflow session
+            step: Iteration number
+
+        """
+
         if self.prefetch:
             _, l, lr, summary = session.run([self.optimizer, self.training_graph,
                                              self.learning_rate, self.summaries_train])
@@ -159,7 +175,16 @@ class Trainer(object):
         logger.info("Loss training set step={0} = {1}".format(step, l))
         self.train_summary_writter.add_summary(summary, step)
 
-    def __compute_validation(self, session, data_shuffler, step):
+    def compute_validation(self, session, data_shuffler, step):
+        """
+        Computes the loss in the validation set
+
+        ** Parameters **
+            session: Tensorflow session
+            data_shuffler: The data shuffler to be used
+            step: Iteration number
+
+        """
 
         if self.validation_summary_writter is None:
             self.validation_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'validation'), session.graph)
@@ -173,16 +198,27 @@ class Trainer(object):
         self.validation_summary_writter.add_summary(summary_pb2.Summary(value=summaries), step)
         logger.info("Loss VALIDATION set step={0} = {1}".format(step, l))
 
-    def __create_general_summary(self):
+    def create_general_summary(self):
+        """
+        Creates a simple tensorboard summary with the value of the loss and learning rate
+        """
+
         # Train summary
         tf.scalar_summary('loss', self.training_graph, name="train")
         tf.scalar_summary('lr', self.learning_rate, name="train")
         return tf.merge_all_summaries()
 
     def start_thread(self, session):
+        """
+        Start pool of threads for pre-fetching
+
+        **Parameters**
+          session: Tensorflow session
+        """
+
         threads = []
-        for n in range(1):
-            t = threading.Thread(target=self.load_and_enqueue, args=(session, ))
+        for n in range(3):
+            t = threading.Thread(target=self.load_and_enqueue, args=(session,))
             t.daemon = True  # thread will close when parent quits
             t.start()
             threads.append(t)
@@ -191,6 +227,9 @@ class Trainer(object):
     def load_and_enqueue(self, session):
         """
         Injecting data in the place holder queue
+
+        **Parameters**
+          session: Tensorflow session
         """
 
         while not self.thread_pool.should_stop():
@@ -204,8 +243,7 @@ class Trainer(object):
 
     def train(self, train_data_shuffler, validation_data_shuffler=None):
         """
-        Do the loop forward --> backward --|
-                      ^--------------------|
+        Train the network
         """
 
         # Creating directory
@@ -220,14 +258,14 @@ class Trainer(object):
             self.weight_decay  # Decay step
         )
 
-        self.training_graph = self.compute_graph(train_data_shuffler, name="train")
+        self.training_graph = self.compute_graph(train_data_shuffler, prefetch=self.prefetch, name="train")
 
         # Preparing the optimizer
         self.optimizer_class._learning_rate = self.learning_rate
         self.optimizer = self.optimizer_class.minimize(self.training_graph, global_step=tf.Variable(0))
 
         # Train summary
-        self.summaries_train = self.__create_general_summary()
+        self.summaries_train = self.create_general_summary()
 
         logger.info("Initializing !!")
         # Training
@@ -247,13 +285,19 @@ class Trainer(object):
             self.train_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'train'), session.graph)
 
             for step in range(self.iterations):
-                self.__fit(session, step)
+
+                start = time.time()
+                self.fit(session, step)
+                end = time.time()
+                summary = summary_pb2.Summary.Value(tag="elapsed_time", simple_value=float(end-start))
+                self.train_summary_writter.add_summary(summary_pb2.Summary(value=[summary]), step)
+
                 if validation_data_shuffler is not None and step % self.snapshot == 0:
-                    self.__compute_validation(session, validation_data_shuffler, step)
+                    self.compute_validation(session, validation_data_shuffler, step)
 
                     if self.analizer is not None:
                         self.validation_summary_writter.add_summary(self.analizer(
-                            validation_data_shuffler, self.architecture, session), step)
+                             validation_data_shuffler, self, session), step)
 
             logger.info("Training finally finished")
 

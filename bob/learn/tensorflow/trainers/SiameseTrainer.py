@@ -6,15 +6,39 @@
 import logging
 logger = logging.getLogger("bob.learn.tensorflow")
 import tensorflow as tf
+from tensorflow.core.framework import summary_pb2
 import threading
-from ..analyzers import ExperimentAnalizer
+from ..analyzers import ExperimentAnalizer, SoftmaxAnalizer
 from ..network import SequenceNetwork
 import bob.io.base
 from .Trainer import Trainer
 import os
 import sys
 
+
 class SiameseTrainer(Trainer):
+
+    """
+    Trainer for siamese networks.
+
+    **Parameters**
+      architecture: The architecture that you want to run. Should be a :py:class`bob.learn.tensorflow.network.SequenceNetwork`
+      optimizer: One of the tensorflow optimizers https://www.tensorflow.org/versions/r0.10/api_docs/python/train.html
+      use_gpu: Use GPUs in the training
+      loss: Loss
+      temp_dir: The output directory
+
+      base_learning_rate: Initial learning rate
+      weight_decay:
+      convergence_threshold:
+
+      iterations: Maximum number of iterations
+      snapshot: Will take a snapshot of the network at every `n` iterations
+      prefetch: Use extra Threads to deal with the I/O
+      analizer: Neural network analizer :py:mod:`bob.learn.tensorflow.analyzers`
+      verbosity_level:
+
+    """
 
     def __init__(self,
                  architecture,
@@ -30,7 +54,13 @@ class SiameseTrainer(Trainer):
                  ###### training options ##########
                  convergence_threshold=0.01,
                  iterations=5000,
-                 snapshot=100):
+                 snapshot=100,
+                 prefetch=False,
+
+                 ## Analizer
+                 analizer=SoftmaxAnalizer(),
+
+                 verbosity_level=2):
 
         super(SiameseTrainer, self).__init__(
             architecture=architecture,
@@ -38,146 +68,171 @@ class SiameseTrainer(Trainer):
             use_gpu=use_gpu,
             loss=loss,
             temp_dir=temp_dir,
+
+            # Learning rate
             base_learning_rate=base_learning_rate,
             weight_decay=weight_decay,
+
+            ###### training options ##########
             convergence_threshold=convergence_threshold,
             iterations=iterations,
-            snapshot=snapshot
+            snapshot=snapshot,
+            prefetch=prefetch,
+
+            ## Analizer
+            analizer=analizer,
+
+            verbosity_level=verbosity_level
         )
 
-    def train(self, train_data_shuffler, validation_data_shuffler=None):
+        self.between_class_graph = None
+        self.within_class_graph = None
+
+    def compute_graph(self, data_shuffler, prefetch=False, name=""):
         """
-        Do the loop forward --> backward --|
-                      ^--------------------|
+        Computes the graph for the trainer.
+
+
+        ** Parameters **
+
+            data_shuffler: Data shuffler
+            prefetch:
+            name: Name of the graph
         """
 
-        def start_thread():
-            threads = []
-            for n in range(1):
-                t = threading.Thread(target=load_and_enqueue)
-                t.daemon = True  # thread will close when parent quits
-                t.start()
-                threads.append(t)
-            return threads
+        # Defining place holders
+        if prefetch:
+            placeholder_left_data, placeholder_right_data, placeholder_labels = data_shuffler.get_placeholders_pair_forprefetch(name="train")
 
-        def load_and_enqueue():
-            """
-            Injecting data in the place holder queue
-            """
-            # for i in range(self.iterations+5):
-            while not thread_pool.should_stop():
-                batch_left, batch_right, labels = train_data_shuffler.get_pair()
+            # Creating two graphs
+            #placeholder_left_data, placeholder_labels = data_shuffler. \
+            #    get_placeholders_forprefetch(name="train_left")
+            #placeholder_right_data, _ = data_shuffler.get_placeholders(name="train_right")
+            feature_left_batch, feature_right_batch, label_batch = data_shuffler.get_placeholders_pair(name="train_")
 
-                feed_dict = {train_placeholder_left_data: batch_left,
-                             train_placeholder_right_data: batch_right,
-                             train_placeholder_labels: labels}
+            # Defining a placeholder queue for prefetching
+            queue = tf.FIFOQueue(capacity=100,
+                                 dtypes=[tf.float32, tf.float32, tf.int64],
+                                 shapes=[placeholder_left_data.get_shape().as_list()[1:],
+                                         placeholder_right_data.get_shape().as_list()[1:],
+                                         []])
 
-                session.run(enqueue_op, feed_dict=feed_dict)
+            # Fetching the place holders from the queue
+            self.enqueue_op = queue.enqueue_many([placeholder_left_data, placeholder_right_data, placeholder_labels])
+            feature_left_batch, feature_right_batch, label_batch = queue.dequeue_many(data_shuffler.batch_size)
 
-        # TODO: find an elegant way to provide this as a parameter of the trainer
-        learning_rate = tf.train.exponential_decay(
-            self.base_learning_rate,  # Learning rate
-            train_data_shuffler.batch_size,
-            train_data_shuffler.n_samples,
-            self.weight_decay  # Decay step
-        )
-
-        # Creating directory
-        bob.io.base.create_directories_safe(self.temp_dir)
-
-        # Creating two graphs
-        train_placeholder_left_data, train_placeholder_labels = train_data_shuffler.\
-            get_placeholders_forprefetch(name="train_left")
-        train_placeholder_right_data, _ = train_data_shuffler.get_placeholders(name="train_right")
-
-        # Defining a placeholder queue for prefetching
-        queue = tf.FIFOQueue(capacity=100,
-                             dtypes=[tf.float32, tf.float32, tf.int64],
-                             shapes=[train_placeholder_left_data.get_shape().as_list()[1:],
-                                     train_placeholder_right_data.get_shape().as_list()[1:],
-                                     []])
-        # Fetching the place holders from the queue
-        enqueue_op = queue.enqueue_many([train_placeholder_left_data,
-                                         train_placeholder_right_data,
-                                         train_placeholder_labels])
-        train_left_feature_batch, train_right_label_batch, train_labels_batch = \
-            queue.dequeue_many(train_data_shuffler.batch_size)
-
-        # Creating the architecture for train and validation
-        if not isinstance(self.architecture, SequenceNetwork):
-            raise ValueError("The variable `architecture` must be an instance of "
-                             "`bob.learn.tensorflow.network.SequenceNetwork`")
+            # Creating the architecture for train and validation
+            if not isinstance(self.architecture, SequenceNetwork):
+                raise ValueError("The variable `architecture` must be an instance of "
+                                 "`bob.learn.tensorflow.network.SequenceNetwork`")
+        else:
+            feature_left_batch, feature_right_batch, label_batch = data_shuffler.get_placeholders_pair(name="train_")
+            #feature_left_batch, label_batch = data_shuffler.get_placeholders(name="train_left")
+            #feature_right_batch, _ = data_shuffler.get_placeholders(name="train_right")
 
         # Creating the siamese graph
-        train_left_graph = self.architecture.compute_graph(train_left_feature_batch)
-        train_right_graph = self.architecture.compute_graph(train_right_label_batch)
+        train_left_graph = self.architecture.compute_graph(feature_left_batch)
+        train_right_graph = self.architecture.compute_graph(feature_right_batch)
 
-        loss_train, between_class, within_class = self.loss(train_labels_batch,
-                                                            train_left_graph,
-                                                            train_right_graph)
+        graph, between_class_graph, within_class_graph = self.loss(label_batch,
+                                                                   train_left_graph,
+                                                                   train_right_graph)
 
-        # Preparing the optimizer
-        step = tf.Variable(0)
-        self.optimizer._learning_rate = learning_rate
-        optimizer = self.optimizer.minimize(loss_train, global_step=step)
-        #optimizer = tf.train.MomentumOptimizer(learning_rate, momentum=0.99, use_locking=False,
-        #                                       name='Momentum').minimize(loss_train, global_step=step)
+        self.between_class_graph = between_class_graph
+        self.within_class_graph = within_class_graph
 
-        print("Initializing !!")
-        # Training
-        hdf5 = bob.io.base.HDF5File(os.path.join(self.temp_dir, 'model.hdf5'), 'w')
+        return graph
 
-        with tf.Session() as session:
-            if validation_data_shuffler is not None:
-                analizer = ExperimentAnalizer(validation_data_shuffler, self.architecture, session)
+    def get_feed_dict(self, data_shuffler):
+        """
+        Given a data shuffler prepared the dictionary to be injected in the graph
 
-            tf.initialize_all_variables().run()
+        ** Parameters **
+            data_shuffler:
 
-            # Start a thread to enqueue data asynchronously, and hide I/O latency.
-            thread_pool = tf.train.Coordinator()
-            tf.train.start_queue_runners(coord=thread_pool)
-            threads = start_thread()
+        """
 
-            # TENSOR BOARD SUMMARY
-            train_writer = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'LOGS'), session.graph)
+        batch_left, batch_right, labels = data_shuffler.get_pair()
+        placeholder_left_data, placeholder_right_data, placeholder_label = data_shuffler.get_placeholders_pair(name="train")
 
-            # Siamese specific summary
-            tf.scalar_summary('loss', loss_train)
-            tf.scalar_summary('between_class', between_class)
-            tf.scalar_summary('within_class', within_class)
-            tf.scalar_summary('lr', learning_rate)
-            merged = tf.merge_all_summaries()
+        feed_dict = {placeholder_left_data: batch_left,
+                     placeholder_right_data: batch_right,
+                     placeholder_label: labels}
 
-            # Architecture summary
-            self.architecture.generate_summaries()
-            merged_validation = tf.merge_all_summaries()
+        return feed_dict
 
-            for step in range(self.iterations):
+    def fit(self, session, step):
+        """
+        Run one iteration (`forward` and `backward`)
 
-                _, l, lr, summary = session.run(
-                    [optimizer, loss_train, learning_rate, merged])
-                #_, l, lr,b,w, summary = session.run([optimizer, loss_train, learning_rate,between_class,within_class, merged])
-                #_, l, lr= session.run([optimizer, loss_train, learning_rate])
-                train_writer.add_summary(summary, step)
-                #print str(step) + " loss: {0}, bc: {1}, wc: {2}".format(l, b, w)
-                #print str(step) + " loss: {0}".format(l)
-                sys.stdout.flush()
-                #import ipdb; ipdb.set_trace();
+        ** Parameters **
+            session: Tensorflow session
+            step: Iteration number
 
-                if validation_data_shuffler is not None and step % self.snapshot == 0:
-                    print str(step)
-                    sys.stdout.flush()
+        """
+        if self.prefetch:
+            _, l, bt_class, wt_class, lr, summary = session.run([self.optimizer,
+                                             self.training_graph, self.between_class_graph, self.within_class_graph,
+                                             self.learning_rate, self.summaries_train])
+        else:
+            feed_dict = self.get_feed_dict(self.train_data_shuffler)
+            _, l, bt_class, wt_class, lr, summary = session.run([self.optimizer,
+                                             self.training_graph, self.between_class_graph, self.within_class_graph,
+                                             self.learning_rate, self.summaries_train], feed_dict=feed_dict)
 
-                    summary = session.run(merged_validation)
-                    train_writer.add_summary(summary, step)
+        logger.info("Loss training set step={0} = {1}".format(step, l))
+        self.train_summary_writter.add_summary(summary, step)
 
-                    summary = analizer()
-                    train_writer.add_summary(summary, step)
+    def compute_validation(self, session, data_shuffler, step):
+        """
+        Computes the loss in the validation set
 
-            print("#######DONE##########")
-            self.architecture.save(hdf5)
-            del hdf5
-            train_writer.close()
+        ** Parameters **
+            session: Tensorflow session
+            data_shuffler: The data shuffler to be used
+            step: Iteration number
 
-            thread_pool.request_stop()
-            thread_pool.join(threads)
+        """
+
+        if self.validation_summary_writter is None:
+            self.validation_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'validation'), session.graph)
+
+        self.validation_graph = self.compute_graph(data_shuffler, name="validation")
+        feed_dict = self.get_feed_dict(data_shuffler)
+        l = session.run(self.validation_graph, feed_dict=feed_dict)
+
+        summaries = []
+        summaries.append(summary_pb2.Summary.Value(tag="loss", simple_value=float(l)))
+        self.validation_summary_writter.add_summary(summary_pb2.Summary(value=summaries), step)
+        logger.info("Loss VALIDATION set step={0} = {1}".format(step, l))
+
+    def create_general_summary(self):
+        """
+        Creates a simple tensorboard summary with the value of the loss and learning rate
+        """
+
+        # Train summary
+        tf.scalar_summary('loss', self.training_graph, name="train")
+        tf.scalar_summary('between_class_loss', self.between_class_graph, name="train")
+        tf.scalar_summary('within_class_loss', self.within_class_graph, name="train")
+        tf.scalar_summary('lr', self.learning_rate, name="train")
+        return tf.merge_all_summaries()
+
+    def load_and_enqueue(self, session):
+        """
+        Injecting data in the place holder queue
+
+        **Parameters**
+          session: Tensorflow session
+        """
+
+        while not self.thread_pool.should_stop():
+
+            batch_left, batch_right, labels = self.train_data_shuffler.get_pair()
+            placeholder_left_data, placeholder_right_data, placeholder_label = self.train_data_shuffler.get_placeholders_pair()
+
+            feed_dict = {placeholder_left_data: batch_left,
+                         placeholder_right_data: batch_right,
+                         placeholder_label: labels}
+
+            session.run(self.enqueue_op, feed_dict=feed_dict)

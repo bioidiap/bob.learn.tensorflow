@@ -112,28 +112,29 @@ def main():
         #                                            batch_size=VALIDATION_BATCH_SIZE)
 
     # Preparing the architecture
-    #n_classes = len(train_data_shuffler.possible_labels)
-    n_classes = 50
+    n_classes = len(train_data_shuffler.possible_labels)
+    #n_classes = 50
     cnn = True
     if cnn:
 
         # LENET PAPER CHOPRA
-        architecture = Chopra(seed=SEED)
+        architecture = Chopra(seed=SEED, fc1_output=n_classes)
         #architecture = Lenet(default_feature_layer="fc2", n_classes=n_classes, conv1_output=8, conv2_output=16,use_gpu=USE_GPU)
         #architecture = VGG(n_classes=n_classes, use_gpu=USE_GPU)
         #architecture = Dummy(seed=SEED)
 
         #architecture = LenetDropout(default_feature_layer="fc2", n_classes=n_classes, conv1_output=4, conv2_output=8, use_gpu=USE_GPU)
 
-        loss = ContrastiveLoss(contrastive_margin=3.)
-        optimizer = tf.train.GradientDescentOptimizer(0.00001)
+        loss = ContrastiveLoss(contrastive_margin=4.)
+        optimizer = tf.train.GradientDescentOptimizer(0.000001)
         trainer = SiameseTrainer(architecture=architecture,
                                  loss=loss,
                                  iterations=ITERATIONS,
                                  snapshot=VALIDATION_TEST,
-                                 optimizer=optimizer)
+                                 optimizer=optimizer,
+                                 temp_dir="./LOGS/siamese-cnn")
 
-
+        #import ipdb; ipdb.set_trace();
         trainer.train(train_data_shuffler, validation_data_shuffler)
         #trainer.train(train_data_shuffler)
     else:
@@ -143,5 +144,6 @@ def main():
         trainer = SiameseTrainer(architecture=mlp,
                                  loss=loss,
                                  iterations=ITERATIONS,
-                                 snapshot=VALIDATION_TEST)
+                                 snapshot=VALIDATION_TEST,
+                                 temp_dir="./LOGS/siamese-dnn")
         trainer.train(train_data_shuffler, validation_data_shuffler)
