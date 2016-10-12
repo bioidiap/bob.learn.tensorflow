@@ -7,6 +7,9 @@ import numpy
 import bob.io.base
 import bob.io.image
 import bob.ip.base
+import bob.core
+logger = bob.core.log.setup("bob.learn.tensorflow")
+
 import tensorflow as tf
 
 from .BaseDataShuffler import BaseDataShuffler
@@ -63,6 +66,10 @@ class TextDataShuffler(BaseDataShuffler):
         else:
             d = self.rescale(d)
             data = self.bob2skimage(d)
+
+        # Checking NaN
+        if numpy.sum(numpy.isnan(data)) > 0:
+            logger.warning("######### Image {0} has noise #########".format(file_name))
 
         return data
 

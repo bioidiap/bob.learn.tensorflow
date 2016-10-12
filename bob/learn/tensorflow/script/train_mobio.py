@@ -82,18 +82,18 @@ def main():
     #                  optimizer=optimizer,
     #                  temp_dir="./LOGS/cnn")
 
-    #loss = ContrastiveLoss(contrastive_margin=4.)
-    #trainer = SiameseTrainer(architecture=architecture, loss=loss,
+    loss = ContrastiveLoss(contrastive_margin=4.)
+    trainer = SiameseTrainer(architecture=architecture, loss=loss,
+                             iterations=ITERATIONS,
+                             prefetch=False,
+                             optimizer=optimizer,
+                             temp_dir="./LOGS_MOBIO/siamese-cnn-prefetch")
+
+    #loss = TripletLoss(margin=4.)
+    #trainer = TripletTrainer(architecture=architecture, loss=loss,
     #                         iterations=ITERATIONS,
     #                         prefetch=True,
     #                         optimizer=optimizer,
-    #                         temp_dir="./LOGS_MOBIO/siamese-cnn-prefetch")
-
-    loss = TripletLoss(margin=4.)
-    trainer = TripletTrainer(architecture=architecture, loss=loss,
-                             iterations=ITERATIONS,
-                             prefetch=True,
-                             optimizer=optimizer,
-                             temp_dir="./LOGS_MOBIO/triplet-cnn-prefetch")
+    #                         temp_dir="./LOGS_MOBIO/triplet-cnn-prefetch")
 
     trainer.train(train_data_shuffler, validation_data_shuffler)
