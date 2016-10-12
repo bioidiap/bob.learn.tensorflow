@@ -72,10 +72,25 @@ class BaseDataShuffler(object):
         if self.data2_placeholder is None:
             self.data2_placeholder = tf.placeholder(tf.float32, shape=tuple([None] + list(self.shape[1:])), name=name)
 
-        if self.label_placeholder:
+        if self.label_placeholder is None:
             self.label_placeholder = tf.placeholder(tf.int64, shape=[None, ])
 
         return self.data_placeholder, self.data2_placeholder, self.label_placeholder
+
+    def get_placeholders_triplet_forprefetch(self, name=""):
+        """
+        Returns a place holder with the size of your batch
+        """
+        if self.data_placeholder is None:
+            self.data_placeholder = tf.placeholder(tf.float32, shape=tuple([None] + list(self.shape[1:])), name=name)
+
+        if self.data2_placeholder is None:
+            self.data2_placeholder = tf.placeholder(tf.float32, shape=tuple([None] + list(self.shape[1:])), name=name)
+
+        if self.data3_placeholder is None:
+            self.data3_placeholder = tf.placeholder(tf.float32, shape=tuple([None] + list(self.shape[1:])), name=name)
+
+        return self.data_placeholder, self.data2_placeholder, self.data3_placeholder
 
     def get_placeholders(self, name=""):
         """
@@ -102,9 +117,25 @@ class BaseDataShuffler(object):
             self.data2_placeholder = tf.placeholder(tf.float32, shape=self.shape, name=name+"_left")
 
         if self.label_placeholder is None:
-            self.label_placeholder = tf.placeholder(tf.int64, shape=self.shape[0], name="label")
+            self.label_placeholder = tf.placeholder(tf.int64, shape=self.shape[0], name=name+"_label")
 
         return self.data_placeholder, self.data2_placeholder, self.label_placeholder
+
+    def get_placeholders_triplet(self, name=""):
+        """
+        Returns a place holder with the size of your batch
+        """
+
+        if self.data_placeholder is None:
+            self.data_placeholder = tf.placeholder(tf.float32, shape=self.shape, name=name+"_anchor")
+
+        if self.data2_placeholder is None:
+            self.data2_placeholder = tf.placeholder(tf.float32, shape=self.shape, name=name+"_positive")
+
+        if self.data3_placeholder is None:
+            self.data3_placeholder = tf.placeholder(tf.float32, shape=self.shape, name=name+"_negative")
+
+        return self.data_placeholder, self.data2_placeholder, self.data3_placeholder
 
     def get_genuine_or_not(self, input_data, input_labels, genuine=True):
 

@@ -44,4 +44,3 @@ class ContrastiveLoss(BaseLoss):
             loss = 0.5 * (within_class + between_class)
 
             return tf.reduce_mean(loss), tf.reduce_mean(between_class), tf.reduce_mean(within_class)
-            #return loss, between_class, within_class, label, left_feature, right_feature, d

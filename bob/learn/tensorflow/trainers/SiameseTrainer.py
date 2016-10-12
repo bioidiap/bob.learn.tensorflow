@@ -58,7 +58,7 @@ class SiameseTrainer(Trainer):
                  prefetch=False,
 
                  ## Analizer
-                 analizer=SoftmaxAnalizer(),
+                 analizer=ExperimentAnalizer(),
 
                  verbosity_level=2):
 
@@ -85,10 +85,13 @@ class SiameseTrainer(Trainer):
             verbosity_level=verbosity_level
         )
 
-        self.between_class_graph = None
-        self.within_class_graph = None
+        self.between_class_graph_train = None
+        self.within_class_graph_train = None
 
-    def compute_graph(self, data_shuffler, prefetch=False, name=""):
+        self.between_class_graph_validation = None
+        self.within_class_graph_validation = None
+
+    def compute_graph(self, data_shuffler, prefetch=False, name="", train=True):
         """
         Computes the graph for the trainer.
 
@@ -102,13 +105,7 @@ class SiameseTrainer(Trainer):
 
         # Defining place holders
         if prefetch:
-            placeholder_left_data, placeholder_right_data, placeholder_labels = data_shuffler.get_placeholders_pair_forprefetch(name="train")
-
-            # Creating two graphs
-            #placeholder_left_data, placeholder_labels = data_shuffler. \
-            #    get_placeholders_forprefetch(name="train_left")
-            #placeholder_right_data, _ = data_shuffler.get_placeholders(name="train_right")
-            feature_left_batch, feature_right_batch, label_batch = data_shuffler.get_placeholders_pair(name="train_")
+            placeholder_left_data, placeholder_right_data, placeholder_labels = data_shuffler.get_placeholders_pair_forprefetch(name=name)
 
             # Defining a placeholder queue for prefetching
             queue = tf.FIFOQueue(capacity=100,
@@ -126,9 +123,7 @@ class SiameseTrainer(Trainer):
                 raise ValueError("The variable `architecture` must be an instance of "
                                  "`bob.learn.tensorflow.network.SequenceNetwork`")
         else:
-            feature_left_batch, feature_right_batch, label_batch = data_shuffler.get_placeholders_pair(name="train_")
-            #feature_left_batch, label_batch = data_shuffler.get_placeholders(name="train_left")
-            #feature_right_batch, _ = data_shuffler.get_placeholders(name="train_right")
+            feature_left_batch, feature_right_batch, label_batch = data_shuffler.get_placeholders_pair(name=name)
 
         # Creating the siamese graph
         train_left_graph = self.architecture.compute_graph(feature_left_batch)
@@ -138,8 +133,12 @@ class SiameseTrainer(Trainer):
                                                                    train_left_graph,
                                                                    train_right_graph)
 
-        self.between_class_graph = between_class_graph
-        self.within_class_graph = within_class_graph
+        if train:
+            self.between_class_graph_train = between_class_graph
+            self.within_class_graph_train = within_class_graph
+        else:
+            self.between_class_graph_validation = between_class_graph
+            self.within_class_graph_validation = within_class_graph
 
         return graph
 
@@ -153,7 +152,7 @@ class SiameseTrainer(Trainer):
         """
 
         batch_left, batch_right, labels = data_shuffler.get_pair()
-        placeholder_left_data, placeholder_right_data, placeholder_label = data_shuffler.get_placeholders_pair(name="train")
+        placeholder_left_data, placeholder_right_data, placeholder_label = data_shuffler.get_placeholders_pair()
 
         feed_dict = {placeholder_left_data: batch_left,
                      placeholder_right_data: batch_right,
@@ -172,12 +171,12 @@ class SiameseTrainer(Trainer):
         """
         if self.prefetch:
             _, l, bt_class, wt_class, lr, summary = session.run([self.optimizer,
-                                             self.training_graph, self.between_class_graph, self.within_class_graph,
+                                             self.training_graph, self.between_class_graph_train, self.within_class_graph_train,
                                              self.learning_rate, self.summaries_train])
         else:
             feed_dict = self.get_feed_dict(self.train_data_shuffler)
             _, l, bt_class, wt_class, lr, summary = session.run([self.optimizer,
-                                             self.training_graph, self.between_class_graph, self.within_class_graph,
+                                             self.training_graph, self.between_class_graph_train, self.within_class_graph_train,
                                              self.learning_rate, self.summaries_train], feed_dict=feed_dict)
 
         logger.info("Loss training set step={0} = {1}".format(step, l))
@@ -197,12 +196,16 @@ class SiameseTrainer(Trainer):
         if self.validation_summary_writter is None:
             self.validation_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'validation'), session.graph)
 
-        self.validation_graph = self.compute_graph(data_shuffler, name="validation")
+        self.validation_graph = self.compute_graph(data_shuffler, name="validation", train=False)
         feed_dict = self.get_feed_dict(data_shuffler)
-        l = session.run(self.validation_graph, feed_dict=feed_dict)
+        l, bt_class, wt_class = session.run([self.validation_graph,
+                                             self.between_class_graph_validation, self.within_class_graph_validation],
+                                             feed_dict=feed_dict)
 
         summaries = []
         summaries.append(summary_pb2.Summary.Value(tag="loss", simple_value=float(l)))
+        summaries.append(summary_pb2.Summary.Value(tag="between_class_loss", simple_value=float(bt_class)))
+        summaries.append(summary_pb2.Summary.Value(tag="within_class_loss", simple_value=float(wt_class)))
         self.validation_summary_writter.add_summary(summary_pb2.Summary(value=summaries), step)
         logger.info("Loss VALIDATION set step={0} = {1}".format(step, l))
 
@@ -213,8 +216,8 @@ class SiameseTrainer(Trainer):
 
         # Train summary
         tf.scalar_summary('loss', self.training_graph, name="train")
-        tf.scalar_summary('between_class_loss', self.between_class_graph, name="train")
-        tf.scalar_summary('within_class_loss', self.within_class_graph, name="train")
+        tf.scalar_summary('between_class_loss', self.between_class_graph_train, name="train")
+        tf.scalar_summary('within_class_loss', self.within_class_graph_train, name="train")
         tf.scalar_summary('lr', self.learning_rate, name="train")
         return tf.merge_all_summaries()
 

@@ -23,7 +23,7 @@ class ExperimentAnalizer:
 
     """
 
-    def __init__(self, data_shuffler, machine, session, convergence_threshold=0.01, convergence_reference='eer'):
+    def __init__(self, convergence_threshold=0.01, convergence_reference='eer'):
         """
         Use the CNN as feature extractor for a n-class classification
 
@@ -38,9 +38,9 @@ class ExperimentAnalizer:
 
         """
 
-        self.data_shuffler = data_shuffler
-        self.machine = machine
-        self.session = session
+        self.data_shuffler = None
+        self.network = None
+        self.session = None
 
         # Statistics
         self.eer = []
@@ -48,16 +48,21 @@ class ExperimentAnalizer:
         self.far100 = []
         self.far1000 = []
 
-    def __call__(self):
+    def __call__(self, data_shuffler, network, session):
+
+        if self.data_shuffler is None:
+            self.data_shuffler = data_shuffler
+            self.network = network
+            self.session = session
 
         # Extracting features for enrollment
         enroll_data, enroll_labels = self.data_shuffler.get_batch()
-        enroll_features = self.machine(enroll_data, session=self.session)
+        enroll_features = self.network(enroll_data, session=self.session)
         del enroll_data
 
         # Extracting features for probing
         probe_data, probe_labels = self.data_shuffler.get_batch()
-        probe_features = self.machine(probe_data, session=self.session)
+        probe_features = self.network(probe_data, session=self.session)
         del probe_data
 
         # Creating models

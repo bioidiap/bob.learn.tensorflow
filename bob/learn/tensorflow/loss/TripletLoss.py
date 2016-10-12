@@ -41,5 +41,4 @@ class TripletLoss(BaseLoss):
             d_negative = tf.square(compute_euclidean_distance(anchor_feature, negative_feature))
 
             loss = tf.maximum(0., d_positive - d_negative + self.margin)
-            return tf.reduce_mean(loss), tf.reduce_mean(d_positive), tf.reduce_mean(d_negative)
-            #return loss, d_positive, d_negative
+            return tf.reduce_mean(loss), tf.reduce_mean(d_negative), tf.reduce_mean(d_positive)

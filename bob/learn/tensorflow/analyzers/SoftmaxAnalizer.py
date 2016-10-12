@@ -31,66 +31,20 @@ class SoftmaxAnalizer(object):
         """
 
         self.data_shuffler = None
-        self.trainer = None
+        self.network = None
         self.session = None
 
-    def __call__(self, data_shuffler, trainer, session):
+    def __call__(self, data_shuffler, network, session):
 
         if self.data_shuffler is None:
             self.data_shuffler = data_shuffler
-            self.trainer = trainer
+            self.network = network
             self.session = session
 
         # Creating the graph
         feature_batch, label_batch = self.data_shuffler.get_placeholders(name="validation_accuracy")
         data, labels = self.data_shuffler.get_batch()
-        graph = self.trainer.architecture.compute_graph(feature_batch)
-
-        predictions = numpy.argmax(self.session.run(graph, feed_dict={feature_batch: data[:]}), 1)
-        accuracy = 100. * numpy.sum(predictions == labels) / predictions.shape[0]
-
-        summaries = []
-        summaries.append(summary_pb2.Summary.Value(tag="accuracy_validation", simple_value=float(accuracy)))
-        return summary_pb2.Summary(value=summaries)
-
-
-class SoftmaxSiameseAnalizer(object):
-    """
-    Analizer.
-    """
-
-    def __init__(self):
-        """
-        Softmax analizer
-
-        ** Parameters **
-
-          data_shuffler:
-          graph:
-          session:
-          convergence_threshold:
-          convergence_reference: References to analize the convergence. Possible values are `eer`, `far10`, `far10`
-
-
-        """
-
-        self.data_shuffler = None
-        self.trainer = None
-        self.session = None
-
-    def __call__(self, data_shuffler, machine, session):
-
-        if self.data_shuffler is None:
-            self.data_shuffler = data_shuffler
-            self.trainer = trainer
-            self.session = session
-
-        # Creating the graph
-        #feature_batch, label_batch = self.data_shuffler.get_placeholders(name="validation_accuracy")
-        feature_left_batch, feature_right_batch label_batch = self.data_shuffler.get_placeholders_pair(name="validation_accuracy")
-
-        batch_left, batch_right, labels = self.data_shuffler.get_batch()
-        left = self.machine.compute_graph(feature_batch)
+        graph = self.network.compute_graph(feature_batch)
 
         predictions = numpy.argmax(self.session.run(graph, feed_dict={feature_batch: data[:]}), 1)
         accuracy = 100. * numpy.sum(predictions == labels) / predictions.shape[0]

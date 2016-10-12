@@ -26,6 +26,7 @@ from bob.learn.tensorflow.data import MemoryDataShuffler, TextDataShuffler
 from bob.learn.tensorflow.network import Lenet, MLP, Dummy, Chopra
 from bob.learn.tensorflow.trainers import Trainer
 from bob.learn.tensorflow.loss import BaseLoss
+from ..analyzers import ExperimentAnalizer, SoftmaxAnalizer
 
 import numpy
 
@@ -93,7 +94,11 @@ def main():
         #architecture = Lenet(seed=SEED)
         #architecture = Dummy(seed=SEED)
         loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
-        trainer = Trainer(architecture=architecture, loss=loss, iterations=ITERATIONS, prefetch=False, temp_dir="./LOGS/cnn")
+        trainer = Trainer(architecture=architecture,
+                          loss=loss,
+                          iterations=ITERATIONS,
+                          analizer=ExperimentAnalizer(),
+                          prefetch=True, temp_dir="./LOGS/cnn")
         trainer.train(train_data_shuffler, validation_data_shuffler)
         #trainer.train(train_data_shuffler)
     else:

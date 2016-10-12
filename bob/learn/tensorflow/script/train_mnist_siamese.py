@@ -132,7 +132,8 @@ def main():
                                  iterations=ITERATIONS,
                                  snapshot=VALIDATION_TEST,
                                  optimizer=optimizer,
-                                 temp_dir="./LOGS/siamese-cnn")
+                                 prefetch=True,
+                                 temp_dir="./LOGS/siamese-cnn-prefetch")
 
         #import ipdb; ipdb.set_trace();
         trainer.train(train_data_shuffler, validation_data_shuffler)

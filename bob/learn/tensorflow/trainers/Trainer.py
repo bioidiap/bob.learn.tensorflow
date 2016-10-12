@@ -175,7 +175,7 @@ class Trainer(object):
         logger.info("Loss training set step={0} = {1}".format(step, l))
         self.train_summary_writter.add_summary(summary, step)
 
-    def compute_validation(self, session, data_shuffler, step):
+    def compute_validation(self,  session, data_shuffler, step):
         """
         Computes the loss in the validation set
 
@@ -185,13 +185,13 @@ class Trainer(object):
             step: Iteration number
 
         """
-
-        if self.validation_summary_writter is None:
-            self.validation_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'validation'), session.graph)
-
+        # Opening a new session for validation
         self.validation_graph = self.compute_graph(data_shuffler, name="validation")
         feed_dict = self.get_feed_dict(data_shuffler)
         l = session.run(self.validation_graph, feed_dict=feed_dict)
+
+        if self.validation_summary_writter is None:
+            self.validation_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'validation'), session.graph)
 
         summaries = []
         summaries.append(summary_pb2.Summary.Value(tag="loss", simple_value=float(l)))
@@ -283,7 +283,6 @@ class Trainer(object):
 
             # TENSOR BOARD SUMMARY
             self.train_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'train'), session.graph)
-
             for step in range(self.iterations):
 
                 start = time.time()
@@ -297,7 +296,7 @@ class Trainer(object):
 
                     if self.analizer is not None:
                         self.validation_summary_writter.add_summary(self.analizer(
-                             validation_data_shuffler, self, session), step)
+                             validation_data_shuffler, self.architecture, session), step)
 
             logger.info("Training finally finished")
 
