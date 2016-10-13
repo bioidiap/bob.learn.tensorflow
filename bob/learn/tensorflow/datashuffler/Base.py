@@ -6,6 +6,7 @@
 import numpy
 import tensorflow as tf
 import bob.ip.base
+import numpy
 
 
 class Base(object):
@@ -13,9 +14,10 @@ class Base(object):
                  input_shape,
                  input_dtype="float64",
                  scale=True,
-                 batch_size=1):
+                 batch_size=1,
+                 seed=10):
         """
-         The class provide base functionoalies to shuffle the data
+         The class provide base functionalities to shuffle the data before to train a neural network
 
          **Parameters**
            data:
@@ -24,11 +26,15 @@ class Base(object):
            scale:
            train_batch_size:
            validation_batch_size:
+           seed: Seed for the random number generator
         """
+        self.seed = seed
+        numpy.random.seed(seed)
 
         self.scale = scale
         self.scale_value = 0.00390625
         self.input_dtype = input_dtype
+
 
         # TODO: Check if the bacth size is higher than the input data
         self.batch_size = batch_size

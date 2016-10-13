@@ -10,7 +10,11 @@ import tensorflow as tf
 
 class Siamese(Base):
     """
-     Siamese Shuffler base class
+     This datashuffler deal with databases that are provides data to Siamese networks.
+     Basically the py:meth:`get_batch` method provides you 3 elements in the returned list.
+
+     The first two are the batch data, and the last is the label. Either `0` for samples from the same class or `1`
+      for samples from different class.
     """
 
     def __init__(self, **kwargs):
@@ -29,6 +33,21 @@ class Siamese(Base):
 
         if self.label_placeholder is None:
             self.label_placeholder = tf.placeholder(tf.int64, shape=self.shape[0], name=name+"_label")
+
+        return [self.data_placeholder, self.data2_placeholder, self.label_placeholder]
+
+    def get_placeholders_forprefetch(self, name=""):
+        """
+        Returns a place holder with the size of your batch
+        """
+        if self.data_placeholder is None:
+            self.data_placeholder = tf.placeholder(tf.float32, shape=tuple([None] + list(self.shape[1:])), name=name)
+
+        if self.data2_placeholder is None:
+            self.data2_placeholder = tf.placeholder(tf.float32, shape=tuple([None] + list(self.shape[1:])), name=name)
+
+        if self.label_placeholder is None:
+            self.label_placeholder = tf.placeholder(tf.int64, shape=[None, ])
 
         return [self.data_placeholder, self.data2_placeholder, self.label_placeholder]
 

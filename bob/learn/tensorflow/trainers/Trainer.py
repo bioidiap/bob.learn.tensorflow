@@ -3,7 +3,6 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 # @date: Tue 09 Aug 2016 15:25:22 CEST
 
-import logging
 import tensorflow as tf
 from ..network import SequenceNetwork
 import threading
@@ -115,7 +114,7 @@ class Trainer(object):
 
         # Defining place holders
         if prefetch:
-            placeholder_data, placeholder_labels = data_shuffler.get_placeholders_forprefetch(name=name)
+            [placeholder_data, placeholder_labels] = data_shuffler.get_placeholders_forprefetch(name=name)
 
             # Defining a placeholder queue for prefetching
             queue = tf.FIFOQueue(capacity=10,
@@ -131,7 +130,7 @@ class Trainer(object):
                 raise ValueError("The variable `architecture` must be an instance of "
                                  "`bob.learn.tensorflow.network.SequenceNetwork`")
         else:
-            feature_batch, label_batch = data_shuffler.get_placeholders(name=name)
+            [feature_batch, label_batch] = data_shuffler.get_placeholders(name=name)
 
         # Creating graphs and defining the loss
         network_graph = self.architecture.compute_graph(feature_batch)
@@ -147,8 +146,8 @@ class Trainer(object):
             data_shuffler:
 
         """
-        data, labels = data_shuffler.get_batch()
-        data_placeholder, label_placeholder = data_shuffler.get_placeholders()
+        [data, labels] = data_shuffler.get_batch()
+        [data_placeholder, label_placeholder] = data_shuffler.get_placeholders()
 
         feed_dict = {data_placeholder: data,
                      label_placeholder: labels}
@@ -233,8 +232,8 @@ class Trainer(object):
         """
 
         while not self.thread_pool.should_stop():
-            train_data, train_labels = self.train_data_shuffler.get_batch()
-            train_placeholder_data, train_placeholder_labels = self.train_data_shuffler.get_placeholders()
+            [train_data, train_labels] = self.train_data_shuffler.get_batch()
+            [train_placeholder_data, train_placeholder_labels] = self.train_data_shuffler.get_placeholders()
 
             feed_dict = {train_placeholder_data: train_data,
                          train_placeholder_labels: train_labels}
@@ -311,3 +310,5 @@ class Trainer(object):
                 # now they should definetely stop
                 self.thread_pool.request_stop()
                 self.thread_pool.join(threads)
+
+            session.close()# For some reason the session is not closed after the context manager finishes

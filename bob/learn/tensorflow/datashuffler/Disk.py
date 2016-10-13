@@ -18,9 +18,11 @@ class Disk(Base):
                  input_shape,
                  input_dtype="float64",
                  scale=True,
-                 batch_size=1):
+                 batch_size=1,
+                 seed=10):
         """
-         Shuffler that deal with file list
+         This datashuffler deal with databases that are stored in the disk.
+         The data is loaded on the fly,.
 
          **Parameters**
          data:
@@ -43,13 +45,16 @@ class Disk(Base):
             input_shape=input_shape,
             input_dtype=input_dtype,
             scale=scale,
-            batch_size=batch_size
+            batch_size=batch_size,
+            seed=seed
         )
+        # Seting the seed
+        numpy.random.seed(seed)
 
         # TODO: very bad solution to deal with bob.shape images an tf shape images
         self.bob_shape = tuple([input_shape[2]] + list(input_shape[0:2]))
 
-    def load_from_file(self, file_name, shape):
+    def load_from_file(self, file_name):
         d = bob.io.base.load(file_name)
         if d.shape[0] != 3 and self.input_shape[2] != 3: # GRAY SCALE IMAGE
             data = numpy.zeros(shape=(d.shape[0], d.shape[1], 1))
@@ -61,7 +66,7 @@ class Disk(Base):
 
         # Checking NaN
         if numpy.sum(numpy.isnan(data)) > 0:
-            logger.warning("######### Image {0} has noise #########".format(file_name))
+            logger.warning("######### Sample {0} has noise #########".format(file_name))
 
         return data
 

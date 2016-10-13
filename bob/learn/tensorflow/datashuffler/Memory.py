@@ -14,9 +14,10 @@ class Memory(Base):
                  input_shape,
                  input_dtype="float64",
                  scale=True,
-                 batch_size=1):
+                 batch_size=1,
+                 seed=10):
         """
-         Shuffler that deal with memory datasets
+         This datashuffler deal with databases that are stored in a :py:class`numpy.array`
 
          **Parameters**
            data:
@@ -33,8 +34,11 @@ class Memory(Base):
             input_shape=input_shape,
             input_dtype=input_dtype,
             scale=scale,
-            batch_size=batch_size
+            batch_size=batch_size,
+            seed=seed
         )
+        # Seting the seed
+        numpy.random.seed(seed)
 
         self.data = self.data.astype(input_dtype)
         if self.scale:

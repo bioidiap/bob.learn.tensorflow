@@ -22,10 +22,11 @@ from docopt import docopt
 import tensorflow as tf
 from .. import util
 SEED = 10
-from bob.learn.tensorflow.data import MemoryDataShuffler, TextDataShuffler
+from bob.learn.tensorflow.datashuffler import Memory, SiameseMemory, TripletMemory
 from bob.learn.tensorflow.network import Lenet, MLP, Dummy, Chopra
 from bob.learn.tensorflow.trainers import Trainer
 from bob.learn.tensorflow.loss import BaseLoss
+import bob.io.base
 from ..analyzers import ExperimentAnalizer, SoftmaxAnalizer
 
 import numpy
@@ -42,68 +43,58 @@ def main():
 
     mnist = True
 
-    # Loading data
-    if mnist:
-        train_data, train_labels, validation_data, validation_labels = \
-            util.load_mnist(data_dir="./src/bob.db.mnist/bob/db/mnist/")
+    train_data, train_labels, validation_data, validation_labels = \
+        util.load_mnist(data_dir="./src/bob.db.mnist/bob/db/mnist/")
 
-        train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
-        validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
+    train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
+    validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
 
-        train_data_shuffler = MemoryDataShuffler(train_data, train_labels,
-                                                 input_shape=[28, 28, 1],
-                                                 batch_size=BATCH_SIZE)
 
-        validation_data_shuffler = MemoryDataShuffler(validation_data, validation_labels,
-                                                      input_shape=[28, 28, 1],
-                                                      batch_size=VALIDATION_BATCH_SIZE)
-    else:
-        import bob.db.mobio
-        db = bob.db.mobio.Database()
+    # Creating datashufflers
+    train_data_shuffler = Memory(train_data, train_labels,
+                                             input_shape=[28, 28, 1],
+                                             batch_size=BATCH_SIZE)
 
-        # Preparing train set
-        train_objects = db.objects(protocol="male", groups="world")
-        train_labels = [o.client_id for o in train_objects]
-        train_file_names = [o.make_path(
-            directory="/idiap/user/tpereira/face/baselines/eigenface/preprocessed",
-            extension=".hdf5")
-                      for o in train_objects]
+    validation_data_shuffler = Memory(validation_data, validation_labels,
+                                                  input_shape=[28, 28, 1],
+                                                  batch_size=VALIDATION_BATCH_SIZE)
 
-        train_data_shuffler = TextDataShuffler(train_file_names, train_labels,
-                                               scale=False,
-                                               input_shape=[80, 64, 1],
-                                               batch_size=BATCH_SIZE)
 
-        # Preparing train set
-        validation_objects = db.objects(protocol="male", groups="dev")
-        validation_labels = [o.client_id for o in validation_objects]
-        validation_file_names = [o.make_path(
-            directory="/idiap/user/tpereira/face/baselines/eigenface/preprocessed",
-            extension=".hdf5")
-                            for o in validation_objects]
-
-        validation_data_shuffler = TextDataShuffler(validation_file_names, validation_labels,
-                                                    input_shape=[80, 64, 1],
-                                                    scale=False,
-                                                    batch_size=VALIDATION_BATCH_SIZE)
 
     # Preparing the architecture
     cnn = True
     if cnn:
-        architecture = Chopra(seed=SEED)
+        architecture = Chopra(seed=SEED, fc1_output=10)
         #architecture = Lenet(seed=SEED)
         #architecture = Dummy(seed=SEED)
         loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
-        trainer = Trainer(architecture=architecture,
-                          loss=loss,
-                          iterations=ITERATIONS,
-                          analizer=ExperimentAnalizer(),
-                          prefetch=True, temp_dir="./LOGS/cnn")
-        trainer.train(train_data_shuffler, validation_data_shuffler)
+        #trainer = Trainer(architecture=architecture,
+        #                  loss=loss,
+        #                  iterations=ITERATIONS,
+        #                  analizer=ExperimentAnalizer(),
+        #                  prefetch=False, temp_dir="./temp/cnn")
+        #trainer.train(train_data_shuffler, validation_data_shuffler)
         #trainer.train(train_data_shuffler)
     else:
         mlp = MLP(10, hidden_layers=[15, 20])
         loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
         trainer = Trainer(architecture=mlp, loss=loss, iterations=ITERATIONS, temp_dir="./LOGS/dnn")
         trainer.train(train_data_shuffler, validation_data_shuffler)
+
+    # Loading
+    test_data_shuffler = Memory(validation_data, validation_labels,
+                                input_shape=[28, 28, 1],
+                                batch_size=400)
+
+    with tf.Session() as session:
+        new_net = Chopra(seed=SEED, fc1_output=10)
+        new_net.load(bob.io.base.HDF5File("./temp/cnn/model.hdf5"), shape=[400, 28, 28, 1], session=session)
+
+        [data, labels] = test_data_shuffler.get_batch()
+        print new_net(data, session)
+
+
+
+
+
 
