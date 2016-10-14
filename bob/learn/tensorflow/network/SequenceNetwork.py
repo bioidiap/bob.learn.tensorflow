@@ -118,71 +118,6 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
 
         return variables
 
-    def save(self, hdf5, step=None):
-        """Save the state of the network in HDF5 format
-
-        **Parameters**
-
-            hdf5: An opened :py:class:`bob.io.base.HDF5File`
-
-            step: The current training step. If not `None`, will create a HDF5 group with the current step.
-
-        """
-
-        # Directory that stores the tensorflow variables
-        hdf5.create_group('/tensor_flow')
-        hdf5.cd('/tensor_flow')
-
-        if step is not None:
-            group_name = '/step_{0}'.format(step)
-            hdf5.create_group(group_name)
-            hdf5.cd(group_name)
-
-        # Iterating the variables of the model
-        for v in self.dump_variables().keys():
-            hdf5.set(v, self.dump_variables()[v].eval())
-
-        hdf5.cd('..')
-        if step is not None:
-            hdf5.cd('..')
-
-        hdf5.set('input_divide', self.input_divide)
-        hdf5.set('input_subtract', self.input_subtract)
-
-    def load(self, hdf5, shape, session=None):
-        """Load the network
-
-        **Parameters**
-
-            hdf5: The saved network in the :py:class:`bob.io.base.HDF5File` format
-
-            shape: Input shape of the network
-
-            session: tensorflow `session <https://www.tensorflow.org/versions/r0.11/api_docs/python/client.html#Session>`_
-        """
-
-        if session is None:
-            session = tf.Session()
-
-        # Loading the normalization parameters
-        self.input_divide = hdf5.read('input_divide')
-        self.input_subtract = hdf5.read('input_subtract')
-
-        # Loading variables
-        place_holder = tf.placeholder(tf.float32, shape=shape, name="load")
-        self.compute_graph(place_holder)
-        tf.initialize_all_variables().run(session=session)
-
-        hdf5.cd('/tensor_flow')
-        for k in self.sequence_net:
-            # TODO: IT IS NOT SMART TESTING ALONG THIS PAGE
-            if not isinstance(self.sequence_net[k], MaxPooling):
-                #self.sequence_net[k].W.assign(hdf5.read(self.sequence_net[k].W.name))
-                self.sequence_net[k].W.assign(hdf5.read(self.sequence_net[k].W.name)).eval(session=session)
-                session.run(self.sequence_net[k].W)
-                self.sequence_net[k].b.assign(hdf5.read(self.sequence_net[k].b.name)).eval(session=session)
-                session.run(self.sequence_net[k].b)
-
     def variable_summaries(self, var, name):
         """Attach a lot of summaries to a Tensor."""
         with tf.name_scope('summaries'):
@@ -248,40 +183,113 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         #    self.saver = tf.train.Saver(variables)
         #self.saver.restore(session, path)
 
+    def save(self, hdf5, step=None):
+        """
+        Save the state of the network in HDF5 format
 
+        **Parameters**
 
-    """
-    def save(self, session, path, step=None):
+            hdf5: An opened :py:class:`bob.io.base.HDF5File`
 
-        if self.saver is None:
-            variables = self.dump_variables()
-            variables['mean'] = tf.Variable(10.0)
-            #import ipdb; ipdb.set_trace()
+            step: The current training step. If not `None`, will create a HDF5 group with the current step.
 
-            tf.initialize_all_variables().run()
-            self.saver = tf.train.Saver(variables)
+        """
 
-        if step is None:
-            return self.saver.save(session, os.path.join(path, "model.ckpt"))
-        else:
-            return self.saver.save(session, os.path.join(path, "model" + str(step) + ".ckpt"))
+        def create_groups(path):
+            split_path = path.split("/")
+            for i in range(0, len(split_path)-1):
+                p = split_path[i]
+                hdf5.create_group(p)
 
+        # Directory that stores the tensorflow variables
+        hdf5.create_group('/tensor_flow')
+        hdf5.cd('/tensor_flow')
 
-    def load(self, path, shape, session=None):
+        if step is not None:
+            group_name = '/step_{0}'.format(step)
+            hdf5.create_group(group_name)
+            hdf5.cd(group_name)
+
+        # Iterating the variables of the model
+        for v in self.dump_variables().keys():
+            create_groups(v)
+            hdf5.set(v, self.dump_variables()[v].eval())
+
+        hdf5.cd('..')
+        if step is not None:
+            hdf5.cd('..')
+
+        hdf5.set('input_divide', self.input_divide)
+        hdf5.set('input_subtract', self.input_subtract)
+
+    def load(self, hdf5, shape, session=None):
+        """
+        Load the network
+
+        **Parameters**
+
+            hdf5: The saved network in the :py:class:`bob.io.base.HDF5File` format
+
+            shape: Input shape of the network
+
+            session: tensorflow `session <https://www.tensorflow.org/versions/r0.11/api_docs/python/client.html#Session>`_
+        """
 
         if session is None:
             session = tf.Session()
+
+        # Loading the normalization parameters
+        self.input_divide = hdf5.read('input_divide')
+        self.input_subtract = hdf5.read('input_subtract')
 
         # Loading variables
         place_holder = tf.placeholder(tf.float32, shape=shape, name="load")
         self.compute_graph(place_holder)
         tf.initialize_all_variables().run(session=session)
 
+        hdf5.cd('/tensor_flow')
+        for k in self.sequence_net:
+            # TODO: IT IS NOT SMART TESTING ALONG THIS PAGE
+            if not isinstance(self.sequence_net[k], MaxPooling):
+                #self.sequence_net[k].W.assign(hdf5.read(self.sequence_net[k].W.name))
+                self.sequence_net[k].W.assign(hdf5.read(self.sequence_net[k].W.name)).eval(session=session)
+                session.run(self.sequence_net[k].W)
+                self.sequence_net[k].b.assign(hdf5.read(self.sequence_net[k].b.name)).eval(session=session)
+                session.run(self.sequence_net[k].b)
+
+
+    """
+    def save(self, session, path, step=None):
+
         if self.saver is None:
-            variables = self.dump_variables()
-            variables['input_divide'] = self.input_divide
-            variables['input_subtract'] = self.input_subtract
-            self.saver = tf.train.Saver(variables)
+            #variables = self.dump_variables()
+            #variables['mean'] = tf.Variable(10.0)
+            #import ipdb; ipdb.set_trace()
+
+            #tf.initialize_all_variables().run()
+            self.saver = tf.train.Saver(session)
+
+        if step is None:
+            return self.saver.save(session, path)
+        else:
+            return self.saver.save(session, path)
+
+    def load(self, path, session=None):
+
+        if session is None:
+            session = tf.Session()
+            #tf.initialize_all_variables().run(session=session)
+
+        # Loading variables
+        #place_holder = tf.placeholder(tf.float32, shape=shape, name="load")
+        #self.compute_graph(place_holder)
+        #tf.initialize_all_variables().run(session=session)
+
+        #if self.saver is None:
+            #variables = self.dump_variables()
+            #variables['input_divide'] = self.input_divide
+            #variables['input_subtract'] = self.input_subtract
+            #self.saver = tf.train.Saver(variables)
 
         self.saver.restore(session, path)
     """

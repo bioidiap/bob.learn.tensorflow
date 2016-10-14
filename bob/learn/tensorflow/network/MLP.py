@@ -60,13 +60,13 @@ class MLP(SequenceNetwork):
 
         for i in range(len(hidden_layers)):
             l = hidden_layers[i]
-            self.add(FullyConnected(name="fc{0}".format(i),
+            self.add(FullyConnected(name="mlp_fc{0}".format(i),
                                     output_dim=l,
                                     activation=hidden_activation,
                                     weights_initialization=weights_initialization,
                                     bias_initialization=bias_initialization))
 
-        self.add(FullyConnected(name="fc_output",
+        self.add(FullyConnected(name="mlp_fc_output",
                                 output_dim=output_shape,
                                 activation=output_activation,
                                 weights_initialization=weights_initialization,

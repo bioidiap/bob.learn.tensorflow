@@ -68,8 +68,8 @@ class SiameseDisk(Siamese, Disk):
         genuine = True
         for i in range(self.shape[0]):
             file_name, file_name_p = self.get_genuine_or_not(self.data, self.labels, genuine=genuine)
-            data[i, ...] = self.load_from_file(str(file_name), self.shape)
-            data_p[i, ...] = self.load_from_file(str(file_name_p), self.shape)
+            data[i, ...] = self.load_from_file(str(file_name))
+            data_p[i, ...] = self.load_from_file(str(file_name_p))
 
             labels_siamese[i] = not genuine
             genuine = not genuine

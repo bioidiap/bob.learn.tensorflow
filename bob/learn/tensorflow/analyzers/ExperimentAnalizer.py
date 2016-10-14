@@ -11,6 +11,8 @@ import bob.measure
 from tensorflow.core.framework import summary_pb2
 from scipy.spatial.distance import cosine
 
+from bob.learn.tensorflow.datashuffler import Memory, Disk
+
 
 class ExperimentAnalizer:
     """
@@ -55,35 +57,44 @@ class ExperimentAnalizer:
             self.network = network
             self.session = session
 
+        # Getting the base class. Recipe extracted from
+        # http://stackoverflow.com/questions/5516263/creating-an-object-from-a-base-class-object-in-python/5516330#5516330
+        if isinstance(data_shuffler, Memory):
+            base_data_shuffler = object.__new__(Memory)
+            base_data_shuffler.__dict__ = data_shuffler.__dict__.copy()
+        else:
+            base_data_shuffler = object.__new__(Disk)
+            base_data_shuffler.__dict__ = data_shuffler.__dict__.copy()
+
         # Extracting features for enrollment
-        enroll_data, enroll_labels = self.data_shuffler.get_batch()
+        enroll_data, enroll_labels = base_data_shuffler.get_batch()
         enroll_features = self.network(enroll_data, session=self.session)
         del enroll_data
 
         # Extracting features for probing
-        probe_data, probe_labels = self.data_shuffler.get_batch()
+        probe_data, probe_labels = base_data_shuffler.get_batch()
         probe_features = self.network(probe_data, session=self.session)
         del probe_data
 
         # Creating models
         models = []
-        for i in range(len(self.data_shuffler.possible_labels)):
+        for i in range(len(base_data_shuffler.possible_labels)):
             indexes_model = numpy.where(enroll_labels == self.data_shuffler.possible_labels[i])[0]
             models.append(numpy.mean(enroll_features[indexes_model, :], axis=0))
 
         # Probing
         positive_scores = numpy.zeros(shape=0)
         negative_scores = numpy.zeros(shape=0)
-        for i in range(len(self.data_shuffler.possible_labels)):
+        for i in range(len(base_data_shuffler.possible_labels)):
             #for i in self.data_shuffler.possible_labels:
             # Positive scoring
-            indexes = probe_labels == self.data_shuffler.possible_labels[i]
+            indexes = probe_labels == base_data_shuffler.possible_labels[i]
             positive_data = probe_features[indexes, :]
             p = [cosine(models[i], positive_data[j]) for j in range(positive_data.shape[0])]
             positive_scores = numpy.hstack((positive_scores, p))
 
             # negative scoring
-            indexes = probe_labels != self.data_shuffler.possible_labels[i]
+            indexes = probe_labels != base_data_shuffler.possible_labels[i]
             negative_data = probe_features[indexes, :]
             n = [cosine(models[i], negative_data[j]) for j in range(negative_data.shape[0])]
             negative_scores = numpy.hstack((negative_scores, n))

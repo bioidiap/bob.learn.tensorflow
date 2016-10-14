@@ -80,7 +80,7 @@ class Disk(Base):
         for i in range(self.batch_size):
 
             file_name = self.data[indexes[i]]
-            data = self.load_from_file(file_name, self.shape)
+            data = self.load_from_file(file_name)
 
             selected_data[i, ...] = data
             if self.scale:

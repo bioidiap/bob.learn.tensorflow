@@ -100,6 +100,9 @@ class Trainer(object):
 
         bob.core.log.set_verbosity_level(logger, verbosity_level)
 
+    def __del__(self):
+        tf.reset_default_graph()
+
     def compute_graph(self, data_shuffler, prefetch=False, name=""):
         """
         Computes the graph for the trainer.

@@ -105,7 +105,7 @@ class SiameseTrainer(Trainer):
 
         # Defining place holders
         if prefetch:
-            placeholder_left_data, placeholder_right_data, placeholder_labels = data_shuffler.get_placeholders_pair_forprefetch(name=name)
+            [placeholder_left_data, placeholder_right_data, placeholder_labels] = data_shuffler.get_placeholders_forprefetch(name=name)
 
             # Defining a placeholder queue for prefetching
             queue = tf.FIFOQueue(capacity=100,
@@ -123,7 +123,7 @@ class SiameseTrainer(Trainer):
                 raise ValueError("The variable `architecture` must be an instance of "
                                  "`bob.learn.tensorflow.network.SequenceNetwork`")
         else:
-            feature_left_batch, feature_right_batch, label_batch = data_shuffler.get_placeholders_pair(name=name)
+            [feature_left_batch, feature_right_batch, label_batch] = data_shuffler.get_placeholders(name=name)
 
         # Creating the siamese graph
         train_left_graph = self.architecture.compute_graph(feature_left_batch)
@@ -151,8 +151,8 @@ class SiameseTrainer(Trainer):
 
         """
 
-        batch_left, batch_right, labels = data_shuffler.get_pair()
-        placeholder_left_data, placeholder_right_data, placeholder_label = data_shuffler.get_placeholders_pair()
+        [batch_left, batch_right, labels] = data_shuffler.get_batch()
+        [placeholder_left_data, placeholder_right_data, placeholder_label] = data_shuffler.get_placeholders()
 
         feed_dict = {placeholder_left_data: batch_left,
                      placeholder_right_data: batch_right,
@@ -231,8 +231,8 @@ class SiameseTrainer(Trainer):
 
         while not self.thread_pool.should_stop():
 
-            batch_left, batch_right, labels = self.train_data_shuffler.get_pair()
-            placeholder_left_data, placeholder_right_data, placeholder_label = self.train_data_shuffler.get_placeholders_pair()
+            [batch_left, batch_right, labels] = self.train_data_shuffler.get_batch()
+            [placeholder_left_data, placeholder_right_data, placeholder_label] = self.train_data_shuffler.get_placeholders()
 
             feed_dict = {placeholder_left_data: batch_left,
                          placeholder_right_data: batch_right,

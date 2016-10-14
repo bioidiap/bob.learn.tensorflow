@@ -4,6 +4,7 @@
 # @date: Tue 09 Aug 2016 15:25:22 CEST
 
 import logging
+
 logger = logging.getLogger("bob.learn.tensorflow")
 import tensorflow as tf
 from tensorflow.core.framework import summary_pb2
@@ -17,7 +18,6 @@ import sys
 
 
 class TripletTrainer(Trainer):
-
     """
     Trainer for Triple networks.
 
@@ -91,7 +91,6 @@ class TripletTrainer(Trainer):
         self.between_class_graph_validation = None
         self.within_class_graph_validation = None
 
-
     def compute_graph(self, data_shuffler, prefetch=False, name="", train=True):
         """
         Computes the graph for the trainer.
@@ -106,8 +105,8 @@ class TripletTrainer(Trainer):
 
         # Defining place holders
         if prefetch:
-            placeholder_anchor_data, placeholder_positive_data, placeholder_negative_data = \
-                data_shuffler.get_placeholders_triplet_forprefetch(name=name)
+            [placeholder_anchor_data, placeholder_positive_data, placeholder_negative_data] = \
+                data_shuffler.get_placeholders_forprefetch(name=name)
 
             # Defining a placeholder queue for prefetching
             queue = tf.FIFOQueue(capacity=100,
@@ -128,8 +127,8 @@ class TripletTrainer(Trainer):
                 raise ValueError("The variable `architecture` must be an instance of "
                                  "`bob.learn.tensorflow.network.SequenceNetwork`")
         else:
-            feature_anchor_batch, feature_positive_batch, feature_negative_batch = \
-                data_shuffler.get_placeholders_triplet(name=name)
+            [feature_anchor_batch, feature_positive_batch, feature_negative_batch] = \
+                data_shuffler.get_placeholders(name=name)
 
         # Creating the siamese graph
         train_anchor_graph = self.architecture.compute_graph(feature_anchor_batch)
@@ -158,9 +157,9 @@ class TripletTrainer(Trainer):
 
         """
 
-        batch_anchor, batch_positive, batch_negative = data_shuffler.get_random_triplet()
-        placeholder_anchor_data, placeholder_positive_data, placeholder_negative_data = \
-            data_shuffler.get_placeholders_triplet()
+        [batch_anchor, batch_positive, batch_negative] = data_shuffler.get_batch()
+        [placeholder_anchor_data, placeholder_positive_data, placeholder_negative_data] = \
+            data_shuffler.get_placeholders()
 
         feed_dict = {placeholder_anchor_data: batch_anchor,
                      placeholder_positive_data: batch_positive,
@@ -179,14 +178,16 @@ class TripletTrainer(Trainer):
         """
         if self.prefetch:
             _, l, bt_class, wt_class, lr, summary = session.run([self.optimizer,
-                                             self.training_graph, self.between_class_graph_train,
-                                             self.within_class_graph_train, self.learning_rate, self.summaries_train])
+                                                                 self.training_graph, self.between_class_graph_train,
+                                                                 self.within_class_graph_train, self.learning_rate,
+                                                                 self.summaries_train])
         else:
             feed_dict = self.get_feed_dict(self.train_data_shuffler)
             _, l, bt_class, wt_class, lr, summary = session.run([self.optimizer,
-                                             self.training_graph, self.between_class_graph_train,
-                                             self.within_class_graph_train,
-                                             self.learning_rate, self.summaries_train], feed_dict=feed_dict)
+                                                                 self.training_graph, self.between_class_graph_train,
+                                                                 self.within_class_graph_train,
+                                                                 self.learning_rate, self.summaries_train],
+                                                                feed_dict=feed_dict)
 
         logger.info("Loss training set step={0} = {1}".format(step, l))
         self.train_summary_writter.add_summary(summary, step)
@@ -203,13 +204,14 @@ class TripletTrainer(Trainer):
         """
 
         if self.validation_summary_writter is None:
-            self.validation_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'validation'), session.graph)
+            self.validation_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'validation'),
+                                                                     session.graph)
 
         self.validation_graph = self.compute_graph(data_shuffler, name="validation", train=False)
         feed_dict = self.get_feed_dict(data_shuffler)
         l, bt_class, wt_class = session.run([self.validation_graph,
                                              self.between_class_graph_validation, self.within_class_graph_validation],
-                                             feed_dict=feed_dict)
+                                            feed_dict=feed_dict)
 
         summaries = []
         summaries.append(summary_pb2.Summary.Value(tag="loss", simple_value=float(l)))
@@ -239,9 +241,9 @@ class TripletTrainer(Trainer):
         """
 
         while not self.thread_pool.should_stop():
-            batch_anchor, batch_positive, batch_negative = self.train_data_shuffler.get_random_triplet()
-            placeholder_anchor_data, placeholder_positive_data, placeholder_negative_data = \
-                self.train_data_shuffler.get_placeholders_triplet()
+            [batch_anchor, batch_positive, batch_negative] = self.train_data_shuffler.get_batch()
+            [placeholder_anchor_data, placeholder_positive_data, placeholder_negative_data] = \
+                self.train_data_shuffler.get_placeholders()
 
             feed_dict = {placeholder_anchor_data: batch_anchor,
                          placeholder_positive_data: batch_positive,

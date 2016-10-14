@@ -30,10 +30,19 @@ class Constant(Initialization):
     def __call__(self, shape, name):
         initializer = tf.constant(self.constant_value, shape=shape)
 
-        if self.use_gpu:
-            with tf.device("/gpu:0"):
-                return tf.get_variable(name, initializer=initializer, dtype=tf.float32)
-        else:
-            with tf.device("/cpu"):
-                return tf.get_variable(name, initializer=initializer, dtype=tf.float32)
-
+        try:
+            with tf.variable_scope(name):
+                if self.use_gpu:
+                    with tf.device("/gpu:0"):
+                        return tf.get_variable(name, initializer=initializer, dtype=tf.float32)
+                else:
+                    with tf.device("/cpu"):
+                        return tf.get_variable(name, initializer=initializer, dtype=tf.float32)
+        except ValueError:
+            with tf.variable_scope(name, reuse=True):
+                if self.use_gpu:
+                    with tf.device("/gpu:0"):
+                        return tf.get_variable(name, initializer=initializer, dtype=tf.float32)
+                else:
+                    with tf.device("/cpu"):
+                        return tf.get_variable(name, initializer=initializer, dtype=tf.float32)

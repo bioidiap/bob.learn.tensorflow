@@ -71,9 +71,9 @@ class TripletDisk(Triplet, Disk):
 
         for i in range(self.shape[0]):
             file_name_a, file_name_p, file_name_n = self.get_one_triplet(self.data, self.labels)
-            data_a[i, ...] = self.load_from_file(str(file_name_a), self.shape)
-            data_p[i, ...] = self.load_from_file(str(file_name_p), self.shape)
-            data_n[i, ...] = self.load_from_file(str(file_name_n), self.shape)
+            data_a[i, ...] = self.load_from_file(str(file_name_a))
+            data_p[i, ...] = self.load_from_file(str(file_name_p))
+            data_n[i, ...] = self.load_from_file(str(file_name_n))
 
         if self.scale:
             data_a *= self.scale_value
