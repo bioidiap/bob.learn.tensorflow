@@ -4,8 +4,8 @@
 # @date: Thu 13 Oct 2016 13:35 CEST
 
 import numpy
-from bob.learn.tensorflow.datashuffler import Memory, SiameseMemory, TripletMemory, Disk, SiameseDisk, TripletDisk
-from bob.learn.tensorflow.network import Chopra, MLP
+from bob.learn.tensorflow.datashuffler import Memory, SiameseMemory, TripletMemory, Disk, SiameseDisk, TripletDisk, ImageAugmentation
+from bob.learn.tensorflow.network import Chopra, Lenet
 from bob.learn.tensorflow.loss import BaseLoss, ContrastiveLoss, TripletLoss
 from bob.learn.tensorflow.trainers import Trainer, SiameseTrainer, TripletTrainer
 # from ..analyzers import ExperimentAnalizer, SoftmaxAnalizer
@@ -79,9 +79,11 @@ def test_cnn_trainer():
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
 
     # Creating datashufflers
+    data_augmentation = ImageAugmentation()
     train_data_shuffler = Memory(train_data, train_labels,
                                  input_shape=[28, 28, 1],
-                                 batch_size=batch_size)
+                                 batch_size=batch_size,
+                                 data_augmentation=data_augmentation)
 
     with tf.Session() as session:
         directory = "./temp/cnn"
@@ -117,6 +119,7 @@ def test_cnn_trainer():
         # At least 80% of accuracy
         assert accuracy > 80.
         shutil.rmtree(directory)
+        session.close()
 
 
 def test_siamesecnn_trainer():
@@ -162,6 +165,7 @@ def test_siamesecnn_trainer():
         # At least 80% of accuracy
         assert eer < 0.25
         shutil.rmtree(directory)
+        session.close()
 
 
 def test_tripletcnn_trainer():
@@ -207,3 +211,4 @@ def test_tripletcnn_trainer():
         # At least 80% of accuracy
         assert eer < 0.25
         shutil.rmtree(directory)
+        session.close()

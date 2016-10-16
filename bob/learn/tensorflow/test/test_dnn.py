@@ -71,3 +71,4 @@ def test_dnn_trainer():
         # At least 50% of accuracy for the DNN
         assert accuracy > 50.
         shutil.rmtree(directory)
+        session.close()

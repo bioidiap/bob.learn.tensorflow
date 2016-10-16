@@ -14,10 +14,11 @@ class SiameseMemory(Siamese, Memory):
 
     def __init__(self, data, labels,
                  input_shape,
-                 input_dtype="float64",
+                 input_dtype="float",
                  scale=True,
                  batch_size=1,
-                 seed=10):
+                 seed=10,
+                 data_augmentation=None):
         """
          Shuffler that deal with memory datasets
 
@@ -37,14 +38,13 @@ class SiameseMemory(Siamese, Memory):
             input_dtype=input_dtype,
             scale=scale,
             batch_size=batch_size,
-            seed=seed
+            seed=seed,
+            data_augmentation=data_augmentation
         )
         # Seting the seed
         numpy.random.seed(seed)
 
         self.data = self.data.astype(input_dtype)
-        if self.scale:
-            self.data *= self.scale_value
 
     def get_batch(self, zero_one_labels=True):
         """
@@ -55,9 +55,9 @@ class SiameseMemory(Siamese, Memory):
 
         **Return**
         """
-        data = numpy.zeros(shape=self.shape, dtype='float32')
-        data_p = numpy.zeros(shape=self.shape, dtype='float32')
-        labels_siamese = numpy.zeros(shape=self.shape[0], dtype='float32')
+        data = numpy.zeros(shape=self.shape, dtype='float')
+        data_p = numpy.zeros(shape=self.shape, dtype='float')
+        labels_siamese = numpy.zeros(shape=self.shape[0], dtype='float')
 
         genuine = True
         for i in range(self.shape[0]):
@@ -68,4 +68,18 @@ class SiameseMemory(Siamese, Memory):
                 labels_siamese[i] = -1 if genuine else +1
             genuine = not genuine
 
-        return [data, data_p, labels_siamese]
+        # Applying the data augmentation
+        if self.data_augmentation is not None:
+            for i in range(data.shape[0]):
+                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(data[i, ...])))
+                data[i, ...] = d
+
+                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(data_p[i, ...])))
+                data_p[i, ...] = d
+
+        # Scaling
+        if self.scale:
+            data *= self.scale_value
+            data_p *= self.scale_value
+
+        return [data.astype("float32"), data_p.astype("float32"), labels_siamese]

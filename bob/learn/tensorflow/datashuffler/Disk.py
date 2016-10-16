@@ -19,7 +19,8 @@ class Disk(Base):
                  input_dtype="float64",
                  scale=True,
                  batch_size=1,
-                 seed=10):
+                 seed=10,
+                 data_augmentation=None):
         """
          This datashuffler deal with databases that are stored in the disk.
          The data is loaded on the fly,.
@@ -46,7 +47,8 @@ class Disk(Base):
             input_dtype=input_dtype,
             scale=scale,
             batch_size=batch_size,
-            seed=seed
+            seed=seed,
+            data_augmentation=data_augmentation
         )
         # Seting the seed
         numpy.random.seed(seed)
@@ -56,6 +58,11 @@ class Disk(Base):
 
     def load_from_file(self, file_name):
         d = bob.io.base.load(file_name)
+
+        # Applying the data augmentation
+        if self.data_augmentation is not None:
+            d = self.data_augmentation(d)
+
         if d.shape[0] != 3 and self.input_shape[2] != 3: # GRAY SCALE IMAGE
             data = numpy.zeros(shape=(d.shape[0], d.shape[1], 1))
             data[:, :, 0] = d
@@ -70,7 +77,7 @@ class Disk(Base):
 
         return data
 
-    def get_batch(self):
+    def get_batch(self, noise=False):
 
         # Shuffling samples
         indexes = numpy.array(range(self.data.shape[0]))
@@ -83,6 +90,8 @@ class Disk(Base):
             data = self.load_from_file(file_name)
 
             selected_data[i, ...] = data
+
+            # Scaling
             if self.scale:
                 selected_data[i, ...] *= self.scale_value
 

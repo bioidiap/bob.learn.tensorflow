@@ -17,7 +17,8 @@ class SiameseDisk(Siamese, Disk):
                  input_dtype="float64",
                  scale=True,
                  batch_size=1,
-                 seed=10):
+                 seed=10,
+                 data_augmentation=None):
         """
          Shuffler that deal with file list
 
@@ -43,7 +44,8 @@ class SiameseDisk(Siamese, Disk):
             input_dtype=input_dtype,
             scale=scale,
             batch_size=batch_size,
-            seed=seed
+            seed=seed,
+            data_augmentation=data_augmentation
         )
         # Seting the seed
         numpy.random.seed(seed)
@@ -73,6 +75,7 @@ class SiameseDisk(Siamese, Disk):
 
             labels_siamese[i] = not genuine
             genuine = not genuine
+
 
         if self.scale:
             data *= self.scale_value

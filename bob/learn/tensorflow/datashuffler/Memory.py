@@ -15,7 +15,8 @@ class Memory(Base):
                  input_dtype="float64",
                  scale=True,
                  batch_size=1,
-                 seed=10):
+                 seed=10,
+                 data_augmentation=None):
         """
          This datashuffler deal with databases that are stored in a :py:class`numpy.array`
 
@@ -35,14 +36,12 @@ class Memory(Base):
             input_dtype=input_dtype,
             scale=scale,
             batch_size=batch_size,
-            seed=seed
+            seed=seed,
+            data_augmentation=data_augmentation
         )
         # Seting the seed
         numpy.random.seed(seed)
-
         self.data = self.data.astype(input_dtype)
-        if self.scale:
-            self.data *= self.scale_value
 
     def get_batch(self):
 
@@ -52,5 +51,15 @@ class Memory(Base):
 
         selected_data = self.data[indexes[0:self.batch_size], :, :, :]
         selected_labels = self.labels[indexes[0:self.batch_size]]
+
+        # Applying the data augmentation
+        if self.data_augmentation is not None:
+            for i in range(selected_data.shape[0]):
+                img = self.skimage2bob(selected_data[i, ...])
+                img = self.data_augmentation(img)
+                selected_data[i, ...] = self.bob2skimage(img)
+
+        if self.scale:
+            selected_data *= self.scale_value
 
         return [selected_data.astype("float32"), selected_labels.astype("int64")]

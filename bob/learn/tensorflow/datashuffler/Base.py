@@ -15,7 +15,8 @@ class Base(object):
                  input_dtype="float64",
                  scale=True,
                  batch_size=1,
-                 seed=10):
+                 seed=10,
+                 data_augmentation=None):
         """
          The class provide base functionalities to shuffle the data before to train a neural network
 
@@ -56,6 +57,8 @@ class Base(object):
         self.data_placeholder = None
         self.label_placeholder = None
 
+        self.data_augmentation = data_augmentation
+
     def get_placeholders(self, name=""):
         """
         Returns a place holder with the size of your batch
@@ -83,13 +86,33 @@ class Base(object):
         Convert bob color image to the skcit image
         """
 
-        skimage = numpy.zeros(shape=(bob_image.shape[1], bob_image.shape[2], 3))
+        skimage = numpy.zeros(shape=(bob_image.shape[1], bob_image.shape[2], bob_image.shape[0]))
 
-        skimage[:, :, 0] = bob_image[0, :, :]  # Copying red
-        skimage[:, :, 1] = bob_image[1, :, :]  # Copying green
-        skimage[:, :, 2] = bob_image[2, :, :]  # Copying blue
+        for i in range(bob_image.shape[0]):
+            skimage[:, :, i] = bob_image[i, :, :]  # Copying red
+        #skimage[:, :, 1] = bob_image[1, :, :]  # Copying green
+        #skimage[:, :, 2] = bob_image[2, :, :]  # Copying blue
 
         return skimage
+
+    def skimage2bob(self, sk_image):
+        """
+        Convert bob color image to the skcit image
+        """
+
+        bob_image = numpy.zeros(shape=(sk_image.shape[2], sk_image.shape[0], sk_image.shape[1]))
+
+        for i in range(bob_image.shape[0]):
+            bob_image[i, :, :] = sk_image[:, :, i]  # Copying red
+
+        #bob_image[0, :, :] = sk_image[:, :, 0] # Copying red
+        #if bob_image.shape[0] > 1:
+        #    bob_image[1, :, :] = sk_image[:, :, 1]# Copying green
+        #    bob_image[2, :, :] = sk_image[:, :, 2]  # Copying blue
+
+        return bob_image
+
+
 
     def rescale(self, data):
         """
