@@ -112,8 +112,6 @@ class Base(object):
 
         return bob_image
 
-
-
     def rescale(self, data):
         """
         Reescale a single sample with input_shape
@@ -146,3 +144,10 @@ class Base(object):
             return dst
         else:
             return data
+
+    def reshape_for_deploy(self, data):
+        shape = tuple([1] + list(data.shape))
+        return numpy.reshape(data, shape)
+
+
+

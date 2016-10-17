@@ -22,7 +22,7 @@ from docopt import docopt
 import tensorflow as tf
 from .. import util
 SEED = 10
-from bob.learn.tensorflow.data import MemoryDataShuffler, TextDataShuffler
+from bob.learn.tensorflow.datashuffler import TripletWithSelectionDisk, TripletDisk
 from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra, Dummy
 from bob.learn.tensorflow.trainers import SiameseTrainer, Trainer, TripletTrainer
 from bob.learn.tensorflow.loss import ContrastiveLoss, BaseLoss, TripletLoss
@@ -53,9 +53,9 @@ def main():
         directory=directory,
         extension=".hdf5")
                         for o in train_objects]
-    train_data_shuffler = TextDataShuffler(train_file_names, train_labels,
-                                           input_shape=[125, 125, 3],
-                                           batch_size=BATCH_SIZE)
+    train_data_shuffler = TripletWithSelectionDisk(train_file_names, train_labels,
+                                                   input_shape=[125, 125, 3],
+                                                   batch_size=BATCH_SIZE)
 
     # Preparing train set
     validation_objects = db_mobio.objects(protocol="male", groups="dev")
@@ -66,12 +66,12 @@ def main():
         directory=directory,
         extension=".hdf5")
                              for o in validation_objects]
-    validation_data_shuffler = TextDataShuffler(validation_file_names, validation_labels,
+    validation_data_shuffler = TripletDisk(validation_file_names, validation_labels,
                                                 input_shape=[125, 125, 3],
                                                 batch_size=VALIDATION_BATCH_SIZE)
     # Preparing the architecture
     #architecture = Chopra(seed=SEED, fc1_output=n_classes)
-    architecture = Chopra(seed=SEED)
+    architecture = Chopra(seed=SEED, fc1_output=n_classes)
     optimizer = tf.train.GradientDescentOptimizer(0.00000001)
 
 
@@ -82,18 +82,19 @@ def main():
     #                  optimizer=optimizer,
     #                  temp_dir="./LOGS/cnn")
 
-    loss = ContrastiveLoss(contrastive_margin=4.)
-    trainer = SiameseTrainer(architecture=architecture, loss=loss,
+    #loss = ContrastiveLoss(contrastive_margin=4.)
+    #trainer = SiameseTrainer(architecture=architecture, loss=loss,
+    #                         iterations=ITERATIONS,
+    #                         prefetch=False,
+    #                         optimizer=optimizer,
+    #                         temp_dir="./LOGS_MOBIO/siamese-cnn-prefetch")
+
+    loss = TripletLoss(margin=4.)
+    trainer = TripletTrainer(architecture=architecture, loss=loss,
                              iterations=ITERATIONS,
                              prefetch=False,
                              optimizer=optimizer,
-                             temp_dir="./LOGS_MOBIO/siamese-cnn-prefetch")
+                             temp_dir="./LOGS_MOBIO/triplet-cnn")
 
-    #loss = TripletLoss(margin=4.)
-    #trainer = TripletTrainer(architecture=architecture, loss=loss,
-    #                         iterations=ITERATIONS,
-    #                         prefetch=True,
-    #                         optimizer=optimizer,
-    #                         temp_dir="./LOGS_MOBIO/triplet-cnn-prefetch")
-
-    trainer.train(train_data_shuffler, validation_data_shuffler)
+    #trainer.train(train_data_shuffler, validation_data_shuffler)
+    trainer.train(train_data_shuffler)

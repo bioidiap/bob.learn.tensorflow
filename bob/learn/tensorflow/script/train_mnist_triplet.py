@@ -22,7 +22,7 @@ from docopt import docopt
 import tensorflow as tf
 from .. import util
 SEED = 10
-from bob.learn.tensorflow.data import MemoryDataShuffler, TextDataShuffler
+from bob.learn.tensorflow.datashuffler import TripletMemory, TripletWithSelectionMemory
 from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra, Dummy
 from bob.learn.tensorflow.trainers import TripletTrainer
 from bob.learn.tensorflow.loss import TripletLoss
@@ -44,22 +44,37 @@ def main():
     train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
 
-    train_data_shuffler = MemoryDataShuffler(train_data, train_labels,
-                                             input_shape=[28, 28, 1],
-                                             scale=True,
-                                             batch_size=BATCH_SIZE)
+    #train_data_shuffler = MemoryDataShuffler(train_data, train_labels,
+    #                                         input_shape=[28, 28, 1],
+    #                                         scale=True,
+    #                                         batch_size=BATCH_SIZE)
 
-    validation_data_shuffler = MemoryDataShuffler(validation_data, validation_labels,
-                                                  input_shape=[28, 28, 1],
-                                                  scale=True,
-                                                  batch_size=VALIDATION_BATCH_SIZE)
+    #validation_data_shuffler = MemoryDataShuffler(validation_data, validation_labels,
+    #                                              input_shape=[28, 28, 1],
+    #                                              scale=True,
+    #                                              batch_size=VALIDATION_BATCH_SIZE)
+
+    validation_data_shuffler = TripletMemory(train_data, train_labels,
+                                                     input_shape=[28, 28, 1],
+                                                     scale=True,
+                                                     batch_size=VALIDATION_BATCH_SIZE)
+
+    train_data_shuffler = TripletWithSelectionMemory(train_data, train_labels,
+                                                     input_shape=[28, 28, 1],
+                                                     scale=True,
+                                                     batch_size=BATCH_SIZE)
+
+    #train_data_shuffler = TripletMemory(train_data, train_labels,
+    #                                                 input_shape=[28, 28, 1],
+    #                                                 scale=True,
+    #                                                 batch_size=BATCH_SIZE)
 
     # Preparing the architecture
     n_classes = len(train_data_shuffler.possible_labels)
     #n_classes = 200
     cnn = True
     if cnn:
-        architecture = Chopra(seed=SEED, fc1_output=n_classes)
+        architecture = Chopra(seed=SEED, fc1_output=n_classes, use_gpu=USE_GPU)
         #architecture = Lenet(default_feature_layer="fc2", n_classes=n_classes, conv1_output=8, conv2_output=16,use_gpu=USE_GPU)
         #architecture = VGG(n_classes=n_classes, use_gpu=USE_GPU)
         #architecture = Dummy(seed=SEED)
@@ -71,8 +86,8 @@ def main():
                                  loss=loss,
                                  iterations=ITERATIONS,
                                  snapshot=VALIDATION_TEST,
-                                 temp_dir="cnn-triplet",
-                                 prefetch=True,
+                                 temp_dir="triplet/cnn-triplet-SELECTION",
+                                 prefetch=False,
                                  optimizer=optimizer
                                  )
         trainer.train(train_data_shuffler, validation_data_shuffler)
@@ -86,5 +101,6 @@ def main():
                                  temp_dir="dnn-triplet",
                                  iterations=ITERATIONS,
                                  snapshot=VALIDATION_TEST)
-        trainer.train(train_data_shuffler, validation_data_shuffler)
+        #trainer.train(train_data_shuffler, validation_data_shuffler)
+        trainer.train(train_data_shuffler)
 

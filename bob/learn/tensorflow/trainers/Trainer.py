@@ -12,6 +12,8 @@ import bob.core
 from ..analyzers import SoftmaxAnalizer
 from tensorflow.core.framework import summary_pb2
 import time
+from bob.learn.tensorflow.datashuffler.OnlineSampling import OnLineSampling
+
 
 logger = bob.core.log.setup("bob.learn.tensorflow")
 
@@ -277,6 +279,9 @@ class Trainer(object):
 
             tf.initialize_all_variables().run()
 
+            if isinstance(train_data_shuffler, OnLineSampling):
+                train_data_shuffler.set_feature_extractor(self.architecture, session=session)
+
             # Start a thread to enqueue data asynchronously, and hide I/O latency.
             if self.prefetch:
                 self.thread_pool = tf.train.Coordinator()
@@ -314,4 +319,4 @@ class Trainer(object):
                 self.thread_pool.request_stop()
                 self.thread_pool.join(threads)
 
-            session.close()# For some reason the session is not closed after the context manager finishes
+            session.close() # For some reason the session is not closed after the context manager finishes

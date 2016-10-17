@@ -102,7 +102,10 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         if feature_layer is None:
             feature_layer = self.default_feature_layer
 
-        return session.run([self.compute_graph(feature_placeholder, feature_layer, training=False)], feed_dict=feed_dict)[0]
+        feature = session.run([self.compute_graph(feature_placeholder, feature_layer, training=False)], feed_dict=feed_dict)[0]
+        del feature_placeholder
+
+        return feature
 
     def dump_variables(self):
         """Return all the tensorflow `variables <https://www.tensorflow.org/versions/r0.11/api_docs/python/state_ops.html#Variable>`_ used in the graph

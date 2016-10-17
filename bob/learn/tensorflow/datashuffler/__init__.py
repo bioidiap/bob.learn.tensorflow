@@ -9,14 +9,11 @@ from .Disk import Disk
 
 from .SiameseMemory import SiameseMemory
 from .TripletMemory import TripletMemory
+from .TripletWithSelectionMemory import TripletWithSelectionMemory
 
 from .SiameseDisk import SiameseDisk
 from .TripletDisk import TripletDisk
-
-# Data Augmentation
-from .DataAugmentation import DataAugmentation
-from .ImageAugmentation import ImageAugmentation
-
+from .TripletWithSelectionDisk import TripletWithSelectionDisk
 
 # gets sphinx autodoc done right - don't remove it
 __all__ = [_ for _ in dir() if not _.startswith('_')]
