@@ -42,9 +42,14 @@ class OnLineSampling(object):
         # Feeding the placeholder
 
         if self.feature_placeholder is None:
-            self.feature_placeholder = tf.placeholder(tf.float32, shape=data.shape, name="feature")
+            shape = tuple([None] + list(data.shape[1:]))
+            self.feature_placeholder = tf.placeholder(tf.float32, shape=shape, name="feature")
             self.graph = self.feature_extractor.compute_graph(self.feature_placeholder, self.feature_extractor.default_feature_layer,
                                                               training=False)
+
+        #if self.feature_placeholder.get_shape().as_list() != list(data.shape):
+            #tf.reshape(self.feature_placeholder, tf.pack([data.shape]))
+            #self.feature_placeholder.set_shape(data.shape)
 
         feed_dict = {self.feature_placeholder: data}
         return self.session.run([self.graph], feed_dict=feed_dict)[0]

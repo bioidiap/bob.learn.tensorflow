@@ -11,6 +11,9 @@ from .Triplet import Triplet
 from .OnlineSampling import OnLineSampling
 from scipy.spatial.distance import euclidean
 
+import logging
+logger = logging.getLogger("bob.learn.tensorflow")
+
 
 class TripletWithSelectionDisk(Triplet, Disk, OnLineSampling):
     """
@@ -110,29 +113,42 @@ class TripletWithSelectionDisk(Triplet, Disk, OnLineSampling):
 
         # Selecting the classes used in the selection
         indexes = numpy.random.choice(len(self.possible_labels), self.total_identities, replace=False)
-        samples_per_identity = self.batch_size/self.total_identities
+        samples_per_identity = numpy.ceil(self.batch_size/float(self.total_identities))
         anchor_labels = numpy.ones(samples_per_identity) * self.possible_labels[indexes[0]]
+
         for i in range(1, self.total_identities):
             anchor_labels = numpy.hstack((anchor_labels,numpy.ones(samples_per_identity) * self.possible_labels[indexes[i]]))
         anchor_labels = anchor_labels[0:self.batch_size]
+
+
+
 
         data_a = numpy.zeros(shape=self.shape, dtype='float32')
         data_p = numpy.zeros(shape=self.shape, dtype='float32')
         data_n = numpy.zeros(shape=self.shape, dtype='float32')
 
+        #logger.info("Fetching anchor")
         # Fetching the anchors
         for i in range(self.shape[0]):
             data_a[i, ...] = self.get_anchor(anchor_labels[i])
         features_a = self.project(data_a)
 
         for i in range(self.shape[0]):
+            #logger.info("*********Anchor {0}".format(i))
+
             label = anchor_labels[i]
             #anchor = self.get_anchor(label)
+            #logger.info("********* Positives")
             positive, distance_anchor_positive = self.get_positive(label, features_a[i])
+            #logger.info("********* Negatives")
             negative = self.get_negative(label, features_a[i], distance_anchor_positive)
+
+            #logger.info("********* Appending")
 
             data_p[i, ...] = positive
             data_n[i, ...] = negative
+
+        #logger.info("#################")
         # Scaling
         #if self.scale:
         #    data_a *= self.scale_value
@@ -164,27 +180,37 @@ class TripletWithSelectionDisk(Triplet, Disk, OnLineSampling):
         The best positive sample for the anchor is the farthest from the anchor
         """
 
+        #logger.info("****************** numpy.where")
         indexes = numpy.where(self.labels == label)[0]
+
         numpy.random.shuffle(indexes)
         indexes = indexes[
                   0:self.batch_size]  # Limiting to the batch size, otherwise the number of comparisons will explode
         distances = []
-
-        data_p = numpy.zeros(shape=self.shape, dtype='float32')
-        for i in range(self.shape[0]):
+        shape = tuple([len(indexes)] + list(self.shape[1:]))
+        data_p = numpy.zeros(shape=shape, dtype='float32')
+        #logger.info("****************** search")
+        for i in range(shape[0]):
+            #logger.info("****************** fetch")
             file_name = self.data[indexes[i], ...]
+            #logger.info("****************** load")
             data_p[i, ...] = self.load_from_file(str(file_name))
-            if self.scale:
-                data_p *= self.scale_value
+
+        if self.scale:
+            data_p *= self.scale_value
+
+        #logger.info("****************** project")
         positive_features = self.project(data_p)
 
+        #logger.info("****************** distances")
         # Projecting the positive instances
         for p in positive_features:
             distances.append(euclidean(anchor_feature, p))
 
         # Geting the max
         index = numpy.argmax(distances)
-        return self.data[indexes[index], ...], distances[index]
+        #logger.info("****************** return")
+        return data_p[index, ...], distances[index]
 
     def get_negative(self, label, anchor_feature, distance_anchor_positive):
         """
@@ -194,20 +220,29 @@ class TripletWithSelectionDisk(Triplet, Disk, OnLineSampling):
         #anchor_feature = self.feature_extractor(self.reshape_for_deploy(anchor), session=self.session)
 
         # Selecting the negative samples
+        #logger.info("****************** numpy.where")
         indexes = numpy.where(self.labels != label)[0]
         numpy.random.shuffle(indexes)
         indexes = indexes[
-                  0:self.batch_size] # Limiting to the batch size, otherwise the number of comparisons will explode
+                  0:self.batch_size*3] # Limiting to the batch size, otherwise the number of comparisons will explode
 
-        data_n = numpy.zeros(shape=self.shape, dtype='float32')
-        for i in range(self.shape[0]):
+        shape = tuple([len(indexes)] + list(self.shape[1:]))
+        data_n = numpy.zeros(shape=shape, dtype='float32')
+        #logger.info("****************** search")
+        for i in range(shape[0]):
+            #logger.info("****************** fetch")
             file_name = self.data[indexes[i], ...]
+            #logger.info("****************** load")
             data_n[i, ...] = self.load_from_file(str(file_name))
-            if self.scale:
-                data_n *= self.scale_value
+
+        if self.scale:
+            data_n *= self.scale_value
+
+        #logger.info("****************** project")
         negative_features = self.project(data_n)
 
         distances = []
+        #logger.info("****************** distances")
         for n in negative_features:
             d = euclidean(anchor_feature, n)
 
@@ -222,6 +257,7 @@ class TripletWithSelectionDisk(Triplet, Disk, OnLineSampling):
 
         # if the semi-hardest is inf take the first
         if numpy.isinf(distances[index]):
+            logger.info("SEMI-HARD negative not found, took the first one")
             index = 0
-
-        return self.data[indexes[index], ...]
+        #logger.info("****************** return")
+        return data_n[index, ...]

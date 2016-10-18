@@ -61,7 +61,9 @@ class FullyConnected(Layer):
 
             if len(self.input_layer.get_shape()) == 4:
                 shape = self.input_layer.get_shape().as_list()
-                fc = tf.reshape(self.input_layer, [shape[0], shape[1] * shape[2] * shape[3]])
+                #fc = tf.reshape(self.input_layer, [shape[0], shape[1] * shape[2] * shape[3]])
+                fc = tf.reshape(self.input_layer, [-1, shape[1] * shape[2] * shape[3]])
+
             else:
                 fc = self.input_layer
 

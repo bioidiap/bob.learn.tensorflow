@@ -22,10 +22,10 @@ from docopt import docopt
 import tensorflow as tf
 from .. import util
 SEED = 10
-from bob.learn.tensorflow.data import MemoryDataShuffler, TextDataShuffler
+from bob.learn.tensorflow.datashuffler import TripletDisk, TripletWithSelectionDisk
 from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra, Dummy
-from bob.learn.tensorflow.trainers import SiameseTrainer
-from bob.learn.tensorflow.loss import ContrastiveLoss
+from bob.learn.tensorflow.trainers import SiameseTrainer, TripletTrainer
+from bob.learn.tensorflow.loss import ContrastiveLoss, TripletLoss
 import numpy
 
 
@@ -56,9 +56,9 @@ def main():
         extension="")
                         for o in train_objects]
 
-    train_data_shuffler = TextDataShuffler(train_file_names, train_labels,
-                                           input_shape=[125, 125, 3],
-                                           batch_size=BATCH_SIZE)
+    train_data_shuffler = TripletWithSelectionDisk(train_file_names, train_labels,
+                                                   input_shape=[125, 125, 3],
+                                                   batch_size=BATCH_SIZE)
 
     # Preparing train set
     directory = "/idiap/temp/tpereira/DEEP_FACE/CASIA/preprocessed"
@@ -70,20 +70,27 @@ def main():
         extension=".hdf5")
                              for o in validation_objects]
 
-    validation_data_shuffler = TextDataShuffler(validation_file_names, validation_labels,
-                                                input_shape=[125, 125, 3],
-                                                batch_size=VALIDATION_BATCH_SIZE)
+    validation_data_shuffler = TripletDisk(validation_file_names, validation_labels,
+                                           input_shape=[125, 125, 3],
+                                           batch_size=VALIDATION_BATCH_SIZE)
     # Preparing the architecture
     # LENET PAPER CHOPRA
     architecture = Chopra(seed=SEED)
 
-    loss = ContrastiveLoss(contrastive_margin=50.)
-    optimizer = tf.train.GradientDescentOptimizer(0.00001)
-    trainer = SiameseTrainer(architecture=architecture,
-                             loss=loss,
+    #loss = ContrastiveLoss(contrastive_margin=50.)
+    #optimizer = tf.train.GradientDescentOptimizer(0.00001)
+    #trainer = SiameseTrainer(architecture=architecture,
+    #                         loss=loss,
+    #                         iterations=ITERATIONS,
+    #                         snapshot=VALIDATION_TEST,
+    #                         optimizer=optimizer)
+
+    loss = TripletLoss(margin=4.)
+    trainer = TripletTrainer(architecture=architecture, loss=loss,
                              iterations=ITERATIONS,
-                             snapshot=VALIDATION_TEST,
-                             optimizer=optimizer)
+                             prefetch=False,
+                             temp_dir="./LOGS_CASIA/triplet-cnn")
+
 
     trainer.train(train_data_shuffler, validation_data_shuffler)
     #trainer.train(train_data_shuffler)
