@@ -27,7 +27,7 @@ class Xavier(Initialization):
 
         super(Xavier, self).__init__(seed, use_gpu=use_gpu)
 
-    def __call__(self, shape, name):
+    def __call__(self, shape, name, scope):
 
         if len(shape) == 4:
             in_out = shape[0] * shape[1] * shape[2] + shape[3]
@@ -40,7 +40,7 @@ class Xavier(Initialization):
         initializer = tf.truncated_normal(shape, stddev=stddev, seed=self.seed)
 
         try:
-            with tf.variable_scope(name):
+            with tf.variable_scope(scope):
                 if self.use_gpu:
                     with tf.device("/gpu:0"):
                         return tf.get_variable(name, initializer=initializer, dtype=tf.float32)
@@ -48,7 +48,7 @@ class Xavier(Initialization):
                     with tf.device("/cpu"):
                         return tf.get_variable(name, initializer=initializer, dtype=tf.float32)
         except ValueError:
-            with tf.variable_scope(name, reuse=True):
+            with tf.variable_scope(scope, reuse=True):
                 if self.use_gpu:
                     with tf.device("/gpu:0"):
                         return tf.get_variable(name, initializer=initializer, dtype=tf.float32)

@@ -26,5 +26,5 @@ class Initialization(object):
         self.seed = seed
         self.use_gpu = use_gpu
 
-    def __call__(self, shape, name):
+    def __call__(self, shape, name, scope):
         NotImplementedError("Please implement this function in derived classes")

@@ -23,7 +23,7 @@ import tensorflow as tf
 from .. import util
 SEED = 10
 from bob.learn.tensorflow.datashuffler import TripletMemory, TripletWithSelectionMemory
-from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra, Dummy
+from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra, Dummy, FaceNet
 from bob.learn.tensorflow.trainers import TripletTrainer
 from bob.learn.tensorflow.loss import TripletLoss
 import numpy
@@ -74,7 +74,8 @@ def main():
     #n_classes = 200
     cnn = True
     if cnn:
-        architecture = Chopra(seed=SEED, fc1_output=n_classes, use_gpu=USE_GPU)
+        architecture = FaceNet(seed=SEED, use_gpu=USE_GPU)
+        #architecture = Chopra(seed=SEED, fc1_output=n_classes, use_gpu=USE_GPU)
         #architecture = Lenet(default_feature_layer="fc2", n_classes=n_classes, conv1_output=8, conv2_output=16,use_gpu=USE_GPU)
         #architecture = VGG(n_classes=n_classes, use_gpu=USE_GPU)
         #architecture = Dummy(seed=SEED)

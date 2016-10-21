@@ -18,6 +18,7 @@ class Conv2D(Layer):
     def __init__(self, name, activation=None,
                  kernel_size=3,
                  filters=8,
+                 stride=[1, 1, 1, 1],
                  weights_initialization=Xavier(),
                  bias_initialization=Constant(),
                  use_gpu=False
@@ -38,12 +39,15 @@ class Conv2D(Layer):
                                      activation=activation,
                                      weights_initialization=weights_initialization,
                                      bias_initialization=bias_initialization,
-                                     use_gpu=use_gpu
+                                     use_gpu=use_gpu,
+
+
                                      )
         self.kernel_size = kernel_size
         self.filters = filters
         self.W = None
         self.b = None
+        self.stride = stride
 
     def create_variables(self, input_layer):
         self.input_layer = input_layer
@@ -56,16 +60,19 @@ class Conv2D(Layer):
 
         if self.W is None:
             self.W = self.weights_initialization(shape=[self.kernel_size, self.kernel_size, n_channels, self.filters],
-                                                 name="w_" + str(self.name)
+                                                 name="w_" + str(self.name),
+                                                 scope="w_" + str(self.name)
                                                  )
 
             self.b = self.bias_initialization(shape=[self.filters],
-                                              name="b_" + str(self.name) + "bias")
+                                              name="b_" + str(self.name) + "bias",
+                                              scope="b_" + str(self.name)
+                                              )
 
     def get_graph(self):
 
         with tf.name_scope(str(self.name)):
-            conv2d = tf.nn.conv2d(self.input_layer, self.W, strides=[1, 1, 1, 1], padding='SAME')
+            conv2d = tf.nn.conv2d(self.input_layer, self.W, strides=self.stride, padding='SAME')
 
             if self.activation is not None:
                 output = self.activation(tf.nn.bias_add(conv2d, self.b))

@@ -266,7 +266,8 @@ class Trainer(object):
 
         # Preparing the optimizer
         self.optimizer_class._learning_rate = self.learning_rate
-        self.optimizer = self.optimizer_class.minimize(self.training_graph, global_step=tf.Variable(0))
+        #self.optimizer = self.optimizer_class.minimize(self.training_graph, global_step=tf.Variable(0))
+        self.optimizer = self.optimizer_class.minimize(self.training_graph)
 
         # Train summary
         self.summaries_train = self.create_general_summary()

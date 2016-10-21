@@ -10,6 +10,7 @@ from .Disk import Disk
 from .SiameseMemory import SiameseMemory
 from .TripletMemory import TripletMemory
 from .TripletWithSelectionMemory import TripletWithSelectionMemory
+from .TripletWithFastSelectionDisk import TripletWithFastSelectionDisk
 
 from .SiameseDisk import SiameseDisk
 from .TripletDisk import TripletDisk

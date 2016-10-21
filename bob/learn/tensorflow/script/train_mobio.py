@@ -22,8 +22,8 @@ from docopt import docopt
 import tensorflow as tf
 from .. import util
 SEED = 10
-from bob.learn.tensorflow.datashuffler import TripletWithSelectionDisk, TripletDisk
-from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra, Dummy
+from bob.learn.tensorflow.datashuffler import TripletWithSelectionDisk, TripletDisk, TripletWithFastSelectionDisk
+from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra, Dummy, FaceNet
 from bob.learn.tensorflow.trainers import SiameseTrainer, Trainer, TripletTrainer
 from bob.learn.tensorflow.loss import ContrastiveLoss, BaseLoss, TripletLoss
 import numpy
@@ -41,11 +41,11 @@ def main():
 
     import bob.db.mobio
     db_mobio = bob.db.mobio.Database()
-    directory = "/idiap/temp/tpereira/DEEP_FACE/CASIA/preprocessed"
+    directory = "/idiap/temp/tpereira/DEEP_FACE/CASIA_WEBFACE/mobio/preprocessed/"
 
     # Preparing train set
     #train_objects = db_mobio.objects(protocol="male", groups="world")
-    train_objects = db_mobio.objects(protocol="male", groups="dev")
+    train_objects = db_mobio.objects(protocol="male", groups="world")
     train_labels = [int(o.client_id) for o in train_objects]
     n_classes = len(set(train_labels))
 
@@ -53,9 +53,14 @@ def main():
         directory=directory,
         extension=".hdf5")
                         for o in train_objects]
-    train_data_shuffler = TripletWithSelectionDisk(train_file_names, train_labels,
-                                                   input_shape=[125, 125, 3],
-                                                   batch_size=BATCH_SIZE)
+    #train_data_shuffler = TripletWithSelectionDisk(train_file_names, train_labels,
+    #                                               input_shape=[125, 125, 3],
+    #                                               batch_size=BATCH_SIZE)
+
+    train_data_shuffler = TripletWithFastSelectionDisk(train_file_names, train_labels,
+                                                       input_shape=[224, 224, 3],
+                                                       batch_size=BATCH_SIZE,
+                                                       total_identities=8)
 
     # Preparing train set
     validation_objects = db_mobio.objects(protocol="male", groups="dev")
@@ -67,11 +72,12 @@ def main():
         extension=".hdf5")
                              for o in validation_objects]
     validation_data_shuffler = TripletDisk(validation_file_names, validation_labels,
-                                                input_shape=[125, 125, 3],
-                                                batch_size=VALIDATION_BATCH_SIZE)
+                                           input_shape=[224, 224, 3],
+                                           batch_size=VALIDATION_BATCH_SIZE)
     # Preparing the architecture
     #architecture = Chopra(seed=SEED, fc1_output=n_classes)
-    architecture = Chopra(seed=SEED, fc1_output=n_classes)
+    #architecture = Chopra(seed=SEED, fc1_output=n_classes)
+    architecture = FaceNet(seed=SEED, use_gpu=USE_GPU)
     optimizer = tf.train.GradientDescentOptimizer(0.00000001)
 
 
@@ -89,12 +95,13 @@ def main():
     #                         optimizer=optimizer,
     #                         temp_dir="./LOGS_MOBIO/siamese-cnn-prefetch")
 
-    loss = TripletLoss(margin=4.)
+    loss = TripletLoss(margin=1.)
+    #optimizer = optimizer,
+
     trainer = TripletTrainer(architecture=architecture, loss=loss,
                              iterations=ITERATIONS,
                              prefetch=False,
-                             optimizer=optimizer,
                              temp_dir="./LOGS_MOBIO/triplet-cnn")
 
-    #trainer.train(train_data_shuffler, validation_data_shuffler)
-    trainer.train(train_data_shuffler)
+    trainer.train(train_data_shuffler, validation_data_shuffler)
+    #trainer.train(train_data_shuffler)
