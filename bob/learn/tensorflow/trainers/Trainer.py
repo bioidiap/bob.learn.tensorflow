@@ -279,7 +279,7 @@ class Trainer(object):
 
         config = tf.ConfigProto(log_device_placement=True)
         config.gpu_options.allow_growth = True
-        with tf.Session(config=True) as session:
+        with tf.Session(config=config) as session:
 
             tf.initialize_all_variables().run()
 
