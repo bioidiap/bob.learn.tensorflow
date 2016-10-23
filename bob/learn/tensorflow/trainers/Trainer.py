@@ -14,6 +14,7 @@ from tensorflow.core.framework import summary_pb2
 import time
 from bob.learn.tensorflow.datashuffler.OnlineSampling import OnLineSampling
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "1,2,3,0"
 
 logger = bob.core.log.setup("bob.learn.tensorflow")
 
@@ -276,7 +277,9 @@ class Trainer(object):
         # Training
         hdf5 = bob.io.base.HDF5File(os.path.join(self.temp_dir, 'model.hdf5'), 'w')
 
-        with tf.Session() as session:
+        config = tf.ConfigProto(log_device_placement=True)
+        config.gpu_options.allow_growth = True
+        with tf.Session(config=True) as session:
 
             tf.initialize_all_variables().run()
 
