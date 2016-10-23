@@ -49,11 +49,11 @@ def main():
     train_objects = db_casia.objects(groups="world")
     #train_objects = db.objects(groups="world")
     train_labels = [int(o.client_id) for o in train_objects]
-    directory = "/idiap/resource/database/CASIA-WebFace/CASIA-WebFace"
+    directory = "/idiap/temp/tpereira/DEEP_FACE/CASIA_WEBFACE/casia_webface/preprocessed"
 
     train_file_names = [o.make_path(
         directory=directory,
-        extension="")
+        extension=".hdf5")
                         for o in train_objects]
 
     #train_data_shuffler = TripletWithSelectionDisk(train_file_names, train_labels,
@@ -61,12 +61,12 @@ def main():
     #                                               batch_size=BATCH_SIZE)
 
     train_data_shuffler = TripletWithFastSelectionDisk(train_file_names, train_labels,
-                                                       input_shape=[125, 125, 3],
+                                                       input_shape=[224, 224, 3],
                                                        batch_size=BATCH_SIZE)
 
 
     # Preparing train set
-    directory = "/idiap/temp/tpereira/DEEP_FACE/CASIA/preprocessed"
+    directory = "/idiap/temp/tpereira/DEEP_FACE/CASIA_WEBFACE/mobio/preprocessed"
     validation_objects = db_mobio.objects(protocol="male", groups="dev")
     validation_labels = [o.client_id for o in validation_objects]
 
@@ -76,7 +76,7 @@ def main():
                              for o in validation_objects]
 
     validation_data_shuffler = TripletDisk(validation_file_names, validation_labels,
-                                           input_shape=[125, 125, 3],
+                                           input_shape=[224, 224, 3],
                                            batch_size=VALIDATION_BATCH_SIZE)
     # Preparing the architecture
     # LENET PAPER CHOPRA
