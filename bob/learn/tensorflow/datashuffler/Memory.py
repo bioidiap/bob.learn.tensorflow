@@ -59,7 +59,6 @@ class Memory(Base):
                 img = self.data_augmentation(img)
                 selected_data[i, ...] = self.bob2skimage(img)
 
-        if self.scale:
-            selected_data *= self.scale_value
+        selected_data = self.normalize_sample(selected_data)
 
         return [selected_data.astype("float32"), selected_labels.astype("int64")]

@@ -44,8 +44,10 @@ class OnLineSampling(object):
         if self.feature_placeholder is None:
             shape = tuple([None] + list(data.shape[1:]))
             self.feature_placeholder = tf.placeholder(tf.float32, shape=shape, name="feature")
-            self.graph = self.feature_extractor.compute_graph(self.feature_placeholder, self.feature_extractor.default_feature_layer,
+            embbeding = self.feature_extractor.compute_graph(self.feature_placeholder, self.feature_extractor.default_feature_layer,
                                                               training=False)
+
+            self.graph = tf.nn.l2_normalize(embbeding, 1, 1e-10, name='embeddings')
 
         #if self.feature_placeholder.get_shape().as_list() != list(data.shape):
             #tf.reshape(self.feature_placeholder, tf.pack([data.shape]))

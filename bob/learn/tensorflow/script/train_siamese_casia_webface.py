@@ -46,7 +46,7 @@ def main():
     db_casia = bob.db.casia_webface.Database()
 
     # Preparing train set
-    train_objects = db_casia.objects(groups="world")
+    train_objects = sorted(db_casia.objects(groups="world"), key=lambda x: x.id)
     #train_objects = db.objects(groups="world")
     train_labels = [int(o.client_id) for o in train_objects]
     directory = "/idiap/temp/tpereira/DEEP_FACE/CASIA_WEBFACE/casia_webface/preprocessed"
@@ -67,7 +67,7 @@ def main():
 
     # Preparing train set
     directory = "/idiap/temp/tpereira/DEEP_FACE/CASIA_WEBFACE/mobio/preprocessed"
-    validation_objects = db_mobio.objects(protocol="male", groups="dev")
+    validation_objects = sorted(db_mobio.objects(protocol="male", groups="dev"), key=lambda x: x.id)
     validation_labels = [o.client_id for o in validation_objects]
 
     validation_file_names = [o.make_path(

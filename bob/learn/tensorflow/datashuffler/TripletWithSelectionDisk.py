@@ -80,22 +80,21 @@ class TripletWithSelectionDisk(Triplet, Disk, OnLineSampling):
         **Return**
         """
 
-        data_a = numpy.zeros(shape=self.shape, dtype='float32')
-        data_p = numpy.zeros(shape=self.shape, dtype='float32')
-        data_n = numpy.zeros(shape=self.shape, dtype='float32')
+        sample_a = numpy.zeros(shape=self.shape, dtype='float32')
+        sample_p = numpy.zeros(shape=self.shape, dtype='float32')
+        sample_n = numpy.zeros(shape=self.shape, dtype='float32')
 
         for i in range(self.shape[0]):
             file_name_a, file_name_p, file_name_n = self.get_one_triplet(self.data, self.labels)
-            data_a[i, ...] = self.load_from_file(str(file_name_a))
-            data_p[i, ...] = self.load_from_file(str(file_name_p))
-            data_n[i, ...] = self.load_from_file(str(file_name_n))
+            sample_a[i, ...] = self.load_from_file(str(file_name_a))
+            sample_p[i, ...] = self.load_from_file(str(file_name_p))
+            sample_n[i, ...] = self.load_from_file(str(file_name_n))
 
-        if self.scale:
-            data_a *= self.scale_value
-            data_p *= self.scale_value
-            data_n *= self.scale_value
+        sample_a = self.normalize_sample(sample_a)
+        sample_p = self.normalize_sample(sample_p)
+        sample_n = self.normalize_sample(sample_n)
 
-        return [data_a, data_p, data_n]
+        return [sample_a, sample_p, sample_n]
 
     def get_batch(self):
         """
@@ -119,9 +118,6 @@ class TripletWithSelectionDisk(Triplet, Disk, OnLineSampling):
         for i in range(1, self.total_identities):
             anchor_labels = numpy.hstack((anchor_labels,numpy.ones(samples_per_identity) * self.possible_labels[indexes[i]]))
         anchor_labels = anchor_labels[0:self.batch_size]
-
-
-
 
         data_a = numpy.zeros(shape=self.shape, dtype='float32')
         data_p = numpy.zeros(shape=self.shape, dtype='float32')
@@ -167,14 +163,12 @@ class TripletWithSelectionDisk(Triplet, Disk, OnLineSampling):
         numpy.random.shuffle(indexes)
 
         file_name = self.data[indexes[0], ...]
-        anchor = self.load_from_file(str(file_name))
+        sample_a = self.load_from_file(str(file_name))
 
-        if self.scale:
-            anchor *= self.scale_value
+        sample_a = self.normalize_sample(sample_a)
+        return sample_a
 
-        return anchor
-
-    def get_positive(self, label, anchor_feature):
+    def get_positive(self, label, embedding_a):
         """
         Get the best positive sample given the anchor.
         The best positive sample for the anchor is the farthest from the anchor
@@ -188,31 +182,30 @@ class TripletWithSelectionDisk(Triplet, Disk, OnLineSampling):
                   0:self.batch_size]  # Limiting to the batch size, otherwise the number of comparisons will explode
         distances = []
         shape = tuple([len(indexes)] + list(self.shape[1:]))
-        data_p = numpy.zeros(shape=shape, dtype='float32')
+        sample_p = numpy.zeros(shape=shape, dtype='float32')
         #logger.info("****************** search")
         for i in range(shape[0]):
             #logger.info("****************** fetch")
             file_name = self.data[indexes[i], ...]
             #logger.info("****************** load")
-            data_p[i, ...] = self.load_from_file(str(file_name))
+            sample_p[i, ...] = self.load_from_file(str(file_name))
 
-        if self.scale:
-            data_p *= self.scale_value
+        sample_p = self.normalize_sample(sample_p)
 
         #logger.info("****************** project")
-        positive_features = self.project(data_p)
+        embedding_p = self.project(sample_p)
 
         #logger.info("****************** distances")
         # Projecting the positive instances
-        for p in positive_features:
-            distances.append(euclidean(anchor_feature, p))
+        for p in embedding_p:
+            distances.append(euclidean(embedding_a, p))
 
         # Geting the max
         index = numpy.argmax(distances)
         #logger.info("****************** return")
-        return data_p[index, ...], distances[index]
+        return sample_p[index, ...], distances[index]
 
-    def get_negative(self, label, anchor_feature, distance_anchor_positive):
+    def get_negative(self, label, embedding_a, distance_anchor_positive):
         """
         Get the best negative sample for a pair anchor-positive
         """
@@ -227,24 +220,23 @@ class TripletWithSelectionDisk(Triplet, Disk, OnLineSampling):
                   0:self.batch_size*3] # Limiting to the batch size, otherwise the number of comparisons will explode
 
         shape = tuple([len(indexes)] + list(self.shape[1:]))
-        data_n = numpy.zeros(shape=shape, dtype='float32')
+        sample_n = numpy.zeros(shape=shape, dtype='float32')
         #logger.info("****************** search")
         for i in range(shape[0]):
             #logger.info("****************** fetch")
             file_name = self.data[indexes[i], ...]
             #logger.info("****************** load")
-            data_n[i, ...] = self.load_from_file(str(file_name))
+            sample_n[i, ...] = self.load_from_file(str(file_name))
 
-        if self.scale:
-            data_n *= self.scale_value
+        sample_n = self.normalize_sample(sample_n)
 
         #logger.info("****************** project")
-        negative_features = self.project(data_n)
+        embedding_n = self.project(sample_n)
 
         distances = []
         #logger.info("****************** distances")
-        for n in negative_features:
-            d = euclidean(anchor_feature, n)
+        for n in embedding_n:
+            d = euclidean(embedding_a, n)
 
             # Semi-hard samples criteria
             if d > distance_anchor_positive:
@@ -260,4 +252,4 @@ class TripletWithSelectionDisk(Triplet, Disk, OnLineSampling):
             logger.info("SEMI-HARD negative not found, took the first one")
             index = 0
         #logger.info("****************** return")
-        return data_n[index, ...]
+        return sample_n[index, ...]

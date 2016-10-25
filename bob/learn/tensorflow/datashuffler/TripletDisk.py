@@ -67,19 +67,18 @@ class TripletDisk(Triplet, Disk):
         **Return**
         """
 
-        data_a = numpy.zeros(shape=self.shape, dtype='float32')
-        data_p = numpy.zeros(shape=self.shape, dtype='float32')
-        data_n = numpy.zeros(shape=self.shape, dtype='float32')
+        sample_a = numpy.zeros(shape=self.shape, dtype='float32')
+        sample_p = numpy.zeros(shape=self.shape, dtype='float32')
+        sample_n = numpy.zeros(shape=self.shape, dtype='float32')
 
         for i in range(self.shape[0]):
             file_name_a, file_name_p, file_name_n = self.get_one_triplet(self.data, self.labels)
-            data_a[i, ...] = self.load_from_file(str(file_name_a))
-            data_p[i, ...] = self.load_from_file(str(file_name_p))
-            data_n[i, ...] = self.load_from_file(str(file_name_n))
+            sample_a[i, ...] = self.load_from_file(str(file_name_a))
+            sample_p[i, ...] = self.load_from_file(str(file_name_p))
+            sample_n[i, ...] = self.load_from_file(str(file_name_n))
 
-        if self.scale:
-            data_a *= self.scale_value
-            data_p *= self.scale_value
-            data_n *= self.scale_value
+        sample_a = self.normalize_sample(sample_a)
+        sample_p = self.normalize_sample(sample_p)
+        sample_n = self.normalize_sample(sample_n)
 
-        return [data_a, data_p, data_n]
+        return [sample_a, sample_p, sample_n]

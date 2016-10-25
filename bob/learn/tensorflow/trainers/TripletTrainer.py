@@ -187,7 +187,7 @@ class TripletTrainer(Trainer):
                                                                  self.training_graph, self.between_class_graph_train,
                                                                  self.within_class_graph_train,
                                                                  self.learning_rate, self.summaries_train],
-                                                                feed_dict=feed_dict)
+                                                                 feed_dict=feed_dict)
 
         logger.info("Loss training set step={0} = {1}".format(step, l))
         self.train_summary_writter.add_summary(summary, step)

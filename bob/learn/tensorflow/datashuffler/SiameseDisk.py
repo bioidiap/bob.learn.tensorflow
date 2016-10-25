@@ -63,22 +63,20 @@ class SiameseDisk(Siamese, Disk):
         **Return**
         """
 
-        data = numpy.zeros(shape=self.shape, dtype='float32')
-        data_p = numpy.zeros(shape=self.shape, dtype='float32')
+        sample_l = numpy.zeros(shape=self.shape, dtype='float32')
+        sample_r = numpy.zeros(shape=self.shape, dtype='float32')
         labels_siamese = numpy.zeros(shape=self.shape[0], dtype='float32')
 
         genuine = True
         for i in range(self.shape[0]):
             file_name, file_name_p = self.get_genuine_or_not(self.data, self.labels, genuine=genuine)
-            data[i, ...] = self.load_from_file(str(file_name))
-            data_p[i, ...] = self.load_from_file(str(file_name_p))
+            sample_l[i, ...] = self.load_from_file(str(file_name))
+            sample_r[i, ...] = self.load_from_file(str(file_name_p))
 
             labels_siamese[i] = not genuine
             genuine = not genuine
 
+        sample_l = self.normalize_sample(sample_l)
+        sample_r = self.normalize_sample(sample_r)
 
-        if self.scale:
-            data *= self.scale_value
-            data_p *= self.scale_value
-
-        return data, data_p, labels_siamese
+        return sample_l, sample_r, labels_siamese

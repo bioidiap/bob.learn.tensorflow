@@ -55,13 +55,13 @@ class SiameseMemory(Siamese, Memory):
 
         **Return**
         """
-        data = numpy.zeros(shape=self.shape, dtype='float')
-        data_p = numpy.zeros(shape=self.shape, dtype='float')
+        sample_l = numpy.zeros(shape=self.shape, dtype='float')
+        sample_r = numpy.zeros(shape=self.shape, dtype='float')
         labels_siamese = numpy.zeros(shape=self.shape[0], dtype='float')
 
         genuine = True
         for i in range(self.shape[0]):
-            data[i, ...], data_p[i, ...] = self.get_genuine_or_not(self.data, self.labels, genuine=genuine)
+            sample_l[i, ...], sample_r[i, ...] = self.get_genuine_or_not(self.data, self.labels, genuine=genuine)
             if zero_one_labels:
                 labels_siamese[i] = not genuine
             else:
@@ -70,16 +70,14 @@ class SiameseMemory(Siamese, Memory):
 
         # Applying the data augmentation
         if self.data_augmentation is not None:
-            for i in range(data.shape[0]):
-                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(data[i, ...])))
-                data[i, ...] = d
+            for i in range(sample_l.shape[0]):
+                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(sample_l[i, ...])))
+                sample_l[i, ...] = d
 
-                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(data_p[i, ...])))
-                data_p[i, ...] = d
+                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(sample_r[i, ...])))
+                sample_r[i, ...] = d
 
-        # Scaling
-        if self.scale:
-            data *= self.scale_value
-            data_p *= self.scale_value
+        sample_l = self.normalize_sample(sample_l)
+        sample_r = self.normalize_sample(sample_r)
 
-        return [data.astype("float32"), data_p.astype("float32"), labels_siamese]
+        return [sample_l.astype("float32"), sample_r.astype("float32"), labels_siamese]
