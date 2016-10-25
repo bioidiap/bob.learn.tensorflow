@@ -33,12 +33,18 @@ class TripletLoss(BaseLoss):
     def __init__(self, margin=5.0):
         self.margin = margin
 
-    def __call__(self, anchor_feature, positive_feature, negative_feature):
+    def __call__(self, anchor_embedding, positive_embedding, negative_embedding):
 
         with tf.name_scope("triplet_loss"):
+            # Normalize
+            anchor_embedding = tf.nn.l2_normalize(anchor_embedding, 1, 1e-10)
+            positive_embedding = tf.nn.l2_normalize(positive_embedding, 1, 1e-10)
+            negative_embedding = tf.nn.l2_normalize(negative_embedding, 1, 1e-10)
 
-            d_positive = tf.square(compute_euclidean_distance(anchor_feature, positive_feature))
-            d_negative = tf.square(compute_euclidean_distance(anchor_feature, negative_feature))
+            d_positive = tf.reduce_sum(tf.square(tf.sub(anchor_embedding, positive_embedding)), 1)
+            d_negative = tf.reduce_sum(tf.square(tf.sub(anchor_embedding, negative_embedding)), 1)
 
-            loss = tf.maximum(0., d_positive - d_negative + self.margin)
-            return tf.reduce_mean(loss), tf.reduce_mean(d_negative), tf.reduce_mean(d_positive)
+            basic_loss = tf.add(tf.sub(d_positive, d_negative), self.margin)
+            loss = tf.reduce_mean(tf.maximum(basic_loss, 0.0), 0)
+
+            return loss, tf.reduce_mean(d_negative), tf.reduce_mean(d_positive)

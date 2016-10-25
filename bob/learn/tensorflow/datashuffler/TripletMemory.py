@@ -56,29 +56,28 @@ class TripletMemory(Triplet, Memory):
         **Return**
         """
 
-        data_a = numpy.zeros(shape=self.shape, dtype='float32')
-        data_p = numpy.zeros(shape=self.shape, dtype='float32')
-        data_n = numpy.zeros(shape=self.shape, dtype='float32')
+        sample_a = numpy.zeros(shape=self.shape, dtype='float32')
+        sample_p = numpy.zeros(shape=self.shape, dtype='float32')
+        sample_n = numpy.zeros(shape=self.shape, dtype='float32')
 
         for i in range(self.shape[0]):
-            data_a[i, ...], data_p[i, ...], data_n[i, ...] = self.get_one_triplet(self.data, self.labels)
+            sample_a[i, ...], sample_p[i, ...], sample_n[i, ...] = self.get_one_triplet(self.data, self.labels)
 
         # Applying the data augmentation
         if self.data_augmentation is not None:
-            for i in range(data_a.shape[0]):
-                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(data_a[i, ...])))
-                data_a[i, ...] = d
+            for i in range(sample_a.shape[0]):
+                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(sample_a[i, ...])))
+                sample_a[i, ...] = d
 
-                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(data_p[i, ...])))
-                data_p[i, ...] = d
+                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(sample_p[i, ...])))
+                sample_p[i, ...] = d
 
-                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(data_n[i, ...])))
-                data_n[i, ...] = d
+                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(sample_n[i, ...])))
+                sample_n[i, ...] = d
 
         # Scaling
-        if self.scale:
-            data_a *= self.scale_value
-            data_p *= self.scale_value
-            data_n *= self.scale_value
+        sample_a = self.normalize_sample(sample_a)
+        sample_p = self.normalize_sample(sample_p)
+        sample_n = self.normalize_sample(sample_n)
 
-        return [data_a.astype("float32"), data_p.astype("float32"), data_n.astype("float32")]
+        return [sample_a.astype("float32"), sample_p.astype("float32"), sample_n.astype("float32")]

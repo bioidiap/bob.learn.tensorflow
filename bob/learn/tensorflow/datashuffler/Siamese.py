@@ -63,8 +63,8 @@ class Siamese(Base):
             numpy.random.shuffle(indexes)
 
             # Picking a pair
-            data = input_data[indexes[0], ...]
-            data_p = input_data[indexes[1], ...]
+            sample_l = input_data[indexes[0], ...]
+            sample_r = input_data[indexes[1], ...]
 
         else:
             # Picking a pair of labels from different clients
@@ -73,13 +73,13 @@ class Siamese(Base):
             index[1] = self.possible_labels[int(index[1])]
 
             # Getting the indexes of the two clients
-            indexes = numpy.where(input_labels == index[0])[0]
-            indexes_p = numpy.where(input_labels == index[1])[0]
-            numpy.random.shuffle(indexes)
-            numpy.random.shuffle(indexes_p)
+            indexes_l = numpy.where(input_labels == index[0])[0]
+            indexes_r = numpy.where(input_labels == index[1])[0]
+            numpy.random.shuffle(indexes_l)
+            numpy.random.shuffle(indexes_r)
 
             # Picking a pair
-            data = input_data[indexes[0], ...]
-            data_p = input_data[indexes_p[0], ...]
+            sample_l = input_data[indexes_l[0], ...]
+            sample_r = input_data[indexes_r[0], ...]
 
-        return data, data_p
+        return sample_l, sample_r

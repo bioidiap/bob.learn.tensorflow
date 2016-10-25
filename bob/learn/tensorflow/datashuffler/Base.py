@@ -149,5 +149,16 @@ class Base(object):
         shape = tuple([1] + list(data.shape))
         return numpy.reshape(data, shape)
 
+    def normalize_sample(self, x):
+        """
+        Normalize the sample.
+
+        For the time being I'm only scaling from 0-1
+        """
+
+        if self.scale:
+            return x * self.scale_value
+        return x
+
 
 

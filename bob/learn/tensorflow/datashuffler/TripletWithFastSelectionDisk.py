@@ -92,10 +92,9 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnLineSampling):
             sample_p[i, ...] = self.load_from_file(str(file_name_p))
             sample_n[i, ...] = self.load_from_file(str(file_name_n))
 
-        if self.scale:
-            sample_a *= self.scale_value
-            sample_p *= self.scale_value
-            sample_n *= self.scale_value
+        sample_a = self.normalize_sample(sample_a)
+        sample_p = self.normalize_sample(sample_p)
+        sample_n = self.normalize_sample(sample_n)
 
         return [sample_a, sample_p, sample_n]
 
@@ -133,13 +132,6 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnLineSampling):
         samples_p, embedding_p, d_anchor_positive = self.get_positives(anchor_labels, embedding_a)
         samples_n = self.get_negative(anchor_labels, embedding_a, d_anchor_positive)
 
-        #import bob.io.base
-        #import bob.io.image
-        #for i in range(self.shape[0]):
-            #bob.io.base.save((self.skimage2bob(samples_a[i, ...]) / 0.00390625).astype("uint8"), "{0}_a.jpg".format(i))
-            #bob.io.base.save((self.skimage2bob(samples_p[i, ...]) / 0.00390625).astype("uint8"), "{0}_p.jpg".format(i))
-            #bob.io.base.save((self.skimage2bob(samples_n[i, ...]) / 0.00390625).astype("uint8"), "{0}_n.jpg".format(i))
-
         return samples_a, samples_p, samples_n
 
     def get_anchor(self, label):
@@ -154,8 +146,7 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnLineSampling):
         file_name = self.data[indexes[0], ...]
         anchor = self.load_from_file(str(file_name))
 
-        if self.scale:
-            anchor *= self.scale_value
+        anchor = self.normalize_sample(anchor)
 
         return anchor
 
@@ -171,9 +162,7 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnLineSampling):
             file_name = self.data[indexes[0], ...]
             samples_p[i, ...] = self.load_from_file(str(file_name))
 
-        if self.scale:
-            samples_p *= self.scale_value
-
+        samples_p = self.normalize_sample(samples_p)
         embedding_p = self.project(samples_p)
 
         # Computing the distances
@@ -204,9 +193,7 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnLineSampling):
         for i in range(shape[0]):
             file_name = self.data[indexes[i], ...]
             temp_samples_n[i, ...] = self.load_from_file(str(file_name))
-
-        if self.scale:
-            temp_samples_n *= self.scale_value
+        temp_samples_n = self.normalize_sample(temp_samples_n)
 
         # Computing all the embeddings
         embedding_temp_n = self.project(temp_samples_n)
