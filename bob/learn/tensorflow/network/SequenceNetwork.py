@@ -220,7 +220,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         hdf5.set('input_divide', self.input_divide)
         hdf5.set('input_subtract', self.input_subtract)
 
-    def load(self, hdf5, shape, session=None):
+    def load(self, hdf5, shape=None, session=None):
         """
         Load the network
 
@@ -243,6 +243,9 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         # Saving the architecture
         self.sequence_net = pickle.loads(hdf5.read('architecture'))
         self.deployment_shape = hdf5.read('deployment_shape')
+
+        if shape is None:
+            shape = self.deployment_shape
 
         # Loading variables
         place_holder = tf.placeholder(tf.float32, shape=shape, name="load")
