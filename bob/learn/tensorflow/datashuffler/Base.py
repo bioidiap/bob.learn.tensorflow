@@ -58,6 +58,7 @@ class Base(object):
         self.label_placeholder = None
 
         self.data_augmentation = data_augmentation
+        self.deployment_shape = [-1] + list(input_shape)
 
     def get_placeholders(self, name=""):
         """
@@ -89,9 +90,7 @@ class Base(object):
         skimage = numpy.zeros(shape=(bob_image.shape[1], bob_image.shape[2], bob_image.shape[0]))
 
         for i in range(bob_image.shape[0]):
-            skimage[:, :, i] = bob_image[i, :, :]  # Copying red
-        #skimage[:, :, 1] = bob_image[1, :, :]  # Copying green
-        #skimage[:, :, 2] = bob_image[2, :, :]  # Copying blue
+            skimage[:, :, i] = bob_image[i, :, :]
 
         return skimage
 
@@ -104,11 +103,6 @@ class Base(object):
 
         for i in range(bob_image.shape[0]):
             bob_image[i, :, :] = sk_image[:, :, i]  # Copying red
-
-        #bob_image[0, :, :] = sk_image[:, :, 0] # Copying red
-        #if bob_image.shape[0] > 1:
-        #    bob_image[1, :, :] = sk_image[:, :, 1]# Copying green
-        #    bob_image[2, :, :] = sk_image[:, :, 2]  # Copying blue
 
         return bob_image
 

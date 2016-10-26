@@ -8,7 +8,7 @@ import tensorflow as tf
 import abc
 import six
 import numpy
-import os
+import pickle
 
 from collections import OrderedDict
 from bob.learn.tensorflow.layers import Layer, MaxPooling, Dropout, Conv2D, FullyConnected
@@ -35,6 +35,9 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         self.input_subtract = 0.
         self.use_gpu = use_gpu
 
+        self.pickle_architecture = None# The trainer triggers this
+        self.deployment_shape = None# The trainer triggers this
+
     def add(self, layer):
         """
         Add a :py:class:`bob.learn.tensorflow.layers.Layer` in the sequence network
@@ -43,6 +46,10 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         if not isinstance(layer, Layer):
             raise ValueError("Input `layer` must be an instance of `bob.learn.tensorflow.layers.Layer`")
         self.sequence_net[layer.name] = layer
+
+    def pickle_net(self, shape):
+        self.pickle_architecture = pickle.dumps(self.sequence_net)
+        self.deployment_shape = shape
 
     def compute_graph(self, input_data, feature_layer=None, training=True):
         """Given the current network, return the Tensorflow graph
@@ -108,10 +115,9 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         return feature
 
     def dump_variables(self):
-        """Return all the tensorflow `variables <https://www.tensorflow.org/versions/r0.11/api_docs/python/state_ops.html#Variable>`_ used in the graph
         """
-
-
+        Return all the tensorflow `variables <https://www.tensorflow.org/versions/r0.11/api_docs/python/state_ops.html#Variable>`_ used in the graph
+        """
         variables = {}
         for k in self.sequence_net:
             # TODO: IT IS NOT SMART TESTING ALONG THIS PAGE
@@ -178,15 +184,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
 
         return samples_per_sample
 
-
-        #if self.saver is None:
-        #    variables = self.dump_variables()
-        #    variables['input_divide'] = self.input_divide
-        #    variables['input_subtract'] = self.input_subtract
-        #    self.saver = tf.train.Saver(variables)
-        #self.saver.restore(session, path)
-
-    def save(self, hdf5, step=None):
+    def save(self, hdf5):
         """
         Save the state of the network in HDF5 format
 
@@ -204,14 +202,14 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
                 p = split_path[i]
                 hdf5.create_group(p)
 
+        # Saving the architecture
+        if self.pickle_architecture is not None:
+            hdf5.set('architecture', self.pickle_architecture)
+            hdf5.set('deployment_shape', self.deployment_shape)
+
         # Directory that stores the tensorflow variables
         hdf5.create_group('/tensor_flow')
         hdf5.cd('/tensor_flow')
-
-        if step is not None:
-            group_name = '/step_{0}'.format(step)
-            hdf5.create_group(group_name)
-            hdf5.cd(group_name)
 
         # Iterating the variables of the model
         for v in self.dump_variables().keys():
@@ -219,9 +217,6 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
             hdf5.set(v, self.dump_variables()[v].eval())
 
         hdf5.cd('..')
-        if step is not None:
-            hdf5.cd('..')
-
         hdf5.set('input_divide', self.input_divide)
         hdf5.set('input_subtract', self.input_subtract)
 
@@ -244,6 +239,10 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         # Loading the normalization parameters
         self.input_divide = hdf5.read('input_divide')
         self.input_subtract = hdf5.read('input_subtract')
+
+        # Saving the architecture
+        self.sequence_net = pickle.loads(hdf5.read('architecture'))
+        self.deployment_shape = hdf5.read('deployment_shape')
 
         # Loading variables
         place_holder = tf.placeholder(tf.float32, shape=shape, name="load")

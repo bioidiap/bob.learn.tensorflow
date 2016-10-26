@@ -14,8 +14,8 @@ from tensorflow.core.framework import summary_pb2
 import time
 from bob.learn.tensorflow.datashuffler.OnlineSampling import OnLineSampling
 
-#os.environ["CUDA_VISIBLE_DEVICES"] = "1,2,3,0"
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
+os.environ["CUDA_VISIBLE_DEVICES"] = "3,2,0,1"
+#os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 logger = bob.core.log.setup("bob.learn.tensorflow")
 
@@ -58,7 +58,8 @@ class Trainer(object):
                  ###### training options ##########
                  convergence_threshold=0.01,
                  iterations=5000,
-                 snapshot=100,
+                 snapshot=500,
+                 validation_snapshot=100,
                  prefetch=False,
 
                  ## Analizer
@@ -81,6 +82,7 @@ class Trainer(object):
 
         self.iterations = iterations
         self.snapshot = snapshot
+        self.validation_snapshot = validation_snapshot
         self.convergence_threshold = convergence_threshold
         self.prefetch = prefetch
 
@@ -259,6 +261,9 @@ class Trainer(object):
         bob.io.base.create_directories_safe(self.temp_dir)
         self.train_data_shuffler = train_data_shuffler
 
+        # Pickle the architecture to save
+        self.architecture.pickle_net(train_data_shuffler.deployment_shape)
+
         # TODO: find an elegant way to provide this as a parameter of the trainer
         self.global_step = tf.Variable(0, trainable=False)
         self.learning_rate = tf.train.exponential_decay(
@@ -274,18 +279,14 @@ class Trainer(object):
         self.optimizer_class._learning_rate = self.learning_rate
         self.optimizer = self.optimizer_class.minimize(self.training_graph, global_step=self.global_step)
 
-
         # Train summary
         self.summaries_train = self.create_general_summary()
 
         logger.info("Initializing !!")
-        # Training
-        hdf5 = bob.io.base.HDF5File(os.path.join(self.temp_dir, 'model.hdf5'), 'w')
 
         config = tf.ConfigProto(log_device_placement=True)
         config.gpu_options.allow_growth = True
         with tf.Session(config=config) as session:
-
             tf.initialize_all_variables().run()
 
             if isinstance(train_data_shuffler, OnLineSampling):
@@ -307,12 +308,20 @@ class Trainer(object):
                 summary = summary_pb2.Summary.Value(tag="elapsed_time", simple_value=float(end-start))
                 self.train_summary_writter.add_summary(summary_pb2.Summary(value=[summary]), step)
 
-                if validation_data_shuffler is not None and step % self.snapshot == 0:
+                # Running validation
+                if validation_data_shuffler is not None and step % self.validation_snapshot == 0:
                     self.compute_validation(session, validation_data_shuffler, step)
 
                     if self.analizer is not None:
                         self.validation_summary_writter.add_summary(self.analizer(
                              validation_data_shuffler, self.architecture, session), step)
+
+                # Taking snapshot
+                if step % self.snapshot == 0:
+                    logger.info("Taking snapshot")
+                    hdf5 = bob.io.base.HDF5File(os.path.join(self.temp_dir, 'model_snapshot{0}.hdf5'.format(step)), 'w')
+                    self.architecture.save(hdf5)
+                    del hdf5
 
             logger.info("Training finally finished")
 
@@ -320,6 +329,8 @@ class Trainer(object):
             if validation_data_shuffler is not None:
                 self.validation_summary_writter.close()
 
+            # Saving the final network
+            hdf5 = bob.io.base.HDF5File(os.path.join(self.temp_dir, 'model.hdf5'), 'w')
             self.architecture.save(hdf5)
             del hdf5
 

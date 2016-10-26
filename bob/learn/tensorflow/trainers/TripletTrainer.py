@@ -55,7 +55,8 @@ class TripletTrainer(Trainer):
                  ###### training options ##########
                  convergence_threshold=0.01,
                  iterations=5000,
-                 snapshot=100,
+                 snapshot=500,
+                 validation_snapshot=100,
                  prefetch=False,
 
                  ## Analizer
@@ -79,6 +80,7 @@ class TripletTrainer(Trainer):
             convergence_threshold=convergence_threshold,
             iterations=iterations,
             snapshot=snapshot,
+            validation_snapshot=validation_snapshot,
             prefetch=prefetch,
 
             ## Analizer
@@ -190,8 +192,6 @@ class TripletTrainer(Trainer):
                                                                  self.within_class_graph_train,
                                                                  self.learning_rate, self.summaries_train],
                                                                  feed_dict=feed_dict)
-        print "LEARNING {0}".format(lr)
-
         logger.info("Loss training set step={0} = {1}".format(step, l))
         self.train_summary_writter.add_summary(summary, step)
 

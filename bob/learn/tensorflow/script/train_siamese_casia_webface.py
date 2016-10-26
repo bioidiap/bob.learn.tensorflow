@@ -23,7 +23,7 @@ import tensorflow as tf
 from .. import util
 SEED = 10
 from bob.learn.tensorflow.datashuffler import TripletDisk, TripletWithSelectionDisk, TripletWithFastSelectionDisk
-from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra, Dummy
+from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra, Dummy, FaceNet
 from bob.learn.tensorflow.trainers import SiameseTrainer, TripletTrainer
 from bob.learn.tensorflow.loss import ContrastiveLoss, TripletLoss
 import numpy
@@ -61,7 +61,7 @@ def main():
     #                                               batch_size=BATCH_SIZE)
 
     train_data_shuffler = TripletWithFastSelectionDisk(train_file_names, train_labels,
-                                                       input_shape=[224, 224, 3],
+                                                       input_shape=[112, 112, 3],
                                                        batch_size=BATCH_SIZE)
 
 
@@ -76,11 +76,12 @@ def main():
                              for o in validation_objects]
 
     validation_data_shuffler = TripletDisk(validation_file_names, validation_labels,
-                                           input_shape=[224, 224, 3],
+                                           input_shape=[112, 112, 3],
                                            batch_size=VALIDATION_BATCH_SIZE)
     # Preparing the architecture
     # LENET PAPER CHOPRA
-    architecture = Chopra(seed=SEED)
+    #architecture = Chopra(seed=SEED)
+    architecture = FaceNet(seed=SEED, use_gpu=USE_GPU)
 
     #loss = ContrastiveLoss(contrastive_margin=50.)
     #optimizer = tf.train.GradientDescentOptimizer(0.00001)
@@ -90,9 +91,10 @@ def main():
     #                         snapshot=VALIDATION_TEST,
     #                         optimizer=optimizer)
 
-    loss = TripletLoss(margin=1.)
+    loss = TripletLoss(margin=0.5)
     trainer = TripletTrainer(architecture=architecture, loss=loss,
                              iterations=ITERATIONS,
+                             base_learning_rate=0.1,
                              prefetch=False,
                              temp_dir="./LOGS_CASIA/triplet-cnn-fast-selection")
 

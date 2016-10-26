@@ -76,9 +76,8 @@ def main():
                                            input_shape=[112, 112, 3],
                                            batch_size=VALIDATION_BATCH_SIZE)
     # Preparing the architecture
-    architecture = Chopra(seed=SEED, fc1_output=n_classes)
     #architecture = Chopra(seed=SEED, fc1_output=n_classes)
-    #architecture = FaceNet(seed=SEED, use_gpu=USE_GPU)
+    architecture = FaceNet(seed=SEED, use_gpu=USE_GPU)
     #optimizer = tf.train.GradientDescentOptimizer(0.0005)
 
 
@@ -103,7 +102,8 @@ def main():
                              iterations=ITERATIONS,
                              base_learning_rate=0.1,
                              prefetch=False,
-                             temp_dir="./LOGS_MOBIO/triplet-cnn")
+                             snapshot=200,
+                             temp_dir="/idiap/temp/tpereira/CNN_MODELS/triplet-cnn-all-mobio")
 
     #trainer.train(train_data_shuffler, validation_data_shuffler)
     trainer.train(train_data_shuffler)

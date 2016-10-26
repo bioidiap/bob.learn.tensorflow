@@ -55,8 +55,9 @@ class SiameseTrainer(Trainer):
                  ###### training options ##########
                  convergence_threshold=0.01,
                  iterations=5000,
-                 snapshot=100,
+                 snapshot=500,
                  prefetch=False,
+                 validation_snapshot=100,
 
                  ## Analizer
                  analizer=ExperimentAnalizer(),
@@ -79,6 +80,7 @@ class SiameseTrainer(Trainer):
             convergence_threshold=convergence_threshold,
             iterations=iterations,
             snapshot=snapshot,
+            validation_snapshot=validation_snapshot,
             prefetch=prefetch,
 
             ## Analizer
