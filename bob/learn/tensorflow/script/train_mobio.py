@@ -101,7 +101,7 @@ def main():
     #optimizer = optimizer,
     trainer = TripletTrainer(architecture=architecture, loss=loss,
                              iterations=ITERATIONS,
-                             base_learning_rate=0.0001,
+                             base_learning_rate=0.1,
                              prefetch=False,
                              temp_dir="./LOGS_MOBIO/triplet-cnn")
 

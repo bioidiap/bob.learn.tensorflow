@@ -50,6 +50,7 @@ class SiameseTrainer(Trainer):
                  # Learning rate
                  base_learning_rate=0.001,
                  weight_decay=0.9,
+                 decay_steps=1000,
 
                  ###### training options ##########
                  convergence_threshold=0.01,
@@ -72,6 +73,7 @@ class SiameseTrainer(Trainer):
             # Learning rate
             base_learning_rate=base_learning_rate,
             weight_decay=weight_decay,
+            decay_steps=decay_steps,
 
             ###### training options ##########
             convergence_threshold=convergence_threshold,

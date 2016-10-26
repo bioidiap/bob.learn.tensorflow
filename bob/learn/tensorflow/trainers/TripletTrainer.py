@@ -50,6 +50,7 @@ class TripletTrainer(Trainer):
                  # Learning rate
                  base_learning_rate=0.001,
                  weight_decay=0.9,
+                 decay_steps=1000,
 
                  ###### training options ##########
                  convergence_threshold=0.01,
@@ -72,6 +73,7 @@ class TripletTrainer(Trainer):
             # Learning rate
             base_learning_rate=base_learning_rate,
             weight_decay=weight_decay,
+            decay_steps=decay_steps,
 
             ###### training options ##########
             convergence_threshold=convergence_threshold,
@@ -188,6 +190,7 @@ class TripletTrainer(Trainer):
                                                                  self.within_class_graph_train,
                                                                  self.learning_rate, self.summaries_train],
                                                                  feed_dict=feed_dict)
+        print "LEARNING {0}".format(lr)
 
         logger.info("Loss training set step={0} = {1}".format(step, l))
         self.train_summary_writter.add_summary(summary, step)

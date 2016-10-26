@@ -51,8 +51,9 @@ class Trainer(object):
                  temp_dir="cnn",
 
                  # Learning rate
-                 base_learning_rate=0.001,
+                 base_learning_rate=0.1,
                  weight_decay=0.9,
+                 decay_steps=1000,
 
                  ###### training options ##########
                  convergence_threshold=0.01,
@@ -76,6 +77,7 @@ class Trainer(object):
 
         self.base_learning_rate = base_learning_rate
         self.weight_decay = weight_decay
+        self.decay_steps = decay_steps
 
         self.iterations = iterations
         self.snapshot = snapshot
@@ -101,6 +103,7 @@ class Trainer(object):
 
         self.thread_pool = None
         self.enqueue_op = None
+        self.global_step = None
 
         bob.core.log.set_verbosity_level(logger, verbosity_level)
 
@@ -257,19 +260,20 @@ class Trainer(object):
         self.train_data_shuffler = train_data_shuffler
 
         # TODO: find an elegant way to provide this as a parameter of the trainer
+        self.global_step = tf.Variable(0, trainable=False)
         self.learning_rate = tf.train.exponential_decay(
-            self.base_learning_rate,  # Learning rate
-            train_data_shuffler.batch_size,
-            train_data_shuffler.n_samples,
-            self.weight_decay  # Decay step
+            learning_rate=self.base_learning_rate,  # Learning rate
+            global_step=self.global_step,
+            decay_steps=self.decay_steps,
+            decay_rate=self.weight_decay,  # Decay step
+            staircase=False
         )
-
         self.training_graph = self.compute_graph(train_data_shuffler, prefetch=self.prefetch, name="train")
 
         # Preparing the optimizer
         self.optimizer_class._learning_rate = self.learning_rate
-        #self.optimizer = self.optimizer_class.minimize(self.training_graph, global_step=tf.Variable(0))
-        self.optimizer = self.optimizer_class.minimize(self.training_graph)
+        self.optimizer = self.optimizer_class.minimize(self.training_graph, global_step=self.global_step)
+
 
         # Train summary
         self.summaries_train = self.create_general_summary()
