@@ -23,7 +23,7 @@ import tensorflow as tf
 from .. import util
 SEED = 10
 from bob.learn.tensorflow.datashuffler import TripletWithSelectionDisk, TripletDisk, TripletWithFastSelectionDisk
-from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra, Dummy, FaceNet
+from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra, Dummy, FaceNet, FaceNetSimple
 from bob.learn.tensorflow.trainers import SiameseTrainer, Trainer, TripletTrainer
 from bob.learn.tensorflow.loss import ContrastiveLoss, BaseLoss, TripletLoss
 import numpy
@@ -59,7 +59,7 @@ def main():
     #                                               batch_size=BATCH_SIZE)
 
     train_data_shuffler = TripletWithFastSelectionDisk(train_file_names, train_labels,
-                                                       input_shape=[112, 112, 3],
+                                                       input_shape=[224, 224, 3],
                                                        batch_size=BATCH_SIZE,
                                                        total_identities=8)
 
@@ -73,11 +73,13 @@ def main():
         extension=".hdf5")
                              for o in validation_objects]
     validation_data_shuffler = TripletDisk(validation_file_names, validation_labels,
-                                           input_shape=[112, 112, 3],
+                                           input_shape=[224, 224, 3],
                                            batch_size=VALIDATION_BATCH_SIZE)
     # Preparing the architecture
     #architecture = Chopra(seed=SEED, fc1_output=n_classes)
-    architecture = FaceNet(seed=SEED, use_gpu=USE_GPU)
+    #architecture = FaceNet(seed=SEED, use_gpu=USE_GPU)
+    architecture = FaceNetSimple(seed=SEED, use_gpu=USE_GPU)
+
     #optimizer = tf.train.GradientDescentOptimizer(0.0005)
 
 
@@ -95,12 +97,12 @@ def main():
     #                         optimizer=optimizer,
     #                         temp_dir="./LOGS_MOBIO/siamese-cnn-prefetch")
 
-    loss = TripletLoss(margin=0.5)
+    loss = TripletLoss(margin=0.2)
     #optimizer = tf.train.GradientDescentOptimizer(0.000000000001)
     #optimizer = optimizer,
     trainer = TripletTrainer(architecture=architecture, loss=loss,
                              iterations=ITERATIONS,
-                             base_learning_rate=0.1,
+                             base_learning_rate=0.05,
                              prefetch=False,
                              snapshot=200,
                              temp_dir="/idiap/temp/tpereira/CNN_MODELS/triplet-cnn-all-mobio")

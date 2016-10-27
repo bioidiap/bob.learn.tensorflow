@@ -23,7 +23,7 @@ import tensorflow as tf
 from .. import util
 SEED = 10
 from bob.learn.tensorflow.datashuffler import TripletDisk, TripletWithSelectionDisk, TripletWithFastSelectionDisk
-from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra, Dummy, FaceNet
+from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra, Dummy, FaceNet, FaceNetSimple
 from bob.learn.tensorflow.trainers import SiameseTrainer, TripletTrainer
 from bob.learn.tensorflow.loss import ContrastiveLoss, TripletLoss
 import numpy

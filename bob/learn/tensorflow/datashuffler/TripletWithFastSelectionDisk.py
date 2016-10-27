@@ -128,6 +128,8 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnLineSampling):
             samples_a[i, ...] = self.get_anchor(anchor_labels[i])
         embedding_a = self.project(samples_a)
 
+        print "EMBEDDING {0} ".format(embedding_a[:, 0])
+
         # Getting the positives
         samples_p, embedding_p, d_anchor_positive = self.get_positives(anchor_labels, embedding_a)
         samples_n = self.get_negative(anchor_labels, embedding_a, d_anchor_positive)
