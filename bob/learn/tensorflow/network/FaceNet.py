@@ -184,13 +184,13 @@ class FaceNet(SequenceNetwork):
         self.add(MaxPooling(name="pooling6", shape=pool6_shape))
 
         self.add(FullyConnected(name="fc1", output_dim=fc1_output,
-                                activation=tf.nn.tanh,
+                                activation=tf.nn.relu,
                                 weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
                                 bias_initialization=Constant(use_gpu=self.use_gpu)
                                 ))
 
         self.add(FullyConnected(name="fc2", output_dim=fc2_output,
-                                activation=tf.nn.tanh,
+                                activation=tf.nn.relu,
                                 weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
                                 bias_initialization=Constant(use_gpu=self.use_gpu)
                                 ))

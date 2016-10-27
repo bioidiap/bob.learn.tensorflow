@@ -220,7 +220,12 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         hdf5.set('input_divide', self.input_divide)
         hdf5.set('input_subtract', self.input_subtract)
 
-    def load(self, hdf5, shape=None, session=None):
+    def turn_gpu_onoff(self, state=True):
+        for k in self.sequence_net:
+            self.sequence_net[k].weights_initialization.use_gpu = state
+            self.sequence_net[k].bias_initialization.use_gpu = state
+
+    def load(self, hdf5, shape=None, session=None, batch=1):
         """
         Load the network
 
@@ -240,12 +245,15 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         self.input_divide = hdf5.read('input_divide')
         self.input_subtract = hdf5.read('input_subtract')
 
-        # Saving the architecture
+        # Loading architecture
         self.sequence_net = pickle.loads(hdf5.read('architecture'))
         self.deployment_shape = hdf5.read('deployment_shape')
 
+        self.turn_gpu_onoff(False)
+
         if shape is None:
             shape = self.deployment_shape
+            shape[0] = batch
 
         # Loading variables
         place_holder = tf.placeholder(tf.float32, shape=shape, name="load")

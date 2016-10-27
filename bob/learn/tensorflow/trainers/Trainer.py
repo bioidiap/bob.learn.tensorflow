@@ -14,8 +14,8 @@ from tensorflow.core.framework import summary_pb2
 import time
 from bob.learn.tensorflow.datashuffler.OnlineSampling import OnLineSampling
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "3,2,0,1"
-#os.environ["CUDA_VISIBLE_DEVICES"] = ""
+#os.environ["CUDA_VISIBLE_DEVICES"] = "1,3,0,2"
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 logger = bob.core.log.setup("bob.learn.tensorflow")
 

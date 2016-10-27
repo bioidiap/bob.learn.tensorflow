@@ -60,9 +60,14 @@ def main():
     #                                               input_shape=[125, 125, 3],
     #                                               batch_size=BATCH_SIZE)
 
-    train_data_shuffler = TripletWithFastSelectionDisk(train_file_names, train_labels,
+    #train_data_shuffler = TripletWithFastSelectionDisk(train_file_names, train_labels,
+    #                                                   input_shape=[112, 112, 3],
+    #                                                   batch_size=BATCH_SIZE)
+
+    train_data_shuffler = TripletDisk(train_file_names, train_labels,
                                                        input_shape=[112, 112, 3],
                                                        batch_size=BATCH_SIZE)
+
 
 
     # Preparing train set
@@ -91,13 +96,13 @@ def main():
     #                         snapshot=VALIDATION_TEST,
     #                         optimizer=optimizer)
 
-    loss = TripletLoss(margin=0.5)
+    loss = TripletLoss(margin=0.2)
     trainer = TripletTrainer(architecture=architecture, loss=loss,
                              iterations=ITERATIONS,
-                             base_learning_rate=0.1,
+                             base_learning_rate=0.05,
                              prefetch=False,
-                             temp_dir="./LOGS_CASIA/triplet-cnn-fast-selection")
+                             temp_dir="/idiap/temp/tpereira/CNN_MODELS/triplet-cnn-RANDOM-selection-gpu")
 
 
-    trainer.train(train_data_shuffler, validation_data_shuffler)
-    #trainer.train(train_data_shuffler)
+    #trainer.train(train_data_shuffler, validation_data_shuffler)
+    trainer.train(train_data_shuffler)
