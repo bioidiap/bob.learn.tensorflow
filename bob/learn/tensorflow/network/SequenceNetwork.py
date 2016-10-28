@@ -225,17 +225,32 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
             self.sequence_net[k].weights_initialization.use_gpu = state
             self.sequence_net[k].bias_initialization.use_gpu = state
 
-    def load(self, hdf5, shape=None, session=None, batch=1):
+    def load_variables_only(self, hdf5, session):
         """
-        Load the network
+        Load the variables of the model
+        """
+        hdf5.cd('/tensor_flow')
+        for k in self.sequence_net:
+            # TODO: IT IS NOT SMART TESTING ALONG THIS PAGE
+            if not isinstance(self.sequence_net[k], MaxPooling):
+                self.sequence_net[k].W.assign(hdf5.read(self.sequence_net[k].W.name)).eval(session=session)
+                session.run(self.sequence_net[k].W)
+                self.sequence_net[k].b.assign(hdf5.read(self.sequence_net[k].b.name)).eval(session=session)
+                session.run(self.sequence_net[k].b)
+        hdf5.cd("..")
+
+    def load(self, hdf5, shape=None, session=None, batch=1, use_gpu=False):
+        """
+        Load the network from scratch.
+        This will build the graphs
 
         **Parameters**
 
             hdf5: The saved network in the :py:class:`bob.io.base.HDF5File` format
-
-            shape: Input shape of the network
-
-            session: tensorflow `session <https://www.tensorflow.org/versions/r0.11/api_docs/python/client.html#Session>`_
+            shape: Input shape of the network. If `None`, the internal shape will be assumed
+            session: An opened tensorflow `session <https://www.tensorflow.org/versions/r0.11/api_docs/python/client.html#Session>`_. If `None`, a new one will be opened
+            batch: The size of the batch
+            use_gpu: Load all the variables in the GPU?
         """
 
         if session is None:
@@ -249,7 +264,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         self.sequence_net = pickle.loads(hdf5.read('architecture'))
         self.deployment_shape = hdf5.read('deployment_shape')
 
-        self.turn_gpu_onoff(False)
+        self.turn_gpu_onoff(use_gpu)
 
         if shape is None:
             shape = self.deployment_shape
@@ -259,17 +274,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         place_holder = tf.placeholder(tf.float32, shape=shape, name="load")
         self.compute_graph(place_holder)
         tf.initialize_all_variables().run(session=session)
-
-        hdf5.cd('/tensor_flow')
-        for k in self.sequence_net:
-            # TODO: IT IS NOT SMART TESTING ALONG THIS PAGE
-            if not isinstance(self.sequence_net[k], MaxPooling):
-                #self.sequence_net[k].W.assign(hdf5.read(self.sequence_net[k].W.name))
-                self.sequence_net[k].W.assign(hdf5.read(self.sequence_net[k].W.name)).eval(session=session)
-                session.run(self.sequence_net[k].W)
-                self.sequence_net[k].b.assign(hdf5.read(self.sequence_net[k].b.name)).eval(session=session)
-                session.run(self.sequence_net[k].b)
-
+        self.load_variables_only(hdf5, session)
 
     """
     def save(self, session, path, step=None):

@@ -26,20 +26,7 @@ iterations = 50
 seed = 10
 
 
-def test_cnn_trainer_scratch():
-    train_data, train_labels, validation_data, validation_labels = load_mnist()
-    train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
-
-    # Creating datashufflers
-    data_augmentation = ImageAugmentation()
-    train_data_shuffler = Memory(train_data, train_labels,
-                                 input_shape=[28, 28, 1],
-                                 batch_size=batch_size,
-                                 data_augmentation=data_augmentation)
-    validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
-
-    directory = "./temp/cnn"
-
+def scratch_network():
     # Creating a random network
     scratch = SequenceNetwork()
     scratch.add(Conv2D(name="conv1", kernel_size=3,
@@ -51,20 +38,11 @@ def test_cnn_trainer_scratch():
                                activation=None,
                                weights_initialization=Xavier(seed=seed, use_gpu=False),
                                bias_initialization=Constant(use_gpu=False)))
-    # Loss for the softmax
-    loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
 
-    # One graph trainer
-    trainer = Trainer(architecture=scratch,
-                      loss=loss,
-                      iterations=iterations,
-                      analizer=None,
-                      prefetch=False,
-                      temp_dir=directory)
-    trainer.train(train_data_shuffler)
+    return scratch
 
-    del scratch
 
+def validate_network(validation_data, validation_labels, directory):
     # Testing
     validation_data_shuffler = Memory(validation_data, validation_labels,
                                       input_shape=[28, 28, 1],
@@ -79,7 +57,40 @@ def test_cnn_trainer_scratch():
         predictions = scratch(data, session=session)
         accuracy = 100. * numpy.sum(numpy.argmax(predictions, 1) == labels) / predictions.shape[0]
 
-        # At least 80% of accuracy
-        assert accuracy > 80.
-        shutil.rmtree(directory)
+    return accuracy
+
+
+def test_cnn_trainer_scratch():
+    train_data, train_labels, validation_data, validation_labels = load_mnist()
+    train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
+
+    # Creating datashufflers
+    data_augmentation = ImageAugmentation()
+    train_data_shuffler = Memory(train_data, train_labels,
+                                 input_shape=[28, 28, 1],
+                                 batch_size=batch_size,
+                                 data_augmentation=data_augmentation)
+    validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
+
+    directory = "./temp/cnn"
+
+    # Create scratch network
+    scratch = scratch_network()
+
+    # Loss for the softmax
+    loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
+
+    # One graph trainer
+    trainer = Trainer(architecture=scratch,
+                      loss=loss,
+                      iterations=iterations,
+                      analizer=None,
+                      prefetch=False,
+                      temp_dir=directory)
+    trainer.train(train_data_shuffler)
+
+    accuracy = validate_network(validation_data, validation_labels, directory)
+    assert accuracy > 80
+    del scratch
+
 

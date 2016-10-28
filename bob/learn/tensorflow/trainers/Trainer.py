@@ -65,6 +65,9 @@ class Trainer(object):
                  ## Analizer
                  analizer=SoftmaxAnalizer(),
 
+                 ### Pretrained model
+                 model_from_file="",
+
                  verbosity_level=2):
 
         if not isinstance(architecture, SequenceNetwork):
@@ -106,6 +109,8 @@ class Trainer(object):
         self.thread_pool = None
         self.enqueue_op = None
         self.global_step = None
+
+        self.model_from_file = model_from_file
 
         bob.core.log.set_verbosity_level(logger, verbosity_level)
 
@@ -288,6 +293,12 @@ class Trainer(object):
         config.gpu_options.allow_growth = True
         with tf.Session(config=config) as session:
             tf.initialize_all_variables().run()
+
+            # Loading a pretrained model
+            if self.model_from_file != "":
+                logger.info("Loading pretrained model from {0}".format(self.model_from_file))
+                hdf5 = bob.io.base.HDF5File(self.model_from_file)
+                self.architecture.load_variables_only(hdf5, session)
 
             if isinstance(train_data_shuffler, OnLineSampling):
                 train_data_shuffler.set_feature_extractor(self.architecture, session=session)

@@ -62,6 +62,8 @@ class SiameseTrainer(Trainer):
                  ## Analizer
                  analizer=ExperimentAnalizer(),
 
+                 model_from_file="",
+
                  verbosity_level=2):
 
         super(SiameseTrainer, self).__init__(
@@ -85,6 +87,8 @@ class SiameseTrainer(Trainer):
 
             ## Analizer
             analizer=analizer,
+
+            model_from_file=model_from_file,
 
             verbosity_level=verbosity_level
         )

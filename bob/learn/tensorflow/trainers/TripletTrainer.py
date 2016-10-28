@@ -62,6 +62,8 @@ class TripletTrainer(Trainer):
                  ## Analizer
                  analizer=ExperimentAnalizer(),
 
+                 model_from_file="",
+
                  verbosity_level=2):
 
         super(TripletTrainer, self).__init__(
@@ -85,6 +87,7 @@ class TripletTrainer(Trainer):
 
             ## Analizer
             analizer=analizer,
+            model_from_file=model_from_file,
 
             verbosity_level=verbosity_level
         )
