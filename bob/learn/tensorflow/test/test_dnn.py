@@ -4,17 +4,16 @@
 # @date: Thu 13 Oct 2016 13:35 CEST
 
 import numpy
-from bob.learn.tensorflow.datashuffler import Memory, SiameseMemory, TripletMemory, Disk, SiameseDisk, TripletDisk
-from bob.learn.tensorflow.network import Chopra, MLP
-from bob.learn.tensorflow.loss import BaseLoss, ContrastiveLoss, TripletLoss
-from bob.learn.tensorflow.trainers import Trainer, SiameseTrainer, TripletTrainer
+from bob.learn.tensorflow.datashuffler import Memory
+from bob.learn.tensorflow.network import MLP
+from bob.learn.tensorflow.loss import BaseLoss
+from bob.learn.tensorflow.trainers import Trainer, constant
 # from ..analyzers import ExperimentAnalizer, SoftmaxAnalizer
 from bob.learn.tensorflow.util import load_mnist
 import tensorflow as tf
 import bob.io.base
 import os
 import shutil
-from scipy.spatial.distance import cosine
 import bob.measure
 
 """
@@ -52,6 +51,7 @@ def test_dnn_trainer():
                           iterations=iterations,
                           analizer=None,
                           prefetch=False,
+                          learning_rate=constant(0.05, name="dnn_lr"),
                           temp_dir=directory)
         trainer.train(train_data_shuffler)
 

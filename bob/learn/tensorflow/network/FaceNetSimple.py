@@ -92,7 +92,7 @@ class FaceNetSimple(SequenceNetwork):
 
         self.add(Conv2D(name="conv1", kernel_size=conv1_kernel_size,
                         filters=conv1_output,
-                        activation=tf.nn.relu,
+                        activation=tf.nn.tanh,
                         stride=conv1_stride,
                         weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
                         bias_initialization=Constant(use_gpu=self.use_gpu)
@@ -102,7 +102,7 @@ class FaceNetSimple(SequenceNetwork):
         ##########
         self.add(Conv2D(name="conv2", kernel_size=conv2_kernel_size,
                         filters=conv2_output,
-                        activation=tf.nn.relu,
+                        activation=tf.nn.tanh,
                         weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
                         bias_initialization=Constant(use_gpu=self.use_gpu)
                         ))
@@ -111,7 +111,7 @@ class FaceNetSimple(SequenceNetwork):
         ##########
         self.add(Conv2D(name="conv3", kernel_size=conv3_kernel_size,
                         filters=conv3_output,
-                        activation=tf.nn.relu,
+                        activation=tf.nn.tanh,
                         weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
                         bias_initialization=Constant(use_gpu=self.use_gpu)
                         ))
@@ -120,7 +120,7 @@ class FaceNetSimple(SequenceNetwork):
         ##########
         self.add(Conv2D(name="conv4", kernel_size=conv4_kernel_size,
                         filters=conv4_output,
-                        activation=tf.nn.relu,
+                        activation=tf.nn.tanh,
                         weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
                         bias_initialization=Constant(use_gpu=self.use_gpu)
                         ))
@@ -128,7 +128,7 @@ class FaceNetSimple(SequenceNetwork):
         ##########
         self.add(Conv2D(name="conv5", kernel_size=conv5_kernel_size,
                         filters=conv5_output,
-                        activation=tf.nn.relu,
+                        activation=tf.nn.tanh,
                         weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
                         bias_initialization=Constant(use_gpu=self.use_gpu)
                         ))
@@ -136,20 +136,20 @@ class FaceNetSimple(SequenceNetwork):
         ##########
         self.add(Conv2D(name="conv6", kernel_size=conv6_kernel_size,
                         filters=conv6_output,
-                        activation=tf.nn.relu,
+                        activation=tf.nn.tanh,
                         weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
                         bias_initialization=Constant(use_gpu=self.use_gpu)
                         ))
         self.add(MaxPooling(name="pooling6", shape=pool6_shape, strides=pool6_stride))
 
         self.add(FullyConnected(name="fc1", output_dim=fc1_output,
-                                activation=tf.nn.relu,
+                                activation=tf.nn.tanh,
                                 weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
                                 bias_initialization=Constant(use_gpu=self.use_gpu)
                                 ))
 
         self.add(FullyConnected(name="fc2", output_dim=fc2_output,
-                                activation=tf.nn.relu,
+                                activation=tf.nn.tanh,
                                 weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
                                 bias_initialization=Constant(use_gpu=self.use_gpu)
                                 ))

@@ -14,9 +14,10 @@ class BaseLoss(object):
     One exam
     """
 
-    def __init__(self, loss, operation):
+    def __init__(self, loss, operation, name="loss"):
         self.loss = loss
         self.operation = operation
+        self.name = name
 
     def __call__(self, graph, label):
-        return self.operation(self.loss(graph, label))
+        return self.operation(self.loss(graph, label), name=self.name)

@@ -24,7 +24,7 @@ from .. import util
 SEED = 10
 from bob.learn.tensorflow.datashuffler import TripletDisk, TripletWithSelectionDisk, TripletWithFastSelectionDisk
 from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra, Dummy, FaceNet, FaceNetSimple
-from bob.learn.tensorflow.trainers import SiameseTrainer, TripletTrainer
+from bob.learn.tensorflow.trainers import SiameseTrainer, TripletTrainer, constant
 from bob.learn.tensorflow.loss import ContrastiveLoss, TripletLoss
 import numpy
 
@@ -56,18 +56,10 @@ def main():
         extension=".hdf5")
                         for o in train_objects]
 
-    #train_data_shuffler = TripletWithSelectionDisk(train_file_names, train_labels,
-    #                                               input_shape=[125, 125, 3],
-    #                                               batch_size=BATCH_SIZE)
-
-    #train_data_shuffler = TripletWithFastSelectionDisk(train_file_names, train_labels,
-    #                                                   input_shape=[112, 112, 3],
-    #                                                   batch_size=BATCH_SIZE)
-
-    train_data_shuffler = TripletDisk(train_file_names, train_labels,
-                                                       input_shape=[112, 112, 3],
-                                                       batch_size=BATCH_SIZE)
-
+    train_data_shuffler = TripletWithFastSelectionDisk(train_file_names, train_labels,
+                                                       input_shape=[224, 224, 3],
+                                                       batch_size=BATCH_SIZE,
+                                                       total_identities=16)
 
 
     # Preparing train set
@@ -81,28 +73,21 @@ def main():
                              for o in validation_objects]
 
     validation_data_shuffler = TripletDisk(validation_file_names, validation_labels,
-                                           input_shape=[112, 112, 3],
+                                           input_shape=[224, 224, 3],
                                            batch_size=VALIDATION_BATCH_SIZE)
     # Preparing the architecture
     # LENET PAPER CHOPRA
-    #architecture = Chopra(seed=SEED)
-    architecture = FaceNet(seed=SEED, use_gpu=USE_GPU)
+    architecture = FaceNetSimple(seed=SEED, use_gpu=USE_GPU)
 
-    #loss = ContrastiveLoss(contrastive_margin=50.)
-    #optimizer = tf.train.GradientDescentOptimizer(0.00001)
-    #trainer = SiameseTrainer(architecture=architecture,
-    #                         loss=loss,
-    #                         iterations=ITERATIONS,
-    #                         snapshot=VALIDATION_TEST,
-    #                         optimizer=optimizer)
-
+    optimizer = tf.train.GradientDescentOptimizer(0.05)
     loss = TripletLoss(margin=0.2)
     trainer = TripletTrainer(architecture=architecture, loss=loss,
                              iterations=ITERATIONS,
-                             base_learning_rate=0.05,
+                             learning_rate=constant(),
+                             optimizer=optimizer,
                              prefetch=False,
-                             temp_dir="/idiap/temp/tpereira/CNN_MODELS/triplet-cnn-RANDOM-selection-gpu")
+                             temp_dir="/idiap/temp/tpereira/CNN_MODELS_GRAD_DESC/triplet-cnn-selection-gpu")
 
-
+    #import ipdb; ipdb.set_trace()
     #trainer.train(train_data_shuffler, validation_data_shuffler)
     trainer.train(train_data_shuffler)

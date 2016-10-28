@@ -15,6 +15,7 @@ import bob.io.base
 from .Trainer import Trainer
 import os
 import sys
+from .learning_rate import constant
 
 
 class TripletTrainer(Trainer):
@@ -48,9 +49,10 @@ class TripletTrainer(Trainer):
                  temp_dir="cnn",
 
                  # Learning rate
-                 base_learning_rate=0.001,
-                 weight_decay=0.9,
-                 decay_steps=1000,
+                 #base_learning_rate=0.001,
+                 #weight_decay=0.9,
+                 #decay_steps=1000,
+                 learning_rate=constant(),
 
                  ###### training options ##########
                  convergence_threshold=0.01,
@@ -74,9 +76,10 @@ class TripletTrainer(Trainer):
             temp_dir=temp_dir,
 
             # Learning rate
-            base_learning_rate=base_learning_rate,
-            weight_decay=weight_decay,
-            decay_steps=decay_steps,
+            #base_learning_rate=base_learning_rate,
+            #weight_decay=weight_decay,
+            #decay_steps=decay_steps,
+            learning_rate=learning_rate,
 
             ###### training options ##########
             convergence_threshold=convergence_threshold,

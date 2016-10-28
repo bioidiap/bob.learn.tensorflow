@@ -5,7 +5,7 @@ __path__ = extend_path(__path__, __name__)
 from .Trainer import Trainer
 from .SiameseTrainer import SiameseTrainer
 from .TripletTrainer import TripletTrainer
-
+from .learning_rate import exponential_decay, constant
 import numpy
 
 

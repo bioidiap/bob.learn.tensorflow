@@ -13,6 +13,7 @@ from ..analyzers import SoftmaxAnalizer
 from tensorflow.core.framework import summary_pb2
 import time
 from bob.learn.tensorflow.datashuffler.OnlineSampling import OnLineSampling
+from .learning_rate import constant
 
 #os.environ["CUDA_VISIBLE_DEVICES"] = "1,3,0,2"
 os.environ["CUDA_VISIBLE_DEVICES"] = ""
@@ -51,9 +52,7 @@ class Trainer(object):
                  temp_dir="cnn",
 
                  # Learning rate
-                 base_learning_rate=0.1,
-                 weight_decay=0.9,
-                 decay_steps=1000,
+                 learning_rate=constant(),
 
                  ###### training options ##########
                  convergence_threshold=0.01,
@@ -79,9 +78,10 @@ class Trainer(object):
         self.loss = loss
         self.temp_dir = temp_dir
 
-        self.base_learning_rate = base_learning_rate
-        self.weight_decay = weight_decay
-        self.decay_steps = decay_steps
+        #self.base_learning_rate = base_learning_rate
+        self.learning_rate = learning_rate
+        #self.weight_decay = weight_decay
+        #self.decay_steps = decay_steps
 
         self.iterations = iterations
         self.snapshot = snapshot
@@ -92,7 +92,6 @@ class Trainer(object):
         # Training variables used in the fit
         self.optimizer = None
         self.training_graph = None
-        self.learning_rate = None
         self.training_graph = None
         self.train_data_shuffler = None
         self.summaries_train = None
@@ -271,13 +270,14 @@ class Trainer(object):
 
         # TODO: find an elegant way to provide this as a parameter of the trainer
         self.global_step = tf.Variable(0, trainable=False)
-        self.learning_rate = tf.train.exponential_decay(
-            learning_rate=self.base_learning_rate,  # Learning rate
-            global_step=self.global_step,
-            decay_steps=self.decay_steps,
-            decay_rate=self.weight_decay,  # Decay step
-            staircase=False
-        )
+        #self.learning_rate = tf.Variable(self.base_learning_rate)
+        #self.learning_rate = tf.train.exponential_decay(
+        #    learning_rate=self.base_learning_rate,  # Learning rate
+        #    global_step=self.global_step,
+        #    decay_steps=self.decay_steps,
+        #    decay_rate=self.weight_decay,  # Decay step
+        #    staircase=False
+        #)
         self.training_graph = self.compute_graph(train_data_shuffler, prefetch=self.prefetch, name="train")
 
         # Preparing the optimizer
@@ -291,6 +291,7 @@ class Trainer(object):
 
         config = tf.ConfigProto(log_device_placement=True)
         config.gpu_options.allow_growth = True
+
         with tf.Session(config=config) as session:
             tf.initialize_all_variables().run()
 
@@ -349,5 +350,3 @@ class Trainer(object):
                 # now they should definetely stop
                 self.thread_pool.request_stop()
                 self.thread_pool.join(threads)
-
-            session.close() # For some reason the session is not closed after the context manager finishes
