@@ -21,6 +21,7 @@ class Conv2D(Layer):
                  stride=[1, 1, 1, 1],
                  weights_initialization=Xavier(),
                  bias_initialization=Constant(),
+                 batch_norm=False,
                  use_gpu=False
                  ):
         """
@@ -39,6 +40,7 @@ class Conv2D(Layer):
                                      activation=activation,
                                      weights_initialization=weights_initialization,
                                      bias_initialization=bias_initialization,
+                                     batch_norm=batch_norm,
                                      use_gpu=use_gpu,
 
 
@@ -69,10 +71,13 @@ class Conv2D(Layer):
                                               scope="b_" + str(self.name)
                                               )
 
-    def get_graph(self):
+    def get_graph(self, training_phase=True):
 
         with tf.name_scope(str(self.name)):
             conv2d = tf.nn.conv2d(self.input_layer, self.W, strides=self.stride, padding='SAME')
+
+            if self.batch_norm:
+                conv2d = self.batch_normalize(conv2d, training_phase)
 
             if self.activation is not None:
                 output = self.activation(tf.nn.bias_add(conv2d, self.b))

@@ -21,6 +21,7 @@ class FullyConnected(Layer):
                  activation=None,
                  weights_initialization=Xavier(),
                  bias_initialization=Constant(),
+                 batch_norm=False,
                  use_gpu=False,
                  ):
         """
@@ -35,10 +36,12 @@ class FullyConnected(Layer):
         """
 
         super(FullyConnected, self).__init__(name=name,
-                                     activation=activation,
-                                     weights_initialization=weights_initialization,
-                                     bias_initialization=bias_initialization,
-                                     use_gpu=use_gpu)
+                                             activation=activation,
+                                             weights_initialization=weights_initialization,
+                                             bias_initialization=bias_initialization,
+                                             batch_norm=batch_norm,
+                                             use_gpu=use_gpu
+                                             )
 
         self.output_dim = output_dim
         self.W = None
@@ -59,7 +62,7 @@ class FullyConnected(Layer):
                                               scope="b_" + str(self.name)
                                              )
 
-    def get_graph(self):
+    def get_graph(self, training_phase=True):
 
         with tf.name_scope(str(self.name)):
 
@@ -67,9 +70,11 @@ class FullyConnected(Layer):
                 shape = self.input_layer.get_shape().as_list()
                 #fc = tf.reshape(self.input_layer, [shape[0], shape[1] * shape[2] * shape[3]])
                 fc = tf.reshape(self.input_layer, [-1, shape[1] * shape[2] * shape[3]])
-
             else:
                 fc = self.input_layer
+
+            if self.batch_norm:
+                fc = self.batch_normalize(fc, training_phase)
 
             if self.activation is not None:
                 non_linear_fc = self.activation(tf.matmul(fc, self.W) + self.b)

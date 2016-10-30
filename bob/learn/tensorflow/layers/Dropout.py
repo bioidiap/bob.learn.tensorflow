@@ -37,7 +37,7 @@ class Dropout(Layer):
         self.input_layer = input_layer
         return
 
-    def get_graph(self):
+    def get_graph(self, training_phase=True):
 
         with tf.name_scope(str(self.name)):
             output = tf.nn.dropout(self.input_layer, self.keep_prob, name=self.name)

@@ -10,11 +10,14 @@ from .Layer import Layer
 
 class MaxPooling(Layer):
 
-    def __init__(self, name, shape=[1, 2, 2, 1], strides=[1, 1, 1, 1], activation=None):
+    def __init__(self, name, shape=[1, 2, 2, 1],
+                 strides=[1, 1, 1, 1],
+                 batch_norm=False,
+                 activation=None):
         """
         Constructor
         """
-        super(MaxPooling, self).__init__(name, use_gpu=False, activation=activation)
+        super(MaxPooling, self).__init__(name, use_gpu=False, activation=activation, batch_norm=batch_norm)
         self.shape = shape
         self.strides = strides
 
@@ -22,9 +25,12 @@ class MaxPooling(Layer):
         self.input_layer = input_layer
         return
 
-    def get_graph(self):
+    def get_graph(self, training_phase=True):
         with tf.name_scope(str(self.name)):
             output = tf.nn.max_pool(self.input_layer, ksize=self.shape, strides=self.strides, padding='SAME')
+
+            if self.batch_norm:
+                output = self.batch_normalize(output, training_phase)
 
             if self.activation is not None:
                 output = self.activation(output)

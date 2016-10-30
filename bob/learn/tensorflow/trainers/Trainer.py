@@ -15,9 +15,6 @@ import time
 from bob.learn.tensorflow.datashuffler.OnlineSampling import OnLineSampling
 from .learning_rate import constant
 
-#os.environ["CUDA_VISIBLE_DEVICES"] = "1,3,0,2"
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
-
 logger = bob.core.log.setup("bob.learn.tensorflow")
 
 

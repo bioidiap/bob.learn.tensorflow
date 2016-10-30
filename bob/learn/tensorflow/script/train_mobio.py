@@ -23,10 +23,14 @@ import tensorflow as tf
 from .. import util
 SEED = 10
 from bob.learn.tensorflow.datashuffler import TripletWithSelectionDisk, TripletDisk, TripletWithFastSelectionDisk
-from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra, Dummy, FaceNet, FaceNetSimple
-from bob.learn.tensorflow.trainers import SiameseTrainer, Trainer, TripletTrainer
+from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra, Dummy, FaceNet, FaceNetSimple, VGG16
+from bob.learn.tensorflow.trainers import SiameseTrainer, Trainer, TripletTrainer, constant
 from bob.learn.tensorflow.loss import ContrastiveLoss, BaseLoss, TripletLoss
 import numpy
+
+import os
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+#os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 
 def main():
@@ -41,7 +45,8 @@ def main():
 
     import bob.db.mobio
     db_mobio = bob.db.mobio.Database()
-    directory = "/idiap/temp/tpereira/DEEP_FACE/CASIA_WEBFACE/mobio/preprocessed/"
+    #directory = "/idiap/temp/tpereira/DEEP_FACE/CASIA_WEBFACE/mobio/preprocessed/"
+    directory = "./preprocessed/"
 
     # Preparing train set
     #train_objects = db_mobio.objects(protocol="male", groups="world")
@@ -78,9 +83,7 @@ def main():
     # Preparing the architecture
     #architecture = Chopra(seed=SEED, fc1_output=n_classes)
     #architecture = FaceNet(seed=SEED, use_gpu=USE_GPU)
-    architecture = FaceNetSimple(seed=SEED, use_gpu=USE_GPU)
-
-    #optimizer = tf.train.GradientDescentOptimizer(0.0005)
+    architecture = VGG16(seed=SEED, use_gpu=USE_GPU)
 
 
     #loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
@@ -98,14 +101,14 @@ def main():
     #                         temp_dir="./LOGS_MOBIO/siamese-cnn-prefetch")
 
     loss = TripletLoss(margin=0.2)
-    #optimizer = tf.train.GradientDescentOptimizer(0.000000000001)
-    #optimizer = optimizer,
+    optimizer = tf.train.GradientDescentOptimizer(0.05)
     trainer = TripletTrainer(architecture=architecture, loss=loss,
                              iterations=ITERATIONS,
-                             base_learning_rate=0.05,
+                             learning_rate=constant(0.05),
                              prefetch=False,
+                             optimizer=optimizer,
                              snapshot=200,
-                             temp_dir="/idiap/temp/tpereira/CNN_MODELS/triplet-cnn-all-mobio")
+                             temp_dir="./logs/")
 
     #trainer.train(train_data_shuffler, validation_data_shuffler)
     trainer.train(train_data_shuffler)
