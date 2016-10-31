@@ -292,6 +292,9 @@ class Trainer(object):
         with tf.Session(config=config) as session:
             tf.initialize_all_variables().run()
 
+            # Original tensorflow saver object
+            saver = tf.train.Saver(var_list=tf.trainable_variables())
+
             # Loading a pretrained model
             if self.model_from_file != "":
                 logger.info("Loading pretrained model from {0}".format(self.model_from_file))
@@ -328,7 +331,10 @@ class Trainer(object):
                 # Taking snapshot
                 if step % self.snapshot == 0:
                     logger.info("Taking snapshot")
-                    hdf5 = bob.io.base.HDF5File(os.path.join(self.temp_dir, 'model_snapshot{0}.hdf5'.format(step)), 'w')
+                    path = os.path.join(self.temp_dir, 'model_snapshot{0}.hdf5'.format(step))
+                    #path_original = os.path.join(self.temp_dir, 'model_snapshot{0}.ckp'.format(step))
+                    #self.architecture.save_original(session, saver, path_original)
+                    hdf5 = bob.io.base.HDF5File(path, 'w')
                     self.architecture.save(hdf5)
                     del hdf5
 
@@ -339,7 +345,10 @@ class Trainer(object):
                 self.validation_summary_writter.close()
 
             # Saving the final network
-            hdf5 = bob.io.base.HDF5File(os.path.join(self.temp_dir, 'model.hdf5'), 'w')
+            path = os.path.join(self.temp_dir, 'model.hdf5')
+            #path_original = os.path.join(self.temp_dir, 'model.ckp')
+            #self.architecture.save_original(session, saver, path_original)
+            hdf5 = bob.io.base.HDF5File(path, 'w')
             self.architecture.save(hdf5)
             del hdf5
 

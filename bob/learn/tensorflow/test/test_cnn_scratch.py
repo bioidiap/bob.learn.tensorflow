@@ -28,13 +28,13 @@ seed = 10
 
 def scratch_network():
     # Creating a random network
-    scratch = SequenceNetwork()
+    scratch = SequenceNetwork(default_feature_layer="fc1")
     scratch.add(Conv2D(name="conv1", kernel_size=3,
                        filters=10,
                        activation=tf.nn.tanh,
                        weights_initialization=Xavier(seed=seed, use_gpu=False),
-                       bias_initialization=Constant(use_gpu=False)
-                       ))
+                       bias_initialization=Constant(use_gpu=False),
+                       batch_norm=True))
     scratch.add(FullyConnected(name="fc1", output_dim=10,
                                activation=None,
                                weights_initialization=Xavier(seed=seed, use_gpu=False),
@@ -50,11 +50,15 @@ def validate_network(validation_data, validation_labels, directory):
                                       input_shape=[28, 28, 1],
                                       batch_size=validation_batch_size)
     with tf.Session() as session:
-
         validation_shape = [400, 28, 28, 1]
+        path = os.path.join(directory, "model.hdf5")
+        #path = os.path.join(directory, "model.ckp")
+        #scratch = SequenceNetwork(default_feature_layer="fc1")
         scratch = SequenceNetwork()
-        scratch.load(bob.io.base.HDF5File(os.path.join(directory, "model.hdf5")),
+        #scratch.load_original(session, os.path.join(directory, "model.ckp"))
+        scratch.load(bob.io.base.HDF5File(path),
                      shape=validation_shape, session=session)
+
         [data, labels] = validation_data_shuffler.get_batch()
         predictions = scratch(data, session=session)
         accuracy = 100. * numpy.sum(numpy.argmax(predictions, 1) == labels) / predictions.shape[0]
@@ -90,6 +94,8 @@ def test_cnn_trainer_scratch():
                       prefetch=False,
                       temp_dir=directory)
     trainer.train(train_data_shuffler)
+
+    import ipdb; ipdb.set_trace();
 
     accuracy = validate_network(validation_data, validation_labels, directory)
 

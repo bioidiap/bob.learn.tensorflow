@@ -29,8 +29,8 @@ from bob.learn.tensorflow.loss import ContrastiveLoss, BaseLoss, TripletLoss
 import numpy
 
 import os
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
-#os.environ["CUDA_VISIBLE_DEVICES"] = ""
+#os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 
 def main():
@@ -45,8 +45,8 @@ def main():
 
     import bob.db.mobio
     db_mobio = bob.db.mobio.Database()
-    #directory = "/idiap/temp/tpereira/DEEP_FACE/CASIA_WEBFACE/mobio/preprocessed/"
-    directory = "./preprocessed/"
+    directory = "/idiap/temp/tpereira/DEEP_FACE/CASIA_WEBFACE/mobio/preprocessed/"
+    #directory = "./preprocessed/"
 
     # Preparing train set
     #train_objects = db_mobio.objects(protocol="male", groups="world")
@@ -108,7 +108,7 @@ def main():
                              prefetch=False,
                              optimizer=optimizer,
                              snapshot=200,
-                             temp_dir="./logs/")
+                             temp_dir="/idiap/temp/tpereira/VGG16/mobio_world")
 
     #trainer.train(train_data_shuffler, validation_data_shuffler)
     trainer.train(train_data_shuffler)

@@ -40,6 +40,10 @@ class Layer(object):
         self.input_layer = None
         self.activation = activation
 
+        # Batch normalization variables
+        self.beta = None
+        self.gamma = None
+
     def create_variables(self, input_layer):
         NotImplementedError("Please implement this function in derived classes")
 
@@ -61,30 +65,33 @@ class Layer(object):
         """
         from tensorflow.python.ops import control_flow_ops
 
-        name = "batch_norm"
-        with tf.variable_scope(name):
-            phase_train = tf.convert_to_tensor(phase_train, dtype=tf.bool)
-            n_out = int(x.get_shape()[-1])
-            beta = tf.Variable(tf.constant(0.0, shape=[n_out], dtype=x.dtype),
-                               name=name + '/beta', trainable=True, dtype=x.dtype)
-            gamma = tf.Variable(tf.constant(1.0, shape=[n_out], dtype=x.dtype),
-                                name=name + '/gamma', trainable=True, dtype=x.dtype)
+        name = "batch_norm_" + str(self.name)
+        #with tf.variable_scope(name):
+        phase_train = tf.convert_to_tensor(phase_train, dtype=tf.bool)
+        n_out = int(x.get_shape()[-1])
+        self.beta = tf.Variable(tf.constant(0.0, shape=[n_out], dtype=x.dtype),
+                                name=name + '_beta',
+                                trainable=True,
+                                dtype=x.dtype)
+        self.gamma = tf.Variable(tf.constant(1.0, shape=[n_out], dtype=x.dtype),
+                                 name=name + '_gamma',
+                                 trainable=True,
+                                 dtype=x.dtype)
 
-            # If signal
-            #if len(x.get_shape()) == 2:
-            #    batch_mean, batch_var = tf.nn.moments(x, [0], name='moments_{0}'.format(name))
-            #else:
+        if len(x.get_shape()) == 2:
+            batch_mean, batch_var = tf.nn.moments(x, [0], name='moments_{0}'.format(name))
+        else:
             batch_mean, batch_var = tf.nn.moments(x, range(len(x.get_shape())-1), name='moments_{0}'.format(name))
 
-            ema = tf.train.ExponentialMovingAverage(decay=0.9)
+        ema = tf.train.ExponentialMovingAverage(decay=0.9)
 
-            def mean_var_with_update():
-                ema_apply_op = ema.apply([batch_mean, batch_var])
-                with tf.control_dependencies([ema_apply_op]):
-                    return tf.identity(batch_mean), tf.identity(batch_var)
+        def mean_var_with_update():
+            ema_apply_op = ema.apply([batch_mean, batch_var])
+            with tf.control_dependencies([ema_apply_op]):
+                return tf.identity(batch_mean), tf.identity(batch_var)
 
-            mean, var = control_flow_ops.cond(phase_train,
-                                              mean_var_with_update,
-                                              lambda: (ema.average(batch_mean), ema.average(batch_var)))
-            normed = tf.nn.batch_normalization(x, mean, var, beta, gamma, 1e-3)
+        mean, var = control_flow_ops.cond(phase_train,
+                                          mean_var_with_update,
+                                          lambda: (ema.average(batch_mean), ema.average(batch_var)))
+        normed = tf.nn.batch_normalization(x, mean, var, self.beta, self.gamma, 1e-3)
         return normed

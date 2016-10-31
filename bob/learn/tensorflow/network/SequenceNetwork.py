@@ -125,6 +125,11 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
                 variables[self.sequence_net[k].W.name] = self.sequence_net[k].W
                 variables[self.sequence_net[k].b.name] = self.sequence_net[k].b
 
+                # Dumping batch norm variables
+                if self.sequence_net[k].batch_norm:
+                    variables[self.sequence_net[k].beta.name] = self.sequence_net[k].beta
+                    variables[self.sequence_net[k].gamma.name] = self.sequence_net[k].gamma
+
         return variables
 
     def variable_summaries(self, var, name):
@@ -200,7 +205,8 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
             split_path = path.split("/")
             for i in range(0, len(split_path)-1):
                 p = split_path[i]
-                hdf5.create_group(p)
+                if not hdf5.has_group(p):
+                    hdf5.create_group(p)
 
         # Saving the architecture
         if self.pickle_architecture is not None:
@@ -237,6 +243,9 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
                 session.run(self.sequence_net[k].W)
                 self.sequence_net[k].b.assign(hdf5.read(self.sequence_net[k].b.name)).eval(session=session)
                 session.run(self.sequence_net[k].b)
+
+                
+
         hdf5.cd("..")
 
     def load(self, hdf5, shape=None, session=None, batch=1, use_gpu=False):
@@ -276,26 +285,15 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         tf.initialize_all_variables().run(session=session)
         self.load_variables_only(hdf5, session)
 
-    """
-    def save(self, session, path, step=None):
+    def save_original(self, session, saver, path):
+        return saver.save(session, path)
 
-        if self.saver is None:
-            #variables = self.dump_variables()
-            #variables['mean'] = tf.Variable(10.0)
-            #import ipdb; ipdb.set_trace()
+    def load_original(self, session, path):
+        saver = tf.train.import_meta_graph(path + ".meta")
+        saver.restore(session, path)
 
-            #tf.initialize_all_variables().run()
-            self.saver = tf.train.Saver(session)
-
-        if step is None:
-            return self.saver.save(session, path)
-        else:
-            return self.saver.save(session, path)
-
-    def load(self, path, session=None):
-
-        if session is None:
-            session = tf.Session()
+        #if session is None:
+        #    session = tf.Session()
             #tf.initialize_all_variables().run(session=session)
 
         # Loading variables
@@ -308,6 +306,4 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
             #variables['input_divide'] = self.input_divide
             #variables['input_subtract'] = self.input_subtract
             #self.saver = tf.train.Saver(variables)
-
-        self.saver.restore(session, path)
-    """
+        #self.saver.restore(session, path)
