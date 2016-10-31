@@ -69,14 +69,14 @@ class Layer(object):
         #with tf.variable_scope(name):
         phase_train = tf.convert_to_tensor(phase_train, dtype=tf.bool)
         n_out = int(x.get_shape()[-1])
-        self.beta = tf.Variable(tf.constant(0.0, shape=[n_out], dtype=x.dtype),
-                                name=name + '_beta',
-                                trainable=True,
-                                dtype=x.dtype)
-        self.gamma = tf.Variable(tf.constant(1.0, shape=[n_out], dtype=x.dtype),
-                                 name=name + '_gamma',
-                                 trainable=True,
-                                 dtype=x.dtype)
+        self.beta = tf.get_variable(name + '_beta',
+                                    initializer=tf.constant(0.0, shape=[n_out], dtype=x.dtype),
+                                    trainable=True,
+                                    dtype=x.dtype)
+        self.gamma = tf.get_variable(name + '_gamma',
+                                     initializer=tf.constant(1.0, shape=[n_out], dtype=x.dtype),
+                                     trainable=True,
+                                     dtype=x.dtype)
 
         if len(x.get_shape()) == 2:
             batch_mean, batch_var = tf.nn.moments(x, [0], name='moments_{0}'.format(name))

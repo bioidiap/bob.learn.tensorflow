@@ -54,7 +54,7 @@ def validate_network(validation_data, validation_labels, directory):
         path = os.path.join(directory, "model.hdf5")
         #path = os.path.join(directory, "model.ckp")
         #scratch = SequenceNetwork(default_feature_layer="fc1")
-        scratch = SequenceNetwork()
+        scratch = SequenceNetwork(default_feature_layer="fc1")
         #scratch.load_original(session, os.path.join(directory, "model.ckp"))
         scratch.load(bob.io.base.HDF5File(path),
                      shape=validation_shape, session=session)
@@ -94,8 +94,10 @@ def test_cnn_trainer_scratch():
                       prefetch=False,
                       temp_dir=directory)
     trainer.train(train_data_shuffler)
+    del trainer
+    del scratch
 
-    import ipdb; ipdb.set_trace();
+    #import ipdb; ipdb.set_trace();
 
     accuracy = validate_network(validation_data, validation_labels, directory)
 

@@ -244,7 +244,9 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
                 self.sequence_net[k].b.assign(hdf5.read(self.sequence_net[k].b.name)).eval(session=session)
                 session.run(self.sequence_net[k].b)
 
-                
+                if self.sequence_net[k].batch_norm:
+                    self.sequence_net[k].beta.assign(hdf5.read(self.sequence_net[k].beta.name)).eval(session=session)
+                    self.sequence_net[k].gamma.assign(hdf5.read(self.sequence_net[k].gamma.name)).eval(session=session)
 
         hdf5.cd("..")
 
