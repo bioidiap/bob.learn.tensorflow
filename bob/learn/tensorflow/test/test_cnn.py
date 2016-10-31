@@ -5,7 +5,7 @@
 
 import numpy
 from bob.learn.tensorflow.datashuffler import Memory, SiameseMemory, TripletMemory, Disk, SiameseDisk, TripletDisk, ImageAugmentation
-from bob.learn.tensorflow.network import Chopra, Lenet
+from bob.learn.tensorflow.network import Chopra
 from bob.learn.tensorflow.loss import BaseLoss, ContrastiveLoss, TripletLoss
 from bob.learn.tensorflow.trainers import Trainer, SiameseTrainer, TripletTrainer, constant
 

@@ -70,7 +70,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
 
             if training or not isinstance(current_layer, Dropout):
                 current_layer.create_variables(input_offset)
-                input_offset = current_layer.get_graph()
+                input_offset = current_layer.get_graph(training_phase=training)
 
                 if feature_layer is not None and k == feature_layer:
                     return input_offset

@@ -61,16 +61,21 @@ class Layer(object):
         """
         from tensorflow.python.ops import control_flow_ops
 
-        name = 'batch_norm'
+        name = "batch_norm"
         with tf.variable_scope(name):
             phase_train = tf.convert_to_tensor(phase_train, dtype=tf.bool)
-            n_out = int(x.get_shape()[3])
+            n_out = int(x.get_shape()[-1])
             beta = tf.Variable(tf.constant(0.0, shape=[n_out], dtype=x.dtype),
                                name=name + '/beta', trainable=True, dtype=x.dtype)
             gamma = tf.Variable(tf.constant(1.0, shape=[n_out], dtype=x.dtype),
                                 name=name + '/gamma', trainable=True, dtype=x.dtype)
 
-            batch_mean, batch_var = tf.nn.moments(x, [0, 1, 2], name='moments')
+            # If signal
+            #if len(x.get_shape()) == 2:
+            #    batch_mean, batch_var = tf.nn.moments(x, [0], name='moments_{0}'.format(name))
+            #else:
+            batch_mean, batch_var = tf.nn.moments(x, range(len(x.get_shape())-1), name='moments_{0}'.format(name))
+
             ema = tf.train.ExponentialMovingAverage(decay=0.9)
 
             def mean_var_with_update():

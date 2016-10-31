@@ -21,5 +21,5 @@ class InputLayer(Layer):
     def create_variables(self, input_layer):
         return
 
-    def get_graph(self):
+    def get_graph(self, training_phase=True):
         return self.original_layer

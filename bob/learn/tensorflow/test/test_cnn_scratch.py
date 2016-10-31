@@ -33,11 +33,13 @@ def scratch_network():
                        filters=10,
                        activation=tf.nn.tanh,
                        weights_initialization=Xavier(seed=seed, use_gpu=False),
-                       bias_initialization=Constant(use_gpu=False)))
+                       bias_initialization=Constant(use_gpu=False)
+                       ))
     scratch.add(FullyConnected(name="fc1", output_dim=10,
                                activation=None,
                                weights_initialization=Xavier(seed=seed, use_gpu=False),
-                               bias_initialization=Constant(use_gpu=False)))
+                               bias_initialization=Constant(use_gpu=False)
+                               ))
 
     return scratch
 
@@ -90,6 +92,7 @@ def test_cnn_trainer_scratch():
     trainer.train(train_data_shuffler)
 
     accuracy = validate_network(validation_data, validation_labels, directory)
+
     assert accuracy > 80
     del scratch
 
