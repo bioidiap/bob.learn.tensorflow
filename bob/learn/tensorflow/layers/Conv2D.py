@@ -68,8 +68,7 @@ class Conv2D(Layer):
 
             self.b = self.bias_initialization(shape=[self.filters],
                                               name="b_" + str(self.name) + "bias",
-                                              scope="b_" + str(self.name)
-                                             )
+                                              scope="b_" + str(self.name))
 
     def get_graph(self, training_phase=True):
 

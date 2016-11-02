@@ -89,7 +89,6 @@ class Trainer(object):
         # Training variables used in the fit
         self.optimizer = None
         self.training_graph = None
-        self.training_graph = None
         self.train_data_shuffler = None
         self.summaries_train = None
         self.train_summary_writter = None
@@ -113,7 +112,7 @@ class Trainer(object):
     def __del__(self):
         tf.reset_default_graph()
 
-    def compute_graph(self, data_shuffler, prefetch=False, name=""):
+    def compute_graph(self, data_shuffler, prefetch=False, name="", training=True):
         """
         Computes the graph for the trainer.
 
@@ -146,7 +145,7 @@ class Trainer(object):
             [feature_batch, label_batch] = data_shuffler.get_placeholders(name=name)
 
         # Creating graphs and defining the loss
-        network_graph = self.architecture.compute_graph(feature_batch)
+        network_graph = self.architecture.compute_graph(feature_batch, training=training)
         graph = self.loss(network_graph, label_batch)
 
         return graph
@@ -198,7 +197,6 @@ class Trainer(object):
 
         """
         # Opening a new session for validation
-        self.validation_graph = self.compute_graph(data_shuffler, name="validation")
         feed_dict = self.get_feed_dict(data_shuffler)
         l = session.run(self.validation_graph, feed_dict=feed_dict)
 
@@ -253,6 +251,23 @@ class Trainer(object):
 
             session.run(self.enqueue_op, feed_dict=feed_dict)
 
+    def create_graphs(self, train_data_shuffler, validation_data_shuffler):
+
+        # Creating train graph
+        self.training_graph = self.compute_graph(train_data_shuffler, prefetch=self.prefetch, name="train")
+        tf.add_to_collection("training_graph", self.training_graph)
+
+        # Creating inference graph
+        self.architecture.compute_inference_placeholder(train_data_shuffler.deployment_shape)
+        self.architecture.compute_inference_graph()
+        tf.add_to_collection("inference_placeholder", self.architecture.inference_placeholder)
+        tf.add_to_collection("inference_graph", self.architecture.inference_graph)
+
+        if validation_data_shuffler is not None:
+            # Creating validation graph
+            self.validation_graph = self.compute_graph(validation_data_shuffler, name="validation", training=False)
+            tf.add_to_collection("validation_graph", self.validation_graph)
+
     def train(self, train_data_shuffler, validation_data_shuffler=None):
         """
         Train the network
@@ -262,44 +277,42 @@ class Trainer(object):
         bob.io.base.create_directories_safe(self.temp_dir)
         self.train_data_shuffler = train_data_shuffler
 
-        # Pickle the architecture to save
-        self.architecture.pickle_net(train_data_shuffler.deployment_shape)
-
-        # TODO: find an elegant way to provide this as a parameter of the trainer
-        self.global_step = tf.Variable(0, trainable=False)
-        #self.learning_rate = tf.Variable(self.base_learning_rate)
-        #self.learning_rate = tf.train.exponential_decay(
-        #    learning_rate=self.base_learning_rate,  # Learning rate
-        #    global_step=self.global_step,
-        #    decay_steps=self.decay_steps,
-        #    decay_rate=self.weight_decay,  # Decay step
-        #    staircase=False
-        #)
-        self.training_graph = self.compute_graph(train_data_shuffler, prefetch=self.prefetch, name="train")
-
-        # Preparing the optimizer
-        self.optimizer_class._learning_rate = self.learning_rate
-        self.optimizer = self.optimizer_class.minimize(self.training_graph, global_step=self.global_step)
-
-        # Train summary
-        self.summaries_train = self.create_general_summary()
-
         logger.info("Initializing !!")
 
         config = tf.ConfigProto(log_device_placement=True)
         config.gpu_options.allow_growth = True
 
-        with tf.Session(config=config) as session:
-            tf.initialize_all_variables().run()
+        # Pickle the architecture to save
+        self.architecture.pickle_net(train_data_shuffler.deployment_shape)
 
-            # Original tensorflow saver object
-            saver = tf.train.Saver(var_list=tf.trainable_variables())
+        with tf.Session(config=config) as session:
 
             # Loading a pretrained model
             if self.model_from_file != "":
                 logger.info("Loading pretrained model from {0}".format(self.model_from_file))
-                hdf5 = bob.io.base.HDF5File(self.model_from_file)
-                self.architecture.load_variables_only(hdf5, session)
+                saver = self.architecture.load(session, self.model_from_file)
+                self.training_graph = tf.get_collection("training_graph")[0]
+                self.optimizer = tf.get_collection("optimizer")[0]
+                self.learning_rate = tf.get_collection("learning_rate")[0]
+            else:
+                self.create_graphs(train_data_shuffler, validation_data_shuffler)
+
+                # TODO: find an elegant way to provide this as a parameter of the trainer
+                self.global_step = tf.Variable(0, trainable=False)
+
+                # Preparing the optimizer
+                self.optimizer_class._learning_rate = self.learning_rate
+                self.optimizer = self.optimizer_class.minimize(self.training_graph, global_step=self.global_step)
+                tf.add_to_collection("optimizer", self.optimizer)
+                tf.add_to_collection("learning_rate", self.learning_rate)
+
+                # Train summary
+                self.summaries_train = self.create_general_summary()
+
+                tf.initialize_all_variables().run()
+
+                # Original tensorflow saver object
+                saver = tf.train.Saver(var_list=tf.all_variables())
 
             if isinstance(train_data_shuffler, OnLineSampling):
                 train_data_shuffler.set_feature_extractor(self.architecture, session=session)
@@ -331,12 +344,8 @@ class Trainer(object):
                 # Taking snapshot
                 if step % self.snapshot == 0:
                     logger.info("Taking snapshot")
-                    path = os.path.join(self.temp_dir, 'model_snapshot{0}.hdf5'.format(step))
-                    #path_original = os.path.join(self.temp_dir, 'model_snapshot{0}.ckp'.format(step))
-                    #self.architecture.save_original(session, saver, path_original)
-                    hdf5 = bob.io.base.HDF5File(path, 'w')
-                    self.architecture.save(hdf5)
-                    del hdf5
+                    path = os.path.join(self.temp_dir, 'model_snapshot{0}.ckp'.format(step))
+                    self.architecture.save(session, saver, path)
 
             logger.info("Training finally finished")
 
@@ -345,12 +354,8 @@ class Trainer(object):
                 self.validation_summary_writter.close()
 
             # Saving the final network
-            path = os.path.join(self.temp_dir, 'model.hdf5')
-            #path_original = os.path.join(self.temp_dir, 'model.ckp')
-            #self.architecture.save_original(session, saver, path_original)
-            hdf5 = bob.io.base.HDF5File(path, 'w')
-            self.architecture.save(hdf5)
-            del hdf5
+            path = os.path.join(self.temp_dir, 'model.ckp')
+            self.architecture.save(session, saver, path)
 
             if self.prefetch:
                 # now they should definetely stop

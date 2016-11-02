@@ -5,6 +5,7 @@
 
 import logging
 logger = logging.getLogger("bob.learn.tensorflow")
+import tensorflow as tf
 
 
 class Initialization(object):
@@ -25,6 +26,10 @@ class Initialization(object):
 
         self.seed = seed
         self.use_gpu = use_gpu
+        tf.set_random_seed(seed)
+
+    def variable_exist(self, var):
+        return var in [v.name.split("/")[0] for v in tf.all_variables()]
 
     def __call__(self, shape, name, scope):
         NotImplementedError("Please implement this function in derived classes")

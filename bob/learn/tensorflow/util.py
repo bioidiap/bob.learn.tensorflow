@@ -7,6 +7,7 @@ import numpy
 import tensorflow as tf
 numpy.random.seed(10)
 
+
 def compute_euclidean_distance(x, y):
     """
     Computes the euclidean distance between two tensorflow variables

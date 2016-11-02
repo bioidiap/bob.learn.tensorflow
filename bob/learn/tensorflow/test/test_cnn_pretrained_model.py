@@ -61,18 +61,20 @@ def test_cnn_trainer_scratch():
 
     del scratch
     del loss
-    # Training the network using a pre trained model
-    loss2 = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean, name="loss2")
-    scratch = scratch_network()
-    trainer2 = Trainer(architecture=scratch,
-                       loss=loss2,
-                       iterations=iterations,
-                       analizer=None,
-                       prefetch=False,
-                       learning_rate=constant(0.05, name="lr2"),
-                       temp_dir=directory2,
-                       model_from_file=os.path.join(directory, "model.hdf5"))
+    del trainer
 
-    trainer2.train(train_data_shuffler)
+    # Training the network using a pre trained model
+    loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean, name="loss")
+    scratch = scratch_network()
+    trainer = Trainer(architecture=scratch,
+                      loss=loss,
+                      iterations=iterations,
+                      analizer=None,
+                      prefetch=False,
+                      learning_rate=constant(0.05, name="lr2"),
+                      temp_dir=directory2,
+                      model_from_file=os.path.join(directory, "model.ckp"))
+
+    trainer.train(train_data_shuffler)
     accuracy = validate_network(validation_data, validation_labels, directory)
     assert accuracy > 90

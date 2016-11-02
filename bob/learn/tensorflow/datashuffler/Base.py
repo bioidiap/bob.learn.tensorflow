@@ -58,7 +58,7 @@ class Base(object):
         self.label_placeholder = None
 
         self.data_augmentation = data_augmentation
-        self.deployment_shape = [-1] + list(input_shape)
+        self.deployment_shape = [None] + list(input_shape)
 
     def get_placeholders(self, name=""):
         """

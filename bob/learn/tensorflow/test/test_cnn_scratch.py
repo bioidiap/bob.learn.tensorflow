@@ -24,6 +24,7 @@ batch_size = 16
 validation_batch_size = 400
 iterations = 50
 seed = 10
+directory = "./temp/cnn_scratch"
 
 
 def scratch_network():
@@ -34,11 +35,12 @@ def scratch_network():
                        activation=tf.nn.tanh,
                        weights_initialization=Xavier(seed=seed, use_gpu=False),
                        bias_initialization=Constant(use_gpu=False),
-                       batch_norm=True))
+                       batch_norm=False))
     scratch.add(FullyConnected(name="fc1", output_dim=10,
                                activation=None,
                                weights_initialization=Xavier(seed=seed, use_gpu=False),
-                               bias_initialization=Constant(use_gpu=False)
+                               bias_initialization=Constant(use_gpu=False),
+                               batch_norm=False
                                ))
 
     return scratch
@@ -50,15 +52,8 @@ def validate_network(validation_data, validation_labels, directory):
                                       input_shape=[28, 28, 1],
                                       batch_size=validation_batch_size)
     with tf.Session() as session:
-        validation_shape = [400, 28, 28, 1]
-        path = os.path.join(directory, "model.hdf5")
-        #path = os.path.join(directory, "model.ckp")
-        #scratch = SequenceNetwork(default_feature_layer="fc1")
-        scratch = SequenceNetwork(default_feature_layer="fc1")
-        #scratch.load_original(session, os.path.join(directory, "model.ckp"))
-        scratch.load(bob.io.base.HDF5File(path),
-                     shape=validation_shape, session=session)
-
+        scratch = SequenceNetwork()
+        scratch.load(session, os.path.join(directory, "model.ckp"))
         [data, labels] = validation_data_shuffler.get_batch()
         predictions = scratch(data, session=session)
         accuracy = 100. * numpy.sum(numpy.argmax(predictions, 1) == labels) / predictions.shape[0]
@@ -78,8 +73,6 @@ def test_cnn_trainer_scratch():
                                  data_augmentation=data_augmentation)
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
 
-    directory = "./temp/cnn"
-
     # Create scratch network
     scratch = scratch_network()
 
@@ -94,14 +87,10 @@ def test_cnn_trainer_scratch():
                       prefetch=False,
                       temp_dir=directory)
     trainer.train(train_data_shuffler)
-    del trainer
-    del scratch
 
-    #import ipdb; ipdb.set_trace();
+    del trainer# JUst to clean the tf.variables
 
     accuracy = validate_network(validation_data, validation_labels, directory)
-
     assert accuracy > 80
-    del scratch
-
+    shutil.rmtree(directory)
 

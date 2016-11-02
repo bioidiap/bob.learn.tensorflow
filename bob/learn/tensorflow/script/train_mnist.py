@@ -59,21 +59,19 @@ def main():
                                                   input_shape=[28, 28, 1],
                                                   batch_size=VALIDATION_BATCH_SIZE)
 
-
-
     # Preparing the architecture
     cnn = True
     if cnn:
-        architecture = Chopra(seed=SEED, fc1_output=10)
-        #architecture = Lenet(seed=SEED)
-        #architecture = Dummy(seed=SEED)
+        architecture = Chopra(seed=SEED, fc1_output=10, batch_norm=False)
         loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
-        #trainer = Trainer(architecture=architecture,
-        #                  loss=loss,
-        #                  iterations=ITERATIONS,
-        #                  analizer=ExperimentAnalizer(),
-        #                  prefetch=False, temp_dir="./temp/cnn")
-        #trainer.train(train_data_shuffler, validation_data_shuffler)
+        trainer = Trainer(architecture=architecture,
+                          loss=loss,
+                          iterations=ITERATIONS,
+                          prefetch=False, temp_dir="./temp/cnn/no-batch-norm-all-relu")
+
+        #prefetch = False, temp_dir = "./temp/cnn/batch-norm-2convs-all-relu")
+
+        trainer.train(train_data_shuffler, validation_data_shuffler)
         #trainer.train(train_data_shuffler)
     else:
         mlp = MLP(10, hidden_layers=[15, 20])
@@ -82,16 +80,16 @@ def main():
         trainer.train(train_data_shuffler, validation_data_shuffler)
 
     # Loading
-    test_data_shuffler = Memory(validation_data, validation_labels,
-                                input_shape=[28, 28, 1],
-                                batch_size=400)
+    #test_data_shuffler = Memory(validation_data, validation_labels,
+    #                            input_shape=[28, 28, 1],
+    #                            batch_size=400)
 
-    with tf.Session() as session:
-        new_net = Chopra(seed=SEED, fc1_output=10)
-        new_net.load(bob.io.base.HDF5File("./temp/cnn/model.hdf5"), shape=[400, 28, 28, 1], session=session)
+    #with tf.Session() as session:
+        #new_net = Chopra(seed=SEED, fc1_output=10)
+        #new_net.load(bob.io.base.HDF5File("./temp/cnn/model.hdf5"), shape=[400, 28, 28, 1], session=session)
 
-        [data, labels] = test_data_shuffler.get_batch()
-        print new_net(data, session)
+        #[data, labels] = test_data_shuffler.get_batch()
+        #print new_net(data, session)
 
 
 

@@ -36,30 +36,30 @@ def test_dnn_trainer():
                                  input_shape=[28, 28, 1],
                                  batch_size=batch_size)
 
+    directory = "./temp/dnn"
+
+    # Preparing the architecture
+    architecture = MLP(10, hidden_layers=[15, 20])
+
+    # Loss for the softmax
+    loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
+
+    # One graph trainer
+    trainer = Trainer(architecture=architecture,
+                      loss=loss,
+                      iterations=iterations,
+                      analizer=None,
+                      prefetch=False,
+                      learning_rate=constant(0.05, name="dnn_lr"),
+                      temp_dir=directory)
+    trainer.train(train_data_shuffler)
+    del trainer# Just to clean the variables
+
+    import ipdb; ipdb.set_trace();
     with tf.Session() as session:
-        directory = "./temp/dnn"
-
-        # Preparing the architecture
-        architecture = MLP(10, hidden_layers=[15, 20])
-
-        # Loss for the softmax
-        loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
-
-        # One graph trainer
-        trainer = Trainer(architecture=architecture,
-                          loss=loss,
-                          iterations=iterations,
-                          analizer=None,
-                          prefetch=False,
-                          learning_rate=constant(0.05, name="dnn_lr"),
-                          temp_dir=directory)
-        trainer.train(train_data_shuffler)
-
         # Testing
-        validation_shape = [400, 28, 28, 1]
         mlp = MLP(10, hidden_layers=[15, 20])
-        mlp.load(bob.io.base.HDF5File(os.path.join(directory, "model.hdf5")),
-                 shape=validation_shape, session=session)
+        mlp.load(session, os.path.join(directory, "model.ckp"))
         validation_data_shuffler = Memory(validation_data, validation_labels,
                                           input_shape=[28, 28, 1],
                                           batch_size=validation_batch_size)

@@ -75,28 +75,30 @@ class Chopra(SequenceNetwork):
                  default_feature_layer="fc1",
 
                  seed=10,
-                 use_gpu=False):
+                 use_gpu=False,
+                 batch_norm=False):
 
         super(Chopra, self).__init__(default_feature_layer=default_feature_layer,
                                      use_gpu=use_gpu)
 
         self.add(Conv2D(name="conv1", kernel_size=conv1_kernel_size,
                         filters=conv1_output,
-                        activation=None,
+                        activation=tf.nn.relu,
                         weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
-                        bias_initialization=Constant(use_gpu=self.use_gpu)
+                        bias_initialization=Constant(use_gpu=self.use_gpu),
+                        batch_norm=batch_norm
                         ))
-        self.add(MaxPooling(name="pooling1", shape=pooling1_size, activation=tf.nn.tanh))
+        self.add(MaxPooling(name="pooling1", shape=pooling1_size, activation=tf.nn.relu, batch_norm=False))
 
         self.add(Conv2D(name="conv2", kernel_size=conv2_kernel_size,
                         filters=conv2_output,
-                        activation=None,
+                        activation=tf.nn.relu,
                         weights_initialization=Xavier(seed=seed,  use_gpu=self.use_gpu),
-                        bias_initialization=Constant(use_gpu=self.use_gpu)
-                        ))
-        self.add(MaxPooling(name="pooling2", shape=pooling2_size, activation=tf.nn.tanh))
+                        bias_initialization=Constant(use_gpu=self.use_gpu),
+                        batch_norm=batch_norm))
+        self.add(MaxPooling(name="pooling2", shape=pooling2_size, activation=tf.nn.relu, batch_norm=False))
 
         self.add(FullyConnected(name="fc1", output_dim=fc1_output,
                                 activation=None,
                                 weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
-                                bias_initialization=Constant(use_gpu=self.use_gpu)))
+                                bias_initialization=Constant(use_gpu=self.use_gpu), batch_norm=False))

@@ -23,7 +23,7 @@ import tensorflow as tf
 from .. import util
 SEED = 10
 from bob.learn.tensorflow.datashuffler import TripletDisk, TripletWithSelectionDisk, TripletWithFastSelectionDisk
-from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra, Dummy, FaceNet, FaceNetSimple
+from bob.learn.tensorflow.network import Lenet, MLP, LenetDropout, VGG, Chopra, Dummy, FaceNet, FaceNetSimple, VGG16
 from bob.learn.tensorflow.trainers import SiameseTrainer, TripletTrainer, constant
 from bob.learn.tensorflow.loss import ContrastiveLoss, TripletLoss
 import numpy
@@ -56,10 +56,14 @@ def main():
         extension=".hdf5")
                         for o in train_objects]
 
-    train_data_shuffler = TripletWithFastSelectionDisk(train_file_names, train_labels,
-                                                       input_shape=[224, 224, 3],
-                                                       batch_size=BATCH_SIZE,
-                                                       total_identities=16)
+    #train_data_shuffler = TripletWithFastSelectionDisk(train_file_names, train_labels,
+    #                                                   input_shape=[224, 224, 3],
+    #                                                   batch_size=BATCH_SIZE,
+    #                                                   total_identities=16)
+
+    train_data_shuffler = TripletDisk(train_file_names, train_labels,
+                                           input_shape=[224, 224, 3],
+                                           batch_size=VALIDATION_BATCH_SIZE)
 
 
     # Preparing train set
@@ -77,7 +81,8 @@ def main():
                                            batch_size=VALIDATION_BATCH_SIZE)
     # Preparing the architecture
     # LENET PAPER CHOPRA
-    architecture = FaceNetSimple(seed=SEED, use_gpu=USE_GPU)
+    #architecture = FaceNetSimple(seed=SEED, use_gpu=USE_GPU)
+    architecture = VGG16(seed=SEED, use_gpu=USE_GPU)
 
     optimizer = tf.train.GradientDescentOptimizer(0.05)
     loss = TripletLoss(margin=0.2)

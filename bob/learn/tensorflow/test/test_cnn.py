@@ -86,29 +86,30 @@ def test_cnn_trainer():
                                  batch_size=batch_size,
                                  data_augmentation=data_augmentation)
 
+    directory = "./temp/cnn"
+
+    # Preparing the architecture
+    architecture = Chopra(seed=seed, fc1_output=10)
+
+    # Loss for the softmax
+    loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
+
+    # One graph trainer
+    trainer = Trainer(architecture=architecture,
+                      loss=loss,
+                      iterations=iterations,
+                      analizer=None,
+                      prefetch=False,
+                      temp_dir=directory)
+    trainer.train(train_data_shuffler)
+    del trainer #Just to clean tf.variables
+
     with tf.Session() as session:
-        directory = "./temp/cnn"
-
-        # Preparing the architecture
-        architecture = Chopra(seed=seed, fc1_output=10)
-
-        # Loss for the softmax
-        loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
-
-        # One graph trainer
-        trainer = Trainer(architecture=architecture,
-                          loss=loss,
-                          iterations=iterations,
-                          analizer=None,
-                          prefetch=False,
-                          temp_dir=directory)
-        trainer.train(train_data_shuffler)
 
         # Testing
-        validation_shape = [400, 28, 28, 1]
         chopra = Chopra(seed=seed, fc1_output=10)
-        chopra.load(bob.io.base.HDF5File(os.path.join(directory, "model.hdf5")),
-                    shape=validation_shape, session=session)
+        chopra.load(session, os.path.join(directory, "model.ckp"))
+
         validation_data_shuffler = Memory(validation_data, validation_labels,
                                           input_shape=[28, 28, 1],
                                           batch_size=validation_batch_size)
@@ -135,33 +136,32 @@ def test_siamesecnn_trainer():
                                              input_shape=[28, 28, 1],
                                              batch_size=validation_batch_size)
 
+    directory = "./temp/siamesecnn"
+
+    # Preparing the architecture
+    architecture = Chopra(seed=seed, fc1_output=10)
+
+    # Loss for the Siamese
+    loss = ContrastiveLoss(contrastive_margin=4.)
+
+    # One graph trainer
+    trainer = SiameseTrainer(architecture=architecture,
+                             loss=loss,
+                             iterations=iterations,
+                             prefetch=False,
+                             analizer=None,
+                             learning_rate=constant(0.05, name="siamese_lr"),
+                             temp_dir=directory)
+
+    trainer.train(train_data_shuffler)
+    del trainer  # Just to clean tf.variables
+
     with tf.Session() as session:
-        directory = "./temp/siamesecnn"
-
-        # Preparing the architecture
-        architecture = Chopra(seed=seed, fc1_output=10)
-
-        # Loss for the Siamese
-        loss = ContrastiveLoss(contrastive_margin=4.)
-
-        # One graph trainer
-        trainer = SiameseTrainer(architecture=architecture,
-                                 loss=loss,
-                                 iterations=iterations,
-                                 prefetch=False,
-                                 analizer=None,
-                                 learning_rate=constant(0.05, name="siamese_lr"),
-                                 temp_dir=directory)
-
-        trainer.train(train_data_shuffler)
-
         # Testing
-        validation_shape = [400, 28, 28, 1]
         chopra = Chopra(seed=seed, fc1_output=10)
-        chopra.load(bob.io.base.HDF5File(os.path.join(directory, "model.hdf5")),
-                    shape=validation_shape, session=session)
+        chopra.load(session, os.path.join(directory, "model.ckp"))
 
-        eer = dummy_experiment(validation_data_shuffler, architecture, session)
+        eer = dummy_experiment(validation_data_shuffler, chopra, session)
 
         # At least 80% of accuracy
         assert eer < 0.25
@@ -181,33 +181,33 @@ def test_tripletcnn_trainer():
                                              input_shape=[28, 28, 1],
                                              batch_size=validation_batch_size)
 
+    directory = "./temp/tripletcnn"
+
+    # Preparing the architecture
+    architecture = Chopra(seed=seed, fc1_output=10)
+
+    # Loss for the Siamese
+    loss = TripletLoss(margin=4.)
+
+    # One graph trainer
+    trainer = TripletTrainer(architecture=architecture,
+                             loss=loss,
+                             iterations=iterations,
+                             prefetch=False,
+                             analizer=None,
+                             learning_rate=constant(0.05, name="triplet_lr"),
+                             temp_dir=directory)
+
+    trainer.train(train_data_shuffler)
+    del trainer  # Just to clean tf.variables
+
     with tf.Session() as session:
-        directory = "./temp/tripletcnn"
-
-        # Preparing the architecture
-        architecture = Chopra(seed=seed, fc1_output=10)
-
-        # Loss for the Siamese
-        loss = TripletLoss(margin=4.)
-
-        # One graph trainer
-        trainer = TripletTrainer(architecture=architecture,
-                                 loss=loss,
-                                 iterations=iterations,
-                                 prefetch=False,
-                                 analizer=None,
-                                 learning_rate=constant(0.05, name="triplet_lr"),
-                                 temp_dir=directory)
-
-        trainer.train(train_data_shuffler)
 
         # Testing
-        validation_shape = [400, 28, 28, 1]
         chopra = Chopra(seed=seed, fc1_output=10)
-        chopra.load(bob.io.base.HDF5File(os.path.join(directory, "model.hdf5")),
-                    shape=validation_shape, session=session)
+        chopra.load(session, os.path.join(directory, "model.ckp"))
 
-        eer = dummy_experiment(validation_data_shuffler, architecture, session)
+        eer = dummy_experiment(validation_data_shuffler, chopra, session)
 
         # At least 80% of accuracy
         assert eer < 0.25

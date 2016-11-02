@@ -38,6 +38,10 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         self.pickle_architecture = None# The trainer triggers this
         self.deployment_shape = None# The trainer triggers this
 
+        # Inference graph
+        self.inference_graph = None
+        self.inference_placeholder = None
+
     def add(self, layer):
         """
         Add a :py:class:`bob.learn.tensorflow.layers.Layer` in the sequence network
@@ -77,17 +81,23 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
 
         return input_offset
 
-    def compute_projection_graph(self, placeholder):
+    def compute_inference_graph(self, feature_layer=None):
         """Generate a graph for feature extraction
 
         **Parameters**
 
         placeholder: tensorflow placeholder as input data
         """
-        return self.compute_graph(placeholder)
+        if feature_layer is None:
+            feature_layer = self.default_feature_layer
+
+        self.inference_graph = self.compute_graph(self.inference_placeholder, feature_layer, training=False)
+
+    def compute_inference_placeholder(self, data_shape):
+        self.inference_placeholder = tf.placeholder(tf.float32, shape=data_shape, name="feature")
 
     def __call__(self, data, session=None, feature_layer=None):
-        """Run a graph
+        """Run a graph and compute the embeddings
 
         **Parameters**
 
@@ -103,16 +113,16 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
             session = tf.Session()
 
         # Feeding the placeholder
-        feature_placeholder = tf.placeholder(tf.float32, shape=data.shape, name="feature")
-        feed_dict = {feature_placeholder: data}
+        if self.inference_placeholder is None:
+            self.compute_inference_placeholder(data.shape[1:])
+        feed_dict = {self.inference_placeholder: data}
 
-        if feature_layer is None:
-            feature_layer = self.default_feature_layer
+        if self.inference_graph is None:
+            self.compute_inference_graph(self.inference_placeholder, feature_layer)
 
-        feature = session.run([self.compute_graph(feature_placeholder, feature_layer, training=False)], feed_dict=feed_dict)[0]
-        del feature_placeholder
+        embedding = session.run([self.inference_graph], feed_dict=feed_dict)[0]
 
-        return feature
+        return embedding
 
     def dump_variables(self):
         """
@@ -129,6 +139,8 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
                 if self.sequence_net[k].batch_norm:
                     variables[self.sequence_net[k].beta.name] = self.sequence_net[k].beta
                     variables[self.sequence_net[k].gamma.name] = self.sequence_net[k].gamma
+                    #variables[self.sequence_net[k].mean.name] = self.sequence_net[k].mean
+                    #variables[self.sequence_net[k].var.name] = self.sequence_net[k].var
 
         return variables
 
@@ -189,7 +201,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
 
         return samples_per_sample
 
-    def save(self, hdf5):
+    def save_hdf5(self, hdf5):
         """
         Save the state of the network in HDF5 format
 
@@ -250,7 +262,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
 
         hdf5.cd("..")
 
-    def load(self, hdf5, shape=None, session=None, batch=1, use_gpu=False):
+    def load_hdf5(self, hdf5, shape=None, session=None, batch=1, use_gpu=False):
         """
         Load the network from scratch.
         This will build the graphs
@@ -287,25 +299,15 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         tf.initialize_all_variables().run(session=session)
         self.load_variables_only(hdf5, session)
 
-    def save_original(self, session, saver, path):
+    def save(self, session, saver, path):
+        open(path+"_sequence_net.pickle", 'w').write(self.pickle_architecture)
         return saver.save(session, path)
 
-    def load_original(self, session, path):
+    def load(self, session, path):
+        self.sequence_net = pickle.loads(open(path+"_sequence_net.pickle").read())
         saver = tf.train.import_meta_graph(path + ".meta")
         saver.restore(session, path)
+        self.inference_graph = tf.get_collection("inference_graph")[0]
+        self.inference_placeholder = tf.get_collection("inference_placeholder")[0]
 
-        #if session is None:
-        #    session = tf.Session()
-            #tf.initialize_all_variables().run(session=session)
-
-        # Loading variables
-        #place_holder = tf.placeholder(tf.float32, shape=shape, name="load")
-        #self.compute_graph(place_holder)
-        #tf.initialize_all_variables().run(session=session)
-
-        #if self.saver is None:
-            #variables = self.dump_variables()
-            #variables['input_divide'] = self.input_divide
-            #variables['input_subtract'] = self.input_subtract
-            #self.saver = tf.train.Saver(variables)
-        #self.saver.restore(session, path)
+        return saver
