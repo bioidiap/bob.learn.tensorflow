@@ -55,7 +55,6 @@ def test_dnn_trainer():
     trainer.train(train_data_shuffler)
     del trainer# Just to clean the variables
 
-    import ipdb; ipdb.set_trace();
     with tf.Session() as session:
         # Testing
         mlp = MLP(10, hidden_layers=[15, 20])

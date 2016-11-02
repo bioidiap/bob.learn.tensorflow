@@ -52,10 +52,10 @@ class ExperimentAnalizer:
 
     def __call__(self, data_shuffler, network, session):
 
-        if self.data_shuffler is None:
-            self.data_shuffler = data_shuffler
-            self.network = network
-            self.session = session
+        #if self.data_shuffler is None:
+        #    self.data_shuffler = data_shuffler
+        #    self.network = network
+        #    self.session = session
 
         # Getting the base class. Recipe extracted from
         # http://stackoverflow.com/questions/5516263/creating-an-object-from-a-base-class-object-in-python/5516330#5516330
@@ -68,18 +68,18 @@ class ExperimentAnalizer:
 
         # Extracting features for enrollment
         enroll_data, enroll_labels = base_data_shuffler.get_batch()
-        enroll_features = self.network(enroll_data, session=self.session)
+        enroll_features = network(enroll_data, session=session)
         del enroll_data
 
         # Extracting features for probing
         probe_data, probe_labels = base_data_shuffler.get_batch()
-        probe_features = self.network(probe_data, session=self.session)
+        probe_features = network(probe_data, session=session)
         del probe_data
 
         # Creating models
         models = []
         for i in range(len(base_data_shuffler.possible_labels)):
-            indexes_model = numpy.where(enroll_labels == self.data_shuffler.possible_labels[i])[0]
+            indexes_model = numpy.where(enroll_labels == data_shuffler.possible_labels[i])[0]
             models.append(numpy.mean(enroll_features[indexes_model, :], axis=0))
 
         # Probing

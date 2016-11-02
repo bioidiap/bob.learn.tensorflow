@@ -67,7 +67,7 @@ def main():
         trainer = Trainer(architecture=architecture,
                           loss=loss,
                           iterations=ITERATIONS,
-                          prefetch=False, temp_dir="./temp/cnn/no-batch-norm-all-relu")
+                          prefetch=False, temp_dir="./temp/cnn/no-batch-norm")
 
         #prefetch = False, temp_dir = "./temp/cnn/batch-norm-2convs-all-relu")
 

@@ -252,6 +252,12 @@ class Trainer(object):
             session.run(self.enqueue_op, feed_dict=feed_dict)
 
     def create_graphs(self, train_data_shuffler, validation_data_shuffler):
+        """
+
+        :param train_data_shuffler:
+        :param validation_data_shuffler:
+        :return:
+        """
 
         # Creating train graph
         self.training_graph = self.compute_graph(train_data_shuffler, prefetch=self.prefetch, name="train")
