@@ -36,7 +36,6 @@ class Base(object):
         self.scale_value = 0.00390625
         self.input_dtype = input_dtype
 
-
         # TODO: Check if the bacth size is higher than the input data
         self.batch_size = batch_size
 
@@ -59,6 +58,10 @@ class Base(object):
 
         self.data_augmentation = data_augmentation
         self.deployment_shape = [None] + list(input_shape)
+
+    def set_placeholders(self, data, label):
+        self.data_placeholder = data
+        self.label_placeholder = label
 
     def get_placeholders(self, name=""):
         """
@@ -153,6 +156,7 @@ class Base(object):
         if self.scale:
             return x * self.scale_value
         return x
+
 
 
 

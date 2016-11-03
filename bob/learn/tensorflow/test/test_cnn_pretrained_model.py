@@ -68,7 +68,7 @@ def test_cnn_trainer_scratch():
     scratch = scratch_network()
     trainer = Trainer(architecture=scratch,
                       loss=loss,
-                      iterations=iterations,
+                      iterations=iterations+200,
                       analizer=None,
                       prefetch=False,
                       learning_rate=constant(0.05, name="lr2"),
@@ -76,5 +76,8 @@ def test_cnn_trainer_scratch():
                       model_from_file=os.path.join(directory, "model.ckp"))
 
     trainer.train(train_data_shuffler)
-    accuracy = validate_network(validation_data, validation_labels, directory)
-    assert accuracy > 90
+
+    accuracy = validate_network(validation_data, validation_labels, directory2)
+    assert accuracy > 85
+    shutil.rmtree(directory)
+    shutil.rmtree(directory2)

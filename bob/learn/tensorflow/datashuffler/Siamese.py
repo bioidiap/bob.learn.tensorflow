@@ -21,6 +21,11 @@ class Siamese(Base):
         super(Siamese, self).__init__(**kwargs)
         self.data2_placeholder = None
 
+    def set_placeholders(self, data, data2, label):
+        self.data_placeholder = data
+        self.data2_placeholder = data2
+        self.label_placeholder = label
+
     def get_placeholders(self, name=""):
         """
         Returns a place holder with the size of your batch

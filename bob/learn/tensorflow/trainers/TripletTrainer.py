@@ -101,6 +101,42 @@ class TripletTrainer(Trainer):
         self.between_class_graph_validation = None
         self.within_class_graph_validation = None
 
+    def bootstrap_placeholders(self, train_data_shuffler, validation_data_shuffler):
+        """
+        Persist the placeholders
+        """
+
+        # Persisting the placeholders
+        if self.prefetch:
+            batch, batch2, batch3 = train_data_shuffler.get_placeholders_forprefetch()
+        else:
+            batch, batch2, batch3 = train_data_shuffler.get_placeholders()
+
+        tf.add_to_collection("train_placeholder_data", batch)
+        tf.add_to_collection("train_placeholder_data2", batch2)
+        tf.add_to_collection("train_placeholder_data3", batch3)
+
+        # Creating validation graph
+        if validation_data_shuffler is not None:
+            batch, batch2, label = validation_data_shuffler.get_placeholders()
+            tf.add_to_collection("validation_placeholder_data", batch)
+            tf.add_to_collection("validation_placeholder_data2", batch2)
+            tf.add_to_collection("validation_placeholder_data3", batch3)
+
+    def bootstrap_placeholders_fromfile(self, train_data_shuffler, validation_data_shuffler):
+        """
+        Load placeholders from file
+        """
+
+        train_data_shuffler.set_placeholders(tf.get_collection("train_placeholder_data")[0],
+                                             tf.get_collection("train_placeholder_data2")[0],
+                                             tf.get_collection("train_placeholder_data3")[0])
+
+        if validation_data_shuffler is not None:
+            train_data_shuffler.set_placeholders(tf.get_collection("validation_placeholder_data")[0],
+                                                 tf.get_collection("validation_placeholder_data2")[0],
+                                                 tf.get_collection("validation_placeholder_data3")[0])
+
     def compute_graph(self, data_shuffler, prefetch=False, name="", train=True):
         """
         Computes the graph for the trainer.

@@ -121,6 +121,7 @@ def test_cnn_trainer():
         # At least 80% of accuracy
         assert accuracy > 80.
         shutil.rmtree(directory)
+        del chopra
 
 
 def test_siamesecnn_trainer():
@@ -166,6 +167,7 @@ def test_siamesecnn_trainer():
         # At least 80% of accuracy
         assert eer < 0.25
         shutil.rmtree(directory)
+        del chopra
 
 
 def test_tripletcnn_trainer():
@@ -212,3 +214,4 @@ def test_tripletcnn_trainer():
         # At least 80% of accuracy
         assert eer < 0.25
         shutil.rmtree(directory)
+        del chopra

@@ -75,10 +75,7 @@ class Trainer(object):
         self.loss = loss
         self.temp_dir = temp_dir
 
-        #self.base_learning_rate = base_learning_rate
         self.learning_rate = learning_rate
-        #self.weight_decay = weight_decay
-        #self.decay_steps = decay_steps
 
         self.iterations = iterations
         self.snapshot = snapshot
@@ -116,12 +113,12 @@ class Trainer(object):
         """
         Computes the graph for the trainer.
 
-
         ** Parameters **
 
             data_shuffler: Data shuffler
-            prefetch:
+            prefetch: Uses prefetch
             name: Name of the graph
+            training: Is it a training graph?
         """
 
         # Defining place holders
@@ -203,8 +200,7 @@ class Trainer(object):
         if self.validation_summary_writter is None:
             self.validation_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'validation'), session.graph)
 
-        summaries = []
-        summaries.append(summary_pb2.Summary.Value(tag="loss", simple_value=float(l)))
+        summaries = [summary_pb2.Summary.Value(tag="loss", simple_value=float(l))]
         self.validation_summary_writter.add_summary(summary_pb2.Summary(value=summaries), step)
         logger.info("Loss VALIDATION set step={0} = {1}".format(step, l))
 
@@ -212,7 +208,6 @@ class Trainer(object):
         """
         Creates a simple tensorboard summary with the value of the loss and learning rate
         """
-
         # Train summary
         tf.scalar_summary('loss', self.training_graph, name="train")
         tf.scalar_summary('lr', self.learning_rate, name="train")
@@ -251,12 +246,9 @@ class Trainer(object):
 
             session.run(self.enqueue_op, feed_dict=feed_dict)
 
-    def create_graphs(self, train_data_shuffler, validation_data_shuffler):
+    def bootstrap_graphs(self, train_data_shuffler, validation_data_shuffler):
         """
-
-        :param train_data_shuffler:
-        :param validation_data_shuffler:
-        :return:
+        Create all the necessary graphs for training, validation and inference graphs
         """
 
         # Creating train graph
@@ -269,10 +261,69 @@ class Trainer(object):
         tf.add_to_collection("inference_placeholder", self.architecture.inference_placeholder)
         tf.add_to_collection("inference_graph", self.architecture.inference_graph)
 
+        # Creating validation graph
         if validation_data_shuffler is not None:
-            # Creating validation graph
             self.validation_graph = self.compute_graph(validation_data_shuffler, name="validation", training=False)
             tf.add_to_collection("validation_graph", self.validation_graph)
+
+            batch, label = validation_data_shuffler.get_placeholders()
+            tf.add_to_collection("validation_placeholder_data", batch)
+            tf.add_to_collection("validation_placeholder_label", label)
+
+        self.bootstrap_placeholders(train_data_shuffler, validation_data_shuffler)
+
+    def bootstrap_placeholders(self, train_data_shuffler, validation_data_shuffler):
+        """
+        Persist the placeholders
+        """
+
+        # Persisting the placeholders
+        if self.prefetch:
+            batch, label = train_data_shuffler.get_placeholders_forprefetch()
+        else:
+            batch, label = train_data_shuffler.get_placeholders()
+
+        tf.add_to_collection("train_placeholder_data", batch)
+        tf.add_to_collection("train_placeholder_label", label)
+
+        # Creating validation graph
+        if validation_data_shuffler is not None:
+            batch, label = validation_data_shuffler.get_placeholders()
+            tf.add_to_collection("validation_placeholder_data", batch)
+            tf.add_to_collection("validation_placeholder_label", label)
+
+    def bootstrap_graphs_fromfile(self, session, train_data_shuffler, validation_data_shuffler):
+        """
+        Bootstrap all the necessary data from file
+        """
+        saver = self.architecture.load(session, self.model_from_file)
+
+        # Loading training graph
+        self.training_graph = tf.get_collection("training_graph")[0]
+
+        # Loding other elements
+        self.optimizer = tf.get_collection("optimizer")[0]
+        self.learning_rate = tf.get_collection("learning_rate")[0]
+        self.summaries_train = tf.get_collection("summaries_train")[0]
+
+        if validation_data_shuffler is not None:
+            self.validation_graph = tf.get_collection("validation_graph")[0]
+
+        self.bootstrap_placeholders_fromfile(train_data_shuffler, validation_data_shuffler)
+
+        return saver
+
+    def bootstrap_placeholders_fromfile(self, train_data_shuffler, validation_data_shuffler):
+        """
+        Load placeholders from file
+        """
+
+        train_data_shuffler.set_placeholders(tf.get_collection("train_placeholder_data")[0],
+                                             tf.get_collection("train_placeholder_label")[0])
+
+        if validation_data_shuffler is not None:
+            train_data_shuffler.set_placeholders(tf.get_collection("validation_placeholder_data")[0],
+                                                 tf.get_collection("validation_placeholder_label")[0])
 
     def train(self, train_data_shuffler, validation_data_shuffler=None):
         """
@@ -296,12 +347,10 @@ class Trainer(object):
             # Loading a pretrained model
             if self.model_from_file != "":
                 logger.info("Loading pretrained model from {0}".format(self.model_from_file))
-                saver = self.architecture.load(session, self.model_from_file)
-                self.training_graph = tf.get_collection("training_graph")[0]
-                self.optimizer = tf.get_collection("optimizer")[0]
-                self.learning_rate = tf.get_collection("learning_rate")[0]
+                saver = self.bootstrap_graphs_fromfile(session, train_data_shuffler, validation_data_shuffler)
             else:
-                self.create_graphs(train_data_shuffler, validation_data_shuffler)
+                # Bootstraping all the graphs
+                self.bootstrap_graphs(train_data_shuffler, validation_data_shuffler)
 
                 # TODO: find an elegant way to provide this as a parameter of the trainer
                 self.global_step = tf.Variable(0, trainable=False)
@@ -314,6 +363,7 @@ class Trainer(object):
 
                 # Train summary
                 self.summaries_train = self.create_general_summary()
+                tf.add_to_collection("summaries_train", self.summaries_train)
 
                 tf.initialize_all_variables().run()
 
