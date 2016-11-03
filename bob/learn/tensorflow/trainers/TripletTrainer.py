@@ -137,7 +137,7 @@ class TripletTrainer(Trainer):
                                                  tf.get_collection("validation_placeholder_data2")[0],
                                                  tf.get_collection("validation_placeholder_data3")[0])
 
-    def compute_graph(self, data_shuffler, prefetch=False, name="", train=True):
+    def compute_graph(self, data_shuffler, prefetch=False, name="", training=True):
         """
         Computes the graph for the trainer.
 
@@ -177,15 +177,15 @@ class TripletTrainer(Trainer):
                 data_shuffler.get_placeholders(name=name)
 
         # Creating the siamese graph
-        train_anchor_graph = self.architecture.compute_graph(feature_anchor_batch)
-        train_positive_graph = self.architecture.compute_graph(feature_positive_batch)
-        train_negative_graph = self.architecture.compute_graph(feature_negative_batch)
+        train_anchor_graph = self.architecture.compute_graph(feature_anchor_batch, training=training)
+        train_positive_graph = self.architecture.compute_graph(feature_positive_batch, training=training)
+        train_negative_graph = self.architecture.compute_graph(feature_negative_batch, training=training)
 
         graph, between_class_graph, within_class_graph = self.loss(train_anchor_graph,
                                                                    train_positive_graph,
                                                                    train_negative_graph)
 
-        if train:
+        if training:
             self.between_class_graph_train = between_class_graph
             self.within_class_graph_train = within_class_graph
         else:
@@ -252,7 +252,7 @@ class TripletTrainer(Trainer):
             self.validation_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'validation'),
                                                                      session.graph)
 
-        self.validation_graph = self.compute_graph(data_shuffler, name="validation", train=False)
+        self.validation_graph = self.compute_graph(data_shuffler, name="validation", training=False)
         feed_dict = self.get_feed_dict(data_shuffler)
         l, bt_class, wt_class = session.run([self.validation_graph,
                                              self.between_class_graph_validation, self.within_class_graph_validation],

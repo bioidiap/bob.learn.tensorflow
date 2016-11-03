@@ -266,10 +266,6 @@ class Trainer(object):
             self.validation_graph = self.compute_graph(validation_data_shuffler, name="validation", training=False)
             tf.add_to_collection("validation_graph", self.validation_graph)
 
-            batch, label = validation_data_shuffler.get_placeholders()
-            tf.add_to_collection("validation_placeholder_data", batch)
-            tf.add_to_collection("validation_placeholder_label", label)
-
         self.bootstrap_placeholders(train_data_shuffler, validation_data_shuffler)
 
     def bootstrap_placeholders(self, train_data_shuffler, validation_data_shuffler):

@@ -138,7 +138,7 @@ class SiameseTrainer(Trainer):
                                                  tf.get_collection("validation_placeholder_data2")[0],
                                                  tf.get_collection("validation_placeholder_label")[0])
 
-    def compute_graph(self, data_shuffler, prefetch=False, name="", train=True):
+    def compute_graph(self, data_shuffler, prefetch=False, name="", training=True):
         """
         Computes the graph for the trainer.
 
@@ -173,14 +173,14 @@ class SiameseTrainer(Trainer):
             [feature_left_batch, feature_right_batch, label_batch] = data_shuffler.get_placeholders(name=name)
 
         # Creating the siamese graph
-        train_left_graph = self.architecture.compute_graph(feature_left_batch)
-        train_right_graph = self.architecture.compute_graph(feature_right_batch)
+        train_left_graph = self.architecture.compute_graph(feature_left_batch, training=training)
+        train_right_graph = self.architecture.compute_graph(feature_right_batch, training=training)
 
         graph, between_class_graph, within_class_graph = self.loss(label_batch,
                                                                    train_left_graph,
                                                                    train_right_graph)
 
-        if train:
+        if training:
             self.between_class_graph_train = between_class_graph
             self.within_class_graph_train = within_class_graph
         else:
@@ -243,7 +243,7 @@ class SiameseTrainer(Trainer):
         if self.validation_summary_writter is None:
             self.validation_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'validation'), session.graph)
 
-        self.validation_graph = self.compute_graph(data_shuffler, name="validation", train=False)
+        self.validation_graph = self.compute_graph(data_shuffler, name="validation", training=False)
         feed_dict = self.get_feed_dict(data_shuffler)
         l, bt_class, wt_class = session.run([self.validation_graph,
                                              self.between_class_graph_validation, self.within_class_graph_validation],

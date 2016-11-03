@@ -74,16 +74,9 @@ setup(
 
       # scripts should be declared using this entry:
       'console_scripts': [
-        'train_mnist.py        = bob.learn.tensorflow.script.train_mnist:main',
-        'train_mnist_siamese.py = bob.learn.tensorflow.script.train_mnist_siamese:main',
-        'train_mnist_triplet.py = bob.learn.tensorflow.script.train_mnist_triplet:main',
-
-        'train_siamese_casia_webface.py = bob.learn.tensorflow.script.train_siamese_casia_webface:main',
-        'train_mobio.py = bob.learn.tensorflow.script.train_mobio:main',
       ],
 
-
-   },
+    },
 
     # Classifiers are important if you plan to distribute this package through
     # PyPI. You can find the complete list of classifiers that are valid and
