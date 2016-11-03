@@ -2,33 +2,38 @@
 .. Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 .. Thu 30 Jan 08:46:53 2014 CET
 
-======================
- Tensorflow Examples
-======================
+===========================
+ Bob support for tensorflow
+===========================
 
-This example package implements simple CNN trainings with tensorflow using the MNIST database.
-It is implemented two CNNs:
+This package is part of the signal-processing and machine learning toolbox
+Bob_. It provides tools to run comparable and reproducible biometric
+recognition experiments on publicly available databases.
 
-* Lenet using softmax
-* Siamease network (Lenet as a base)
+The `User Guide`_ provides installation and usage instructions.
 
 Installation
 ------------
 
-With tensorflow installed in your environment just run::
+Follow our `installation`_ instructions. Then, using the Python interpreter
+provided by the distribution, bootstrap and buildout this package::
 
-  $ python bootstrap.py
+  $ python bootstrap-buildout.py
   $ ./bin/buildout
 
-Documentation
--------------
 
-For the time being has just one script that trains the MNIST using the Lenet architecture using the softmax
-cross entropy loss. Run the command bellow to have some help::
+.. warning:: We assume that `tensorflow`_ is already installed.
 
-  $ ./bin/train_mnist.py --help # Lenet using softmax
-  $ ./bin/train_mnist_siamese.py --help # Lenet using siamese net
+Contact
+-------
+
+For questions or reporting issues to this software package, contact our
+development `mailing list`_.
 
 
-It is just the classical stuff.
-I haven't added any regularization (L2, L1, dropout, etc )
+.. Place your references here:
+.. _bob: https://www.idiap.ch/software/bob
+.. _installation: https://gitlab.idiap.ch/bob/bob/wikis/Installation
+.. _mailing list: https://groups.google.com/forum/?fromgroups#!forum/bob-devel
+.. _user guide: http://pythonhosted.org/bob.bio.base
+.. _tensorflow: https://www.tensorflow.org/versions/r0.11/get_started/os_setup.html
