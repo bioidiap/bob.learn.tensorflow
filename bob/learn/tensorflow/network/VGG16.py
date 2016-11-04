@@ -65,7 +65,7 @@ class VGG16(SequenceNetwork):
                  fc7_output=4096,
                  n_classes=10,
 
-                 default_feature_layer="fc7",
+                 default_feature_layer="fc8",
 
                  seed=10,
                  use_gpu=False):
