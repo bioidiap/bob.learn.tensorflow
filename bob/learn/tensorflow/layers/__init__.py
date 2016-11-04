@@ -7,6 +7,7 @@ from .Layer import Layer
 from .Conv2D import Conv2D
 from .FullyConnected import FullyConnected
 from .MaxPooling import MaxPooling
+from .AveragePooling import AveragePooling
 from .Dropout import Dropout
 from .InputLayer import InputLayer
 

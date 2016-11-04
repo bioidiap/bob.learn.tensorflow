@@ -12,6 +12,7 @@ from .MLP import MLP
 from .FaceNet import FaceNet
 from .FaceNetSimple import FaceNetSimple
 from .VGG16 import VGG16
+from .VGG16_mod import VGG16_mod
 
 # gets sphinx autodoc done right - don't remove it
 __all__ = [_ for _ in dir() if not _.startswith('_')]
