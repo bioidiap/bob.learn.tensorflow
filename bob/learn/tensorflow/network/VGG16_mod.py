@@ -61,8 +61,6 @@ class VGG16_mod(SequenceNetwork):
                  conv5_3_kernel_size=3,
                  conv5_3_output=512,
 
-                 fc6_output=4096,
-                 fc7_output=4096,
                  n_classes=10,
 
                  default_feature_layer="fc8",
@@ -131,8 +129,6 @@ class VGG16_mod(SequenceNetwork):
         self.conv5_3_kernel_size = conv5_3_kernel_size
         self.conv5_3_output = conv5_3_output
 
-        self.fc6_output = fc6_output
-        self.fc7_output = fc7_output
         self.n_classes = n_classes
 
         # First convolutional
@@ -236,12 +232,6 @@ class VGG16_mod(SequenceNetwork):
                         ))
         self.add(AveragePooling(name="pooling5", strides=[1, 2, 2, 1]))
 
-        self.add(FullyConnected(name="fc6", output_dim=fc6_output,
-                                activation=tf.nn.relu,
-                                weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
-                                bias_initialization=Constant(use_gpu=self.use_gpu)
-                                ))
-        self.add(Dropout(name="dropout", keep_prob=0.5))
         self.add(FullyConnected(name="fc8", output_dim=n_classes,
                                 activation=None,
                                 weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
