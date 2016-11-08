@@ -53,13 +53,13 @@ class VGG16_mod(SequenceNetwork):
 
                  # Forth convolutional block
                  conv5_1_kernel_size=3,
-                 conv5_1_output=512,
+                 conv5_1_output=256,
 
                  conv5_2_kernel_size=3,
-                 conv5_2_output=512,
+                 conv5_2_output=256,
 
                  conv5_3_kernel_size=3,
-                 conv5_3_output=512,
+                 conv5_3_output=256,
 
                  n_classes=10,
 

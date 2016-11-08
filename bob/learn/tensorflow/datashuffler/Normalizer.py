@@ -25,9 +25,8 @@ class MeanOffset(object):
         self.mean_offset = mean_offset
 
     def __call__(self, x):
-
         for i in range(len(self.mean_offset)):
-            x[:, i, :, :] = x[:, i, :, :] - self.mean_offset[i]
+            x[:, :, i] = x[:, :, i] - self.mean_offset[i]
 
         return x
 
