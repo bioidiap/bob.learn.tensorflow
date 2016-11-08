@@ -10,6 +10,8 @@ logger = bob.core.log.setup("bob.learn.tensorflow")
 from .Disk import Disk
 from .Siamese import Siamese
 
+from bob.learn.tensorflow.datashuffler.Normalizer import Linear
+
 
 class SiameseDisk(Siamese, Disk):
     def __init__(self, data, labels,
@@ -18,7 +20,8 @@ class SiameseDisk(Siamese, Disk):
                  scale=True,
                  batch_size=1,
                  seed=10,
-                 data_augmentation=None):
+                 data_augmentation=None,
+                 normalizer=Linear()):
         """
          Shuffler that deal with file list
 
@@ -45,7 +48,8 @@ class SiameseDisk(Siamese, Disk):
             scale=scale,
             batch_size=batch_size,
             seed=seed,
-            data_augmentation=data_augmentation
+            data_augmentation=data_augmentation,
+            normalizer=normalizer
         )
         # Seting the seed
         numpy.random.seed(seed)

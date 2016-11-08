@@ -13,7 +13,7 @@ from scipy.spatial.distance import euclidean, cdist
 
 import logging
 logger = logging.getLogger("bob.learn.tensorflow")
-
+from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 class TripletWithFastSelectionDisk(Triplet, Disk, OnLineSampling):
     """
@@ -50,7 +50,8 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnLineSampling):
                  batch_size=1,
                  seed=10,
                  data_augmentation=None,
-                 total_identities=10):
+                 total_identities=10,
+                 normalizer=Linear()):
 
         super(TripletWithFastSelectionDisk, self).__init__(
             data=data,
@@ -60,7 +61,8 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnLineSampling):
             scale=scale,
             batch_size=batch_size,
             seed=seed,
-            data_augmentation=data_augmentation
+            data_augmentation=data_augmentation,
+            normalizer=normalizer
         )
         self.clear_variables()
         # Seting the seed

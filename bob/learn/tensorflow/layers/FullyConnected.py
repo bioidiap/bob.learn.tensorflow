@@ -53,15 +53,24 @@ class FullyConnected(Layer):
         self.input_layer = input_layer
         if self.W is None:
             input_dim = reduce(mul, self.input_layer.get_shape().as_list()[1:])
-            self.W = self.weights_initialization(shape=[input_dim, self.output_dim],
-                                                 name="W_" + str(self.name),
-                                                 scope="W_" +str(self.name)
-                                                 )
+
+            variable = "W_" + str(self.name)
+            if self.get_varible_by_name(variable) is not None:
+                self.W = self.get_varible_by_name(variable)
+            else:
+                self.W = self.weights_initialization(shape=[input_dim, self.output_dim],
+                                                     name="W_" + str(self.name),
+                                                     scope="W_" +str(self.name)
+                                                     )
             # if self.activation is not None:
-            self.b = self.bias_initialization(shape=[self.output_dim],
-                                              name="b_" + str(self.name),
-                                              scope="b_" + str(self.name)
-                                             )
+            variable = "b_" + str(self.name)
+            if self.get_varible_by_name(variable) is not None:
+                self.b = self.get_varible_by_name(variable)
+            else:
+                self.b = self.bias_initialization(shape=[self.output_dim],
+                                                  name="b_" + str(self.name),
+                                                  scope="b_" + str(self.name)
+                                                 )
 
     def get_graph(self, training_phase=True):
 

@@ -10,6 +10,7 @@ from .Memory import Memory
 from .Triplet import Triplet
 from .OnlineSampling import OnLineSampling
 from scipy.spatial.distance import euclidean
+from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 
 class TripletWithSelectionMemory(Triplet, Memory, OnLineSampling):
@@ -48,7 +49,8 @@ class TripletWithSelectionMemory(Triplet, Memory, OnLineSampling):
                  batch_size=1,
                  seed=10,
                  data_augmentation=None,
-                 total_identities=10):
+                 total_identities=10,
+                 normalizer=Linear()):
 
         super(TripletWithSelectionMemory, self).__init__(
             data=data,
@@ -58,7 +60,8 @@ class TripletWithSelectionMemory(Triplet, Memory, OnLineSampling):
             scale=scale,
             batch_size=batch_size,
             seed=seed,
-            data_augmentation=data_augmentation
+            data_augmentation=data_augmentation,
+            normalizer=normalizer
         )
         self.clear_variables()
         # Seting the seed
@@ -141,10 +144,9 @@ class TripletWithSelectionMemory(Triplet, Memory, OnLineSampling):
                 data_n[i, ...] = d
 
         # Scaling
-        if self.scale:
-            data_a *= self.scale_value
-            data_p *= self.scale_value
-            data_n *= self.scale_value
+        data_a = self.normalize_sample(data_a)
+        data_p = self.normalize_sample(data_p)
+        data_n = self.normalize_sample(data_n)
 
         return data_a, data_p, data_n
 

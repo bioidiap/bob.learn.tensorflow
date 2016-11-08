@@ -74,6 +74,7 @@ setup(
 
       # scripts should be declared using this entry:
       'console_scripts': [
+          'compute_statistics.py = bob.learn.tensorflow.script.compute_statistics:main'
       ],
 
     },

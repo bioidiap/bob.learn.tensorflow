@@ -22,7 +22,7 @@ Some unit tests for the datashuffler
 
 batch_size = 16
 validation_batch_size = 400
-iterations = 50
+iterations = 200
 seed = 10
 
 
@@ -39,7 +39,7 @@ def test_dnn_trainer():
     directory = "./temp/dnn"
 
     # Preparing the architecture
-    architecture = MLP(10, hidden_layers=[15, 20])
+    architecture = MLP(10, hidden_layers=[20, 40])
 
     # Loss for the softmax
     loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)

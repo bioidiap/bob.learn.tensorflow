@@ -110,3 +110,14 @@ class Layer(object):
 
             normed = tf.nn.batch_normalization(x, mean, var, self.beta, self.gamma, 1e-3)
         return normed
+
+    def get_varible_by_name(self, var):
+        """
+        Doing this because of that https://github.com/tensorflow/tensorflow/issues/1325
+        """
+
+        for v in tf.all_variables():
+            if (len(v.name.split("/")) > 1) and (var in v.name.split("/")[1]):
+                return v
+
+        return None

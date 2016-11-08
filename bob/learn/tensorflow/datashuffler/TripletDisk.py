@@ -14,7 +14,7 @@ import tensorflow as tf
 
 from .Disk import Disk
 from .Triplet import Triplet
-
+from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 class TripletDisk(Triplet, Disk):
     def __init__(self, data, labels,
@@ -23,7 +23,8 @@ class TripletDisk(Triplet, Disk):
                  scale=True,
                  batch_size=1,
                  seed=10,
-                 data_augmentation=None):
+                 data_augmentation=None,
+                 normalizer=Linear()):
         """
          Shuffler that deal with file list
 
@@ -49,7 +50,8 @@ class TripletDisk(Triplet, Disk):
             input_dtype=input_dtype,
             scale=scale,
             batch_size=batch_size,
-            data_augmentation=data_augmentation
+            data_augmentation=data_augmentation,
+            normalizer=normalizer
         )
         # Seting the seed
         numpy.random.seed(seed)

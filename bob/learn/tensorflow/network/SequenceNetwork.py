@@ -303,8 +303,9 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         open(path+"_sequence_net.pickle", 'w').write(self.pickle_architecture)
         return saver.save(session, path)
 
-    def load(self, session, path):
+    def load(self, session, path, clear_devices=False):
         self.sequence_net = pickle.loads(open(path+"_sequence_net.pickle").read())
+        #saver = tf.train.import_meta_graph(path + ".meta", clear_devices=clear_devices)
         saver = tf.train.import_meta_graph(path + ".meta")
         saver.restore(session, path)
         self.inference_graph = tf.get_collection("inference_graph")[0]

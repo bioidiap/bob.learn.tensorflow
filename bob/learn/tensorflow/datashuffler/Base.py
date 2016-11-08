@@ -7,6 +7,7 @@ import numpy
 import tensorflow as tf
 import bob.ip.base
 import numpy
+from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 
 class Base(object):
@@ -16,7 +17,8 @@ class Base(object):
                  scale=True,
                  batch_size=1,
                  seed=10,
-                 data_augmentation=None):
+                 data_augmentation=None,
+                 normalizer=Linear()):
         """
          The class provide base functionalities to shuffle the data before to train a neural network
 
@@ -33,7 +35,7 @@ class Base(object):
         numpy.random.seed(seed)
 
         self.scale = scale
-        self.scale_value = 0.00390625
+        self.normalizer = normalizer
         self.input_dtype = input_dtype
 
         # TODO: Check if the bacth size is higher than the input data
@@ -153,10 +155,4 @@ class Base(object):
         For the time being I'm only scaling from 0-1
         """
 
-        if self.scale:
-            return x * self.scale_value
-        return x
-
-
-
-
+        return self.normalizer(x)

@@ -11,6 +11,7 @@ import bob.core
 from .Base import Base
 
 logger = bob.core.log.setup("bob.learn.tensorflow")
+from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 
 class Disk(Base):
@@ -20,7 +21,8 @@ class Disk(Base):
                  scale=True,
                  batch_size=1,
                  seed=10,
-                 data_augmentation=None):
+                 data_augmentation=None,
+                 normalizer=Linear()):
         """
          This datashuffler deal with databases that are stored in the disk.
          The data is loaded on the fly,.
@@ -48,7 +50,8 @@ class Disk(Base):
             scale=scale,
             batch_size=batch_size,
             seed=seed,
-            data_augmentation=data_augmentation
+            data_augmentation=data_augmentation,
+            normalizer=normalizer
         )
         # Seting the seed
         numpy.random.seed(seed)
@@ -92,8 +95,7 @@ class Disk(Base):
             selected_data[i, ...] = data
 
             # Scaling
-            if self.scale:
-                selected_data[i, ...] *= self.scale_value
+            selected_data[i, ...] = self.normalize_sample(selected_data[i, ...])
 
         selected_labels = self.labels[indexes[0:self.batch_size]]
 

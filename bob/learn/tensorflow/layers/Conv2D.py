@@ -61,14 +61,23 @@ class Conv2D(Layer):
         n_channels = input_layer.get_shape().as_list()[3]
 
         if self.W is None:
-            self.W = self.weights_initialization(shape=[self.kernel_size, self.kernel_size, n_channels, self.filters],
-                                                 name="w_" + str(self.name),
-                                                 scope="w_" + str(self.name)
-                                                 )
 
-            self.b = self.bias_initialization(shape=[self.filters],
-                                              name="b_" + str(self.name) + "bias",
-                                              scope="b_" + str(self.name))
+            variable = "w_" + str(self.name)
+            if self.get_varible_by_name(variable) is not None:
+                self.W = self.get_varible_by_name(variable)
+            else:
+                self.W = self.weights_initialization(shape=[self.kernel_size, self.kernel_size, n_channels, self.filters],
+                                                     name=variable,
+                                                     scope=variable
+                                                     )
+
+            variable = "b_" + str(self.name) + "bias"
+            if self.get_varible_by_name(variable) is not None:
+                self.b = self.get_varible_by_name(variable)
+            else:
+                self.b = self.bias_initialization(shape=[self.filters],
+                                                  name=variable,
+                                                  scope="b_" + str(self.name))
 
     def get_graph(self, training_phase=True):
 

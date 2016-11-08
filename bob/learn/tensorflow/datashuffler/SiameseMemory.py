@@ -8,7 +8,7 @@ import numpy
 from .Memory import Memory
 from .Siamese import Siamese
 import tensorflow as tf
-
+from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 class SiameseMemory(Siamese, Memory):
 
@@ -18,7 +18,8 @@ class SiameseMemory(Siamese, Memory):
                  scale=True,
                  batch_size=1,
                  seed=10,
-                 data_augmentation=None):
+                 data_augmentation=None,
+                 normalizer=Linear()):
         """
          Shuffler that deal with memory datasets
 
@@ -39,7 +40,8 @@ class SiameseMemory(Siamese, Memory):
             scale=scale,
             batch_size=batch_size,
             seed=seed,
-            data_augmentation=data_augmentation
+            data_augmentation=data_augmentation,
+            normalizer=normalizer
         )
         # Seting the seed
         numpy.random.seed(seed)

@@ -5,6 +5,7 @@
 
 import numpy
 from .Base import Base
+from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 import tensorflow as tf
 
 
@@ -16,7 +17,8 @@ class Memory(Base):
                  scale=True,
                  batch_size=1,
                  seed=10,
-                 data_augmentation=None):
+                 data_augmentation=None,
+                 normalizer=Linear()):
         """
          This datashuffler deal with databases that are stored in a :py:class`numpy.array`
 
@@ -37,7 +39,8 @@ class Memory(Base):
             scale=scale,
             batch_size=batch_size,
             seed=seed,
-            data_augmentation=data_augmentation
+            data_augmentation=data_augmentation,
+            normalizer=normalizer
         )
         # Seting the seed
         numpy.random.seed(seed)
