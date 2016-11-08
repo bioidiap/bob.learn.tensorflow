@@ -332,7 +332,8 @@ class Trainer(object):
 
         logger.info("Initializing !!")
 
-        config = tf.ConfigProto(log_device_placement=True)
+        config = tf.ConfigProto(log_device_placement=True,
+                                gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=0.333))
         config.gpu_options.allow_growth = True
 
         # Pickle the architecture to save
