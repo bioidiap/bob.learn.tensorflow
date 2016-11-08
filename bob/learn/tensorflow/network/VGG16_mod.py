@@ -61,7 +61,6 @@ class VGG16_mod(SequenceNetwork):
                  conv5_3_kernel_size=3,
                  conv5_3_output=512,
 
-                 fc6_output=4096,
                  n_classes=10,
 
                  default_feature_layer="fc8",
@@ -130,7 +129,6 @@ class VGG16_mod(SequenceNetwork):
         self.conv5_3_kernel_size = conv5_3_kernel_size
         self.conv5_3_output = conv5_3_output
 
-        self.fc6_output = fc6_output
         self.n_classes = n_classes
 
         # First convolutional
