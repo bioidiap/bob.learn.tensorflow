@@ -82,7 +82,7 @@ Creating the architecture
 -------------------------
 
 Architectures are assembled as a :py:class:`bob.learn.tensorflow.network.SequenceNetwork` object.
-Once the objects are created it necessary to fill it up with `py_api/Layers`_.
+Once the objects are created it necessary to fill it up with :py_api:`Layers`_.
 The library has already some crafted networks `Architectures`_
 
 
