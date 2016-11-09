@@ -6,16 +6,17 @@
 import numpy
 import tensorflow as tf
 
-from .Memory import Memory
-from .Triplet import Triplet
-from .OnlineSampling import OnLineSampling
+from OnlineSampling import OnLineSampling
+from Memory import Memory
+from Triplet import Triplet
 from scipy.spatial.distance import euclidean
 from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 
 class TripletWithSelectionMemory(Triplet, Memory, OnLineSampling):
     """
-    This data shuffler generates triplets from :py:class:`bob.learn.tensorflow.datashuffler.Memory` shufflers.
+    This data shuffler generates triplets from :py:class:`bob.learn.tensorflow.datashuffler.Triplet` and
+    :py:class:`bob.learn.tensorflow.datashuffler.Memory` shufflers.
 
     The selection of the triplets is inspired in the paper:
 
@@ -30,16 +31,15 @@ class TripletWithSelectionMemory(Triplet, Memory, OnLineSampling):
       3. For each pair anchor-positive, find the "semi-hard" negative samples such that
       argmin(||f(x_a) - f(x_p)||^2 < ||f(x_a) - f(x_n)||^2
 
-
      **Parameters**
-       data:
-       labels:
-       perc_train:
-       scale:
-       train_batch_size:
-       validation_batch_size:
-       data_augmentation:
-       total_identities: Number of identities inside of the batch
+      data: Input data to be trainer
+      labels: Labels. These labels should be set from 0..1
+      input_shape: The shape of the inputs
+      input_dtype: The type of the data,
+      batch_size: Batch size
+      seed: The seed of the random number generator
+      data_augmentation: The algorithm used for data augmentation. Look :py:class:`bob.learn.tensorflow.datashuffler.DataAugmentation`
+      normalizer: The algorithm used for feature scaling. Look :py:class:`bob.learn.tensorflow.datashuffler.ScaleFactor`, :py:class:`bob.learn.tensorflow.datashuffler.Linear` and :py:class:`bob.learn.tensorflow.datashuffler.MeanOffset`
     """
 
     def __init__(self, data, labels,

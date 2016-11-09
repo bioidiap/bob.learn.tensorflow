@@ -15,26 +15,29 @@ from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 
 class Disk(Base):
+
+    """
+     This datashuffler deal with databases that are stored in the disk.
+     The data is loaded on the fly,.
+
+     **Parameters**
+       data: Input data to be trainer
+       labels: Labels. These labels should be set from 0..1
+       input_shape: The shape of the inputs
+       input_dtype: The type of the data,
+       batch_size: Batch size
+       seed: The seed of the random number generator
+       data_augmentation: The algorithm used for data augmentation. Look :py:class:`bob.learn.tensorflow.datashuffler.DataAugmentation`
+       normalizer: The algorithm used for feature scaling. Look :py:class:`bob.learn.tensorflow.datashuffler.ScaleFactor`, :py:class:`bob.learn.tensorflow.datashuffler.Linear` and :py:class:`bob.learn.tensorflow.datashuffler.MeanOffset`
+    """
+
     def __init__(self, data, labels,
                  input_shape,
                  input_dtype="float64",
-                 scale=True,
                  batch_size=1,
                  seed=10,
                  data_augmentation=None,
                  normalizer=Linear()):
-        """
-         This datashuffler deal with databases that are stored in the disk.
-         The data is loaded on the fly,.
-
-         **Parameters**
-         data:
-         labels:
-         input_shape: Shape of the input. `input_shape != data.shape`, the data will be reshaped
-         input_dtype="float64":
-         scale=True:
-         batch_size=1:
-        """
 
         if isinstance(data, list):
             data = numpy.array(data)
@@ -47,7 +50,6 @@ class Disk(Base):
             labels=labels,
             input_shape=input_shape,
             input_dtype=input_dtype,
-            scale=scale,
             batch_size=batch_size,
             seed=seed,
             data_augmentation=data_augmentation,
@@ -80,7 +82,15 @@ class Disk(Base):
 
         return data
 
-    def get_batch(self, noise=False):
+    def get_batch(self):
+        """
+        Shuffle the Disk dataset, get a random batch and load it on the fly.
+
+        ** Returns **
+
+        data: Selected samples
+        labels: Correspondent labels
+        """
 
         # Shuffling samples
         indexes = numpy.array(range(self.data.shape[0]))

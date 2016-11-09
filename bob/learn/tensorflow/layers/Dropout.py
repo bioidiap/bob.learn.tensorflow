@@ -12,26 +12,17 @@ class Dropout(Layer):
 
     """
     Dropout
+
+    **Parameters**
+     name: The name of the layer
+     keep_prob: With probability keep_prob, outputs the input element scaled up by 1 / keep_prob, otherwise outputs 0.
     """
 
     def __init__(self, name,
-                 keep_prob=0.99,
-                 seed=10.
+                 keep_prob=0.99
                  ):
-        """
-        Constructor
-
-        **Parameters**
-        input: Layer input
-        activation: Tensor Flow activation
-        initialization: Initialization type
-        use_gpu: Store data in the GPU
-        seed: Seed for the Random number generation
-        """
-
         super(Dropout, self).__init__(name=name)
         self.keep_prob = keep_prob
-        self.seed = seed
 
     def create_variables(self, input_layer):
         self.input_layer = input_layer

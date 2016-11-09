@@ -27,6 +27,15 @@ class SimplerXavier(Initialization):
         super(SimplerXavier, self).__init__(seed, use_gpu=use_gpu)
 
     def __call__(self, shape, name, scope):
+        """
+        Create the gaussian initialized variables
+
+        ** Parameters **
+
+         shape: Shape of the variable
+         name: Name of the variable
+         scope: Tensorflow scope name
+        """
 
         if len(shape) == 4:
             in_out = shape[0] * shape[1] * shape[2]

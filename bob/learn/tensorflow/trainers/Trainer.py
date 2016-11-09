@@ -271,6 +271,11 @@ class Trainer(object):
     def bootstrap_placeholders(self, train_data_shuffler, validation_data_shuffler):
         """
         Persist the placeholders
+
+         ** Parameters **
+           train_data_shuffler: Data shuffler for training
+           validation_data_shuffler: Data shuffler for validation
+
         """
 
         # Persisting the placeholders
@@ -291,6 +296,13 @@ class Trainer(object):
     def bootstrap_graphs_fromfile(self, session, train_data_shuffler, validation_data_shuffler):
         """
         Bootstrap all the necessary data from file
+
+         ** Parameters **
+           session: Tensorflow session
+           train_data_shuffler: Data shuffler for training
+           validation_data_shuffler: Data shuffler for validation
+
+
         """
         saver = self.architecture.load(session, self.model_from_file)
 
@@ -312,6 +324,12 @@ class Trainer(object):
     def bootstrap_placeholders_fromfile(self, train_data_shuffler, validation_data_shuffler):
         """
         Load placeholders from file
+
+         ** Parameters **
+
+           train_data_shuffler: Data shuffler for training
+           validation_data_shuffler: Data shuffler for validation
+
         """
 
         train_data_shuffler.set_placeholders(tf.get_collection("train_placeholder_data")[0],
@@ -323,7 +341,12 @@ class Trainer(object):
 
     def train(self, train_data_shuffler, validation_data_shuffler=None):
         """
-        Train the network
+        Train the network:
+
+         ** Parameters **
+
+           train_data_shuffler: Data shuffler for training
+           validation_data_shuffler: Data shuffler for validation
         """
 
         # Creating directory

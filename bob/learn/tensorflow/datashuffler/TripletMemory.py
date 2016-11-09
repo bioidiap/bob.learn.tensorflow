@@ -10,34 +10,36 @@ from .Memory import Memory
 from Triplet import Triplet
 from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
+
 class TripletMemory(Triplet, Memory):
+    """
+     This :py:class:`bob.learn.tensorflow.datashuffler.Triplet` datashuffler deal with databases that are stored in memory
+     The data is loaded on the fly.
+
+     **Parameters**
+       data: Input data to be trainer
+       labels: Labels. These labels should be set from 0..1
+       input_shape: The shape of the inputs
+       input_dtype: The type of the data,
+       batch_size: Batch size
+       seed: The seed of the random number generator
+       data_augmentation: The algorithm used for data augmentation. Look :py:class:`bob.learn.tensorflow.datashuffler.DataAugmentation`
+       normalizer: The algorithm used for feature scaling. Look :py:class:`bob.learn.tensorflow.datashuffler.ScaleFactor`, :py:class:`bob.learn.tensorflow.datashuffler.Linear` and :py:class:`bob.learn.tensorflow.datashuffler.MeanOffset`
+    """
 
     def __init__(self, data, labels,
                  input_shape,
                  input_dtype="float64",
-                 scale=True,
                  batch_size=1,
                  seed=10,
                  data_augmentation=None,
                  normalizer=Linear()):
-        """
-         Shuffler that deal with memory datasets
-
-         **Parameters**
-           data:
-           labels:
-           perc_train:
-           scale:
-           train_batch_size:
-           validation_batch_size:
-        """
 
         super(TripletMemory, self).__init__(
             data=data,
             labels=labels,
             input_shape=input_shape,
             input_dtype=input_dtype,
-            scale=scale,
             batch_size=batch_size,
             seed=seed,
             data_augmentation=data_augmentation,

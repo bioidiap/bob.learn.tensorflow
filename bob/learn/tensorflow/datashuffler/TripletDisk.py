@@ -16,26 +16,30 @@ from .Disk import Disk
 from .Triplet import Triplet
 from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
+
 class TripletDisk(Triplet, Disk):
+    """
+     This :py:class:`bob.learn.tensorflow.datashuffler.Triplet` datashuffler deal with databases that are stored in the disk.
+     The data is loaded on the fly.
+
+     **Parameters**
+       data: Input data to be trainer
+       labels: Labels. These labels should be set from 0..1
+       input_shape: The shape of the inputs
+       input_dtype: The type of the data,
+       batch_size: Batch size
+       seed: The seed of the random number generator
+       data_augmentation: The algorithm used for data augmentation. Look :py:class:`bob.learn.tensorflow.datashuffler.DataAugmentation`
+       normalizer: The algorithm used for feature scaling. Look :py:class:`bob.learn.tensorflow.datashuffler.ScaleFactor`, :py:class:`bob.learn.tensorflow.datashuffler.Linear` and :py:class:`bob.learn.tensorflow.datashuffler.MeanOffset`
+    """
+
     def __init__(self, data, labels,
                  input_shape,
                  input_dtype="float64",
-                 scale=True,
                  batch_size=1,
                  seed=10,
                  data_augmentation=None,
                  normalizer=Linear()):
-        """
-         Shuffler that deal with file list
-
-         **Parameters**
-         data:
-         labels:
-         input_shape: Shape of the input. `input_shape != data.shape`, the data will be reshaped
-         input_dtype="float64":
-         scale=True:
-         batch_size=1:
-        """
 
         if isinstance(data, list):
             data = numpy.array(data)
@@ -48,7 +52,6 @@ class TripletDisk(Triplet, Disk):
             labels=labels,
             input_shape=input_shape,
             input_dtype=input_dtype,
-            scale=scale,
             batch_size=batch_size,
             data_augmentation=data_augmentation,
             normalizer=normalizer

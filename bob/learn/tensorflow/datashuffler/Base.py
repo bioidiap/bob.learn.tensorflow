@@ -11,30 +11,30 @@ from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 
 class Base(object):
+    """
+     The class provide base functionalities to shuffle the data to train a neural network
+
+     **Parameters**
+       data: Input data to be trainer
+       labels: Labels. These labels should be set from 0..1
+       input_shape: The shape of the inputs
+       input_dtype: The type of the data,
+       batch_size: Batch size
+       seed: The seed of the random number generator
+       data_augmentation: The algorithm used for data augmentation. Look :py:class:`bob.learn.tensorflow.datashuffler.DataAugmentation`
+       normalizer: The algorithm used for feature scaling. Look :py:class:`bob.learn.tensorflow.datashuffler.ScaleFactor`, :py:class:`bob.learn.tensorflow.datashuffler.Linear` and :py:class:`bob.learn.tensorflow.datashuffler.MeanOffset`
+    """
+
     def __init__(self, data, labels,
                  input_shape,
                  input_dtype="float64",
-                 scale=True,
                  batch_size=1,
                  seed=10,
                  data_augmentation=None,
                  normalizer=Linear()):
-        """
-         The class provide base functionalities to shuffle the data before to train a neural network
-
-         **Parameters**
-           data:
-           labels:
-           perc_train:
-           scale:
-           train_batch_size:
-           validation_batch_size:
-           seed: Seed for the random number generator
-        """
         self.seed = seed
         numpy.random.seed(seed)
 
-        self.scale = scale
         self.normalizer = normalizer
         self.input_dtype = input_dtype
 
@@ -64,6 +64,12 @@ class Base(object):
     def set_placeholders(self, data, label):
         self.data_placeholder = data
         self.label_placeholder = label
+
+    def get_batch(self):
+        """
+        Shuffle dataset and get a random batch.
+        """
+        raise NotImplementedError("Method not implemented in this level. You should use one of the derived classes.")
 
     def get_placeholders(self, name=""):
         """

@@ -37,7 +37,6 @@ def test_memory_shuffler():
     data_augmentation = ImageAugmentation()
     data_shuffler = Memory(train_data, train_labels,
                            input_shape=batch_shape[1:],
-                           scale=True,
                            batch_size=batch_shape[0],
                            data_augmentation=data_augmentation)
 
@@ -56,7 +55,6 @@ def test_siamesememory_shuffler():
     data_augmentation = ImageAugmentation()
     data_shuffler = SiameseMemory(train_data, train_labels,
                                   input_shape=batch_shape[1:],
-                                  scale=True,
                                   batch_size=batch_shape[0],
                                   data_augmentation=data_augmentation)
 
@@ -82,7 +80,6 @@ def test_tripletmemory_shuffler():
     data_augmentation = ImageAugmentation()
     data_shuffler = TripletMemory(train_data, train_labels,
                                   input_shape=batch_shape[1:],
-                                  scale=True,
                                   batch_size=batch_shape[0],
                                   data_augmentation=data_augmentation)
 
@@ -107,7 +104,6 @@ def test_disk_shuffler():
     data_augmentation = ImageAugmentation()
     data_shuffler = Disk(train_data, train_labels,
                          input_shape=batch_shape[1:],
-                         scale=True,
                          batch_size=batch_shape[0],
                          data_augmentation=data_augmentation)
 
@@ -130,7 +126,6 @@ def test_siamesedisk_shuffler():
     data_augmentation = ImageAugmentation()
     data_shuffler = SiameseDisk(train_data, train_labels,
                                 input_shape=batch_shape[1:],
-                                scale=True,
                                 batch_size=batch_shape[0],
                                 data_augmentation=data_augmentation)
 
@@ -155,7 +150,6 @@ def test_tripletdisk_shuffler():
     data_augmentation = ImageAugmentation()
     data_shuffler = TripletDisk(train_data, train_labels,
                                 input_shape=batch_shape[1:],
-                                scale=True,
                                 batch_size=batch_shape[0],
                                 data_augmentation=data_augmentation)
 

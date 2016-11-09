@@ -16,33 +16,21 @@ import logging
 logger = logging.getLogger("bob.learn.tensorflow")
 from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
+
 class TripletWithSelectionDisk(Triplet, Disk, OnLineSampling):
     """
-    This data shuffler generates triplets from :py:class:`bob.learn.tensorflow.datashuffler.Memory` shufflers.
-
-    The selection of the triplets is inspired in the paper:
-
-    Schroff, Florian, Dmitry Kalenichenko, and James Philbin.
-    "Facenet: A unified embedding for face recognition and clustering." Proceedings of the IEEE Conference on
-    Computer Vision and Pattern Recognition. 2015.
-
-
-    In this shuffler, the triplets are selected as the following:
-      1. Select M identities
-      2. Get N pairs anchor-positive (for each M identities) such that the argmax(anchor, positive)
-      3. For each pair anchor-positive, find the "semi-hard" negative samples such that
-      argmin(||f(x_a) - f(x_p)||^2 < ||f(x_a) - f(x_n)||^2
-
+    This data shuffler generates triplets from :py:class:`bob.learn.tensorflow.datashuffler.Triplet` shufflers.
+    The selection of the triplets are random.
 
      **Parameters**
-       data:
-       labels:
-       perc_train:
-       scale:
-       train_batch_size:
-       validation_batch_size:
-       data_augmentation:
-       total_identities: Number of identities inside of the batch
+       data: Input data to be trainer
+       labels: Labels. These labels should be set from 0..1
+       input_shape: The shape of the inputs
+       input_dtype: The type of the data,
+       batch_size: Batch size
+       seed: The seed of the random number generator
+       data_augmentation: The algorithm used for data augmentation. Look :py:class:`bob.learn.tensorflow.datashuffler.DataAugmentation`
+       normalizer: The algorithm used for feature scaling. Look :py:class:`bob.learn.tensorflow.datashuffler.ScaleFactor`, :py:class:`bob.learn.tensorflow.datashuffler.Linear` and :py:class:`bob.learn.tensorflow.datashuffler.MeanOffset`
     """
 
     def __init__(self, data, labels,

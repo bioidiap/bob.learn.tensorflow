@@ -15,6 +15,7 @@ class Siamese(Base):
 
      The first two are the batch data, and the last is the label. Either `0` for samples from the same class or `1`
       for samples from different class.
+
     """
 
     def __init__(self, **kwargs):

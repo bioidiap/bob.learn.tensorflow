@@ -15,6 +15,7 @@ class Triplet(Base):
 
      The first element is the batch for the anchor, the second one is the batch for the positive class, w.r.t the
      anchor, and  the last one is the batch for the negative class , w.r.t the anchor.
+
     """
 
     def __init__(self, **kwargs):

@@ -52,6 +52,12 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         self.sequence_net[layer.name] = layer
 
     def pickle_net(self, shape):
+        """
+        Pickle the class
+
+         ** Parameters **
+          shape: Shape of the input data for deployment
+        """
         self.pickle_architecture = pickle.dumps(self.sequence_net)
         self.deployment_shape = shape
 
@@ -62,7 +68,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
 
           input_data: tensorflow placeholder as input data
 
-          feature_layer: Name of the :py:class:`bob.learn.tensorflow.layer.Layer` that you want to "cut".
+          feature_layer: Name of the :py:class:`bob.learn.tensorflow.layers.Layer` that you want to "cut".
                          If `None` will run the graph until the end.
 
           training: If `True` will generating the graph for training
@@ -123,6 +129,9 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         embedding = session.run([self.inference_graph], feed_dict=feed_dict)[0]
 
         return embedding
+
+    def predict(self, data, session):
+        return numpy.argmax(self(data, session=session), 1)
 
     def dump_variables(self):
         """

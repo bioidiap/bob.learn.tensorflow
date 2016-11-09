@@ -18,7 +18,8 @@ Architectures
     bob.learn.tensorflow.network.Lenet
     bob.learn.tensorflow.network.LenetDropout
     bob.learn.tensorflow.network.MLP
-    bob.learn.tensorflow.network.VGG
+    bob.learn.tensorflow.network.VGG16
+    bob.learn.tensorflow.network.VGG16_mod
 
 
 Trainers
@@ -40,6 +41,7 @@ Layers
     bob.learn.tensorflow.layers.Dropout
     bob.learn.tensorflow.layers.FullyConnected
     bob.learn.tensorflow.layers.MaxPooling
+    bob.learn.tensorflow.layers.AveragePooling
 
 
 Data Shufflers
@@ -47,9 +49,28 @@ Data Shufflers
 
 .. autosummary::
 
-    bob.learn.tensorflow.data.BaseDataShuffler
-    bob.learn.tensorflow.data.MemoryDataShuffler
-    bob.learn.tensorflow.data.TextDataShuffler
+    bob.learn.tensorflow.datashuffler.Base
+    bob.learn.tensorflow.datashuffler.Memory
+    bob.learn.tensorflow.datashuffler.Disk
+    bob.learn.tensorflow.datashuffler.Siamese
+    bob.learn.tensorflow.datashuffler.SiameseDisk
+    bob.learn.tensorflow.datashuffler.SiameseMemory
+    bob.learn.tensorflow.datashuffler.Triplet
+    bob.learn.tensorflow.datashuffler.TripletDisk
+    bob.learn.tensorflow.datashuffler.TripletMemory
+    bob.learn.tensorflow.datashuffler.TripletWithFastSelectionDisk
+    bob.learn.tensorflow.datashuffler.TripletWithSelectionDisk
+    bob.learn.tensorflow.datashuffler.OnLineSampling
+
+
+
+Data Augmentation
+-----------------
+
+.. autosummary::
+
+    bob.learn.tensorflow.datashuffler.DataAugmentation
+    bob.learn.tensorflow.datashuffler.ImageAugmentation
 
 
 Analizers
@@ -67,7 +88,7 @@ Initialization
     bob.learn.tensorflow.initialization.Initialization
     bob.learn.tensorflow.initialization.Constant
     bob.learn.tensorflow.initialization.Gaussian
-    bob.learn.tensorflow.initialization.SimpleXavier
+    bob.learn.tensorflow.initialization.SimplerXavier
     bob.learn.tensorflow.initialization.Xavier
 
 
@@ -77,7 +98,7 @@ Loss
 .. autosummary::
 
     bob.learn.tensorflow.loss.BaseLoss
-    bob.learn.tensorflow.loss.ConstrastiveLoss
+    bob.learn.tensorflow.loss.ContrastiveLoss
     bob.learn.tensorflow.loss.TripletLoss
 
 Detailed Information
@@ -87,7 +108,7 @@ Detailed Information
 .. automodule:: bob.learn.tensorflow.network
 .. automodule:: bob.learn.tensorflow.trainers
 .. automodule:: bob.learn.tensorflow.layers
-.. automodule:: bob.learn.tensorflow.data
+.. automodule:: bob.learn.tensorflow.datashuffler
 .. automodule:: bob.learn.tensorflow.network
 .. automodule:: bob.learn.tensorflow.analyzers
 .. automodule:: bob.learn.tensorflow.initialization

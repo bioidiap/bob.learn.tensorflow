@@ -12,10 +12,18 @@ import numpy
 
 
 class FullyConnected(Layer):
+    """
+    Fully Connected layer
 
-    """
-    2D Convolution
-    """
+    **Parameters**
+     name: The name of the layer
+     output_dim: Size of the output
+     activation: Tensor Flow activation
+     weights_initialization: Initialization type for the weights
+     bias_initialization: Initialization type for the weights
+     batch_norm: Do batch norm?
+     use_gpu: Store data in the GPU
+     """
 
     def __init__(self, name,
                  output_dim,
@@ -25,16 +33,6 @@ class FullyConnected(Layer):
                  batch_norm=False,
                  use_gpu=False,
                  ):
-        """
-        Constructor
-
-        **Parameters**
-        input: Layer input
-        activation: Tensor Flow activation
-        initialization: Initialization type
-        use_gpu: Store data in the GPU
-        seed: Seed for the Random number generation
-        """
 
         super(FullyConnected, self).__init__(name=name,
                                              activation=activation,

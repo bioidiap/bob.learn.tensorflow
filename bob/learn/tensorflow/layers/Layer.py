@@ -12,6 +12,15 @@ class Layer(object):
 
     """
     Layer base class
+
+    **Parameters**
+     name: The name of the layer
+     activation: Tensor Flow activation
+     weights_initialization: Initialization type for the weights
+     bias_initialization: Initialization type for the weights
+     batch_norm: Do batch norm?
+     use_gpu: Store data in the GPU
+
     """
 
     def __init__(self, name,
@@ -20,17 +29,7 @@ class Layer(object):
                  bias_initialization=Constant(),
                  batch_norm=False,
                  use_gpu=False):
-        """
-        Base constructor
 
-        **Parameters**
-          name: Name of the layer
-          activation: Tensorflow activation operation (https://www.tensorflow.org/versions/r0.10/api_docs/python/nn.html)
-          weights_initialization: Initialization for the weights
-          bias_initialization: Initialization for the biases
-          use_gpu: I think this is not necessary to explain
-          seed: Initialization seed set in Tensor flow
-        """
         self.name = name
         self.weights_initialization = weights_initialization
         self.bias_initialization = bias_initialization
@@ -58,15 +57,12 @@ class Layer(object):
     def batch_normalize(self, x, phase_train):
         """
         Batch normalization on convolutional maps.
-        Args:
-            x:           Tensor, 4D BHWD input maps
-            n_out:       integer, depth of input maps
-            phase_train: boolean tf.Variable, true indicates training phase
-            scope:       string, variable scope
-            affn:      whether to affn-transform outputs
-        Return:
-            normed:      batch-normalized maps
         Ref: http://stackoverflow.com/questions/33949786/how-could-i-use-batch-normalization-in-tensorflow/33950177
+
+        ** Parameters **
+            x:           Tensor, 4D BHWD input maps
+            phase_train:
+
         """
         from tensorflow.python.ops import control_flow_ops
 

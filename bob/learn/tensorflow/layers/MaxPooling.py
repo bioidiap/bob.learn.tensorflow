@@ -9,14 +9,21 @@ from .Layer import Layer
 
 
 class MaxPooling(Layer):
+    """
+    Wraps the tensorflow max pooling
+
+    **Parameters**
+     name: The name of the layer
+     shape: Shape of the pooling kernel
+     stride: Shape of the stride
+     batch_norm: Do batch norm?
+     activation: Tensor Flow activation
+    """
 
     def __init__(self, name, shape=[1, 2, 2, 1],
                  strides=[1, 1, 1, 1],
                  batch_norm=False,
                  activation=None):
-        """
-        Constructor
-        """
         super(MaxPooling, self).__init__(name, use_gpu=False, activation=activation, batch_norm=batch_norm)
         self.shape = shape
         self.strides = strides

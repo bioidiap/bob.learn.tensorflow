@@ -21,13 +21,11 @@ class TripletLoss(BaseLoss):
 
     L  = sum(  |f_a - f_p|^2 - |f_a - f_n|^2  + \lambda)
 
-
     **Parameters**
      left_feature: First element of the pair
      right_feature: Second element of the pair
      label: Label of the pair (0 or 1)
      margin: Contrastive margin
-
     """
 
     def __init__(self, margin=5.0):

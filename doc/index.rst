@@ -7,9 +7,8 @@
  Tensorflow Bob Bindings
 ========================
 
-The ``bob.bio`` packages provide open source tools to run comparable and reproducible biometric recognition experiments.
-To design a biometric recognition experiment, one has to choose:
-
+`bob.learn.tensorflow` is a high-level library, written in Python that runs on top of TensorFlow.
+The goal here is to be able to do fast experimentation with neural networks.
 
 ===========
 Users Guide
@@ -17,6 +16,8 @@ Users Guide
 
 .. toctree::
    :maxdepth: 2
+
+   user_guide.rst
 
 ================
 Reference Manual

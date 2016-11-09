@@ -6,18 +6,20 @@
 import numpy
 import tensorflow as tf
 
-from .Disk import Disk
-from .Triplet import Triplet
-from .OnlineSampling import OnLineSampling
+from Disk import Disk
+from Triplet import Triplet
+from OnlineSampling import OnLineSampling
 from scipy.spatial.distance import euclidean, cdist
 
 import logging
 logger = logging.getLogger("bob.learn.tensorflow")
 from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
+
 class TripletWithFastSelectionDisk(Triplet, Disk, OnLineSampling):
     """
-    This data shuffler generates triplets from :py:class:`bob.learn.tensorflow.datashuffler.Memory` shufflers.
+    This data shuffler generates triplets from :py:class:`bob.learn.tensorflow.datashuffler.Triplet` and
+    :py:class:`bob.learn.tensorflow.datashuffler.Disk` shufflers.
 
     The selection of the triplets is inspired in the paper:
 
@@ -33,20 +35,19 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnLineSampling):
       argmin(||f(x_a) - f(x_p)||^2 < ||f(x_a) - f(x_n)||^2
 
      **Parameters**
-       data:
-       labels:
-       perc_train:
-       scale:
-       train_batch_size:
-       validation_batch_size:
-       data_augmentation:
-       total_identities: Number of identities inside of the batch
+      data: Input data to be trainer
+      labels: Labels. These labels should be set from 0..1
+      input_shape: The shape of the inputs
+      input_dtype: The type of the data,
+      batch_size: Batch size
+      seed: The seed of the random number generator
+      data_augmentation: The algorithm used for data augmentation. Look :py:class:`bob.learn.tensorflow.datashuffler.DataAugmentation`
+      normalizer: The algorithm used for feature scaling. Look :py:class:`bob.learn.tensorflow.datashuffler.ScaleFactor`, :py:class:`bob.learn.tensorflow.datashuffler.Linear` and :py:class:`bob.learn.tensorflow.datashuffler.MeanOffset`
     """
 
     def __init__(self, data, labels,
                  input_shape,
                  input_dtype="float64",
-                 scale=True,
                  batch_size=1,
                  seed=10,
                  data_augmentation=None,
@@ -58,7 +59,6 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnLineSampling):
             labels=labels,
             input_shape=input_shape,
             input_dtype=input_dtype,
-            scale=scale,
             batch_size=batch_size,
             seed=seed,
             data_augmentation=data_augmentation,

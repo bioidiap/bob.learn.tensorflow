@@ -13,6 +13,17 @@ class Conv2D(Layer):
 
     """
     2D Convolution
+
+    **Parameters**
+     name: The name of the layer
+     activation: Tensor Flow activation
+     kernel_size: Size of the convolutional kernel
+     filters: Number of filters
+     stride: Shape of the stride
+     weights_initialization: Initialization type for the weights
+     bias_initialization: Initialization type for the weights
+     batch_norm: Do batch norm?
+     use_gpu: Store data in the GPU
     """
 
     def __init__(self, name, activation=None,
@@ -24,18 +35,6 @@ class Conv2D(Layer):
                  batch_norm=False,
                  use_gpu=False
                  ):
-        """
-        Constructor
-
-        **Parameters**
-        input: Layer input
-        activation: Tensor Flow activation
-        kernel_size: Size of the convolutional kernel
-        filters: Number of filters
-        initialization: Initialization type
-        use_gpu: Store data in the GPU
-        seed: Seed for the Random number generation
-        """
         super(Conv2D, self).__init__(name=name,
                                      activation=activation,
                                      weights_initialization=weights_initialization,

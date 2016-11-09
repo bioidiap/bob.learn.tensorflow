@@ -30,21 +30,7 @@ class LenetDropout(SequenceNetwork):
 
                  seed=10,
                  use_gpu=False):
-        """
-        Create all the necessary variables for this CNN
 
-        **Parameters**
-            conv1_kernel_size=5,
-            conv1_output=32,
-
-            conv2_kernel_size=5,
-            conv2_output=64,
-
-            fc1_output=400,
-            n_classes=10
-
-            seed = 10
-        """
         super(LenetDropout, self).__init__(default_feature_layer=default_feature_layer,
                                            use_gpu=use_gpu)
 

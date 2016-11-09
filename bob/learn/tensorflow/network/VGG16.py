@@ -3,9 +3,6 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 # @date: Wed 11 May 2016 09:39:36 CEST 
 
-"""
-Class that creates the lenet architecture
-"""
 
 import tensorflow as tf
 from .SequenceNetwork import SequenceNetwork
@@ -15,6 +12,12 @@ from bob.learn.tensorflow.initialization import Constant
 
 
 class VGG16(SequenceNetwork):
+    """
+    Class that creates the VGG16 architecture
+
+    Reference: Deep Face recognition: https://www.robots.ox.ac.uk/~vgg/publications/2015/Parkhi15/parkhi15.pdf
+
+    """
 
     def __init__(self,
                  # First convolutional block
@@ -69,21 +72,7 @@ class VGG16(SequenceNetwork):
 
                  seed=10,
                  use_gpu=False):
-        """
-        Create all the necessary variables for this CNN
 
-        **Parameters**
-            conv1_kernel_size=5,
-            conv1_output=32,
-
-            conv2_kernel_size=5,
-            conv2_output=64,
-
-            fc1_output=400,
-            n_classes=10
-
-            seed = 10
-        """
         super(VGG16, self).__init__(default_feature_layer=default_feature_layer,
                                               use_gpu=use_gpu)
 
