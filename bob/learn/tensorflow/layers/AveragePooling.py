@@ -4,7 +4,6 @@
 # @date: Wed 11 May 2016 17:38 CEST
 
 import tensorflow as tf
-from bob.learn.tensorflow.util import *
 from .MaxPooling import MaxPooling
 
 

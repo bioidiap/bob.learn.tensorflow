@@ -9,4 +9,5 @@ from bob.learn.tensorflow import layers
 from bob.learn.tensorflow import loss
 from bob.learn.tensorflow import network
 from bob.learn.tensorflow import trainers
+from bob.learn.tensorflow import utils
 

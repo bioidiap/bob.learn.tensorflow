@@ -13,6 +13,7 @@ from ..analyzers import SoftmaxAnalizer
 from tensorflow.core.framework import summary_pb2
 import time
 from bob.learn.tensorflow.datashuffler.OnlineSampling import OnLineSampling
+from bob.learn.tensorflow.utils.session import Session
 from .learning_rate import constant
 
 logger = bob.core.log.setup("bob.learn.tensorflow")
@@ -103,6 +104,7 @@ class Trainer(object):
         self.global_step = None
 
         self.model_from_file = model_from_file
+        self.session = None
 
         bob.core.log.set_verbosity_level(logger, verbosity_level)
 
@@ -162,7 +164,7 @@ class Trainer(object):
                      label_placeholder: labels}
         return feed_dict
 
-    def fit(self, session, step):
+    def fit(self, step):
         """
         Run one iteration (`forward` and `backward`)
 
@@ -173,17 +175,17 @@ class Trainer(object):
         """
 
         if self.prefetch:
-            _, l, lr, summary = session.run([self.optimizer, self.training_graph,
+            _, l, lr, summary = self.session.run([self.optimizer, self.training_graph,
                                              self.learning_rate, self.summaries_train])
         else:
             feed_dict = self.get_feed_dict(self.train_data_shuffler)
-            _, l, lr, summary = session.run([self.optimizer, self.training_graph,
+            _, l, lr, summary = self.session.run([self.optimizer, self.training_graph,
                                              self.learning_rate, self.summaries_train], feed_dict=feed_dict)
 
         logger.info("Loss training set step={0} = {1}".format(step, l))
         self.train_summary_writter.add_summary(summary, step)
 
-    def compute_validation(self,  session, data_shuffler, step):
+    def compute_validation(self, data_shuffler, step):
         """
         Computes the loss in the validation set
 
@@ -195,10 +197,10 @@ class Trainer(object):
         """
         # Opening a new session for validation
         feed_dict = self.get_feed_dict(data_shuffler)
-        l = session.run(self.validation_graph, feed_dict=feed_dict)
+        l = self.session.run(self.validation_graph, feed_dict=feed_dict)
 
         if self.validation_summary_writter is None:
-            self.validation_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'validation'), session.graph)
+            self.validation_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'validation'), self.session.graph)
 
         summaries = [summary_pb2.Summary.Value(tag="loss", simple_value=float(l))]
         self.validation_summary_writter.add_summary(summary_pb2.Summary(value=summaries), step)
@@ -213,7 +215,7 @@ class Trainer(object):
         tf.scalar_summary('lr', self.learning_rate, name="train")
         return tf.merge_all_summaries()
 
-    def start_thread(self, session):
+    def start_thread(self):
         """
         Start pool of threads for pre-fetching
 
@@ -223,13 +225,13 @@ class Trainer(object):
 
         threads = []
         for n in range(3):
-            t = threading.Thread(target=self.load_and_enqueue, args=(session,))
+            t = threading.Thread(target=self.load_and_enqueue, args=())
             t.daemon = True  # thread will close when parent quits
             t.start()
             threads.append(t)
         return threads
 
-    def load_and_enqueue(self, session):
+    def load_and_enqueue(self):
         """
         Injecting data in the place holder queue
 
@@ -244,7 +246,7 @@ class Trainer(object):
             feed_dict = {train_placeholder_data: train_data,
                          train_placeholder_labels: train_labels}
 
-            session.run(self.enqueue_op, feed_dict=feed_dict)
+            self.session.run(self.enqueue_op, feed_dict=feed_dict)
 
     def bootstrap_graphs(self, train_data_shuffler, validation_data_shuffler):
         """
@@ -293,7 +295,7 @@ class Trainer(object):
             tf.add_to_collection("validation_placeholder_data", batch)
             tf.add_to_collection("validation_placeholder_label", label)
 
-    def bootstrap_graphs_fromfile(self, session, train_data_shuffler, validation_data_shuffler):
+    def bootstrap_graphs_fromfile(self, train_data_shuffler, validation_data_shuffler):
         """
         Bootstrap all the necessary data from file
 
@@ -304,7 +306,7 @@ class Trainer(object):
 
 
         """
-        saver = self.architecture.load(session, self.model_from_file)
+        saver = self.architecture.load(self.session, self.model_from_file)
 
         # Loading training graph
         self.training_graph = tf.get_collection("training_graph")[0]
@@ -362,78 +364,80 @@ class Trainer(object):
         # Pickle the architecture to save
         self.architecture.pickle_net(train_data_shuffler.deployment_shape)
 
-        with tf.Session(config=config) as session:
+        #with tf.Session(config=config) as session:
 
-            # Loading a pretrained model
-            if self.model_from_file != "":
-                logger.info("Loading pretrained model from {0}".format(self.model_from_file))
-                saver = self.bootstrap_graphs_fromfile(session, train_data_shuffler, validation_data_shuffler)
-            else:
-                # Bootstraping all the graphs
-                self.bootstrap_graphs(train_data_shuffler, validation_data_shuffler)
+        self.session = Session.instance().session
 
-                # TODO: find an elegant way to provide this as a parameter of the trainer
-                self.global_step = tf.Variable(0, trainable=False)
+        # Loading a pretrained model
+        if self.model_from_file != "":
+            logger.info("Loading pretrained model from {0}".format(self.model_from_file))
+            saver = self.bootstrap_graphs_fromfile(self.session, train_data_shuffler, validation_data_shuffler)
+        else:
+            # Bootstraping all the graphs
+            self.bootstrap_graphs(train_data_shuffler, validation_data_shuffler)
 
-                # Preparing the optimizer
-                self.optimizer_class._learning_rate = self.learning_rate
-                self.optimizer = self.optimizer_class.minimize(self.training_graph, global_step=self.global_step)
-                tf.add_to_collection("optimizer", self.optimizer)
-                tf.add_to_collection("learning_rate", self.learning_rate)
+            # TODO: find an elegant way to provide this as a parameter of the trainer
+            self.global_step = tf.Variable(0, trainable=False)
 
-                # Train summary
-                self.summaries_train = self.create_general_summary()
-                tf.add_to_collection("summaries_train", self.summaries_train)
+            # Preparing the optimizer
+            self.optimizer_class._learning_rate = self.learning_rate
+            self.optimizer = self.optimizer_class.minimize(self.training_graph, global_step=self.global_step)
+            tf.add_to_collection("optimizer", self.optimizer)
+            tf.add_to_collection("learning_rate", self.learning_rate)
 
-                tf.initialize_all_variables().run()
+            # Train summary
+            self.summaries_train = self.create_general_summary()
+            tf.add_to_collection("summaries_train", self.summaries_train)
 
-                # Original tensorflow saver object
-                saver = tf.train.Saver(var_list=tf.all_variables())
+            tf.initialize_all_variables().run(session=self.session)
 
-            if isinstance(train_data_shuffler, OnLineSampling):
-                train_data_shuffler.set_feature_extractor(self.architecture, session=session)
+            # Original tensorflow saver object
+            saver = tf.train.Saver(var_list=tf.all_variables())
 
-            # Start a thread to enqueue data asynchronously, and hide I/O latency.
-            if self.prefetch:
-                self.thread_pool = tf.train.Coordinator()
-                tf.train.start_queue_runners(coord=self.thread_pool)
-                threads = self.start_thread(session)
+        if isinstance(train_data_shuffler, OnLineSampling):
+            train_data_shuffler.set_feature_extractor(self.architecture, session=self.session)
 
-            # TENSOR BOARD SUMMARY
-            self.train_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'train'), session.graph)
-            for step in range(self.iterations):
+        # Start a thread to enqueue data asynchronously, and hide I/O latency.
+        if self.prefetch:
+            self.thread_pool = tf.train.Coordinator()
+            tf.train.start_queue_runners(coord=self.thread_pool)
+            threads = self.start_thread(self.session)
 
-                start = time.time()
-                self.fit(session, step)
-                end = time.time()
-                summary = summary_pb2.Summary.Value(tag="elapsed_time", simple_value=float(end-start))
-                self.train_summary_writter.add_summary(summary_pb2.Summary(value=[summary]), step)
+        # TENSOR BOARD SUMMARY
+        self.train_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'train'), self.session.graph)
+        for step in range(self.iterations):
 
-                # Running validation
-                if validation_data_shuffler is not None and step % self.validation_snapshot == 0:
-                    self.compute_validation(session, validation_data_shuffler, step)
+            start = time.time()
+            self.fit(self.session, step)
+            end = time.time()
+            summary = summary_pb2.Summary.Value(tag="elapsed_time", simple_value=float(end-start))
+            self.train_summary_writter.add_summary(summary_pb2.Summary(value=[summary]), step)
 
-                    if self.analizer is not None:
-                        self.validation_summary_writter.add_summary(self.analizer(
-                             validation_data_shuffler, self.architecture, session), step)
+            # Running validation
+            if validation_data_shuffler is not None and step % self.validation_snapshot == 0:
+                self.compute_validation(self.session, validation_data_shuffler, step)
 
-                # Taking snapshot
-                if step % self.snapshot == 0:
-                    logger.info("Taking snapshot")
-                    path = os.path.join(self.temp_dir, 'model_snapshot{0}.ckp'.format(step))
-                    self.architecture.save(session, saver, path)
+                if self.analizer is not None:
+                    self.validation_summary_writter.add_summary(self.analizer(
+                         validation_data_shuffler, self.architecture, self.session), step)
 
-            logger.info("Training finally finished")
+            # Taking snapshot
+            if step % self.snapshot == 0:
+                logger.info("Taking snapshot")
+                path = os.path.join(self.temp_dir, 'model_snapshot{0}.ckp'.format(step))
+                self.architecture.save(saver, path)
 
-            self.train_summary_writter.close()
-            if validation_data_shuffler is not None:
-                self.validation_summary_writter.close()
+        logger.info("Training finally finished")
 
-            # Saving the final network
-            path = os.path.join(self.temp_dir, 'model.ckp')
-            self.architecture.save(session, saver, path)
+        self.train_summary_writter.close()
+        if validation_data_shuffler is not None:
+            self.validation_summary_writter.close()
 
-            if self.prefetch:
-                # now they should definetely stop
-                self.thread_pool.request_stop()
-                self.thread_pool.join(threads)
+        # Saving the final network
+        path = os.path.join(self.temp_dir, 'model.ckp')
+        self.architecture.save(saver, path)
+
+        if self.prefetch:
+            # now they should definetely stop
+            self.thread_pool.request_stop()
+            self.thread_pool.join(threads)

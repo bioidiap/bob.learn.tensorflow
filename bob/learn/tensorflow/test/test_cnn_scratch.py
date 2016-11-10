@@ -11,7 +11,7 @@ from bob.learn.tensorflow.initialization import Xavier, Constant
 from bob.learn.tensorflow.network import SequenceNetwork
 from bob.learn.tensorflow.loss import BaseLoss
 from bob.learn.tensorflow.trainers import Trainer
-from bob.learn.tensorflow.util import load_mnist
+from bob.learn.tensorflow.utils import load_mnist
 from bob.learn.tensorflow.layers import Conv2D, FullyConnected, MaxPooling
 import tensorflow as tf
 import shutil
@@ -46,22 +46,21 @@ def scratch_network():
     return scratch
 
 
-def validate_network(validation_data, validation_labels, directory):
+def validate_network(validation_data, validation_labels, network):
     # Testing
     validation_data_shuffler = Memory(validation_data, validation_labels,
                                       input_shape=[28, 28, 1],
                                       batch_size=validation_batch_size)
-    with tf.Session() as session:
-        scratch = SequenceNetwork()
-        scratch.load(session, os.path.join(directory, "model.ckp"))
-        [data, labels] = validation_data_shuffler.get_batch()
-        predictions = scratch(data, session=session)
-        accuracy = 100. * numpy.sum(numpy.argmax(predictions, 1) == labels) / predictions.shape[0]
+
+    [data, labels] = validation_data_shuffler.get_batch()
+    predictions = network.predict(data)
+    accuracy = 100. * numpy.sum(predictions == labels) / predictions.shape[0]
 
     return accuracy
 
 
 def test_cnn_trainer_scratch():
+
     train_data, train_labels, validation_data, validation_labels = load_mnist()
     train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
 
@@ -86,11 +85,10 @@ def test_cnn_trainer_scratch():
                       analizer=None,
                       prefetch=False,
                       temp_dir=directory)
+
     trainer.train(train_data_shuffler)
 
-    del trainer# JUst to clean the tf.variables
-
-    accuracy = validate_network(validation_data, validation_labels, directory)
+    accuracy = validate_network(validation_data, validation_labels, scratch)
     assert accuracy > 80
     shutil.rmtree(directory)
-
+    del trainer

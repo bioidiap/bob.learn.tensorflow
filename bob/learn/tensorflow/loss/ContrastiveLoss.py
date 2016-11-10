@@ -8,7 +8,7 @@ logger = logging.getLogger("bob.learn.tensorflow")
 import tensorflow as tf
 
 from .BaseLoss import BaseLoss
-from bob.learn.tensorflow.util import compute_euclidean_distance
+from bob.learn.tensorflow.utils import compute_euclidean_distance
 
 
 class ContrastiveLoss(BaseLoss):

@@ -12,6 +12,7 @@ import pickle
 
 from collections import OrderedDict
 from bob.learn.tensorflow.layers import Layer, MaxPooling, Dropout, Conv2D, FullyConnected
+from bob.learn.tensorflow.utils.session import Session
 
 
 class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
@@ -102,7 +103,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
     def compute_inference_placeholder(self, data_shape):
         self.inference_placeholder = tf.placeholder(tf.float32, shape=data_shape, name="feature")
 
-    def __call__(self, data, session=None, feature_layer=None):
+    def __call__(self, data, feature_layer=None):
         """Run a graph and compute the embeddings
 
         **Parameters**
@@ -115,8 +116,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
                        If `None` will run the graph until the end.
         """
 
-        if session is None:
-            session = tf.Session()
+        session = Session.instance().session
 
         # Feeding the placeholder
         if self.inference_placeholder is None:
@@ -130,8 +130,8 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
 
         return embedding
 
-    def predict(self, data, session):
-        return numpy.argmax(self(data, session=session), 1)
+    def predict(self, data):
+        return numpy.argmax(self(data), 1)
 
     def dump_variables(self):
         """
@@ -252,10 +252,13 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
             self.sequence_net[k].weights_initialization.use_gpu = state
             self.sequence_net[k].bias_initialization.use_gpu = state
 
-    def load_variables_only(self, hdf5, session):
+    def load_variables_only(self, hdf5):
         """
         Load the variables of the model
         """
+
+        session = Session.instance().session
+
         hdf5.cd('/tensor_flow')
         for k in self.sequence_net:
             # TODO: IT IS NOT SMART TESTING ALONG THIS PAGE
@@ -271,7 +274,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
 
         hdf5.cd("..")
 
-    def load_hdf5(self, hdf5, shape=None, session=None, batch=1, use_gpu=False):
+    def load_hdf5(self, hdf5, shape=None, batch=1, use_gpu=False):
         """
         Load the network from scratch.
         This will build the graphs
@@ -285,8 +288,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
             use_gpu: Load all the variables in the GPU?
         """
 
-        if session is None:
-            session = tf.Session()
+        session = Session.instance().session
 
         # Loading the normalization parameters
         self.input_divide = hdf5.read('input_divide')
@@ -308,11 +310,17 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         tf.initialize_all_variables().run(session=session)
         self.load_variables_only(hdf5, session)
 
-    def save(self, session, saver, path):
+    def save(self, saver, path):
+
+        session = Session.instance().session
+
         open(path+"_sequence_net.pickle", 'w').write(self.pickle_architecture)
         return saver.save(session, path)
 
-    def load(self, session, path, clear_devices=False):
+    def load(self, path, clear_devices=False):
+
+        session = Session.instance().session
+
         self.sequence_net = pickle.loads(open(path+"_sequence_net.pickle").read())
         #saver = tf.train.import_meta_graph(path + ".meta", clear_devices=clear_devices)
         saver = tf.train.import_meta_graph(path + ".meta")

@@ -63,7 +63,7 @@ Now lets describe each step in detail.
 
 
 Preparing your input data
--------------------------
+.........................
 
 In this library datasets are wrapped in **data shufflers**. Data shufflers are elements designed to shuffle
 the input data for stochastic training.
@@ -73,24 +73,39 @@ It is possible to either use Memory (:py:class:`bob.learn.tensorflow.datashuffle
 Disk (:py:class:`bob.learn.tensorflow.datashuffler.Disk`) data shufflers.
 
 For the Memory data shufflers, as in the example, it is expected that the dataset is stored in `numpy.array`.
-In the example that we provided the MNIST dataset was loaded and
-reshaped to `[n, w, h, c]` where `n` is the size of the batch, `w` and `h` are the image width and height and `c` is the
+In the example that we provided the MNIST dataset was loaded and reshaped to `[n, w, h, c]` where `n` is the size
+of the batch, `w` and `h` are the image width and height and `c` is the
 number of channels.
 
 
 Creating the architecture
--------------------------
+.........................
 
 Architectures are assembled as a :py:class:`bob.learn.tensorflow.network.SequenceNetwork` object.
-Once the objects are created it necessary to fill it up with :py_api:`Layers`_.
-The library has already some crafted networks `Architectures`_
+Once the objects are created it is necessary to fill it up with `Layers`_.
+The library has already some crafted networks implemented in `Architectures`_
 
 
 Defining a loss and training
-----------------------------
+............................
+
+The loss function can be defined by any set of tensorflow operations.
+In our example, we used the `tf.nn.sparse_softmax_cross_entropy_with_logits` loss, but we also have some crafted
+loss functions for Siamese :py:class`bob.learn.tensorflow.loss.ContrastiveLoss` and Triplet networks :py:class`bob.learn.tensorflow.loss.TripletLoss`.
+
+The trainer is the real muscle here.
+This element takes the inputs and trains the network.
+As for the loss, we have specific trainers for Siamese (:py:class:`bob.learn.tensorflow.trainers.SiameseTrainer`) a
+nd Triplet networks (:py:class:`bob.learn.tensorflow.trainers.TripletTrainer`).
 
 
-Predicting and computing the accuracy
--------------------------------------
+Sandbox
+-------
 
-
+We have a sandbox of examples in a git repository `https://gitlab.idiap.ch/tiago.pereira/bob.learn.tensorflow_sandbox`_
+The sandbox has some example of training:
+ - MNIST with softmax
+ - MNIST with Siamese Network
+ - MNIST with Triplet Network
+ - Face recognition with MOBIO database
+ - Face recognition with CASIA WebFace database
