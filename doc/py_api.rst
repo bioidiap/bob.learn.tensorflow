@@ -2,6 +2,8 @@
 .. Tiago de Freitas Pereira <laurent.el-shafey@idiap.ch>
 .. Tue 28 Aug 2012 18:09:40 CEST
 
+.. _py_api:
+
 ============
  Python API
 ============

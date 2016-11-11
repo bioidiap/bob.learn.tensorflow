@@ -8,13 +8,9 @@ from bob.learn.tensorflow.datashuffler import Memory
 from bob.learn.tensorflow.network import MLP
 from bob.learn.tensorflow.loss import BaseLoss
 from bob.learn.tensorflow.trainers import Trainer, constant
-# from ..analyzers import ExperimentAnalizer, SoftmaxAnalizer
-from bob.learn.tensorflow.util import load_mnist
+from bob.learn.tensorflow.utils import load_mnist
 import tensorflow as tf
-import bob.io.base
-import os
 import shutil
-import bob.measure
 
 """
 Some unit tests for the datashuffler
@@ -26,14 +22,25 @@ iterations = 200
 seed = 10
 
 
+def validate_network(validation_data, validation_labels, network):
+    # Testing
+    validation_data_shuffler = Memory(validation_data, validation_labels,
+                                      input_shape=[784],
+                                      batch_size=validation_batch_size)
+
+    [data, labels] = validation_data_shuffler.get_batch()
+    predictions = network.predict(data)
+    accuracy = 100. * numpy.sum(predictions == labels) / predictions.shape[0]
+
+    return accuracy
+
+
 def test_dnn_trainer():
     train_data, train_labels, validation_data, validation_labels = load_mnist()
-    train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
-    validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
 
     # Creating datashufflers
     train_data_shuffler = Memory(train_data, train_labels,
-                                 input_shape=[28, 28, 1],
+                                 input_shape=[784],
                                  batch_size=batch_size)
 
     directory = "./temp/dnn"
@@ -53,21 +60,12 @@ def test_dnn_trainer():
                       learning_rate=constant(0.05, name="dnn_lr"),
                       temp_dir=directory)
     trainer.train(train_data_shuffler)
-    del trainer# Just to clean the variables
 
-    with tf.Session() as session:
-        # Testing
-        mlp = MLP(10, hidden_layers=[15, 20])
-        mlp.load(session, os.path.join(directory, "model.ckp"))
-        validation_data_shuffler = Memory(validation_data, validation_labels,
-                                          input_shape=[28, 28, 1],
-                                          batch_size=validation_batch_size)
+    accuracy = validate_network(validation_data, validation_labels, architecture)
 
-        [data, labels] = validation_data_shuffler.get_batch()
-        predictions = mlp(data, session=session)
-        accuracy = 100. * numpy.sum(numpy.argmax(predictions, 1) == labels) / predictions.shape[0]
+    # At least 50% of accuracy for the DNN
+    assert accuracy > 50.
+    shutil.rmtree(directory)
 
-        # At least 50% of accuracy for the DNN
-        assert accuracy > 50.
-        shutil.rmtree(directory)
-        session.close()
+    del architecture
+    del trainer  # Just to clean the variables

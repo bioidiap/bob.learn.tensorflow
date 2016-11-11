@@ -9,7 +9,10 @@ import os
 from bob.learn.tensorflow.datashuffler import Memory, ImageAugmentation
 from bob.learn.tensorflow.loss import BaseLoss
 from bob.learn.tensorflow.trainers import Trainer, constant
-from bob.learn.tensorflow.util import load_mnist
+from bob.learn.tensorflow.utils import load_mnist
+from bob.learn.tensorflow.network import SequenceNetwork
+from bob.learn.tensorflow.layers import Conv2D, FullyConnected
+
 import tensorflow as tf
 import shutil
 
@@ -22,10 +25,36 @@ validation_batch_size = 400
 iterations = 50
 seed = 10
 
-from test_cnn_scratch import scratch_network, validate_network
+
+def scratch_network():
+    # Creating a random network
+    scratch = SequenceNetwork(default_feature_layer="fc1")
+    scratch.add(Conv2D(name="conv1", kernel_size=3,
+                       filters=10,
+                       activation=tf.nn.tanh,
+                       batch_norm=False))
+    scratch.add(FullyConnected(name="fc1", output_dim=10,
+                               activation=None,
+                               batch_norm=False
+                               ))
+
+    return scratch
 
 
-def test_cnn_trainer_scratch():
+def validate_network(validation_data, validation_labels, network):
+    # Testing
+    validation_data_shuffler = Memory(validation_data, validation_labels,
+                                      input_shape=[28, 28, 1],
+                                      batch_size=validation_batch_size)
+
+    [data, labels] = validation_data_shuffler.get_batch()
+    predictions = network.predict(data)
+    accuracy = 100. * numpy.sum(predictions == labels) / predictions.shape[0]
+
+    return accuracy
+
+
+def test_cnn_pretrained():
     train_data, train_labels, validation_data, validation_labels = load_mnist()
     train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
 
@@ -55,8 +84,7 @@ def test_cnn_trainer_scratch():
                       learning_rate=constant(0.05, name="lr"),
                       temp_dir=directory)
     trainer.train(train_data_shuffler)
-
-    accuracy = validate_network(validation_data, validation_labels, directory)
+    accuracy = validate_network(validation_data, validation_labels, scratch)
     assert accuracy > 85
 
     del scratch
@@ -77,7 +105,12 @@ def test_cnn_trainer_scratch():
 
     trainer.train(train_data_shuffler)
 
-    accuracy = validate_network(validation_data, validation_labels, directory2)
-    assert accuracy > 85
+    accuracy = validate_network(validation_data, validation_labels, scratch)
+    assert accuracy > 90
     shutil.rmtree(directory)
     shutil.rmtree(directory2)
+
+    del scratch
+    del loss
+    del trainer
+

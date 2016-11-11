@@ -8,8 +8,8 @@
 ===========
 
 
-Getting started
----------------
+Quick start
+-----------
 
 Before explain the base elements of this library, lets first do a simple example.
 The example consists in training a very simple **CNN** with `MNIST` dataset in 4 steps.
@@ -48,18 +48,19 @@ The example consists in training a very simple **CNN** with `MNIST` dataset in 4
 
 .. doctest::
 
-    >>> with tf.Session() as session:
-    >>>    # Loading the model
-    >>>    architecture = bob.learn.tensorflow.network.SequenceNetwork()
-    >>>    architecture.load(session, "./cnn/model.ckp")
-    >>>    # Predicting
-    >>>    predictions = scratch.predict(validation_data, session=session)
-    >>>    # Computing an awesome accuracy for a simple network and 100 iterations
-    >>>    accuracy = 100. * numpy.sum(predictions == validation_labels) / predictions.shape[0]
-    >>>    print accuracy
+    >>> # Loading the model
+    >>> architecture = bob.learn.tensorflow.network.SequenceNetwork()
+    >>> architecture.load("./cnn/model.ckp")
+    >>> # Predicting
+    >>> predictions = scratch.predict(validation_data, session=session)
+    >>> # Computing an awesome accuracy for a simple network and 100 iterations
+    >>> accuracy = 100. * numpy.sum(predictions == validation_labels) / predictions.shape[0]
+    >>> print accuracy
     90.4714285714
 
-Now lets describe each step in detail.
+
+Understanding what you have done
+--------------------------------
 
 
 Preparing your input data
@@ -81,9 +82,9 @@ number of channels.
 Creating the architecture
 .........................
 
-Architectures are assembled as a :py:class:`bob.learn.tensorflow.network.SequenceNetwork` object.
-Once the objects are created it is necessary to fill it up with `Layers`_.
-The library has already some crafted networks implemented in `Architectures`_
+Architectures are assembled in the :py:class:`bob.learn.tensorflow.network.SequenceNetwork` object.
+Once the objects are created it is necessary to fill it up with `Layers <py_api.html#layers>`_
+The library has already some crafted networks implemented in `Architectures <py_api.html#architectures>`_
 
 
 Defining a loss and training
@@ -97,6 +98,80 @@ The trainer is the real muscle here.
 This element takes the inputs and trains the network.
 As for the loss, we have specific trainers for Siamese (:py:class:`bob.learn.tensorflow.trainers.SiameseTrainer`) a
 nd Triplet networks (:py:class:`bob.learn.tensorflow.trainers.TripletTrainer`).
+
+
+Components in detail
+--------------------
+
+If you have reached this point it means that you want to understand a little bit more on how this library works.
+The next sections give some details of each element.
+
+Data Shufflers
+..............
+
+As mentioned before, datasets are wrapped in **data shufflers**.
+Data shufflers were designed to shuffle the input data for stochastic training.
+It has one basic functionality which is :py:meth:`bob.learn.tensorflow.datashuffler.Base.get_batch` functionality.
+
+The shufflers are categorized with respect to:
+ 1. How the data is fetched
+ 2. The type of the trainer
+ 3. How the data is sampled
+
+How do you want to fetch your data?
+```````````````````````````````````
+
+The data can be fetched either from the memory (:py:class:`bob.learn.tensorflow.datashuffler.Memory`), as in out example, or from
+disk (:py:class:`bob.learn.tensorflow.datashuffler.Disk`).
+To train networks fetched from the disk, your training data must be a list of paths like in the example below:
+
+.. doctest::
+
+    >>> train_data = ['./file/id1_0.jpg', './file/id1_1.jpg', './file/id2_1.jpg']
+    >>> train_labels = [0, 0, 1]
+
+With disk data shufflers, the data is loaded on the fly.
+
+
+How is the shape of your trainer?
+`````````````````````````````````
+
+Here we have one data shuffler for each type of the trainer.
+
+You will see in the section `Trainers`_ that we have three types of trainer.
+The first one is the regular trainer, which deals with one graph only.
+The data shuflers for this type of trainer must be a direct instance of either :py:class:`bob.learn.tensorflow.datashuffler.Memory`
+or :py:class:`bob.learn.tensorflow.datashuffler.Disk`.
+
+The second one is the :py:class:`bob.learn.tensorflow.trainers.Siamese` trainer, which is designed to train Siamese networks.
+The data shuflers for this type of trainer must be a direct instance of either
+
+The third one is the :py:class:`bob.learn.tensorflow.trainers.Triplet` trainer, which is designed to train Triplet networks.
+
+
+
+Architecture
+............
+
+Trainers
+........
+
+
+Layers
+......
+
+
+Initialization
+..............
+
+
+Loss
+....
+
+Analyzers
+.........
+
+
 
 
 Sandbox

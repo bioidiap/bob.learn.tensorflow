@@ -60,7 +60,7 @@ class Memory(Base):
         indexes = numpy.array(range(self.data.shape[0]))
         numpy.random.shuffle(indexes)
 
-        selected_data = self.data[indexes[0:self.batch_size], :, :, :]
+        selected_data = self.data[indexes[0:self.batch_size], ...]
         selected_labels = self.labels[indexes[0:self.batch_size]]
 
         # Applying the data augmentation

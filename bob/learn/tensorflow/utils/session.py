@@ -15,6 +15,3 @@ class Session(object):
                                 gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=0.333))
         config.gpu_options.allow_growth = True
         self.session = tf.Session()
-
-    #def __del__(self):
-    #    self.session.close()

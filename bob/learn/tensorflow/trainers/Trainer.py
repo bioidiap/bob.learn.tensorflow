@@ -306,7 +306,7 @@ class Trainer(object):
 
 
         """
-        saver = self.architecture.load(self.session, self.model_from_file)
+        saver = self.architecture.load(self.model_from_file)
 
         # Loading training graph
         self.training_graph = tf.get_collection("training_graph")[0]
@@ -357,21 +357,16 @@ class Trainer(object):
 
         logger.info("Initializing !!")
 
-        config = tf.ConfigProto(log_device_placement=True,
-                                gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=0.333))
-        config.gpu_options.allow_growth = True
-
         # Pickle the architecture to save
         self.architecture.pickle_net(train_data_shuffler.deployment_shape)
 
-        #with tf.Session(config=config) as session:
-
+        Session.create()
         self.session = Session.instance().session
 
         # Loading a pretrained model
         if self.model_from_file != "":
             logger.info("Loading pretrained model from {0}".format(self.model_from_file))
-            saver = self.bootstrap_graphs_fromfile(self.session, train_data_shuffler, validation_data_shuffler)
+            saver = self.bootstrap_graphs_fromfile(train_data_shuffler, validation_data_shuffler)
         else:
             # Bootstraping all the graphs
             self.bootstrap_graphs(train_data_shuffler, validation_data_shuffler)
@@ -408,7 +403,7 @@ class Trainer(object):
         for step in range(self.iterations):
 
             start = time.time()
-            self.fit(self.session, step)
+            self.fit(step)
             end = time.time()
             summary = summary_pb2.Summary.Value(tag="elapsed_time", simple_value=float(end-start))
             self.train_summary_writter.add_summary(summary_pb2.Summary(value=[summary]), step)

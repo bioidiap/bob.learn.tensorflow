@@ -6,7 +6,7 @@
 import numpy
 from bob.learn.tensorflow.datashuffler import Memory, SiameseMemory, TripletMemory, Disk, SiameseDisk, TripletDisk
 import pkg_resources
-from ..util import load_mnist
+from bob.learn.tensorflow.utils import load_mnist
 import os
 
 """

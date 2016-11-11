@@ -49,9 +49,6 @@ class SiameseTrainer(Trainer):
                  temp_dir="cnn",
 
                  # Learning rate
-                 #base_learning_rate=0.001,
-                 #weight_decay=0.9,
-                 #decay_steps=1000,
                  learning_rate=constant(),
 
                  ###### training options ##########
@@ -76,9 +73,6 @@ class SiameseTrainer(Trainer):
             temp_dir=temp_dir,
 
             # Learning rate
-            #base_learning_rate=base_learning_rate,
-            #weight_decay=weight_decay,
-            #decay_steps=decay_steps,
             learning_rate=learning_rate,
 
             ###### training options ##########
@@ -207,7 +201,7 @@ class SiameseTrainer(Trainer):
 
         return feed_dict
 
-    def fit(self, session, step):
+    def fit(self, step):
         """
         Run one iteration (`forward` and `backward`)
 
@@ -217,19 +211,19 @@ class SiameseTrainer(Trainer):
 
         """
         if self.prefetch:
-            _, l, bt_class, wt_class, lr, summary = session.run([self.optimizer,
-                                             self.training_graph, self.between_class_graph_train, self.within_class_graph_train,
-                                             self.learning_rate, self.summaries_train])
+            _, l, bt_class, wt_class, lr, summary = self.session.run([self.optimizer,
+                                                    self.training_graph, self.between_class_graph_train, self.within_class_graph_train,
+                                                    self.learning_rate, self.summaries_train])
         else:
             feed_dict = self.get_feed_dict(self.train_data_shuffler)
-            _, l, bt_class, wt_class, lr, summary = session.run([self.optimizer,
+            _, l, bt_class, wt_class, lr, summary = self.session.run([self.optimizer,
                                              self.training_graph, self.between_class_graph_train, self.within_class_graph_train,
                                              self.learning_rate, self.summaries_train], feed_dict=feed_dict)
 
         logger.info("Loss training set step={0} = {1}".format(step, l))
         self.train_summary_writter.add_summary(summary, step)
 
-    def compute_validation(self, session, data_shuffler, step):
+    def compute_validation(self, data_shuffler, step):
         """
         Computes the loss in the validation set
 
@@ -245,9 +239,9 @@ class SiameseTrainer(Trainer):
 
         self.validation_graph = self.compute_graph(data_shuffler, name="validation", training=False)
         feed_dict = self.get_feed_dict(data_shuffler)
-        l, bt_class, wt_class = session.run([self.validation_graph,
-                                             self.between_class_graph_validation, self.within_class_graph_validation],
-                                             feed_dict=feed_dict)
+        l, bt_class, wt_class = self.session.run([self.validation_graph,
+                                                  self.between_class_graph_validation, self.within_class_graph_validation],
+                                                  feed_dict=feed_dict)
 
         summaries = []
         summaries.append(summary_pb2.Summary.Value(tag="loss", simple_value=float(l)))
@@ -268,7 +262,7 @@ class SiameseTrainer(Trainer):
         tf.scalar_summary('lr', self.learning_rate, name="train")
         return tf.merge_all_summaries()
 
-    def load_and_enqueue(self, session):
+    def load_and_enqueue(self):
         """
         Injecting data in the place holder queue
 
@@ -285,4 +279,4 @@ class SiameseTrainer(Trainer):
                          placeholder_right_data: batch_right,
                          placeholder_label: labels}
 
-            session.run(self.enqueue_op, feed_dict=feed_dict)
+            self.session.run(self.enqueue_op, feed_dict=feed_dict)

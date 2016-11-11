@@ -71,10 +71,13 @@ class VGG16_mod(SequenceNetwork):
                  default_feature_layer="fc8",
 
                  seed=10,
+
+                 do_dropout=True,
+
                  use_gpu=False):
 
         super(VGG16_mod, self).__init__(default_feature_layer=default_feature_layer,
-                                              use_gpu=use_gpu)
+                                        use_gpu=use_gpu)
 
         # First convolutional block
         self.conv1_1_kernel_size = conv1_1_kernel_size
@@ -222,6 +225,9 @@ class VGG16_mod(SequenceNetwork):
                         bias_initialization=Constant(use_gpu=self.use_gpu)
                         ))
         self.add(AveragePooling(name="pooling5", strides=[1, 2, 2, 1]))
+
+        if do_dropout:
+            self.add(Dropout(name="dropout", keep_prob=0.4))
 
         self.add(FullyConnected(name="fc8", output_dim=n_classes,
                                 activation=None,

@@ -7,12 +7,11 @@ import numpy
 import bob.io.base
 import os
 from bob.learn.tensorflow.datashuffler import Memory, ImageAugmentation
-from bob.learn.tensorflow.initialization import Xavier, Constant
 from bob.learn.tensorflow.network import SequenceNetwork
 from bob.learn.tensorflow.loss import BaseLoss
 from bob.learn.tensorflow.trainers import Trainer
 from bob.learn.tensorflow.utils import load_mnist
-from bob.learn.tensorflow.layers import Conv2D, FullyConnected, MaxPooling
+from bob.learn.tensorflow.layers import Conv2D, FullyConnected
 import tensorflow as tf
 import shutil
 
@@ -33,13 +32,9 @@ def scratch_network():
     scratch.add(Conv2D(name="conv1", kernel_size=3,
                        filters=10,
                        activation=tf.nn.tanh,
-                       weights_initialization=Xavier(seed=seed, use_gpu=False),
-                       bias_initialization=Constant(use_gpu=False),
                        batch_norm=False))
     scratch.add(FullyConnected(name="fc1", output_dim=10,
                                activation=None,
-                               weights_initialization=Xavier(seed=seed, use_gpu=False),
-                               bias_initialization=Constant(use_gpu=False),
                                batch_norm=False
                                ))
 

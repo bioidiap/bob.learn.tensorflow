@@ -78,12 +78,8 @@ class TripletDisk(Triplet, Disk):
 
         for i in range(self.shape[0]):
             file_name_a, file_name_p, file_name_n = self.get_one_triplet(self.data, self.labels)
-            sample_a[i, ...] = self.load_from_file(str(file_name_a))
-            sample_p[i, ...] = self.load_from_file(str(file_name_p))
-            sample_n[i, ...] = self.load_from_file(str(file_name_n))
-
-        sample_a = self.normalize_sample(sample_a)
-        sample_p = self.normalize_sample(sample_p)
-        sample_n = self.normalize_sample(sample_n)
+            sample_a[i, ...] = self.normalize_sample(self.load_from_file(str(file_name_a)))
+            sample_p[i, ...] = self.normalize_sample(self.load_from_file(str(file_name_p)))
+            sample_n[i, ...] = self.normalize_sample(self.load_from_file(str(file_name_n)))
 
         return [sample_a, sample_p, sample_n]

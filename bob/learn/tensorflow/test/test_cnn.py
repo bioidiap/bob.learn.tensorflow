@@ -8,12 +8,11 @@ from bob.learn.tensorflow.datashuffler import Memory, SiameseMemory, TripletMemo
 from bob.learn.tensorflow.network import Chopra
 from bob.learn.tensorflow.loss import BaseLoss, ContrastiveLoss, TripletLoss
 from bob.learn.tensorflow.trainers import Trainer, SiameseTrainer, TripletTrainer, constant
+from .test_cnn_scratch import validate_network
 
-# from ..analyzers import ExperimentAnalizer, SoftmaxAnalizer
-from bob.learn.tensorflow.util import load_mnist
+from bob.learn.tensorflow.utils import load_mnist
 import tensorflow as tf
 import bob.io.base
-import os
 import shutil
 from scipy.spatial.distance import cosine
 import bob.measure
@@ -28,7 +27,7 @@ iterations = 50
 seed = 10
 
 
-def dummy_experiment(data_s, architecture, session):
+def dummy_experiment(data_s, architecture):
     """
     Create a dummy experiment and return the EER
     """
@@ -38,12 +37,12 @@ def dummy_experiment(data_s, architecture, session):
 
     # Extracting features for enrollment
     enroll_data, enroll_labels = data_shuffler.get_batch()
-    enroll_features = architecture(enroll_data, session=session)
+    enroll_features = architecture(enroll_data)
     del enroll_data
 
     # Extracting features for probing
     probe_data, probe_labels = data_shuffler.get_batch()
-    probe_features = architecture(probe_data, session=session)
+    probe_features = architecture(probe_data)
     del probe_data
 
     # Creating models
@@ -102,26 +101,14 @@ def test_cnn_trainer():
                       prefetch=False,
                       temp_dir=directory)
     trainer.train(train_data_shuffler)
-    del trainer #Just to clean tf.variables
 
-    with tf.Session() as session:
+    accuracy = validate_network(validation_data, validation_labels, architecture)
 
-        # Testing
-        chopra = Chopra(seed=seed, fc1_output=10)
-        chopra.load(session, os.path.join(directory, "model.ckp"))
-
-        validation_data_shuffler = Memory(validation_data, validation_labels,
-                                          input_shape=[28, 28, 1],
-                                          batch_size=validation_batch_size)
-
-        [data, labels] = validation_data_shuffler.get_batch()
-        predictions = chopra(data, session=session)
-        accuracy = 100. * numpy.sum(numpy.argmax(predictions, 1) == labels) / predictions.shape[0]
-
-        # At least 80% of accuracy
-        assert accuracy > 80.
-        shutil.rmtree(directory)
-        del chopra
+    # At least 80% of accuracy
+    assert accuracy > 80.
+    shutil.rmtree(directory)
+    del trainer
+    del architecture
 
 
 def test_siamesecnn_trainer():
@@ -155,19 +142,15 @@ def test_siamesecnn_trainer():
                              temp_dir=directory)
 
     trainer.train(train_data_shuffler)
+
+    eer = dummy_experiment(validation_data_shuffler, architecture)
+
+    # At least 80% of accuracy
+    assert eer < 0.25
+    shutil.rmtree(directory)
+
+    del architecture
     del trainer  # Just to clean tf.variables
-
-    with tf.Session() as session:
-        # Testing
-        chopra = Chopra(seed=seed, fc1_output=10)
-        chopra.load(session, os.path.join(directory, "model.ckp"))
-
-        eer = dummy_experiment(validation_data_shuffler, chopra, session)
-
-        # At least 80% of accuracy
-        assert eer < 0.25
-        shutil.rmtree(directory)
-        del chopra
 
 
 def test_tripletcnn_trainer():
@@ -201,17 +184,13 @@ def test_tripletcnn_trainer():
                              temp_dir=directory)
 
     trainer.train(train_data_shuffler)
+
+    # Testing
+    eer = dummy_experiment(validation_data_shuffler, architecture)
+
+    # At least 80% of accuracy
+    assert eer < 0.25
+    shutil.rmtree(directory)
+
+    del architecture
     del trainer  # Just to clean tf.variables
-
-    with tf.Session() as session:
-
-        # Testing
-        chopra = Chopra(seed=seed, fc1_output=10)
-        chopra.load(session, os.path.join(directory, "model.ckp"))
-
-        eer = dummy_experiment(validation_data_shuffler, chopra, session)
-
-        # At least 80% of accuracy
-        assert eer < 0.25
-        shutil.rmtree(directory)
-        del chopra
