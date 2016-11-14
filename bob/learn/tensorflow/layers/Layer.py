@@ -14,12 +14,23 @@ class Layer(object):
     Layer base class
 
     **Parameters**
-     name: The name of the layer
-     activation: Tensor Flow activation
-     weights_initialization: Initialization type for the weights
-     bias_initialization: Initialization type for the weights
-     batch_norm: Do batch norm?
-     use_gpu: Store data in the GPU
+    name: str
+      The name of the layer
+
+    activation:
+      Tensor Flow activation
+
+    weights_initialization: py:class:`bob.learn.tensorflow.initialization.Initialization`
+      Initialization type for the weights
+
+    bias_initialization: py:class:`bob.learn.tensorflow.initialization.Initialization`
+      Initialization type for the biases
+
+    batch_norm: bool
+      Do batch norm?
+
+    use_gpu: bool
+      Store data in the GPU
 
     """
 

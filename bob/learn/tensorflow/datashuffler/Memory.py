@@ -15,14 +15,29 @@ class Memory(Base):
     This datashuffler deal with memory databases that are stored in a :py:class`numpy.array`
 
      **Parameters**
-       data: Input data to be trainer
-       labels: Labels. These labels should be set from 0..1
-       input_shape: The shape of the inputs
-       input_dtype: The type of the data,
-       batch_size: Batch size
-       seed: The seed of the random number generator
-       data_augmentation: The algorithm used for data augmentation. Look :py:class:`bob.learn.tensorflow.datashuffler.DataAugmentation`
-       normalizer: The algorithm used for feature scaling. Look :py:class:`bob.learn.tensorflow.datashuffler.ScaleFactor`, :py:class:`bob.learn.tensorflow.datashuffler.Linear` and :py:class:`bob.learn.tensorflow.datashuffler.MeanOffset`
+     data:
+       Input data to be trainer
+
+     labels:
+       Labels. These labels should be set from 0..1
+
+     input_shape:
+       The shape of the inputs
+
+     input_dtype:
+       The type of the data,
+
+     batch_size:
+       Batch size
+
+     seed:
+       The seed of the random number generator
+
+     data_augmentation:
+       The algorithm used for data augmentation. Look :py:class:`bob.learn.tensorflow.datashuffler.DataAugmentation`
+
+     normalizer:
+       The algorithm used for feature scaling. Look :py:class:`bob.learn.tensorflow.datashuffler.ScaleFactor`, :py:class:`bob.learn.tensorflow.datashuffler.Linear` and :py:class:`bob.learn.tensorflow.datashuffler.MeanOffset`
     """
 
     def __init__(self, data, labels,
@@ -53,8 +68,11 @@ class Memory(Base):
 
         ** Returns **
 
-        data: Selected samples
-        labels: Correspondent labels
+        data:
+          Selected samples
+
+        labels:
+          Correspondent labels
         """
         # Shuffling samples
         indexes = numpy.array(range(self.data.shape[0]))

@@ -15,14 +15,30 @@ class Base(object):
      The class provide base functionalities to shuffle the data to train a neural network
 
      **Parameters**
-       data: Input data to be trainer
-       labels: Labels. These labels should be set from 0..1
-       input_shape: The shape of the inputs
-       input_dtype: The type of the data,
-       batch_size: Batch size
-       seed: The seed of the random number generator
-       data_augmentation: The algorithm used for data augmentation. Look :py:class:`bob.learn.tensorflow.datashuffler.DataAugmentation`
-       normalizer: The algorithm used for feature scaling. Look :py:class:`bob.learn.tensorflow.datashuffler.ScaleFactor`, :py:class:`bob.learn.tensorflow.datashuffler.Linear` and :py:class:`bob.learn.tensorflow.datashuffler.MeanOffset`
+     data:
+       Input data to be trainer
+
+     labels:
+       Labels. These labels should be set from 0..1
+
+     input_shape:
+       The shape of the inputs
+
+     input_dtype:
+       The type of the data,
+
+     batch_size:
+       Batch size
+
+     seed:
+       The seed of the random number generator
+
+     data_augmentation:
+       The algorithm used for data augmentation. Look :py:class:`bob.learn.tensorflow.datashuffler.DataAugmentation`
+
+     normalizer:
+       The algorithm used for feature scaling. Look :py:class:`bob.learn.tensorflow.datashuffler.ScaleFactor`, :py:class:`bob.learn.tensorflow.datashuffler.Linear` and :py:class:`bob.learn.tensorflow.datashuffler.MeanOffset`
+
     """
 
     def __init__(self, data, labels,

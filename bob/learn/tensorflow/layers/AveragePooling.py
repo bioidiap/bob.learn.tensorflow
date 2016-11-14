@@ -13,11 +13,22 @@ class AveragePooling(MaxPooling):
     Wraps the tensorflow average pooling
 
     **Parameters**
-     name: The name of the layer
-     shape: Shape of the pooling kernel
-     stride: Shape of the stride
-     batch_norm: Do batch norm?
-     activation: Tensor Flow activation
+
+    name: str
+      The name of the layer
+
+    shape:
+      Shape of the pooling kernel
+
+    stride:
+      Shape of the stride
+
+    batch_norm: bool
+      Do batch norm?
+
+    activation: bool
+      Tensor Flow activation
+
     """
 
     def __init__(self, name, shape=[1, 2, 2, 1],

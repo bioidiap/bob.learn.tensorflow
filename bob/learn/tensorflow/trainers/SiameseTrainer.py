@@ -23,21 +23,42 @@ class SiameseTrainer(Trainer):
     Trainer for siamese networks.
 
     **Parameters**
-      architecture: The architecture that you want to run. Should be a :py:class`bob.learn.tensorflow.network.SequenceNetwork`
-      optimizer: One of the tensorflow optimizers https://www.tensorflow.org/versions/r0.10/api_docs/python/train.html
-      use_gpu: Use GPUs in the training
-      loss: Loss
-      temp_dir: The output directory
+    architecture:
+      The architecture that you want to run. Should be a :py:class`bob.learn.tensorflow.network.SequenceNetwork`
 
-      base_learning_rate: Initial learning rate
-      weight_decay:
-      convergence_threshold:
+    optimizer:
+      One of the tensorflow optimizers https://www.tensorflow.org/versions/r0.10/api_docs/python/train.html
 
-      iterations: Maximum number of iterations
-      snapshot: Will take a snapshot of the network at every `n` iterations
-      prefetch: Use extra Threads to deal with the I/O
-      analizer: Neural network analizer :py:mod:`bob.learn.tensorflow.analyzers`
-      verbosity_level:
+    use_gpu: bool
+      Use GPUs in the training
+
+    loss: :py:class:`bob.learn.tensorflow.loss.BaseLoss`
+      Loss function
+
+    temp_dir: str
+      The output directory
+
+    learning_rate: :py:class:`bob.learn.tensorflow.trainers.learningrate`
+      Initial learning rate
+
+    convergence_threshold:
+
+    iterations: int
+      Maximum number of iterations
+
+    snapshot: int
+      Will take a snapshot of the network at every `n` iterations
+
+    prefetch: bool
+      Use extra Threads to deal with the I/O
+
+    model_from_file: str
+      If you want to use a pretrained model
+
+    analizer:
+      Neural network analizer :py:mod:`bob.learn.tensorflow.analyzers`
+
+    verbosity_level:
 
     """
 

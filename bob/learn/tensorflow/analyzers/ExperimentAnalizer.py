@@ -31,12 +31,9 @@ class ExperimentAnalizer:
 
         ** Parameters **
 
-          data_shuffler:
-          graph:
-          session:
-          convergence_threshold:
-          convergence_reference: References to analize the convergence. Possible values are `eer`, `far10`, `far10`
+        convergence_threshold:
 
+        convergence_reference:
 
         """
 
@@ -112,8 +109,10 @@ class ExperimentAnalizer:
           - RANK 10
 
         **Parameters**
-          negative_scores:
-          positive_scores:
+
+        negative_scores:
+
+        positive_scores:
         """
 
         summaries = []

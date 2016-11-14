@@ -18,6 +18,7 @@ Users Guide
    :maxdepth: 2
 
    user_guide.rst
+   references
 
 ================
 Reference Manual
@@ -27,7 +28,6 @@ Reference Manual
    :maxdepth: 2
 
    py_api
-
 
 ==================
 Indices and tables

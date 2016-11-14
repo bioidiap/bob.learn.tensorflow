@@ -25,23 +25,45 @@ class Trainer(object):
     Use this trainer when your CNN is composed by one graph
 
     **Parameters**
-      architecture: The architecture that you want to run. Should be a :py:class`bob.learn.tensorflow.network.SequenceNetwork`
-      optimizer: One of the tensorflow optimizers https://www.tensorflow.org/versions/r0.10/api_docs/python/train.html
-      use_gpu: Use GPUs in the training
-      loss: Loss
-      temp_dir: The output directory
+    architecture:
+      The architecture that you want to run. Should be a :py:class`bob.learn.tensorflow.network.SequenceNetwork`
 
-      base_learning_rate: Initial learning rate
-      weight_decay:
-      convergence_threshold:
+    optimizer:
+      One of the tensorflow optimizers https://www.tensorflow.org/versions/r0.10/api_docs/python/train.html
 
-      iterations: Maximum number of iterations
-      snapshot: Will take a snapshot of the network at every `n` iterations
-      prefetch: Use extra Threads to deal with the I/O
-      analizer: Neural network analizer :py:mod:`bob.learn.tensorflow.analyzers`
-      verbosity_level:
+    use_gpu: bool
+      Use GPUs in the training
+
+    loss: :py:class:`bob.learn.tensorflow.loss.BaseLoss`
+      Loss function
+
+    temp_dir: str
+      The output directory
+
+    learning_rate: :py:class:`bob.learn.tensorflow.trainers.learningrate`
+      Initial learning rate
+
+    convergence_threshold:
+
+    iterations: int
+      Maximum number of iterations
+
+    snapshot: int
+      Will take a snapshot of the network at every `n` iterations
+
+    prefetch: bool
+      Use extra Threads to deal with the I/O
+
+    model_from_file: str
+      If you want to use a pretrained model
+
+    analizer:
+      Neural network analizer :py:mod:`bob.learn.tensorflow.analyzers`
+
+    verbosity_level:
 
     """
+
     def __init__(self,
                  architecture,
                  optimizer=tf.train.AdamOptimizer(),
@@ -180,7 +202,7 @@ class Trainer(object):
         else:
             feed_dict = self.get_feed_dict(self.train_data_shuffler)
             _, l, lr, summary = self.session.run([self.optimizer, self.training_graph,
-                                             self.learning_rate, self.summaries_train], feed_dict=feed_dict)
+                                                  self.learning_rate, self.summaries_train], feed_dict=feed_dict)
 
         logger.info("Loss training set step={0} = {1}".format(step, l))
         self.train_summary_writter.add_summary(summary, step)
@@ -306,7 +328,7 @@ class Trainer(object):
 
 
         """
-        saver = self.architecture.load(self.model_from_file)
+        saver = self.architecture.load(self.model_from_file, clear_devices=True)
 
         # Loading training graph
         self.training_graph = tf.get_collection("training_graph")[0]
@@ -315,6 +337,7 @@ class Trainer(object):
         self.optimizer = tf.get_collection("optimizer")[0]
         self.learning_rate = tf.get_collection("learning_rate")[0]
         self.summaries_train = tf.get_collection("summaries_train")[0]
+        self.global_step = tf.get_collection("global_step")[0]
 
         if validation_data_shuffler is not None:
             self.validation_graph = tf.get_collection("validation_graph")[0]
@@ -367,12 +390,16 @@ class Trainer(object):
         if self.model_from_file != "":
             logger.info("Loading pretrained model from {0}".format(self.model_from_file))
             saver = self.bootstrap_graphs_fromfile(train_data_shuffler, validation_data_shuffler)
+
+            start_step = self.global_step.eval(self.session)
+
         else:
+            start_step = 0
             # Bootstraping all the graphs
             self.bootstrap_graphs(train_data_shuffler, validation_data_shuffler)
 
             # TODO: find an elegant way to provide this as a parameter of the trainer
-            self.global_step = tf.Variable(0, trainable=False)
+            self.global_step = tf.Variable(0, trainable=False, name="global_step")
 
             # Preparing the optimizer
             self.optimizer_class._learning_rate = self.learning_rate
@@ -400,7 +427,7 @@ class Trainer(object):
 
         # TENSOR BOARD SUMMARY
         self.train_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'train'), self.session.graph)
-        for step in range(self.iterations):
+        for step in range(start_step, self.iterations):
 
             start = time.time()
             self.fit(step)

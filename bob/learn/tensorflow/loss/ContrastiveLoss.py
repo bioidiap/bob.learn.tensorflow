@@ -20,10 +20,17 @@ class ContrastiveLoss(BaseLoss):
     L = 0.5 * (Y) * D^2 + 0.5 * (1-Y) * {max(0, margin - D)}^2
 
     **Parameters**
-     left_feature: First element of the pair
-     right_feature: Second element of the pair
-     label: Label of the pair (0 or 1)
-     margin: Contrastive margin
+    left_feature:
+      First element of the pair
+
+    right_feature:
+      Second element of the pair
+
+    label:
+      Label of the pair (0 or 1)
+
+    margin:
+      Contrastive margin
 
     """
 

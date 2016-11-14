@@ -14,8 +14,12 @@ class Dropout(Layer):
     Dropout
 
     **Parameters**
-     name: The name of the layer
-     keep_prob: With probability keep_prob, outputs the input element scaled up by 1 / keep_prob, otherwise outputs 0.
+     name: str
+       The name of the layer
+
+     keep_prob: float
+       With probability keep_prob, outputs the input element scaled up by 1 / keep_prob, otherwise outputs 0.
+
     """
 
     def __init__(self, name,

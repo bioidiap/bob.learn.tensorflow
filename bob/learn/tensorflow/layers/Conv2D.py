@@ -15,15 +15,34 @@ class Conv2D(Layer):
     2D Convolution
 
     **Parameters**
-     name: The name of the layer
-     activation: Tensor Flow activation
-     kernel_size: Size of the convolutional kernel
-     filters: Number of filters
-     stride: Shape of the stride
-     weights_initialization: Initialization type for the weights
-     bias_initialization: Initialization type for the weights
-     batch_norm: Do batch norm?
-     use_gpu: Store data in the GPU
+
+    name: str
+      The name of the layer
+
+    activation:
+     Tensor Flow activation
+
+    kernel_size: int
+      Size of the convolutional kernel
+
+    filters: int
+      Number of filters
+
+    stride:
+      Shape of the stride
+
+    weights_initialization: py:class:`bob.learn.tensorflow.initialization.Initialization`
+      Initialization type for the weights
+
+    bias_initialization: py:class:`bob.learn.tensorflow.initialization.Initialization`
+      Initialization type for the weights
+
+    batch_norm: bool
+      Do batch norm?
+
+    use_gpu: bool
+      Store data in the GPU
+
     """
 
     def __init__(self, name, activation=None,

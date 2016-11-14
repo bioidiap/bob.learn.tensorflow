@@ -33,6 +33,15 @@ Trainers
     bob.learn.tensorflow.trainers.SiameseTrainer
     bob.learn.tensorflow.trainers.TripletTrainer
 
+Learning rate
+-------------
+
+.. autosummary::
+
+    bob.learn.tensorflow.trainers.constant
+    bob.learn.tensorflow.trainers.exponential_decay
+
+
 Layers
 ------
 
