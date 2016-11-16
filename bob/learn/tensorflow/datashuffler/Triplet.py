@@ -38,7 +38,7 @@ class Triplet(Base):
 
         return [self.data_placeholder, self.data2_placeholder, self.data3_placeholder]
 
-    def get_placeholders_triplet_forprefetch(self, name=""):
+    def get_placeholders_forprefetch(self, name=""):
         """
         Returns a place holder with the size of your batch
         """
