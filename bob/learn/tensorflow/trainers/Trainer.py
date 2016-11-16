@@ -328,7 +328,7 @@ class Trainer(object):
 
 
         """
-        saver = self.architecture.load(self.model_from_file, clear_devices=True)
+        saver = self.architecture.load(self.model_from_file, clear_devices=False)
 
         # Loading training graph
         self.training_graph = tf.get_collection("training_graph")[0]
