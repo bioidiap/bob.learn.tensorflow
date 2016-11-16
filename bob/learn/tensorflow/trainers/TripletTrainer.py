@@ -62,7 +62,6 @@ class TripletTrainer(Trainer):
 
     """
 
-
     def __init__(self,
                  architecture,
                  optimizer=tf.train.AdamOptimizer(),

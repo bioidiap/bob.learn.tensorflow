@@ -14,6 +14,7 @@ import pkg_resources
 from bob.learn.tensorflow.utils import load_mnist
 from bob.learn.tensorflow.network import SequenceNetwork
 from bob.learn.tensorflow.datashuffler import Memory
+import tensorflow as tf
 
 
 def validate_network(validation_data, validation_labels, network):
@@ -28,8 +29,9 @@ def validate_network(validation_data, validation_labels, network):
 
     return accuracy
 
-"""
+
 def test_load_test_cnn():
+    tf.reset_default_graph()
 
     _, _, validation_data, validation_labels = load_mnist()
 
@@ -41,4 +43,4 @@ def test_load_test_cnn():
     accuracy = validate_network(validation_data, validation_labels, network)
     assert accuracy > 80
     del network
-"""
+

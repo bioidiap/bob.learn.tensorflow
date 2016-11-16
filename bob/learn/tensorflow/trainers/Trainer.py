@@ -391,7 +391,7 @@ class Trainer(object):
             logger.info("Loading pretrained model from {0}".format(self.model_from_file))
             saver = self.bootstrap_graphs_fromfile(train_data_shuffler, validation_data_shuffler)
 
-            start_step = self.global_step.eval(self.session)
+            start_step = self.global_step.eval(session=self.session)
 
         else:
             start_step = 0
@@ -400,6 +400,7 @@ class Trainer(object):
 
             # TODO: find an elegant way to provide this as a parameter of the trainer
             self.global_step = tf.Variable(0, trainable=False, name="global_step")
+            tf.add_to_collection("global_step", self.global_step)
 
             # Preparing the optimizer
             self.optimizer_class._learning_rate = self.learning_rate
@@ -409,6 +410,8 @@ class Trainer(object):
 
             # Train summary
             self.summaries_train = self.create_general_summary()
+            tf.add_to_collection("summaries_train", self.summaries_train)
+
             tf.add_to_collection("summaries_train", self.summaries_train)
 
             tf.initialize_all_variables().run(session=self.session)
@@ -422,8 +425,8 @@ class Trainer(object):
         # Start a thread to enqueue data asynchronously, and hide I/O latency.
         if self.prefetch:
             self.thread_pool = tf.train.Coordinator()
-            tf.train.start_queue_runners(coord=self.thread_pool)
-            threads = self.start_thread(self.session)
+            tf.train.start_queue_runners(coord=self.thread_pool, sess=self.session)
+            threads = self.start_thread()
 
         # TENSOR BOARD SUMMARY
         self.train_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'train'), self.session.graph)

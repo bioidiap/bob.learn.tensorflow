@@ -102,8 +102,6 @@ def test_cnn_pretrained():
                       learning_rate=constant(0.05, name="lr2"),
                       temp_dir=directory2,
                       model_from_file=os.path.join(directory, "model.ckp"))
-
-    #import ipdb; ipdb.set_trace();
     trainer.train(train_data_shuffler)
 
     accuracy = validate_network(validation_data, validation_labels, scratch)

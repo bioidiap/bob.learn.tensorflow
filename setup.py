@@ -43,7 +43,7 @@ setup(
     # information before releasing code publicly.
     name = 'bob.learn.tensorflow',
     version = open("version.txt").read().rstrip(),
-    description = 'Hands on with tensor flow',
+    description = 'Bob bindings for tensorflow',
 
     url = '',
     license = 'BSD',
