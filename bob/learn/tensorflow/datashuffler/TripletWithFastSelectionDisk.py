@@ -106,13 +106,9 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnLineSampling):
 
         for i in range(self.shape[0]):
             file_name_a, file_name_p, file_name_n = self.get_one_triplet(self.data, self.labels)
-            sample_a[i, ...] = self.load_from_file(str(file_name_a))
-            sample_p[i, ...] = self.load_from_file(str(file_name_p))
-            sample_n[i, ...] = self.load_from_file(str(file_name_n))
-
-        sample_a = self.normalize_sample(sample_a)
-        sample_p = self.normalize_sample(sample_p)
-        sample_n = self.normalize_sample(sample_n)
+            sample_a[i, ...] = self.normalize_sample(self.load_from_file(str(file_name_a)))
+            sample_p[i, ...] = self.normalize_sample(self.load_from_file(str(file_name_p)))
+            sample_n[i, ...] = self.normalize_sample(self.load_from_file(str(file_name_n)))
 
         return [sample_a, sample_p, sample_n]
 
@@ -180,9 +176,8 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnLineSampling):
             indexes = numpy.where(self.labels == l)[0]
             numpy.random.shuffle(indexes)
             file_name = self.data[indexes[0], ...]
-            samples_p[i, ...] = self.load_from_file(str(file_name))
+            samples_p[i, ...] = self.normalize_sample(self.load_from_file(str(file_name)))
 
-        samples_p = self.normalize_sample(samples_p)
         embedding_p = self.project(samples_p)
 
         # Computing the distances
@@ -212,8 +207,7 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnLineSampling):
         samples_n = numpy.zeros(shape=self.shape, dtype='float32')
         for i in range(shape[0]):
             file_name = self.data[indexes[i], ...]
-            temp_samples_n[i, ...] = self.load_from_file(str(file_name))
-        temp_samples_n = self.normalize_sample(temp_samples_n)
+            temp_samples_n[i, ...] = self.normalize_sample(self.load_from_file(str(file_name)))
 
         # Computing all the embeddings
         embedding_temp_n = self.project(temp_samples_n)
