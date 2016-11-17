@@ -440,7 +440,7 @@ class Trainer(object):
 
             # Running validation
             if validation_data_shuffler is not None and step % self.validation_snapshot == 0:
-                self.compute_validation(self.session, validation_data_shuffler, step)
+                self.compute_validation(validation_data_shuffler, step)
 
                 if self.analizer is not None:
                     self.validation_summary_writter.add_summary(self.analizer(

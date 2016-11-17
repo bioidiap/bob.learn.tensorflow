@@ -256,7 +256,7 @@ class SiameseTrainer(Trainer):
         """
 
         if self.validation_summary_writter is None:
-            self.validation_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'validation'), session.graph)
+            self.validation_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'validation'), self.session.graph)
 
         self.validation_graph = self.compute_graph(data_shuffler, name="validation", training=False)
         feed_dict = self.get_feed_dict(data_shuffler)

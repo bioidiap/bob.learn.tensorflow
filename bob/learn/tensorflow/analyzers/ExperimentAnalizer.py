@@ -65,12 +65,12 @@ class ExperimentAnalizer:
 
         # Extracting features for enrollment
         enroll_data, enroll_labels = base_data_shuffler.get_batch()
-        enroll_features = network(enroll_data, session=session)
+        enroll_features = network(enroll_data)
         del enroll_data
 
         # Extracting features for probing
         probe_data, probe_labels = base_data_shuffler.get_batch()
-        probe_features = network(probe_data, session=session)
+        probe_features = network(probe_data)
         del probe_data
 
         # Creating models
