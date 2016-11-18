@@ -49,7 +49,7 @@ class LenetDropout(SequenceNetwork):
                         ))
         self.add(MaxPooling(name="pooling2"))
         self.add(MaxPooling(name="pooling2"))
-        self.add(Dropout(name="dropout"))
+        self.add(Dropout(name="dropout", keep_prob=0.4))
         self.add(FullyConnected(name="fc1", output_dim=fc1_output,
                                 activation=tf.nn.tanh,
                                 weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
