@@ -9,7 +9,7 @@ from .FaceNet import FaceNet
 from .FaceNetSimple import FaceNetSimple
 from .VGG16 import VGG16
 from .VGG16_mod import VGG16_mod
-
+from SimpleAudio import SimpleAudio
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):
@@ -36,6 +36,7 @@ __appropriate__(
     FaceNetSimple,
     VGG16,
     VGG16_mod,
+    SimpleAudio,
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]
 

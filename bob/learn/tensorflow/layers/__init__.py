@@ -1,5 +1,6 @@
 #from DataShuffler import *
 from .Layer import Layer
+from .Conv1D import Conv1D
 from .Conv2D import Conv2D
 from .FullyConnected import FullyConnected
 from .MaxPooling import MaxPooling
@@ -24,12 +25,13 @@ def __appropriate__(*args):
 
 __appropriate__(
     Layer,
+    Conv1D,
     Conv2D,
     FullyConnected,
     MaxPooling,
     AveragePooling,
     Dropout,
-    InputLayer
+    InputLayer,
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]
 

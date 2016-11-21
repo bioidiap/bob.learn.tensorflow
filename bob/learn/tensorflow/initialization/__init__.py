@@ -3,6 +3,7 @@ from .Xavier import Xavier
 from .SimplerXavier import SimplerXavier
 from .Gaussian import Gaussian
 from .Constant import Constant
+from .Uniform import Uniform
 
 
 # gets sphinx autodoc done right - don't remove it
@@ -25,6 +26,7 @@ __appropriate__(
     SimplerXavier,
     Gaussian,
     Constant,
+    Uniform,
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]
 
