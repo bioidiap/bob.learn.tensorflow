@@ -5,7 +5,7 @@
 
 import numpy
 from bob.learn.tensorflow.datashuffler import Memory, SiameseMemory, TripletMemory, Disk, SiameseDisk, TripletDisk, \
-    TripletWithFastSelectionDisk, TripletWithSelectionDisk
+    TripletWithFastSelectionDisk, TripletWithSelectionDisk, DiskAudio
 import pkg_resources
 from bob.learn.tensorflow.utils import load_mnist
 import os
@@ -25,6 +25,19 @@ def get_dummy_files():
             clients.append(int(f[1:4]))
 
     return files, clients
+
+
+def get_dummy_audiofiles():
+
+    base_path = pkg_resources.resource_filename(__name__, 'data/dummy_audio')
+    files = []
+    labels = []
+    for f in os.listdir(base_path):
+        if f.endswith(".wav"):
+            files.append(os.path.join(base_path, f))
+            labels.append((1 if 'attack' in f else 0))
+
+    return files, labels
 
 
 def test_memory_shuffler():
@@ -202,3 +215,22 @@ def test_triplet_selection_disk_shuffler():
     assert placeholders[0].get_shape().as_list() == batch_shape
     assert placeholders[1].get_shape().as_list() == batch_shape
     assert placeholders[2].get_shape().as_list() == batch_shape
+
+
+def test_diskaudio_shuffler():
+
+    train_data, train_labels = get_dummy_audiofiles()
+
+    batch_shape = [582, 6560, 1]
+
+    data_shuffler = DiskAudio(train_data, train_labels, batch_size=batch_shape[0])
+
+    batch = data_shuffler.get_batch()
+
+    assert len(batch) == 2
+    assert batch[0].shape == tuple(batch_shape)
+    assert batch[1].shape[0] == batch_shape[0]
+
+    placeholders = data_shuffler.get_placeholders(name="train")
+    assert placeholders[0].get_shape().as_list() == batch_shape
+    assert placeholders[1].get_shape().as_list()[0] == batch_shape[0]

@@ -20,6 +20,7 @@ from .ImageAugmentation import ImageAugmentation
 
 from .Normalizer import ScaleFactor, MeanOffset, Linear
 
+from .DiskAudio import DiskAudio
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):
@@ -51,7 +52,7 @@ __appropriate__(
     TripletWithSelectionDisk,
     DataAugmentation,
     ImageAugmentation,
-    ScaleFactor, MeanOffset, Linear
-
+    ScaleFactor, MeanOffset, Linear,
+    DiskAudio,
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]

@@ -26,7 +26,7 @@ class SimplerXavier(Initialization):
     def __init__(self, seed=10., use_gpu=False):
         super(SimplerXavier, self).__init__(seed, use_gpu=use_gpu)
 
-    def __call__(self, shape, name, scope):
+    def __call__(self, shape, name, scope, init_value=None):
         """
         Create the gaussian initialized variables
 
