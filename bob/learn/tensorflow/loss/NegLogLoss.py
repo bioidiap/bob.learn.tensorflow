@@ -35,9 +35,10 @@ class NegLogLoss(BaseLoss):
 
     def __call__(self, graph, label):
         # get the log-probabilities with log softmax
-        log_probabilities = tf.nn.log_softmax(graph)
+        # removed it since we have a LogSoftMax layer now
+        # log_probabilities = tf.nn.log_softmax(graph)
         # negative of the log-probability that correspond to the correct label
-        correct_probabilities = self.gather_nd(log_probabilities, label)
+        correct_probabilities = self.gather_nd(graph, label)
         neg_log_prob = tf.neg(correct_probabilities)
         # use negative log likelihood as the loss
         return self.operation(neg_log_prob)

@@ -9,7 +9,7 @@ Class that creates the lenet architecture
 
 import tensorflow as tf
 from .SequenceNetwork import SequenceNetwork
-from ..layers import Conv1D, FullyConnected
+from ..layers import Conv1D, FullyConnected, LogSoftMax
 from bob.learn.tensorflow.initialization import Uniform
 
 
@@ -61,3 +61,5 @@ class SimpleAudio(SequenceNetwork):
                                bias_initialization=Uniform(seed=seed, use_gpu=use_gpu),
                                use_gpu=use_gpu
                                ))
+
+        self.add(LogSoftMax(name="logsoftmax", activation=None, use_gpu=use_gpu))

@@ -11,7 +11,7 @@ import numpy
 import pickle
 
 from collections import OrderedDict
-from bob.learn.tensorflow.layers import Layer, MaxPooling, Dropout, Conv2D, FullyConnected
+from bob.learn.tensorflow.layers import Layer, MaxPooling, Dropout, Conv2D, FullyConnected, LogSoftMax
 from bob.learn.tensorflow.utils.session import Session
 
 
@@ -140,7 +140,9 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         variables = {}
         for k in self.sequence_net:
             # TODO: IT IS NOT SMART TESTING ALONG THIS PAGE
-            if not isinstance(self.sequence_net[k], MaxPooling) and not isinstance(self.sequence_net[k], Dropout):
+            if not isinstance(self.sequence_net[k], MaxPooling) and \
+                    not isinstance(self.sequence_net[k], Dropout) and \
+                    not isinstance(self.sequence_net[k], LogSoftMax):
                 variables[self.sequence_net[k].W.name] = self.sequence_net[k].W
                 variables[self.sequence_net[k].b.name] = self.sequence_net[k].b
 
@@ -169,7 +171,9 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         for k in self.sequence_net.keys():
             current_layer = self.sequence_net[k]
 
-            if not isinstance(self.sequence_net[k], MaxPooling) and not isinstance(self.sequence_net[k], Dropout):
+            if not isinstance(self.sequence_net[k], MaxPooling) and \
+                    not isinstance(self.sequence_net[k], Dropout) and \
+                    not isinstance(self.sequence_net[k], LogSoftMax):
                 self.variable_summaries(current_layer.W, current_layer.name + '/weights')
                 self.variable_summaries(current_layer.b, current_layer.name + '/bias')
 
@@ -232,7 +236,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         # Saving the architecture
         if self.pickle_architecture is not None:
             hdf5.set('architecture', self.pickle_architecture)
-            hdf5.set('deployment_shape', self.deployment_shape)
+            # hdf5.set('deployment_shape', numpy.array(self.deployment_shape))
 
         # Directory that stores the tensorflow variables
         hdf5.create_group('/tensor_flow')

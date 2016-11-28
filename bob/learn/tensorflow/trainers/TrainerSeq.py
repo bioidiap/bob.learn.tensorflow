@@ -16,10 +16,11 @@ from bob.learn.tensorflow.datashuffler.OnlineSampling import OnLineSampling
 from bob.learn.tensorflow.utils.session import Session
 from .learning_rate import constant
 
+import numpy
 logger = bob.core.log.setup("bob.learn.tensorflow")
 
 
-class Trainer(object):
+class TrainerSeq(object):
     """
     One graph trainer.
     Use this trainer when your CNN is composed by one graph
@@ -80,6 +81,7 @@ class Trainer(object):
                  snapshot=500,
                  validation_snapshot=100,
                  prefetch=False,
+                 epochs=10,
 
                  ## Analizer
                  analizer=SoftmaxAnalizer(),
@@ -106,6 +108,8 @@ class Trainer(object):
         self.convergence_threshold = convergence_threshold
         self.prefetch = prefetch
 
+        self.epochs = epochs  # how many epochs to run
+
         # Training variables used in the fit
         self.optimizer = None
         self.training_graph = None
@@ -123,7 +127,7 @@ class Trainer(object):
 
         self.thread_pool = None
         self.enqueue_op = None
-        self.global_step = None
+        self.global_epoch = None
 
         self.model_from_file = model_from_file
         self.session = None
@@ -168,6 +172,8 @@ class Trainer(object):
         # Creating graphs and defining the loss
         network_graph = self.architecture.compute_graph(feature_batch, training=training)
         graph = self.loss(network_graph, label_batch)
+        if not training:
+            return [network_graph, graph]
 
         return graph
 
@@ -180,13 +186,17 @@ class Trainer(object):
 
         """
         [data, labels] = data_shuffler.get_batch()
+        # when we run out of data
+        if data is None:
+            return None
+
         [data_placeholder, label_placeholder] = data_shuffler.get_placeholders()
 
         feed_dict = {data_placeholder: data,
                      label_placeholder: labels}
         return feed_dict
 
-    def fit(self, step):
+    def fit(self):
         """
         Run one iteration (`forward` and `backward`)
 
@@ -198,16 +208,17 @@ class Trainer(object):
 
         if self.prefetch:
             _, l, lr, summary = self.session.run([self.optimizer, self.training_graph,
-                                             self.learning_rate, self.summaries_train])
+                                                  self.learning_rate, self.summaries_train])
         else:
             feed_dict = self.get_feed_dict(self.train_data_shuffler)
+            # if we run out of data
+            if feed_dict is None:
+                return None, None
             _, l, lr, summary = self.session.run([self.optimizer, self.training_graph,
                                                   self.learning_rate, self.summaries_train], feed_dict=feed_dict)
+        return l, summary
 
-        logger.info("Loss training set step={0} = {1}".format(step, l))
-        self.train_summary_writter.add_summary(summary, step)
-
-    def compute_validation(self, data_shuffler, step):
+    def compute_validation(self, data_shuffler):
         """
         Computes the loss in the validation set
 
@@ -218,15 +229,21 @@ class Trainer(object):
 
         """
         # Opening a new session for validation
-        feed_dict = self.get_feed_dict(data_shuffler)
-        l = self.session.run(self.validation_graph, feed_dict=feed_dict)
+        [data, labels] = data_shuffler.get_batch()
+        # when we run out of data
+        if data is None:
+            return None, None
 
-        if self.validation_summary_writter is None:
-            self.validation_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'validation'), self.session.graph)
+        [data_placeholder, label_placeholder] = data_shuffler.get_placeholders()
 
-        summaries = [summary_pb2.Summary.Value(tag="loss", simple_value=float(l))]
-        self.validation_summary_writter.add_summary(summary_pb2.Summary(value=summaries), step)
-        logger.info("Loss VALIDATION set step={0} = {1}".format(step, l))
+        feed_dict = {data_placeholder: data,
+                     label_placeholder: labels}
+
+        prediction, l = self.session.run(self.validation_graph, feed_dict=feed_dict)
+        prediction = numpy.argmax(prediction, 1)
+        prediction_err = numpy.asarray([prediction != labels], dtype=numpy.int16)
+
+        return prediction_err, l
 
     def create_general_summary(self):
         """
@@ -263,6 +280,12 @@ class Trainer(object):
 
         while not self.thread_pool.should_stop():
             [train_data, train_labels] = self.train_data_shuffler.get_batch()
+
+            # if we run out of data, stop
+            if train_data is None:
+                self.thread_pool.request_stop()
+                break
+
             [train_placeholder_data, train_placeholder_labels] = self.train_data_shuffler.get_placeholders()
 
             feed_dict = {train_placeholder_data: train_data,
@@ -337,7 +360,7 @@ class Trainer(object):
         self.optimizer = tf.get_collection("optimizer")[0]
         self.learning_rate = tf.get_collection("learning_rate")[0]
         self.summaries_train = tf.get_collection("summaries_train")[0]
-        self.global_step = tf.get_collection("global_epoch")[0]
+        self.global_epoch = tf.get_collection("global_epoch")[0]
 
         if validation_data_shuffler is not None:
             self.validation_graph = tf.get_collection("validation_graph")[0]
@@ -391,20 +414,20 @@ class Trainer(object):
             logger.info("Loading pretrained model from {0}".format(self.model_from_file))
             saver = self.bootstrap_graphs_fromfile(train_data_shuffler, validation_data_shuffler)
 
-            start_step = self.global_step.eval(session=self.session)
+            epoch = self.global_epoch.eval(session=self.session)
 
         else:
-            start_step = 0
+            epoch = 0
             # Bootstraping all the graphs
             self.bootstrap_graphs(train_data_shuffler, validation_data_shuffler)
 
             # TODO: find an elegant way to provide this as a parameter of the trainer
-            self.global_step = tf.Variable(0, trainable=False, name="global_epoch")
-            tf.add_to_collection("global_epoch", self.global_step)
+            self.global_epoch = tf.Variable(0, trainable=False, name="global_epoch")
+            tf.add_to_collection("global_epoch", self.global_epoch)
 
             # Preparing the optimizer
             self.optimizer_class._learning_rate = self.learning_rate
-            self.optimizer = self.optimizer_class.minimize(self.training_graph, global_step=self.global_step)
+            self.optimizer = self.optimizer_class.minimize(self.training_graph, global_step=self.global_epoch)
             tf.add_to_collection("optimizer", self.optimizer)
             tf.add_to_collection("learning_rate", self.learning_rate)
 
@@ -430,30 +453,84 @@ class Trainer(object):
 
         # TENSOR BOARD SUMMARY
         self.train_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'train'), self.session.graph)
-        for step in range(start_step, self.iterations):
+        start = time.time()
+        total_train_data = 0
+        total_valid_data = 0
+        for epoch in range(epoch, self.epochs):
 
-            start = time.time()
-            self.fit(step)
-            end = time.time()
-            summary = summary_pb2.Summary.Value(tag="elapsed_time", simple_value=float(end-start))
-            self.train_summary_writter.add_summary(summary_pb2.Summary(value=[summary]), step)
+            batch_num = 0
+            total_train_loss = 0
+            while True:
+                cur_loss, summary = self.fit()
+                # we are done when we went through the whole data
+                if cur_loss is None:
+                    break
 
-            # Running validation
-            if validation_data_shuffler is not None and step % self.validation_snapshot == 0:
-                self.compute_validation(validation_data_shuffler, step)
+                batch_num += 1
+                total_train_loss += cur_loss
 
-                if self.analizer is not None:
-                    self.validation_summary_writter.add_summary(self.analizer(
-                         validation_data_shuffler, self.architecture, self.session), step)
+                # Reporting loss for each snapshot
+                if batch_num % self.snapshot == 0:
+                    logger.info("Loss training set, epoch={0}, batch_num={1} = {2}".format(
+                        epoch, batch_num, total_train_loss/batch_num))
+                    self.train_summary_writter.add_summary(summary, epoch*total_train_data+batch_num)
+                    end = time.time()
+                    summary = summary_pb2.Summary.Value(tag="elapsed_time", simple_value=float(end - start))
+                    self.train_summary_writter.add_summary(
+                        summary_pb2.Summary(value=[summary]), epoch*total_train_data+batch_num)
+                    start = time.time()
 
-            # Taking snapshot
-            if step % self.snapshot == 0:
-                logger.info("Taking snapshot")
-                path = os.path.join(self.temp_dir, 'model_snapshot{0}.ckp'.format(step))
-                self.architecture.save(saver, path)
-                with self.session.as_default():
-                    path = os.path.join(self.temp_dir, 'model_snapshot{0}.hdf5'.format(step))
-                    self.architecture.save_hdf5(bob.io.base.HDF5File(path, 'w'))
+            total_train_data = batch_num
+            logger.info("Number of training batches={0}".format(total_train_data))
+            logger.info("Taking snapshot for epoch %d", epoch)
+            if total_train_data:
+                logger.info("Loss total TRAINING for epoch={0} = {1}".format(
+                    epoch, total_train_loss / total_train_data))
+            path = os.path.join(self.temp_dir, 'model_epoch{0}.ckp'.format(epoch))
+            self.architecture.save(saver, path)
+            with self.session.as_default():
+                path = os.path.join(self.temp_dir, 'model_epoch{0}.hdf5'.format(epoch))
+                self.architecture.save_hdf5(bob.io.base.HDF5File(path, 'w'))
+
+
+            # Running validation for the current epoch
+            if validation_data_shuffler is not None:
+                batch_num = 0
+                total_valid_loss = 0
+                total_prediction_err = 0
+                while True:
+                    prediction_err, cur_loss = self.compute_validation(validation_data_shuffler)
+                    # we are done when we went through the whole data
+                    if cur_loss is None:
+                        break
+
+                    batch_num += 1
+                    total_valid_loss += cur_loss
+                    total_prediction_err += numpy.mean(numpy.array(prediction_err))
+
+                    if self.validation_summary_writter is None:
+                        self.validation_summary_writter = tf.train.SummaryWriter(
+                            os.path.join(self.temp_dir, 'validation'), self.session.graph)
+                    if batch_num % self.validation_snapshot == 0:
+                        summaries = [summary_pb2.Summary.Value(tag="loss", simple_value=float(total_valid_loss/batch_num))]
+                        self.validation_summary_writter.add_summary(
+                            summary_pb2.Summary(value=summaries), epoch*total_valid_data+batch_num)
+                        logger.info("Loss validation step={0} = {1}".format(
+                            epoch*total_valid_data+batch_num, total_valid_loss/batch_num))
+
+                        summaries = [summary_pb2.Summary.Value(tag="Error", simple_value=float(total_prediction_err / batch_num))]
+                        self.validation_summary_writter.add_summary(
+                            summary_pb2.Summary(value=summaries), epoch * total_valid_data + batch_num)
+                        logger.info("Error validation step={0} = {1}".format(
+                            epoch * total_valid_data + batch_num, total_prediction_err / batch_num))
+
+                total_valid_data = batch_num
+                logger.info("Total number of validation batches={0}".format(total_valid_data))
+                if total_valid_data:
+                    logger.info("Loss total VALIDATION for epoch={0} = {1}".format(
+                        epoch, total_valid_loss / total_valid_data))
+                    logger.info("Error total VALIDATION for epoch={0} = {1}".format(
+                        epoch, total_prediction_err / total_valid_data))
 
         logger.info("Training finally finished")
 

@@ -9,8 +9,10 @@ from .Base import Base
 
 from scipy.io.wavfile import read as readWAV
 
-logger = bob.core.log.setup("bob.learn.tensorflow")
-logger.propagate = False
+# logger = bob.core.log.setup("bob.learn.tensorflow")
+import logging
+logger = logging.getLogger("bob.learn.tensorflow")
+# logger.propagate = False
 
 
 class DiskAudio(Base):
@@ -59,13 +61,17 @@ class DiskAudio(Base):
         self.frames_storage = []
         # a similar queue for the corresponding labels
         self.labels_storage = []
+
+        self.indices = None
+        self.cur_index = 0
+
+
 #        if self.out_file != "":
 #            bob.io.base.create_directories_safe(os.path.dirname(self.out_file))
 #            f = open(self.out_file, "w")
 #            for i in range(0, self.data.shape[0]):
 #                f.write("%d %s\n" % (self.labels[i], str(self.data[i])))
 #            f.close()
-
 
     def load_from_file(self, file_name):
         rate, audio = readWAV(file_name)
@@ -74,23 +80,38 @@ class DiskAudio(Base):
 
         return rate, data
 
-    def get_batch(self, noise=False):
+    def randomized_indices(self, max_size):
         # Shuffling samples
-        indexes = numpy.array(range(self.data.shape[0]))
-        numpy.random.shuffle(indexes)
+        indices = numpy.array(range(max_size))
+        numpy.random.shuffle(indices)
+        return indices
+
+    def get_batch(self, noise=False):
+
+        # if we ran through the whole data already
+        if self.cur_index >= self.data.shape[0] and len(self.frames_storage) < self.batch_size:
+            # reset everything
+            self.frames_storage = []
+            self.labels_storage = []
+            self.cur_index = 0
+            return None, None
+
+        if self.indices is None or self.cur_index == 0:
+            self.indices = self.randomized_indices(self.data.shape[0])
+
         f = None
         if self.out_file != "":
             f = open(self.out_file, "a")
-        i = 0
+        i = self.cur_index
         # if not enough in the storage, we pre-load frames from the audio files
         while len(self.frames_storage) < self.batch_size:
             if f is not None:
-                f.write("%s\n" % self.data[indexes[i]])
-            frames, labels = self.extract_frames_from_file(self.data[indexes[i]], self.labels[indexes[i]])
+                f.write("%s\n" % self.data[self.indices[i]])
+            frames, labels = self.extract_frames_from_file(self.data[self.indices[i]], self.labels[self.indices[i]])
             self.frames_storage.extend(frames)
             self.labels_storage.extend(labels)
             i += 1
-
+        self.cur_index = i
         # our temp frame queue should have enough data
         selected_data = numpy.asarray(self.frames_storage[:self.batch_size])
         selected_labels = numpy.asarray(self.labels_storage[:self.batch_size])
@@ -100,6 +121,7 @@ class DiskAudio(Base):
         selected_data = numpy.reshape(selected_data, (self.batch_size, -1, 1))
         if f is not None:
             f.close()
+
         return [selected_data.astype("float32"), selected_labels.astype("int64")]
 
     def extract_frames_from_file(self, filename, label):
