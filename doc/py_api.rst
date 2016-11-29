@@ -71,7 +71,7 @@ Data Shufflers
     bob.learn.tensorflow.datashuffler.TripletMemory
     bob.learn.tensorflow.datashuffler.TripletWithFastSelectionDisk
     bob.learn.tensorflow.datashuffler.TripletWithSelectionDisk
-    bob.learn.tensorflow.datashuffler.OnLineSampling
+    bob.learn.tensorflow.datashuffler.OnlineSampling
 
 
 
@@ -120,7 +120,6 @@ Detailed Information
 .. automodule:: bob.learn.tensorflow.trainers
 .. automodule:: bob.learn.tensorflow.layers
 .. automodule:: bob.learn.tensorflow.datashuffler
-.. automodule:: bob.learn.tensorflow.network
 .. automodule:: bob.learn.tensorflow.analyzers
 .. automodule:: bob.learn.tensorflow.initialization
 .. automodule:: bob.learn.tensorflow.loss

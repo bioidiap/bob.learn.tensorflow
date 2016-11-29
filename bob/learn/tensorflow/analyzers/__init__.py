@@ -1,4 +1,3 @@
-
 from .ExperimentAnalizer import ExperimentAnalizer
 from .SoftmaxAnalizer import SoftmaxAnalizer
 

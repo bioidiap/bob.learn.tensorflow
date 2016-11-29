@@ -8,7 +8,6 @@
 Some unit tests that create networks on the fly
 """
 
-
 import numpy
 import pkg_resources
 from bob.learn.tensorflow.utils import load_mnist
@@ -38,9 +37,8 @@ def test_load_test_cnn():
     # Creating datashufflers
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
     network = SequenceNetwork()
-    network.load(pkg_resources.resource_filename(__name__, 'data/cnn_mnist/model.ckp'))
+    network.load(pkg_resources.resource_filename(__name__, 'data/cnn_mnist/model.ckp'), session_from_scratch=True)
 
     accuracy = validate_network(validation_data, validation_labels, network)
     assert accuracy > 80
     del network
-

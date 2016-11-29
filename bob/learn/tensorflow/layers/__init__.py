@@ -13,7 +13,7 @@ from .InputLayer import InputLayer
 def __appropriate__(*args):
   """Says object was actually declared here, an not on the import module.
 
-  Parameters:
+  **Parameters**
 
     *args: An iterable of objects to modify
 

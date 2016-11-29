@@ -21,6 +21,7 @@ class Disk(Base):
      The data is loaded on the fly,.
 
      **Parameters**
+
      data:
        Input data to be trainer
 

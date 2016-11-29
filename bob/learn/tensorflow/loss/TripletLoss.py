@@ -19,9 +19,10 @@ class TripletLoss(BaseLoss):
     "Facenet: A unified embedding for face recognition and clustering."
     Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition. 2015.
 
-    L  = sum(  |f_a - f_p|^2 - |f_a - f_n|^2  + \lambda)
+    :math:`L  = sum(  |f_a - f_p|^2 - |f_a - f_n|^2  + \lambda)`
 
     **Parameters**
+
     left_feature:
       First element of the pair
 

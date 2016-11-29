@@ -1,7 +1,6 @@
 .. vim: set fileencoding=utf-8 :
 .. date: Thu Sep 20 11:58:57 CEST 2012
 
-.. _bob.learn.tensorflow:
 
 ===========
  User guide
@@ -138,17 +137,17 @@ Type of the trainer?
 
 Here we have one data shuffler for each type of the trainer.
 
-You will see in the section `Trainers`_ that we have three types of trainer.
+You will see in the section `Trainers <py_api.html#trainers>`_ that we have three types of trainer.
 The first one is the regular trainer, which deals with one graph only (for example, if you training a network with
 a softmax loss).
 The data shuflers for this type of trainer must be a direct instance of either :py:class:`bob.learn.tensorflow.datashuffler.Memory`
 or :py:class:`bob.learn.tensorflow.datashuffler.Disk`.
 
-The second one is the :py:class:`bob.learn.tensorflow.trainers.Siamese` trainer, which is designed to train Siamese networks.
+The second one is the :py:class:`bob.learn.tensorflow.trainers.SiameseTrainer` trainer, which is designed to train Siamese networks.
 The data shuflers for this type of trainer must be a direct instance of either :py:class:`bob.learn.tensorflow.datashuffler.SiameseDisk` or
 :py:class:`bob.learn.tensorflow.datashuffler.SiameseMemory`.
 
-The third one is the :py:class:`bob.learn.tensorflow.trainers.Triplet` trainer, which is designed to train Triplet networks.
+The third one is the :py:class:`bob.learn.tensorflow.trainers.TripletTrainer` trainer, which is designed to train Triplet networks.
 The data shuflers for this type of trainer must be a direct instance of either :py:class:`bob.learn.tensorflow.datashuffler.TripletDisk`,
 :py:class:`bob.learn.tensorflow.datashuffler.TripletMemory`, :py:class:`bob.learn.tensorflow.datashuffler.TripletWithFastSelectionDisk`
 or :py:class:`bob.learn.tensorflow.datashuffler.TripletWithSelectionDisk`.
@@ -159,7 +158,7 @@ How the data is sampled ?
 
 The paper [facenet_2015]_ introduced a new strategy to select triplets to train triplet networks (this is better described
 here :py:class:`bob.learn.tensorflow.datashuffler.TripletWithSelectionDisk` and :py:class:`bob.learn.tensorflow.datashuffler.TripletWithFastSelectionDisk`).
-This triplet selection relies in the current state of the network and are extensions of :py:class:`bob.learn.tensorflow.datashuffler.OnlineSampling`.
+This triplet selection relies in the current state of the network and are extensions of `bob.learn.tensorflow.datashuffler.OnlineSampling`.
 
 
 Architecture
@@ -213,7 +212,7 @@ Initialization
 ..............
 
 We have implemented some strategies to initialize the tensorflow variables.
-Check it out `Layers <py_api.html#initialization>`_.
+Check it out `Initialization <py_api.html#initialization>`_.
 
 
 Loss
@@ -242,10 +241,10 @@ To be discussed.
 Sandbox
 -------
 
-We have a sandbox of examples in a git repository `https://gitlab.idiap.ch/tiago.pereira/bob.learn.tensorflow_sandbox`_
+We have a sandbox of examples in a git repository `https://gitlab.idiap.ch/tiago.pereira/bob.learn.tensorflow_sandbox`
 The sandbox has some example of training:
- - MNIST with softmax
- - MNIST with Siamese Network
- - MNIST with Triplet Network
- - Face recognition with MOBIO database
- - Face recognition with CASIA WebFace database
+- MNIST with softmax
+- MNIST with Siamese Network
+- MNIST with Triplet Network
+- Face recognition with MOBIO database
+- Face recognition with CASIA WebFace database

@@ -317,9 +317,9 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         open(path+"_sequence_net.pickle", 'w').write(self.pickle_architecture)
         return saver.save(session, path)
 
-    def load(self, path, clear_devices=False):
+    def load(self, path, clear_devices=False, session_from_scratch=False):
 
-        session = Session.instance().session
+        session = Session.instance(new=session_from_scratch).session
 
         self.sequence_net = pickle.loads(open(path+"_sequence_net.pickle").read())
         if clear_devices:

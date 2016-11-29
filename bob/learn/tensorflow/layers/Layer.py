@@ -14,6 +14,7 @@ class Layer(object):
     Layer base class
 
     **Parameters**
+
     name: str
       The name of the layer
 

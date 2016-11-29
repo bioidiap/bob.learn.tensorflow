@@ -4,11 +4,12 @@
 # @date: Thu 13 Oct 2016 13:35 CEST
 
 import numpy
-from bob.learn.tensorflow.datashuffler import Memory, SiameseMemory, TripletMemory, Disk, SiameseDisk, TripletDisk, ImageAugmentation
-from bob.learn.tensorflow.network import Chopra
+from bob.learn.tensorflow.datashuffler import Memory, SiameseMemory, TripletMemory, ImageAugmentation
+from bob.learn.tensorflow.network import Chopra, SequenceNetwork
 from bob.learn.tensorflow.loss import BaseLoss, ContrastiveLoss, TripletLoss
 from bob.learn.tensorflow.trainers import Trainer, SiameseTrainer, TripletTrainer, constant
 from .test_cnn_scratch import validate_network
+import pkg_resources
 
 from bob.learn.tensorflow.utils import load_mnist
 import tensorflow as tf
@@ -99,7 +100,10 @@ def test_cnn_trainer():
                       iterations=iterations,
                       analizer=None,
                       prefetch=False,
+                      learning_rate=constant(0.05, name="regular_lr"),
+                      optimizer=tf.train.AdamOptimizer(name="adam_softmax"),
                       temp_dir=directory)
+
     trainer.train(train_data_shuffler)
 
     accuracy = validate_network(validation_data, validation_labels, architecture)
@@ -139,6 +143,7 @@ def test_siamesecnn_trainer():
                              prefetch=False,
                              analizer=None,
                              learning_rate=constant(0.05, name="siamese_lr"),
+                             optimizer=tf.train.AdamOptimizer(name="adam_siamese"),
                              temp_dir=directory)
 
     trainer.train(train_data_shuffler)
@@ -181,6 +186,7 @@ def test_tripletcnn_trainer():
                              prefetch=False,
                              analizer=None,
                              learning_rate=constant(0.05, name="triplet_lr"),
+                             optimizer=tf.train.AdamOptimizer(name="adam_triplet"),
                              temp_dir=directory)
 
     trainer.train(train_data_shuffler)

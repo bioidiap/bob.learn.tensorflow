@@ -23,6 +23,7 @@ class TripletTrainer(Trainer):
     Trainer for Triple networks.
 
     **Parameters**
+
     architecture:
       The architecture that you want to run. Should be a :py:class`bob.learn.tensorflow.network.SequenceNetwork`
 
@@ -38,7 +39,7 @@ class TripletTrainer(Trainer):
     temp_dir: str
       The output directory
 
-    learning_rate: :py:class:`bob.learn.tensorflow.trainers.learningrate`
+    learning_rate: `bob.learn.tensorflow.trainers.learning_rate`
       Initial learning rate
 
     convergence_threshold:
@@ -70,7 +71,7 @@ class TripletTrainer(Trainer):
                  temp_dir="cnn",
 
                  # Learning rate
-                 learning_rate=constant(),
+                 learning_rate=None,
 
                  ###### training options ##########
                  convergence_threshold=0.01,

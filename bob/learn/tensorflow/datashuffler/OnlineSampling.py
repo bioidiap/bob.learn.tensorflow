@@ -3,12 +3,12 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 # @date: Wed 11 May 2016 09:39:36 CEST 
 
-import numpy
 import tensorflow as tf
+from .Base import Base
 from bob.learn.tensorflow.network import SequenceNetwork
 
 
-class OnLineSampling(object):
+class OnlineSampling(Base):
     """
     This data shuffler uses the current state of the network to select the samples.
     This class is not meant to be used, but extended.

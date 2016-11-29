@@ -12,7 +12,7 @@ import bob.core
 from ..analyzers import SoftmaxAnalizer
 from tensorflow.core.framework import summary_pb2
 import time
-from bob.learn.tensorflow.datashuffler.OnlineSampling import OnLineSampling
+from bob.learn.tensorflow.datashuffler import OnlineSampling
 from bob.learn.tensorflow.utils.session import Session
 from .learning_rate import constant
 
@@ -25,6 +25,7 @@ class Trainer(object):
     Use this trainer when your CNN is composed by one graph
 
     **Parameters**
+
     architecture:
       The architecture that you want to run. Should be a :py:class`bob.learn.tensorflow.network.SequenceNetwork`
 
@@ -40,7 +41,7 @@ class Trainer(object):
     temp_dir: str
       The output directory
 
-    learning_rate: :py:class:`bob.learn.tensorflow.trainers.learningrate`
+    learning_rate: `bob.learn.tensorflow.trainers.learning_rate`
       Initial learning rate
 
     convergence_threshold:
@@ -72,7 +73,7 @@ class Trainer(object):
                  temp_dir="cnn",
 
                  # Learning rate
-                 learning_rate=constant(),
+                 learning_rate=None,
 
                  ###### training options ##########
                  convergence_threshold=0.01,
@@ -98,7 +99,10 @@ class Trainer(object):
         self.loss = loss
         self.temp_dir = temp_dir
 
-        self.learning_rate = learning_rate
+        if learning_rate is None and model_from_file == "":
+            self.learning_rate = constant()
+        else:
+            self.learning_rate = learning_rate
 
         self.iterations = iterations
         self.snapshot = snapshot
@@ -383,8 +387,7 @@ class Trainer(object):
         # Pickle the architecture to save
         self.architecture.pickle_net(train_data_shuffler.deployment_shape)
 
-        Session.create()
-        self.session = Session.instance().session
+        self.session = Session.instance(new=True).session
 
         # Loading a pretrained model
         if self.model_from_file != "":
@@ -419,7 +422,7 @@ class Trainer(object):
             # Original tensorflow saver object
             saver = tf.train.Saver(var_list=tf.all_variables())
 
-        if isinstance(train_data_shuffler, OnLineSampling):
+        if isinstance(train_data_shuffler, OnlineSampling):
             train_data_shuffler.set_feature_extractor(self.architecture, session=self.session)
 
         # Start a thread to enqueue data asynchronously, and hide I/O latency.

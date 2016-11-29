@@ -6,9 +6,9 @@
 import numpy
 import tensorflow as tf
 
-from Disk import Disk
-from Triplet import Triplet
-from OnlineSampling import OnLineSampling
+from .Disk import Disk
+from .Triplet import Triplet
+from .OnlineSampling import OnlineSampling
 from scipy.spatial.distance import euclidean, cdist
 
 import logging
@@ -16,7 +16,7 @@ logger = logging.getLogger("bob.learn.tensorflow")
 from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 
-class TripletWithFastSelectionDisk(Triplet, Disk, OnLineSampling):
+class TripletWithFastSelectionDisk(Triplet, Disk, OnlineSampling):
     """
     This data shuffler generates triplets from :py:class:`bob.learn.tensorflow.datashuffler.Triplet` and
     :py:class:`bob.learn.tensorflow.datashuffler.Disk` shufflers.
@@ -27,12 +27,11 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnLineSampling):
     "Facenet: A unified embedding for face recognition and clustering." Proceedings of the IEEE Conference on
     Computer Vision and Pattern Recognition. 2015.
 
-
     In this shuffler, the triplets are selected as the following:
-      1. Select M identities
-      2. Get N pairs anchor-positive (for each M identities) such that the argmax(anchor, positive)
-      3. For each pair anchor-positive, find the "semi-hard" negative samples such that
-      argmin(||f(x_a) - f(x_p)||^2 < ||f(x_a) - f(x_n)||^2
+
+    1. Select M identities.
+    2. Get N pairs anchor-positive (for each M identities) such that the argmax(anchor, positive).
+    3. For each pair anchor-positive, find the "semi-hard" negative samples such that :math:`argmin(||f(x_a) - f(x_p)||^2 < ||f(x_a) - f(x_n)||^2`.
 
      **Parameters**
 
@@ -141,8 +140,6 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnLineSampling):
         for i in range(self.shape[0]):
             samples_a[i, ...] = self.get_anchor(anchor_labels[i])
         embedding_a = self.project(samples_a)
-
-        print "EMBEDDING {0} ".format(embedding_a[:, 0])
 
         # Getting the positives
         samples_p, embedding_p, d_anchor_positive = self.get_positives(anchor_labels, embedding_a)

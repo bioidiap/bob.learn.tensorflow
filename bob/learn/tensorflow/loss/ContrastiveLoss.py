@@ -17,9 +17,10 @@ class ContrastiveLoss(BaseLoss):
 
     http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
 
-    L = 0.5 * (Y) * D^2 + 0.5 * (1-Y) * {max(0, margin - D)}^2
+    :math:`L = 0.5 * (Y) * D^2 + 0.5 * (1-Y) * {max(0, margin - D)}^2`
 
     **Parameters**
+
     left_feature:
       First element of the pair
 

@@ -224,10 +224,10 @@ class VGG16_mod(SequenceNetwork):
                         weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
                         bias_initialization=Constant(use_gpu=self.use_gpu)
                         ))
-        self.add(AveragePooling(name="pooling5", strides=[1, 2, 2, 1]))
+        self.add(AveragePooling(name="pooling5", shape=[1, 7, 7, 1], strides=[1, 7, 7, 1]))
 
         if do_dropout:
-            self.add(Dropout(name="dropout", keep_prob=0.4))
+            self.add(Dropout(name="dropout", keep_prob=0.5))
 
         self.add(FullyConnected(name="fc8", output_dim=n_classes,
                                 activation=None,

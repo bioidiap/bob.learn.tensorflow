@@ -37,6 +37,7 @@ else:
 
 # Be picky about warnings
 nitpicky = True
+keep_warnings = True
 
 # Ignores stuff we can't easily resolve on other project's sphinx manuals
 nitpick_ignore = []

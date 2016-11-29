@@ -6,14 +6,14 @@
 import numpy
 import tensorflow as tf
 
-from OnlineSampling import OnLineSampling
-from Memory import Memory
-from Triplet import Triplet
+from .OnlineSampling import OnlineSampling
+from .Memory import Memory
+from .Triplet import Triplet
 from scipy.spatial.distance import euclidean
 from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 
-class TripletWithSelectionMemory(Triplet, Memory, OnLineSampling):
+class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
     """
     This data shuffler generates triplets from :py:class:`bob.learn.tensorflow.datashuffler.Triplet` and
     :py:class:`bob.learn.tensorflow.datashuffler.Memory` shufflers.
@@ -24,12 +24,11 @@ class TripletWithSelectionMemory(Triplet, Memory, OnLineSampling):
     "Facenet: A unified embedding for face recognition and clustering." Proceedings of the IEEE Conference on
     Computer Vision and Pattern Recognition. 2015.
 
-
     In this shuffler, the triplets are selected as the following:
-      1. Select M identities
-      2. Get N pairs anchor-positive (for each M identities) such that the argmax(anchor, positive)
-      3. For each pair anchor-positive, find the "semi-hard" negative samples such that
-      argmin(||f(x_a) - f(x_p)||^2 < ||f(x_a) - f(x_n)||^2
+
+    1. Select M identities.
+    2. Get N pairs anchor-positive (for each M identities) such that the argmax(anchor, positive).
+    3. For each pair anchor-positive, find the "semi-hard" negative samples such that :math:`argmin(||f(x_a) - f(x_p)||^2 < ||f(x_a) - f(x_n)||^2`
 
      **Parameters**
 

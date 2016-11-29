@@ -1,10 +1,10 @@
 # see https://docs.python.org/3/library/pkgutil.html
 from .Base import Base
+from .OnlineSampling import OnlineSampling
 from .Siamese import Siamese
 from .Triplet import Triplet
 from .Memory import Memory
 from .Disk import Disk
-from .OnlineSampling import OnLineSampling
 
 from .SiameseMemory import SiameseMemory
 from .TripletMemory import TripletMemory

@@ -15,6 +15,7 @@ class Memory(Base):
     This datashuffler deal with memory databases that are stored in a :py:class`numpy.array`
 
      **Parameters**
+
      data:
        Input data to be trainer
 

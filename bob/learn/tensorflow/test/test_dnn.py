@@ -58,6 +58,7 @@ def test_dnn_trainer():
                       analizer=None,
                       prefetch=False,
                       learning_rate=constant(0.05, name="dnn_lr"),
+                      optimizer=tf.train.AdamOptimizer(name="adam_dnn"),
                       temp_dir=directory)
     trainer.train(train_data_shuffler)
 

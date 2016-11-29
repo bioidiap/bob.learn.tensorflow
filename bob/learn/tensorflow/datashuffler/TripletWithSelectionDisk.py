@@ -8,7 +8,7 @@ import tensorflow as tf
 
 from .Disk import Disk
 from .Triplet import Triplet
-from .OnlineSampling import OnLineSampling
+from .OnlineSampling import OnlineSampling
 from scipy.spatial.distance import euclidean
 from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
@@ -17,12 +17,13 @@ logger = logging.getLogger("bob.learn.tensorflow")
 from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 
-class TripletWithSelectionDisk(Triplet, Disk, OnLineSampling):
+class TripletWithSelectionDisk(Triplet, Disk, OnlineSampling):
     """
     This data shuffler generates triplets from :py:class:`bob.learn.tensorflow.datashuffler.Triplet` shufflers.
     The selection of the triplets are random.
 
      **Parameters**
+
      data:
        Input data to be trainer
 

@@ -7,22 +7,18 @@ import logging
 logger = logging.getLogger("bob.learn.tensorflow")
 import tensorflow as tf
 from tensorflow.core.framework import summary_pb2
-import threading
 from ..analyzers import ExperimentAnalizer, SoftmaxAnalizer
 from ..network import SequenceNetwork
-import bob.io.base
 from .Trainer import Trainer
 import os
-import sys
-from .learning_rate import constant
 
 
 class SiameseTrainer(Trainer):
-
     """
     Trainer for siamese networks.
 
     **Parameters**
+
     architecture:
       The architecture that you want to run. Should be a :py:class`bob.learn.tensorflow.network.SequenceNetwork`
 
@@ -38,7 +34,7 @@ class SiameseTrainer(Trainer):
     temp_dir: str
       The output directory
 
-    learning_rate: :py:class:`bob.learn.tensorflow.trainers.learningrate`
+    learning_rate: `bob.learn.tensorflow.trainers.learning_rate`
       Initial learning rate
 
     convergence_threshold:
@@ -70,7 +66,7 @@ class SiameseTrainer(Trainer):
                  temp_dir="cnn",
 
                  # Learning rate
-                 learning_rate=constant(),
+                 learning_rate=None,
 
                  ###### training options ##########
                  convergence_threshold=0.01,
