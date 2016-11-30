@@ -116,18 +116,24 @@ class TrainerSeq(object):
         self.train_data_shuffler = None
         self.summaries_train = None
         self.train_summary_writter = None
-        self.thread_pool = None
+        self.train_thread_pool = None
+        self.train_threads = None
 
         # Validation data
         self.validation_graph = None
+        self.validation_data_shuffler = None
         self.validation_summary_writter = None
+        self.valid_thread_pool = None
+        self.valid_threads = None
 
         # Analizer
         self.analizer = analizer
 
-        self.thread_pool = None
-        self.enqueue_op = None
+        self.enqueue_op_train = None
+        self.enqueue_op_valid = None
         self.global_epoch = None
+        self.threads_lock = threading.RLock()
+
 
         self.model_from_file = model_from_file
         self.session = None
@@ -159,7 +165,10 @@ class TrainerSeq(object):
                                  shapes=[placeholder_data.get_shape().as_list()[1:], []])
 
             # Fetching the place holders from the queue
-            self.enqueue_op = queue.enqueue_many([placeholder_data, placeholder_labels])
+            if training:
+                self.enqueue_op_train = queue.enqueue_many([placeholder_data, placeholder_labels])
+            else:
+                self.enqueue_op_valid = queue.enqueue_many([placeholder_data, placeholder_labels])
             feature_batch, label_batch = queue.dequeue_many(data_shuffler.batch_size)
 
             # Creating the architecture for train and validation
@@ -173,7 +182,7 @@ class TrainerSeq(object):
         network_graph = self.architecture.compute_graph(feature_batch, training=training)
         graph = self.loss(network_graph, label_batch)
         if not training:
-            return [network_graph, graph]
+            return [network_graph, graph, label_batch]
 
         return graph
 
@@ -228,18 +237,22 @@ class TrainerSeq(object):
             step: Iteration number
 
         """
-        # Opening a new session for validation
-        [data, labels] = data_shuffler.get_batch()
-        # when we run out of data
-        if data is None:
-            return None, None
+        if self.prefetch:
+            prediction, l, labels = self.session.run(self.validation_graph)
+        else:
+            # Opening a new session for validation
+            [data, labels] = data_shuffler.get_batch()
+            # when we run out of data
+            if data is None:
+                return None, None
 
-        [data_placeholder, label_placeholder] = data_shuffler.get_placeholders()
+            [data_placeholder, label_placeholder] = data_shuffler.get_placeholders()
 
-        feed_dict = {data_placeholder: data,
-                     label_placeholder: labels}
+            feed_dict = {data_placeholder: data,
+                         label_placeholder: labels}
 
-        prediction, l = self.session.run(self.validation_graph, feed_dict=feed_dict)
+            prediction, l, labels = self.session.run(self.validation_graph, feed_dict=feed_dict)
+
         prediction = numpy.argmax(prediction, 1)
         prediction_err = numpy.asarray([prediction != labels], dtype=numpy.int16)
 
@@ -254,17 +267,20 @@ class TrainerSeq(object):
         tf.scalar_summary('lr', self.learning_rate, name="train")
         return tf.merge_all_summaries()
 
-    def start_thread(self):
+    def start_thread(self, training=True):
         """
-        Start pool of threads for pre-fetching
+        Start pool of train_threads for pre-fetching
 
         **Parameters**
           session: Tensorflow session
         """
 
         threads = []
-        for n in range(3):
-            t = threading.Thread(target=self.load_and_enqueue, args=())
+        for n in range(5):
+            if training:
+                t = threading.Thread(target=self.load_and_enqueue, args=())
+            else:
+                t = threading.Thread(target=self.load_and_enqueue_valid, args=())
             t.daemon = True  # thread will close when parent quits
             t.start()
             threads.append(t)
@@ -278,20 +294,51 @@ class TrainerSeq(object):
           session: Tensorflow session
         """
 
-        while not self.thread_pool.should_stop():
-            [train_data, train_labels] = self.train_data_shuffler.get_batch()
+        while not self.train_thread_pool.should_stop():
+            with self.threads_lock:
+                [train_data, train_labels] = self.train_data_shuffler.get_batch()
 
             # if we run out of data, stop
             if train_data is None:
-                self.thread_pool.request_stop()
-                break
+                # print("None data, exiting the thread")
+                self.train_thread_pool.request_stop()
+                self.train_thread_pool.join(self.train_threads)
+                return
 
             [train_placeholder_data, train_placeholder_labels] = self.train_data_shuffler.get_placeholders()
 
             feed_dict = {train_placeholder_data: train_data,
                          train_placeholder_labels: train_labels}
 
-            self.session.run(self.enqueue_op, feed_dict=feed_dict)
+            self.session.run(self.enqueue_op_train, feed_dict=feed_dict)
+
+    def load_and_enqueue_valid(self):
+        """
+        Injecting data in the place holder queue
+
+        **Parameters**
+          session: Tensorflow session
+        """
+        if self.validation_data_shuffler is None:
+            return
+
+        while not self.valid_thread_pool.should_stop():
+            with self.threads_lock:
+                [valid_data, valid_labels] = self.validation_data_shuffler.get_batch()
+
+            # if we run out of data, stop
+            if valid_data is None:
+                # print("None validation data, exiting the thread")
+                self.valid_thread_pool.request_stop()
+                self.valid_thread_pool.join(self.valid_threads)
+                return
+
+            [valid_placeholder_data, valid_placeholder_labels] = self.validation_data_shuffler.get_placeholders()
+
+            feed_dict = {valid_placeholder_data: valid_data,
+                         valid_placeholder_labels: valid_labels}
+
+            self.session.run(self.enqueue_op_valid, feed_dict=feed_dict)
 
     def bootstrap_graphs(self, train_data_shuffler, validation_data_shuffler):
         """
@@ -310,7 +357,8 @@ class TrainerSeq(object):
 
         # Creating validation graph
         if validation_data_shuffler is not None:
-            self.validation_graph = self.compute_graph(validation_data_shuffler, name="validation", training=False)
+            self.validation_graph = self.compute_graph(validation_data_shuffler, prefetch=self.prefetch,
+                                                       name="validation", training=False)
             tf.add_to_collection("validation_graph", self.validation_graph)
 
         self.bootstrap_placeholders(train_data_shuffler, validation_data_shuffler)
@@ -327,7 +375,7 @@ class TrainerSeq(object):
 
         # Persisting the placeholders
         if self.prefetch:
-            batch, label = train_data_shuffler.get_placeholders_forprefetch()
+            batch, label = train_data_shuffler.get_placeholders_forprefetch("train")
         else:
             batch, label = train_data_shuffler.get_placeholders()
 
@@ -336,7 +384,10 @@ class TrainerSeq(object):
 
         # Creating validation graph
         if validation_data_shuffler is not None:
-            batch, label = validation_data_shuffler.get_placeholders()
+            if self.prefetch:
+                batch, label = validation_data_shuffler.get_placeholders_forprefetch("validation")
+            else:
+                batch, label = validation_data_shuffler.get_placeholders()
             tf.add_to_collection("validation_placeholder_data", batch)
             tf.add_to_collection("validation_placeholder_label", label)
 
@@ -387,6 +438,16 @@ class TrainerSeq(object):
             train_data_shuffler.set_placeholders(tf.get_collection("validation_placeholder_data")[0],
                                                  tf.get_collection("validation_placeholder_label")[0])
 
+    def launch_train_threads(self):
+        self.train_thread_pool = tf.train.Coordinator()
+        tf.train.start_queue_runners(coord=self.train_thread_pool, sess=self.session)
+        self.train_threads = self.start_thread()
+
+    def launch_valid_threads(self):
+        self.valid_thread_pool = tf.train.Coordinator()
+        tf.train.start_queue_runners(coord=self.valid_thread_pool, sess=self.session)
+        self.valid_threads = self.start_thread(training=False)
+
     def train(self, train_data_shuffler, validation_data_shuffler=None):
         """
         Train the network:
@@ -400,6 +461,7 @@ class TrainerSeq(object):
         # Creating directory
         bob.io.base.create_directories_safe(self.temp_dir)
         self.train_data_shuffler = train_data_shuffler
+        self.validation_data_shuffler = validation_data_shuffler
 
         logger.info("Initializing !!")
 
@@ -445,11 +507,6 @@ class TrainerSeq(object):
         if isinstance(train_data_shuffler, OnLineSampling):
             train_data_shuffler.set_feature_extractor(self.architecture, session=self.session)
 
-        # Start a thread to enqueue data asynchronously, and hide I/O latency.
-        if self.prefetch:
-            self.thread_pool = tf.train.Coordinator()
-            tf.train.start_queue_runners(coord=self.thread_pool, sess=self.session)
-            threads = self.start_thread()
 
         # TENSOR BOARD SUMMARY
         self.train_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'train'), self.session.graph)
@@ -460,10 +517,17 @@ class TrainerSeq(object):
 
             batch_num = 0
             total_train_loss = 0
+            logger.info("\nTRAINING EPOCH {0}".format(epoch))
+            self.train_data_shuffler.data_finished = False
+
+            # Start a thread to enqueue data asynchronously, and hide I/O latency.
+            if self.prefetch:
+                self.launch_train_threads()
+
             while True:
                 cur_loss, summary = self.fit()
                 # we are done when we went through the whole data
-                if cur_loss is None:
+                if cur_loss is None or self.train_data_shuffler.data_finished:
                     break
 
                 batch_num += 1
@@ -475,6 +539,7 @@ class TrainerSeq(object):
                         epoch, batch_num, total_train_loss/batch_num))
                     self.train_summary_writter.add_summary(summary, epoch*total_train_data+batch_num)
                     end = time.time()
+                    logger.info("Training Batch = {0}, time = {1}".format(batch_num, float(end - start)))
                     summary = summary_pb2.Summary.Value(tag="elapsed_time", simple_value=float(end - start))
                     self.train_summary_writter.add_summary(
                         summary_pb2.Summary(value=[summary]), epoch*total_train_data+batch_num)
@@ -494,14 +559,21 @@ class TrainerSeq(object):
 
 
             # Running validation for the current epoch
-            if validation_data_shuffler is not None:
+            if self.validation_data_shuffler is not None:
                 batch_num = 0
                 total_valid_loss = 0
                 total_prediction_err = 0
+                start = time.time()
+                logger.info("\nVALIDATION EPOCH {0}".format(epoch))
+
+                # Start a thread to enqueue data asynchronously, and hide I/O latency.
+                if self.prefetch:
+                    self.launch_valid_threads()
+
                 while True:
-                    prediction_err, cur_loss = self.compute_validation(validation_data_shuffler)
+                    prediction_err, cur_loss = self.compute_validation(self.validation_data_shuffler)
                     # we are done when we went through the whole data
-                    if cur_loss is None:
+                    if cur_loss is None or self.validation_data_shuffler.data_finished:
                         break
 
                     batch_num += 1
@@ -517,12 +589,15 @@ class TrainerSeq(object):
                             summary_pb2.Summary(value=summaries), epoch*total_valid_data+batch_num)
                         logger.info("Loss validation step={0} = {1}".format(
                             epoch*total_valid_data+batch_num, total_valid_loss/batch_num))
+                        end = time.time()
+                        logger.info("Validation Batch = {0}, time = {1}".format(batch_num, float(end - start)))
 
                         summaries = [summary_pb2.Summary.Value(tag="Error", simple_value=float(total_prediction_err / batch_num))]
                         self.validation_summary_writter.add_summary(
                             summary_pb2.Summary(value=summaries), epoch * total_valid_data + batch_num)
                         logger.info("Error validation step={0} = {1}".format(
                             epoch * total_valid_data + batch_num, total_prediction_err / batch_num))
+                        start = time.time()
 
                 total_valid_data = batch_num
                 logger.info("Total number of validation batches={0}".format(total_valid_data))
@@ -535,7 +610,7 @@ class TrainerSeq(object):
         logger.info("Training finally finished")
 
         self.train_summary_writter.close()
-        if validation_data_shuffler is not None:
+        if self.validation_data_shuffler is not None:
             self.validation_summary_writter.close()
 
         # Saving the final network
@@ -547,5 +622,5 @@ class TrainerSeq(object):
 
         if self.prefetch:
             # now they should definetely stop
-            self.thread_pool.request_stop()
-            self.thread_pool.join(threads)
+            self.train_thread_pool.request_stop()
+            self.valid_thread_pool.request_stop()

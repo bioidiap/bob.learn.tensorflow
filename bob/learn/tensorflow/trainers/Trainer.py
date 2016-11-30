@@ -239,7 +239,7 @@ class Trainer(object):
 
     def start_thread(self):
         """
-        Start pool of threads for pre-fetching
+        Start pool of train_threads for pre-fetching
 
         **Parameters**
           session: Tensorflow session

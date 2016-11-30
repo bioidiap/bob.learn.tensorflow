@@ -64,7 +64,7 @@ class DiskAudio(Base):
 
         self.indices = None
         self.cur_index = 0
-
+        self.data_finished = False
 
 #        if self.out_file != "":
 #            bob.io.base.create_directories_safe(os.path.dirname(self.out_file))
@@ -87,13 +87,16 @@ class DiskAudio(Base):
         return indices
 
     def get_batch(self, noise=False):
-
+        if self.data_finished:
+            return None, None
         # if we ran through the whole data already
         if self.cur_index >= self.data.shape[0] and len(self.frames_storage) < self.batch_size:
+            # print("DiskAudio RESET")
             # reset everything
             self.frames_storage = []
             self.labels_storage = []
             self.cur_index = 0
+            self.data_finished = True
             return None, None
 
         if self.indices is None or self.cur_index == 0:
