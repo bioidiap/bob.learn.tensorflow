@@ -91,7 +91,7 @@ class DiskAudio(Base):
             return None, None
         # if we ran through the whole data already
         if self.cur_index >= self.data.shape[0] and len(self.frames_storage) < self.batch_size:
-            # print("DiskAudio RESET")
+#            print("DiskAudio RESET")
             # reset everything
             self.frames_storage = []
             self.labels_storage = []
@@ -102,6 +102,7 @@ class DiskAudio(Base):
         if self.indices is None or self.cur_index == 0:
             self.indices = self.randomized_indices(self.data.shape[0])
 
+#        print(len(self.frames_storage))
         f = None
         if self.out_file != "":
             f = open(self.out_file, "a")

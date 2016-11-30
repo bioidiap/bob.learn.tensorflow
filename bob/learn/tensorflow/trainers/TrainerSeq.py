@@ -132,7 +132,8 @@ class TrainerSeq(object):
         self.enqueue_op_train = None
         self.enqueue_op_valid = None
         self.global_epoch = None
-        self.threads_lock = threading.RLock()
+        self.threads_lock_train = threading.RLock()
+        self.threads_lock_valid = threading.RLock()
 
 
         self.model_from_file = model_from_file
@@ -160,7 +161,7 @@ class TrainerSeq(object):
             [placeholder_data, placeholder_labels] = data_shuffler.get_placeholders_forprefetch(name=name)
 
             # Defining a placeholder queue for prefetching
-            queue = tf.FIFOQueue(capacity=10,
+            queue = tf.FIFOQueue(capacity=20,
                                  dtypes=[tf.float32, tf.int64],
                                  shapes=[placeholder_data.get_shape().as_list()[1:], []])
 
@@ -295,14 +296,14 @@ class TrainerSeq(object):
         """
 
         while not self.train_thread_pool.should_stop():
-            with self.threads_lock:
+            with self.threads_lock_train:
                 [train_data, train_labels] = self.train_data_shuffler.get_batch()
 
             # if we run out of data, stop
-            if train_data is None:
-                # print("None data, exiting the thread")
+            if train_data is None or self.train_data_shuffler.data_finished:
+#                print("None data, exiting the thread")
                 self.train_thread_pool.request_stop()
-                self.train_thread_pool.join(self.train_threads)
+#                self.train_thread_pool.join(self.train_threads)
                 return
 
             [train_placeholder_data, train_placeholder_labels] = self.train_data_shuffler.get_placeholders()
@@ -323,14 +324,14 @@ class TrainerSeq(object):
             return
 
         while not self.valid_thread_pool.should_stop():
-            with self.threads_lock:
+            with self.threads_lock_valid:
                 [valid_data, valid_labels] = self.validation_data_shuffler.get_batch()
 
             # if we run out of data, stop
-            if valid_data is None:
-                # print("None validation data, exiting the thread")
+            if valid_data is None or self.validation_data_shuffler.data_finished:
+#                print("None validation data, exiting the thread")
                 self.valid_thread_pool.request_stop()
-                self.valid_thread_pool.join(self.valid_threads)
+#                self.valid_thread_pool.join(self.valid_threads)
                 return
 
             [valid_placeholder_data, valid_placeholder_labels] = self.validation_data_shuffler.get_placeholders()
@@ -525,7 +526,10 @@ class TrainerSeq(object):
                 self.launch_train_threads()
 
             while True:
+#                start = time.time()
                 cur_loss, summary = self.fit()
+#                end = time.time()
+#                logger.info("Batch = {0}, time = {1}".format(batch_num, float(end-start)))
                 # we are done when we went through the whole data
                 if cur_loss is None or self.train_data_shuffler.data_finished:
                     break
@@ -543,6 +547,11 @@ class TrainerSeq(object):
                     summary = summary_pb2.Summary.Value(tag="elapsed_time", simple_value=float(end - start))
                     self.train_summary_writter.add_summary(
                         summary_pb2.Summary(value=[summary]), epoch*total_train_data+batch_num)
+                    path = os.path.join(self.temp_dir, 'model_epoch{0}_batch{1}.ckp'.format(epoch, batch_num))
+                    self.architecture.save(saver, path)
+                    with self.session.as_default():
+                        path = os.path.join(self.temp_dir, 'model_epoch{0}_batch{1}.hdf5'.format(epoch, batch_num))
+                        self.architecture.save_hdf5(bob.io.base.HDF5File(path, 'w'))
                     start = time.time()
 
             total_train_data = batch_num
@@ -565,6 +574,7 @@ class TrainerSeq(object):
                 total_prediction_err = 0
                 start = time.time()
                 logger.info("\nVALIDATION EPOCH {0}".format(epoch))
+                self.validation_data_shuffler.data_finished = False
 
                 # Start a thread to enqueue data asynchronously, and hide I/O latency.
                 if self.prefetch:
@@ -587,16 +597,16 @@ class TrainerSeq(object):
                         summaries = [summary_pb2.Summary.Value(tag="loss", simple_value=float(total_valid_loss/batch_num))]
                         self.validation_summary_writter.add_summary(
                             summary_pb2.Summary(value=summaries), epoch*total_valid_data+batch_num)
-                        logger.info("Loss validation step={0} = {1}".format(
-                            epoch*total_valid_data+batch_num, total_valid_loss/batch_num))
+                        logger.info("Loss validation batch={0} = {1}".format(
+                            batch_num, total_valid_loss/batch_num))
                         end = time.time()
                         logger.info("Validation Batch = {0}, time = {1}".format(batch_num, float(end - start)))
 
                         summaries = [summary_pb2.Summary.Value(tag="Error", simple_value=float(total_prediction_err / batch_num))]
                         self.validation_summary_writter.add_summary(
                             summary_pb2.Summary(value=summaries), epoch * total_valid_data + batch_num)
-                        logger.info("Error validation step={0} = {1}".format(
-                            epoch * total_valid_data + batch_num, total_prediction_err / batch_num))
+                        logger.info("Error validation batch={0} = {1}".format(
+                            batch_num, total_prediction_err / batch_num))
                         start = time.time()
 
                 total_valid_data = batch_num
