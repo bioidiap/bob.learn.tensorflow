@@ -43,6 +43,9 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         self.inference_graph = None
         self.inference_placeholder = None
 
+    def __del__(self):
+        tf.reset_default_graph()
+
     def add(self, layer):
         """
         Add a :py:class:`bob.learn.tensorflow.layers.Layer` in the sequence network

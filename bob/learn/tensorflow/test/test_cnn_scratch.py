@@ -79,7 +79,8 @@ def test_cnn_trainer_scratch():
                       iterations=iterations,
                       analizer=None,
                       prefetch=False,
-                      temp_dir=directory)
+                      temp_dir=directory
+                      )
 
     trainer.train(train_data_shuffler)
 

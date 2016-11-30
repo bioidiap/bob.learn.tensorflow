@@ -59,7 +59,8 @@ def test_dnn_trainer():
                       prefetch=False,
                       learning_rate=constant(0.05, name="dnn_lr"),
                       optimizer=tf.train.AdamOptimizer(name="adam_dnn"),
-                      temp_dir=directory)
+                      temp_dir=directory
+                      )
     trainer.train(train_data_shuffler)
 
     accuracy = validate_network(validation_data, validation_labels, architecture)

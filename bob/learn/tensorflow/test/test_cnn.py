@@ -102,7 +102,8 @@ def test_cnn_trainer():
                       prefetch=False,
                       learning_rate=constant(0.05, name="regular_lr"),
                       optimizer=tf.train.AdamOptimizer(name="adam_softmax"),
-                      temp_dir=directory)
+                      temp_dir=directory
+                      )
 
     trainer.train(train_data_shuffler)
 
@@ -144,7 +145,8 @@ def test_siamesecnn_trainer():
                              analizer=None,
                              learning_rate=constant(0.05, name="siamese_lr"),
                              optimizer=tf.train.AdamOptimizer(name="adam_siamese"),
-                             temp_dir=directory)
+                             temp_dir=directory
+                             )
 
     trainer.train(train_data_shuffler)
 
@@ -187,7 +189,8 @@ def test_tripletcnn_trainer():
                              analizer=None,
                              learning_rate=constant(0.05, name="triplet_lr"),
                              optimizer=tf.train.AdamOptimizer(name="adam_triplet"),
-                             temp_dir=directory)
+                             temp_dir=directory
+                             )
 
     trainer.train(train_data_shuffler)
 

@@ -56,6 +56,7 @@ class SiameseTrainer(Trainer):
 
     verbosity_level:
 
+
     """
 
     def __init__(self,
@@ -80,7 +81,8 @@ class SiameseTrainer(Trainer):
 
                  model_from_file="",
 
-                 verbosity_level=2):
+                 verbosity_level=2
+                 ):
 
         super(SiameseTrainer, self).__init__(
             architecture=architecture,

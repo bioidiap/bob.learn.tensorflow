@@ -85,7 +85,8 @@ class TripletTrainer(Trainer):
 
                  model_from_file="",
 
-                 verbosity_level=2):
+                 verbosity_level=2
+                 ):
 
         super(TripletTrainer, self).__init__(
             architecture=architecture,

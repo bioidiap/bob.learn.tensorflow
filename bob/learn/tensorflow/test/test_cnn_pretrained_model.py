@@ -83,8 +83,9 @@ def test_cnn_pretrained():
                       prefetch=False,
                       learning_rate=constant(0.05, name="regular_lr"),
                       optimizer=tf.train.AdamOptimizer(name="adam_pretrained_model"),
-                      temp_dir=directory)
-    import ipdb; ipdb.set_trace();
+                      temp_dir=directory
+                      )
+
     trainer.train(train_data_shuffler)
     accuracy = validate_network(validation_data, validation_labels, scratch)
     assert accuracy > 85
@@ -103,7 +104,8 @@ def test_cnn_pretrained():
                       prefetch=False,
                       learning_rate=None,
                       temp_dir=directory2,
-                      model_from_file=os.path.join(directory, "model.ckp"))
+                      model_from_file=os.path.join(directory, "model.ckp")
+                      )
 
     trainer.train(train_data_shuffler)
 

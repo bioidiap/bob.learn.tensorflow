@@ -202,7 +202,7 @@ class Trainer(object):
 
         if self.prefetch:
             _, l, lr, summary = self.session.run([self.optimizer, self.training_graph,
-                                             self.learning_rate, self.summaries_train])
+                                                  self.learning_rate, self.summaries_train])
         else:
             feed_dict = self.get_feed_dict(self.train_data_shuffler)
             _, l, lr, summary = self.session.run([self.optimizer, self.training_graph,

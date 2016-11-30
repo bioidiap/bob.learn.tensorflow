@@ -8,7 +8,7 @@ from .Base import Base
 from bob.learn.tensorflow.network import SequenceNetwork
 
 
-class OnlineSampling(Base):
+class OnlineSampling(object):
     """
     This data shuffler uses the current state of the network to select the samples.
     This class is not meant to be used, but extended.
