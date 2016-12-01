@@ -13,8 +13,6 @@
    :target: https://gitlab.idiap.ch/bob/bob.learn.tensorflow
 .. image:: http://img.shields.io/pypi/v/bob.learn.tensorflow.png
    :target: https://pypi.python.org/pypi/bob.learn.tensorflow
-.. image:: http://img.shields.io/pypi/dm/bob.learn.tensorflow.png
-   :target: https://pypi.python.org/pypi/bob.learn.tensorflow
 
 ===========================
  Bob support for tensorflow
