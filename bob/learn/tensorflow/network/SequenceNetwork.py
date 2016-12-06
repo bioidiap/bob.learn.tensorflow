@@ -317,14 +317,14 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
 
         session = Session.instance().session
 
-        open(path+"_sequence_net.pickle", 'w').write(self.pickle_architecture)
+        open(path+"_sequence_net.pickle", 'wb').write(self.pickle_architecture)
         return saver.save(session, path)
 
     def load(self, path, clear_devices=False, session_from_scratch=False):
 
         session = Session.instance(new=session_from_scratch).session
 
-        self.sequence_net = pickle.loads(open(path+"_sequence_net.pickle").read())
+        self.sequence_net = pickle.loads(open(path+"_sequence_net.pickle", 'rb').read())
         if clear_devices:
             saver = tf.train.import_meta_graph(path + ".meta", clear_devices=clear_devices)
         else:

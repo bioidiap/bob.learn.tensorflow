@@ -67,7 +67,7 @@ class FullyConnected(Layer):
     def create_variables(self, input_layer):
         self.input_layer = input_layer
         if self.W is None:
-            input_dim = reduce(mul, self.input_layer.get_shape().as_list()[1:])
+            input_dim = numpy.prod(self.input_layer.get_shape().as_list()[1:])
             if self.init_value is None:
                 self.init_value = input_dim
 
