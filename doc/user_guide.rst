@@ -16,7 +16,7 @@ The example consists in training a very simple **CNN** with `MNIST` dataset in 4
 
 1. Preparing your input data
 
-.. doctest::
+.. code-block:: python
 
     >>> import tensorflow as tf
     >>> import bob.learn.tensorflow
@@ -28,7 +28,7 @@ The example consists in training a very simple **CNN** with `MNIST` dataset in 4
 
 2. Create an architecture
 
-.. doctest::
+.. code-block:: python
 
     >>> architecture = bob.learn.tensorflow.network.SequenceNetwork()
     >>> architecture.add(bob.learn.tensorflow.layers.Conv2D(name="conv1", kernel_size=3, filters=10, activation=tf.nn.tanh))
@@ -36,7 +36,7 @@ The example consists in training a very simple **CNN** with `MNIST` dataset in 4
 
 3. Defining a loss and training
 
-.. doctest::
+.. code-block:: python
 
     >>> loss = bob.learn.tensorflow.loss.BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
     >>> trainer = bob.learn.tensorflow.trainers.Trainer(architecture=architecture, loss=loss, iterations=100, temp_dir="./cnn")
@@ -45,7 +45,7 @@ The example consists in training a very simple **CNN** with `MNIST` dataset in 4
 
 4. Predicting and computing the accuracy
 
-.. doctest::
+.. code-block:: python
 
     >>> # Loading the model
     >>> architecture = bob.learn.tensorflow.network.SequenceNetwork()
@@ -124,7 +124,7 @@ The data can be fetched either from the memory (:py:class:`bob.learn.tensorflow.
 disk (:py:class:`bob.learn.tensorflow.datashuffler.Disk`).
 To train networks fetched from the disk, your training data must be a list of paths like in the example below:
 
-.. doctest::
+.. code-block:: python
 
     >>> train_data = ['./file/id1_0.jpg', './file/id1_1.jpg', './file/id2_1.jpg']
     >>> train_labels = [0, 0, 1]
@@ -171,7 +171,7 @@ The library has already some crafted networks implemented in `Architectures <py_
 It is also possible to craft simple MLPs with this library using the class :py:class:`bob.learn.tensorflow.network.MLP`.
 The example bellow shows how to create a simple MLP with 10 putputs and 2 hidden layers.
 
-.. doctest::
+.. code-block:: python
 
     >>> architecture = bob.learn.tensorflow.network.MLP(10, hidden_layers=[20, 40])
 
@@ -221,7 +221,7 @@ Loss
 Loss functions must be wrapped as a :py:class:`bob.learn.tensorflow.loss.BaseLoss` objects.
 For instance, if you want to use the sparse softmax cross entropy loss between logits and labels you should do like this.
 
-.. doctest::
+.. code-block:: python
 
     >>> loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
 

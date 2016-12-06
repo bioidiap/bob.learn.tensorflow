@@ -1,4 +1,3 @@
-
 from .SequenceNetwork import SequenceNetwork
 from .Lenet import Lenet
 from .Chopra import Chopra
