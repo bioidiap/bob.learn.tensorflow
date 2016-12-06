@@ -1,7 +1,7 @@
 from .BaseLoss import BaseLoss
 from .ContrastiveLoss import ContrastiveLoss
 from .TripletLoss import TripletLoss
-from NegLogLoss import NegLogLoss
+from .NegLogLoss import NegLogLoss
 
 
 # gets sphinx autodoc done right - don't remove it
