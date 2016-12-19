@@ -8,6 +8,7 @@ import bob.core
 from .Base import Base
 
 from scipy.io.wavfile import read as readWAV
+import time
 
 # logger = bob.core.log.setup("bob.learn.tensorflow")
 import logging
@@ -87,11 +88,11 @@ class DiskAudio(Base):
         return indices
 
     def get_batch(self, noise=False):
+        # start = time.time()
         if self.data_finished:
             return None, None
         # if we ran through the whole data already
         if self.cur_index >= self.data.shape[0] and len(self.frames_storage) < self.batch_size:
-#            print("DiskAudio RESET")
             # reset everything
             self.frames_storage = []
             self.labels_storage = []
@@ -102,7 +103,6 @@ class DiskAudio(Base):
         if self.indices is None or self.cur_index == 0:
             self.indices = self.randomized_indices(self.data.shape[0])
 
-#        print(len(self.frames_storage))
         f = None
         if self.out_file != "":
             f = open(self.out_file, "a")
@@ -126,6 +126,8 @@ class DiskAudio(Base):
         if f is not None:
             f.close()
 
+        # end = time.time()
+        # logger.info("Get Batch time = {0}".format(float(end - start)))
         return [selected_data.astype("float32"), selected_labels.astype("int64")]
 
     def extract_frames_from_file(self, filename, label):
@@ -144,8 +146,10 @@ class DiskAudio(Base):
         # make sure the array is divided into equal chunks
         windows = numpy.split(wav_signal[:self.m_win_length * m_num_win], m_num_win)
 
-        final_frames = []
-        final_labels = [label] * m_num_win
+        # final_frames = []
+        # final_labels = [label] * m_num_win
+        final_frames = numpy.empty([m_num_win, 2*self.context_size+1], dtype=numpy.float32)
+        final_labels = label * numpy.ones(m_num_win, dtype=numpy.int64)
         # loop through the windows
         for i, window in zip(range(0, len(windows)), windows):
             # window with surrounding context will form the frame we seek
@@ -154,11 +158,13 @@ class DiskAudio(Base):
             # copy the first frame necessary number of times
             if i < self.context_size:
                 left_context = numpy.tile(windows[0], self.context_size - i)
-                final_frames.append(numpy.append(left_context, windows[:i + self.context_size + 1]))
+                # final_frames.append(numpy.append(left_context, windows[:i + self.context_size + 1]))
+                final_frames[i, :] = numpy.append(left_context, windows[:i + self.context_size + 1])
             elif (i + self.context_size) > (m_num_win - 1):
                 right_context = numpy.tile(windows[-1], i + self.context_size - m_num_win + 1)
-                final_frames.append(numpy.append(windows[i - self.context_size:], right_context))
+                # final_frames.append(numpy.append(windows[i - self.context_size:], right_context))
+                final_frames[i, :] = numpy.append(windows[i - self.context_size:], right_context)
             else:
-                final_frames.append(numpy.ravel(windows[i - self.context_size:i + self.context_size + 1]))
-
+                # final_frames.append(numpy.ravel(windows[i - self.context_size:i + self.context_size + 1]))
+                final_frames[i, :] = numpy.ravel(windows[i - self.context_size:i + self.context_size + 1])
         return final_frames, final_labels
