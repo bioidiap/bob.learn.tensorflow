@@ -6,6 +6,7 @@
 import numpy
 import bob.core
 from .Base import Base
+from Queue import Queue
 
 from scipy.io.wavfile import read as readWAV
 import time
@@ -58,8 +59,10 @@ class DiskAudio(Base):
         # Seting the seed
         numpy.random.seed(seed)
 
+        self.max_queue_size = 20000
+
         # a flexible queue that stores audio frames extracted from files
-        self.frames_storage = []
+        self.frames_storage = Queue(self.max_queue_size)
         # a similar queue for the corresponding labels
         self.labels_storage = []
 
@@ -92,9 +95,9 @@ class DiskAudio(Base):
         if self.data_finished:
             return None, None
         # if we ran through the whole data already
-        if self.cur_index >= self.data.shape[0] and len(self.frames_storage) < self.batch_size:
+        if self.cur_index >= self.data.shape[0] and len(self.labels_storage) < self.batch_size:
             # reset everything
-            self.frames_storage = []
+            self.frames_storage = Queue(self.max_queue_size)
             self.labels_storage = []
             self.cur_index = 0
             self.data_finished = True
@@ -108,27 +111,32 @@ class DiskAudio(Base):
             f = open(self.out_file, "a")
         i = self.cur_index
         # if not enough in the storage, we pre-load frames from the audio files
-        while len(self.frames_storage) < self.batch_size:
+        while len(self.labels_storage) < self.batch_size:
             if f is not None:
                 f.write("%s\n" % self.data[self.indices[i]])
             frames, labels = self.extract_frames_from_file(self.data[self.indices[i]], self.labels[self.indices[i]])
-            self.frames_storage.extend(frames)
+            map(self.frames_storage.put, frames)
+            # self.frames_storage.extend(frames)
             self.labels_storage.extend(labels)
             i += 1
         self.cur_index = i
-        # our temp frame queue should have enough data
-        selected_data = numpy.asarray(self.frames_storage[:self.batch_size])
-        selected_labels = numpy.asarray(self.labels_storage[:self.batch_size])
-        # remove them from the list
-        del self.frames_storage[:self.batch_size]
-        del self.labels_storage[:self.batch_size]
-        selected_data = numpy.reshape(selected_data, (self.batch_size, -1, 1))
         if f is not None:
             f.close()
+        # our temp frame queue should have enough data
+        # selected_data = numpy.asarray(self.frames_storage[:self.batch_size])
+        selected_labels = numpy.asarray(self.labels_storage[:self.batch_size])
+        # remove them from the list
+        # del self.frames_storage[:self.batch_size]
+        del self.labels_storage[:self.batch_size]
+
+        selected_data = numpy.empty([self.batch_size, self.m_frame_length], dtype=numpy.float32)
+        for i in range(0, self.batch_size):
+            selected_data[i, :] = self.frames_storage.get()
+        selected_data = numpy.reshape(selected_data, (self.batch_size, -1, 1))
 
         # end = time.time()
         # logger.info("Get Batch time = {0}".format(float(end - start)))
-        return [selected_data.astype("float32"), selected_labels.astype("int64")]
+        return [selected_data, selected_labels.astype("int64")]
 
     def extract_frames_from_file(self, filename, label):
         rate, wav_signal = self.load_from_file(filename)
@@ -148,7 +156,8 @@ class DiskAudio(Base):
 
         # final_frames = []
         # final_labels = [label] * m_num_win
-        final_frames = numpy.empty([m_num_win, 2*self.context_size+1], dtype=numpy.float32)
+
+        final_frames = numpy.empty([m_num_win, self.m_frame_length], dtype=numpy.float32)
         final_labels = label * numpy.ones(m_num_win, dtype=numpy.int64)
         # loop through the windows
         for i, window in zip(range(0, len(windows)), windows):
