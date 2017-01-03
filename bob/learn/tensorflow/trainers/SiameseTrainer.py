@@ -151,6 +151,46 @@ class SiameseTrainer(Trainer):
                                                  tf.get_collection("validation_placeholder_data2")[0],
                                                  tf.get_collection("validation_placeholder_label")[0])
 
+    def bootstrap_graphs(self, train_data_shuffler, validation_data_shuffler):
+        """
+        Create all the necessary graphs for training, validation and inference graphs
+        """
+        super(SiameseTrainer, self).bootstrap_graphs(train_data_shuffler, validation_data_shuffler)
+
+        # Triplet specific
+        tf.add_to_collection("between_class_graph_train", self.between_class_graph_train)
+        tf.add_to_collection("within_class_graph_train", self.within_class_graph_train)
+
+        # Creating validation graph
+        if validation_data_shuffler is not None:
+            tf.add_to_collection("between_class_graph_validation", self.between_class_graph_validation)
+            tf.add_to_collection("within_class_graph_validation", self.within_class_graph_validation)
+
+        self.bootstrap_placeholders(train_data_shuffler, validation_data_shuffler)
+
+    def bootstrap_graphs_fromfile(self, train_data_shuffler, validation_data_shuffler):
+        """
+        Bootstrap all the necessary data from file
+
+         ** Parameters **
+           session: Tensorflow session
+           train_data_shuffler: Data shuffler for training
+           validation_data_shuffler: Data shuffler for validation
+        """
+
+        saver = super(SiameseTrainer, self).bootstrap_graphs_fromfile(train_data_shuffler, validation_data_shuffler)
+
+        self.between_class_graph_train = tf.get_collection("between_class_graph_train")[0]
+        self.within_class_graph_train = tf.get_collection("within_class_graph_train")[0]
+
+        if validation_data_shuffler is not None:
+            self.between_class_graph_validation = tf.get_collection("between_class_graph_validation")[0]
+            self.within_class_graph_validation = tf.get_collection("within_class_graph_validation")[0]
+
+        self.bootstrap_placeholders_fromfile(train_data_shuffler, validation_data_shuffler)
+
+        return saver
+
     def compute_graph(self, data_shuffler, prefetch=False, name="", training=True):
         """
         Computes the graph for the trainer.

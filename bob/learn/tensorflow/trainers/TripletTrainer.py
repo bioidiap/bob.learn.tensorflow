@@ -118,6 +118,46 @@ class TripletTrainer(Trainer):
         self.between_class_graph_validation = None
         self.within_class_graph_validation = None
 
+    def bootstrap_graphs(self, train_data_shuffler, validation_data_shuffler):
+        """
+        Create all the necessary graphs for training, validation and inference graphs
+        """
+        super(TripletTrainer, self).bootstrap_graphs(train_data_shuffler, validation_data_shuffler)
+
+        # Triplet specific
+        tf.add_to_collection("between_class_graph_train", self.between_class_graph_train)
+        tf.add_to_collection("within_class_graph_train", self.within_class_graph_train)
+
+        # Creating validation graph
+        if validation_data_shuffler is not None:
+            tf.add_to_collection("between_class_graph_validation", self.between_class_graph_validation)
+            tf.add_to_collection("within_class_graph_validation", self.within_class_graph_validation)
+
+        self.bootstrap_placeholders(train_data_shuffler, validation_data_shuffler)
+
+    def bootstrap_graphs_fromfile(self, train_data_shuffler, validation_data_shuffler):
+        """
+        Bootstrap all the necessary data from file
+
+         ** Parameters **
+           session: Tensorflow session
+           train_data_shuffler: Data shuffler for training
+           validation_data_shuffler: Data shuffler for validation
+        """
+
+        saver = super(TripletTrainer, self).bootstrap_graphs_fromfile(train_data_shuffler, validation_data_shuffler)
+
+        self.between_class_graph_train = tf.get_collection("between_class_graph_train")[0]
+        self.within_class_graph_train = tf.get_collection("within_class_graph_train")[0]
+
+        if validation_data_shuffler is not None:
+            self.between_class_graph_validation = tf.get_collection("between_class_graph_validation")[0]
+            self.within_class_graph_validation = tf.get_collection("within_class_graph_validation")[0]
+
+        self.bootstrap_placeholders_fromfile(train_data_shuffler, validation_data_shuffler)
+
+        return saver
+
     def bootstrap_placeholders(self, train_data_shuffler, validation_data_shuffler):
         """
         Persist the placeholders
@@ -251,6 +291,7 @@ class TripletTrainer(Trainer):
                                                                       self.within_class_graph_train,
                                                                       self.learning_rate, self.summaries_train],
                                                                       feed_dict=feed_dict)
+
         logger.info("Loss training set step={0} = {1}".format(step, l))
         self.train_summary_writter.add_summary(summary, step)
 
