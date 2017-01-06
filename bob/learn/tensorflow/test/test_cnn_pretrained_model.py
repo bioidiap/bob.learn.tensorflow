@@ -253,7 +253,7 @@ def test_siamese_cnn_pretrained():
 
     eer = dummy_experiment(validation_data_shuffler, scratch)
     # Now it is better
-    assert eer < 0.25
+    assert eer < 0.27
     shutil.rmtree(directory)
     shutil.rmtree(directory2)
 
