@@ -16,7 +16,10 @@ from bob.learn.tensorflow.datashuffler import OnlineSampling
 from bob.learn.tensorflow.utils.session import Session
 from .learning_rate import constant
 
-logger = bob.core.log.setup("bob.learn.tensorflow")
+#logger = bob.core.log.setup("bob.learn.tensorflow")
+
+import logging
+logger = logging.getLogger("bob.learn")
 
 
 class Trainer(object):

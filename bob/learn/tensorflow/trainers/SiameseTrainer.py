@@ -3,14 +3,14 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 # @date: Tue 09 Aug 2016 15:25:22 CEST
 
-import logging
-logger = logging.getLogger("bob.learn.tensorflow")
 import tensorflow as tf
 from tensorflow.core.framework import summary_pb2
 from ..analyzers import ExperimentAnalizer, SoftmaxAnalizer
 from ..network import SequenceNetwork
 from .Trainer import Trainer
 import os
+import logging
+logger = logging.getLogger("bob.learn")
 
 
 class SiameseTrainer(Trainer):
