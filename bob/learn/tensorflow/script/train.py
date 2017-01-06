@@ -25,28 +25,25 @@ import imp
 def main():
     args = docopt(__doc__, version='Train Neural Net')
 
-    #ITERATIONS = int(args['--iterations'])
-    #VALIDATION_TEST = int(args['--validation-interval'])
     #USE_GPU = args['--use-gpu']
-    #OUTPUT_DIR = str(args['--output-dir'])
-    #PREFETCH = args['--prefetch']
-    #if args['--pretrained-net'] is None:
-    #    PRETRAINED_NET = ""
-    #else:
-    #    PRETRAINED_NET = str(args['--pretrained-net'])
+    OUTPUT_DIR = str(args['--output-dir'])
+    PREFETCH = args['--prefetch']
+    ITERATIONS = int(args['--iterations'])
+
+    PRETRAINED_NET = ""
+    if not args['--pretrained-net'] is None:
+        PRETRAINED_NET = str(args['--pretrained-net'])
 
     config = imp.load_source('config', args['<configuration>'])
 
     trainer = config.Trainer(architecture=config.architecture,
                              loss=config.loss,
-                             iterations=int(args['--iterations']),
+                             iterations=ITERATIONS,
                              analizer=None,
-                             prefetch=args['--prefetch'],
+                             prefetch=PREFETCH,
                              learning_rate=config.learning_rate,
-                             temp_dir=args['--output-dir'],
-                             model_from_file=config.model_from_file
+                             temp_dir=OUTPUT_DIR,
+                             model_from_file=PRETRAINED_NET
                              )
 
-    import ipdb; ipdb.set_trace();
     trainer.train(config.train_data_shuffler)
-

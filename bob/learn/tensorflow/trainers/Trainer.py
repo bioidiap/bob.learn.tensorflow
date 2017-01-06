@@ -22,7 +22,6 @@ import logging
 logger = logging.getLogger("bob.learn")
 
 
-
 class Trainer(object):
     """
     One graph trainer.

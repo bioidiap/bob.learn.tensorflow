@@ -13,7 +13,6 @@ Quick start
 Before explain the base elements of this library, lets first do a simple example.
 The example consists in training a very simple **CNN** with `MNIST` dataset in 4 steps.
 
-
 1. Preparing your input data
 
 .. code-block:: python
@@ -34,16 +33,25 @@ The example consists in training a very simple **CNN** with `MNIST` dataset in 4
     >>> architecture.add(bob.learn.tensorflow.layers.Conv2D(name="conv1", kernel_size=3, filters=10, activation=tf.nn.tanh))
     >>> architecture.add(bob.learn.tensorflow.layers.FullyConnected(name="fc1", output_dim=10, activation=None))
 
-3. Defining a loss and training
+3. Defining a loss and training algorithm
 
 .. code-block:: python
 
     >>> loss = bob.learn.tensorflow.loss.BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
-    >>> trainer = bob.learn.tensorflow.trainers.Trainer(architecture=architecture, loss=loss, iterations=100, temp_dir="./cnn")
-    >>> trainer.train(train_data_shuffler)
+    >>> from bob.learn.tensorflow.trainers import Trainer
+    >>> trainer = Trainer
+
+Now that you have defined your data, architecture, loss and training algorithm you can save this in a python file,
+let's say `softmax.py`, and run:
+
+.. code-block:: shell
+
+    >>> ./bin/train.py softmax.py
 
 
 4. Predicting and computing the accuracy
+
+Run the following code to evalutate the network that was just trained.
 
 .. code-block:: python
 

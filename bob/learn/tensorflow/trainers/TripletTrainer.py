@@ -3,19 +3,16 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 # @date: Tue 09 Aug 2016 15:25:22 CEST
 
-import logging
-
-logger = logging.getLogger("bob.learn.tensorflow")
 import tensorflow as tf
 from tensorflow.core.framework import summary_pb2
 import threading
 from ..analyzers import ExperimentAnalizer
 from ..network import SequenceNetwork
-import bob.io.base
 from .Trainer import Trainer
 import os
-import sys
-from .learning_rate import constant
+
+import logging
+logger = logging.getLogger("bob.learn")
 
 
 class TripletTrainer(Trainer):
