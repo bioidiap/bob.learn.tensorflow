@@ -161,7 +161,7 @@ class TrainerSeq(object):
             [placeholder_data, placeholder_labels] = data_shuffler.get_placeholders_forprefetch(name=name)
 
             # Defining a placeholder queue for prefetching
-            queue = tf.FIFOQueue(capacity=20,
+            queue = tf.FIFOQueue(capacity=100000,
                                  dtypes=[tf.float32, tf.int64],
                                  shapes=[placeholder_data.get_shape().as_list()[1:], []])
 
@@ -277,7 +277,7 @@ class TrainerSeq(object):
         """
 
         threads = []
-        for n in range(5):
+        for n in range(10):
             if training:
                 t = threading.Thread(target=self.load_and_enqueue, args=())
             else:
@@ -526,10 +526,10 @@ class TrainerSeq(object):
                 self.launch_train_threads()
 
             while True:
-#                start = time.time()
+                # start = time.time()
                 cur_loss, summary = self.fit()
-#                end = time.time()
-#                logger.info("Batch = {0}, time = {1}".format(batch_num, float(end-start)))
+                # end = time.time()
+                # logger.info("Fit time = {0}".format(float(end - start)))
                 # we are done when we went through the whole data
                 if cur_loss is None or self.train_data_shuffler.data_finished:
                     break
