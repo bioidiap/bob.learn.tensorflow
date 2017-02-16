@@ -392,6 +392,37 @@ class TrainerSeq(object):
             tf.add_to_collection("validation_placeholder_data", batch)
             tf.add_to_collection("validation_placeholder_label", label)
 
+    def bootstrap_graphs_fromhdf5file(self, train_data_shuffler, validation_data_shuffler):
+
+        self.bootstrap_graphs(train_data_shuffler, validation_data_shuffler)
+
+        # TODO: find an elegant way to provide this as a parameter of the trainer
+        self.global_epoch = tf.Variable(0, trainable=False, name="global_epoch")
+        tf.add_to_collection("global_epoch", self.global_epoch)
+
+        # Preparing the optimizer
+        self.optimizer_class._learning_rate = self.learning_rate
+        self.optimizer = self.optimizer_class.minimize(self.training_graph, global_step=self.global_epoch)
+        tf.add_to_collection("optimizer", self.optimizer)
+        tf.add_to_collection("learning_rate", self.learning_rate)
+
+        # Train summary
+        self.summaries_train = self.create_general_summary()
+        tf.add_to_collection("summaries_train", self.summaries_train)
+
+        tf.add_to_collection("summaries_train", self.summaries_train)
+
+        tf.initialize_all_variables().run(session=self.session)
+
+        # Original tensorflow saver object
+        saver = tf.train.Saver(var_list=tf.all_variables())
+
+        self.architecture.load_hdf5(self.model_from_file, shape=[1, 6560, 1])
+        # fname, _ = os.path.splitext(self.model_from_file)
+        # self.model_from_file = fname + '.ckp'
+        # self.architecture.save(saver, self.model_from_file)
+        return saver
+
     def bootstrap_graphs_fromfile(self, train_data_shuffler, validation_data_shuffler):
         """
         Bootstrap all the necessary data from file
@@ -475,7 +506,13 @@ class TrainerSeq(object):
         # Loading a pretrained model
         if self.model_from_file != "":
             logger.info("Loading pretrained model from {0}".format(self.model_from_file))
-            saver = self.bootstrap_graphs_fromfile(train_data_shuffler, validation_data_shuffler)
+            if self.model_from_file.lower().endswith('.hdf5'):
+                saver = self.bootstrap_graphs_fromhdf5file(train_data_shuffler, validation_data_shuffler)
+            elif self.model_from_file.lower().endswith('.ckp'):
+                saver = self.bootstrap_graphs_fromfile(train_data_shuffler, validation_data_shuffler)
+            else:
+                raise ValueError("Unknown format of the model %s. Only HDF5 or pickled formats are supported"
+                                 % self.model_from_file)
 
             epoch = self.global_epoch.eval(session=self.session)
 
@@ -508,6 +545,10 @@ class TrainerSeq(object):
         if isinstance(train_data_shuffler, OnLineSampling):
             train_data_shuffler.set_feature_extractor(self.architecture, session=self.session)
 
+        self.architecture.save(saver, os.path.join(self.temp_dir, 'model_initial.ckp'))
+        with self.session.as_default():
+            path = os.path.join(self.temp_dir, 'model_initial.hdf5')
+            self.architecture.save_hdf5(bob.io.base.HDF5File(path, 'w'))
 
         # TENSOR BOARD SUMMARY
         self.train_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'train'), self.session.graph)

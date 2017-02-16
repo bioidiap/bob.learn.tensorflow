@@ -94,8 +94,8 @@ class DiskAudio(Base):
         # start = time.time()
         if self.data_finished:
             return None, None
-        # if we ran through the whole data already
-        if self.cur_index >= self.data.shape[0] and len(self.labels_storage) < self.batch_size:
+        # if we ran through the whole data already (we ignore the last incomplete batch)
+        if self.cur_index >= (self.data.shape[0]-self.batch_size) and len(self.labels_storage) < self.batch_size:
             # reset everything
             self.frames_storage = Queue(self.max_queue_size)
             self.labels_storage = []

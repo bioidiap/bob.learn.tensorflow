@@ -10,6 +10,8 @@ import six
 import numpy
 import pickle
 
+import bob.io.base
+
 from collections import OrderedDict
 from bob.learn.tensorflow.layers import Layer, MaxPooling, Dropout, Conv2D, FullyConnected, LogSoftMax
 from bob.learn.tensorflow.utils.session import Session
@@ -279,7 +281,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
 
         hdf5.cd("..")
 
-    def load_hdf5(self, hdf5, shape=None, batch=1, use_gpu=False):
+    def load_hdf5(self, hdf5path, shape=None, batch=1, use_gpu=False):
         """
         Load the network from scratch.
         This will build the graphs
@@ -292,6 +294,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
             batch: The size of the batch
             use_gpu: Load all the variables in the GPU?
         """
+        hdf5 = bob.io.base.HDF5File(hdf5path)
 
         session = Session.instance().session
 
@@ -315,11 +318,14 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         tf.initialize_all_variables().run(session=session)
         self.load_variables_only(hdf5)
 
+        # self.pickle_net(shape)
+
     def save(self, saver, path):
 
         session = Session.instance().session
 
         open(path+"_sequence_net.pickle", 'w').write(self.pickle_architecture)
+        # print("SAVING TO path: ", path)
         return saver.save(session, path)
 
     def load(self, path, clear_devices=False):
