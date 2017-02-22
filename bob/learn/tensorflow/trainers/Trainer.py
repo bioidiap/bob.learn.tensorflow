@@ -229,7 +229,7 @@ class Trainer(object):
         l = self.session.run(self.validation_graph, feed_dict=feed_dict)
 
         if self.validation_summary_writter is None:
-            self.validation_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'validation'), self.session.graph)
+            self.validation_summary_writter = tf.summary.FileWriter(os.path.join(self.temp_dir, 'validation'), self.session.graph)
 
         summaries = [summary_pb2.Summary.Value(tag="loss", simple_value=float(l))]
         self.validation_summary_writter.add_summary(summary_pb2.Summary(value=summaries), step)
@@ -240,9 +240,9 @@ class Trainer(object):
         Creates a simple tensorboard summary with the value of the loss and learning rate
         """
         # Train summary
-        tf.scalar_summary('loss', self.training_graph, name="train")
-        tf.scalar_summary('lr', self.learning_rate, name="train")
-        return tf.merge_all_summaries()
+        tf.summary.scalar('loss', self.training_graph)
+        tf.summary.scalar('lr', self.learning_rate)
+        return tf.summary.merge_all()
 
     def start_thread(self):
         """
@@ -281,7 +281,6 @@ class Trainer(object):
         """
         Create all the necessary graphs for training, validation and inference graphs
         """
-
         # Creating train graph
         self.training_graph = self.compute_graph(train_data_shuffler, prefetch=self.prefetch, name="train")
         tf.add_to_collection("training_graph", self.training_graph)
@@ -420,10 +419,10 @@ class Trainer(object):
 
             tf.add_to_collection("summaries_train", self.summaries_train)
 
-            tf.initialize_all_variables().run(session=self.session)
+            tf.global_variables_initializer().run(session=self.session)
 
             # Original tensorflow saver object
-            saver = tf.train.Saver(var_list=tf.all_variables())
+            saver = tf.train.Saver(var_list=tf.global_variables())
 
         if isinstance(train_data_shuffler, OnlineSampling):
             train_data_shuffler.set_feature_extractor(self.architecture, session=self.session)
@@ -435,7 +434,7 @@ class Trainer(object):
             threads = self.start_thread()
 
         # TENSOR BOARD SUMMARY
-        self.train_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'train'), self.session.graph)
+        self.train_summary_writter = tf.summary.FileWriter(os.path.join(self.temp_dir, 'train'), self.session.graph)
         for step in range(start_step, self.iterations):
 
             start = time.time()

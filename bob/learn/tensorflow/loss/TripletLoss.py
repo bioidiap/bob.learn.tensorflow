@@ -48,10 +48,10 @@ class TripletLoss(BaseLoss):
             positive_embedding = tf.nn.l2_normalize(positive_embedding, 1, 1e-10)
             negative_embedding = tf.nn.l2_normalize(negative_embedding, 1, 1e-10)
 
-            d_positive = tf.reduce_sum(tf.square(tf.sub(anchor_embedding, positive_embedding)), 1)
-            d_negative = tf.reduce_sum(tf.square(tf.sub(anchor_embedding, negative_embedding)), 1)
+            d_positive = tf.reduce_sum(tf.square(tf.subtract(anchor_embedding, positive_embedding)), 1)
+            d_negative = tf.reduce_sum(tf.square(tf.subtract(anchor_embedding, negative_embedding)), 1)
 
-            basic_loss = tf.add(tf.sub(d_positive, d_negative), self.margin)
+            basic_loss = tf.add(tf.subtract(d_positive, d_negative), self.margin)
             loss = tf.reduce_mean(tf.maximum(basic_loss, 0.0), 0)
 
             return loss, tf.reduce_mean(d_negative), tf.reduce_mean(d_positive)

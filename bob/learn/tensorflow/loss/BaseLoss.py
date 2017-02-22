@@ -20,4 +20,4 @@ class BaseLoss(object):
         self.name = name
 
     def __call__(self, graph, label):
-        return self.operation(self.loss(graph, label), name=self.name)
+        return self.operation(self.loss(logits=graph, labels=label), name=self.name)

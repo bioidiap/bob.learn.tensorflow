@@ -304,7 +304,7 @@ class TripletTrainer(Trainer):
         """
 
         if self.validation_summary_writter is None:
-            self.validation_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'validation'),
+            self.validation_summary_writter = tf.summary.FileWriter(os.path.join(self.temp_dir, 'validation'),
                                                                      self.session.graph)
 
         self.validation_graph = self.compute_graph(data_shuffler, name="validation", training=False)
@@ -326,11 +326,11 @@ class TripletTrainer(Trainer):
         """
 
         # Train summary
-        tf.scalar_summary('loss', self.training_graph, name="train")
-        tf.scalar_summary('between_class_loss', self.between_class_graph_train, name="train")
-        tf.scalar_summary('within_class_loss', self.within_class_graph_train, name="train")
-        tf.scalar_summary('lr', self.learning_rate, name="train")
-        return tf.merge_all_summaries()
+        tf.summary.scalar('loss', self.training_graph)
+        tf.summary.scalar('between_class_loss', self.between_class_graph_train)
+        tf.summary.scalar('within_class_loss', self.within_class_graph_train)
+        tf.summary.scalar('lr', self.learning_rate)
+        return tf.summary.merge_all()
 
     def load_and_enqueue(self):
         """

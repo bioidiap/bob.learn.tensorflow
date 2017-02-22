@@ -14,7 +14,7 @@ def compute_euclidean_distance(x, y):
     """
 
     with tf.name_scope('euclidean_distance') as scope:
-        d = tf.sqrt(tf.reduce_sum(tf.square(tf.sub(x, y)), 1))
+        d = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(x, y)), 1))
         return d
 
 

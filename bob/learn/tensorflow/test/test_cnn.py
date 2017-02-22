@@ -75,6 +75,7 @@ def dummy_experiment(data_s, architecture):
 
 
 def test_cnn_trainer():
+
     train_data, train_labels, validation_data, validation_labels = load_mnist()
     train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
