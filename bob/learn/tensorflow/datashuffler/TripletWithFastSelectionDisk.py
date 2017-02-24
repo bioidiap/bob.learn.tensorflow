@@ -12,7 +12,7 @@ from .OnlineSampling import OnlineSampling
 from scipy.spatial.distance import euclidean, cdist
 
 import logging
-logger = logging.getLogger("bob.learn.tensorflow")
+logger = logging.getLogger("bob.learn")
 from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 
@@ -127,7 +127,7 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnlineSampling):
 
         # Selecting the classes used in the selection
         indexes = numpy.random.choice(len(self.possible_labels), self.total_identities, replace=False)
-        samples_per_identity = numpy.ceil(self.batch_size/float(self.total_identities))
+        samples_per_identity = int(numpy.ceil(self.batch_size/float(self.total_identities)))
         anchor_labels = numpy.ones(samples_per_identity) * self.possible_labels[indexes[0]]
 
         for i in range(1, self.total_identities):
