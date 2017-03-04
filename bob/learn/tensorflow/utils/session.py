@@ -5,7 +5,7 @@
 
 import tensorflow as tf
 from .singleton import Singleton
-
+from tensorflow.python import debug as tf_debug
 
 @Singleton
 class Session(object):
@@ -15,3 +15,4 @@ class Session(object):
                                 gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=0.333))
         config.gpu_options.allow_growth = True
         self.session = tf.Session()
+        #self.session = tf_debug.LocalCLIDebugWrapperSession(self.session)

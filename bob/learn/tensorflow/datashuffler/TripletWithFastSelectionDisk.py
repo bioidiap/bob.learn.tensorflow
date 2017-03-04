@@ -12,7 +12,7 @@ from .OnlineSampling import OnlineSampling
 from scipy.spatial.distance import euclidean, cdist
 
 import logging
-logger = logging.getLogger("bob.learn.tensorflow")
+logger = logging.getLogger("bob.learn")
 from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 
@@ -216,11 +216,11 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnlineSampling):
         for i in range(self.shape[0]):
             label = anchor_labels[i]
             possible_candidates = [d if d > d_anchor_positive[i] else numpy.inf for d in  d_anchor_negative[i]]
-
+            
             for j in numpy.argsort(possible_candidates):
 
                 # Checking if they don't have the same label
-                if indexes[j] != label:
+                if self.labels[indexes[j]] != label:
                     samples_n[i, ...] = temp_samples_n[j, ...]
                     if numpy.isinf(possible_candidates[j]):
                         logger.info("SEMI-HARD negative not found, took the first one")

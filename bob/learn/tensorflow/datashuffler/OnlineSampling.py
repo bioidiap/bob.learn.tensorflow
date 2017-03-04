@@ -44,8 +44,7 @@ class OnlineSampling(object):
         if self.feature_placeholder is None:
             shape = tuple([None] + list(data.shape[1:]))
             self.feature_placeholder = tf.placeholder(tf.float32, shape=shape, name="feature")
-            embbeding = self.feature_extractor.compute_graph(self.feature_placeholder, self.feature_extractor.default_feature_layer,
-                                                              training=False)
+            embbeding = self.feature_extractor.compute_graph(self.feature_placeholder, self.feature_extractor.default_feature_layer)
 
             self.graph = tf.nn.l2_normalize(embbeding, 1, 1e-10, name='embeddings')
 

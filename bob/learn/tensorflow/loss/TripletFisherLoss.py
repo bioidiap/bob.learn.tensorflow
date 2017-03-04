@@ -11,7 +11,7 @@ from .BaseLoss import BaseLoss
 from bob.learn.tensorflow.utils import compute_euclidean_distance
 
 
-class TripletLoss(BaseLoss):
+class TripletFisherLoss(BaseLoss):
     """
     Compute the triplet loss as in
 
@@ -37,8 +37,24 @@ class TripletLoss(BaseLoss):
 
     """
 
-    def __init__(self, margin=5.0):
+    def __init__(self, margin=0.2):
         self.margin = margin
+
+    def body(self, mean, x):
+        buffer = mean - x
+        return tf.matmul(buffer, tf.transpose(buffer))
+
+    """
+    def cond(i):
+        return tf.reduce_sum(i) < 10
+
+    def body(i):
+        return tf.add(i, 1)
+
+    i = tf.placeholder(tf.float32)
+    op = tf.while_loop(cond, body, [i])
+    print(session.run(op, feed_dict={i: 0}))
+    """
 
     def __call__(self, anchor_embedding, positive_embedding, negative_embedding):
 
@@ -48,10 +64,19 @@ class TripletLoss(BaseLoss):
             positive_embedding = tf.nn.l2_normalize(positive_embedding, 1, 1e-10, name="positive")
             negative_embedding = tf.nn.l2_normalize(negative_embedding, 1, 1e-10, name="negative")
 
-            d_positive = tf.reduce_sum(tf.square(tf.subtract(anchor_embedding, positive_embedding)), 1)
-            d_negative = tf.reduce_sum(tf.square(tf.subtract(anchor_embedding, negative_embedding)), 1)
+            #anchor_mean = tf.reduce_mean(anchor_embedding, 0)
+            #result = tf.while_loop(condition, self.body(anchor_mean), [positive_embedding])
 
-            basic_loss = tf.add(tf.subtract(d_positive, d_negative), self.margin)
-            loss = tf.reduce_mean(tf.maximum(basic_loss, 0.0), 0)
 
-            return loss, tf.reduce_mean(d_negative), tf.reduce_mean(d_positive)
+            #p_minus_mean = tf.subtract(anchor_mean, positive_embedding)
+            #s_w = tf.divide(tf.matmul(tf.transpose(p_minus_mean), p_minus_mean), 1)
+
+            #s_w = tf.trace(tf.reduce_mean(tf.square(tf.subtract(anchor_mean, positive_embedding)), 1))
+            #s_b = tf.trace(tf.reduce_mean(tf.square(tf.subtract(anchor_mean, negative_embedding)), 1))
+
+            #s_w = tf.reduce_mean(tf.square(tf.subtract(anchor_mean, positive_embedding)), 1)
+
+            #loss = s_w/s_b
+
+            #return s_w, p_minus_mean
+            #return tf.multiply(p_minus_mean, tf.transpose(p_minus_mean))

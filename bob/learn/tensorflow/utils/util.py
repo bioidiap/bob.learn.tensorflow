@@ -17,7 +17,6 @@ def compute_euclidean_distance(x, y):
         d = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(x, y)), 1))
         return d
 
-
 def load_mnist(data_dir="./src/bob.db.mnist/bob/db/mnist/", perc_train=0.9):
 
     import bob.db.mnist
@@ -189,3 +188,25 @@ def compute_accuracy(data_train, labels_train, data_validation, labels_validatio
             tp += 1
 
     return (float(tp) / data_validation.shape[0]) * 100
+    
+    
+def debug_embbeding(image, architecture, embbeding_dim=2, feature_layer="fc3"):
+    """
+    """
+    import tensorflow as tf
+    from bob.learn.tensorflow.network import SequenceNetwork
+    from bob.learn.tensorflow.utils.session import Session
+    
+    session = Session.instance(new=False).session    
+    inference_graph = architecture.compute_graph(architecture.inference_placeholder, feature_layer=feature_layer, training=False)
+
+    embeddings = numpy.zeros(shape=(image.shape[0], embbeding_dim))
+    for i in range(image.shape[0]):
+        feed_dict = {architecture.inference_placeholder: image[i:i+1, :,:,:]}
+        embedding = session.run([tf.nn.l2_normalize(inference_graph, 1, 1e-10)], feed_dict=feed_dict)[0]
+        embedding = numpy.reshape(embedding, numpy.prod(embedding.shape[1:]))
+        embeddings[i] = embedding
+
+    return embeddings
+
+    

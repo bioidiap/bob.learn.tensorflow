@@ -436,7 +436,6 @@ class Trainer(object):
         # TENSOR BOARD SUMMARY
         self.train_summary_writter = tf.summary.FileWriter(os.path.join(self.temp_dir, 'train'), self.session.graph)
         for step in range(start_step, self.iterations):
-
             start = time.time()
             self.fit(step)
             end = time.time()
