@@ -13,48 +13,10 @@ from bob.learn.tensorflow.utils import compute_euclidean_distance
 
 class TripletFisherLoss(BaseLoss):
     """
-    Compute the triplet loss as in
-
-    Schroff, Florian, Dmitry Kalenichenko, and James Philbin.
-    "Facenet: A unified embedding for face recognition and clustering."
-    Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition. 2015.
-
-    :math:`L  = sum(  |f_a - f_p|^2 - |f_a - f_n|^2  + \lambda)`
-
-    **Parameters**
-
-    left_feature:
-      First element of the pair
-
-    right_feature:
-      Second element of the pair
-
-    label:
-      Label of the pair (0 or 1)
-
-    margin:
-      Contrastive margin
-
     """
 
     def __init__(self, margin=0.2):
         self.margin = margin
-
-    def body(self, mean, x):
-        buffer = mean - x
-        return tf.matmul(buffer, tf.transpose(buffer))
-
-    """
-    def cond(i):
-        return tf.reduce_sum(i) < 10
-
-    def body(i):
-        return tf.add(i, 1)
-
-    i = tf.placeholder(tf.float32)
-    op = tf.while_loop(cond, body, [i])
-    print(session.run(op, feed_dict={i: 0}))
-    """
 
     def __call__(self, anchor_embedding, positive_embedding, negative_embedding):
 
@@ -64,19 +26,36 @@ class TripletFisherLoss(BaseLoss):
             positive_embedding = tf.nn.l2_normalize(positive_embedding, 1, 1e-10, name="positive")
             negative_embedding = tf.nn.l2_normalize(negative_embedding, 1, 1e-10, name="negative")
 
-            #anchor_mean = tf.reduce_mean(anchor_embedding, 0)
-            #result = tf.while_loop(condition, self.body(anchor_mean), [positive_embedding])
+            average_class = tf.reduce_mean(anchor_embedding, 0)
+            average_total = tf.div(tf.add(tf.reduce_mean(anchor_embedding, axis=0),\
+                            tf.reduce_mean(negative_embedding, axis=0)), 2)
 
+            length = anchor_embedding.get_shape().as_list()[0]
+            split_positive = tf.unstack(positive_embedding, num=length, axis=0)
+            split_negative = tf.unstack(negative_embedding, num=length, axis=0)
 
-            #p_minus_mean = tf.subtract(anchor_mean, positive_embedding)
-            #s_w = tf.divide(tf.matmul(tf.transpose(p_minus_mean), p_minus_mean), 1)
+            Sw = None
+            Sb = None
+            for s in zip(split_positive, split_negative):
+                positive = s[0]
+                negative = s[1]
 
-            #s_w = tf.trace(tf.reduce_mean(tf.square(tf.subtract(anchor_mean, positive_embedding)), 1))
-            #s_b = tf.trace(tf.reduce_mean(tf.square(tf.subtract(anchor_mean, negative_embedding)), 1))
+                buffer_sw = tf.reshape(tf.subtract(positive, average_class), shape=(2, 1))
+                buffer_sw = tf.matmul(buffer_sw, tf.reshape(buffer_sw, shape=(1, 2)))
 
-            #s_w = tf.reduce_mean(tf.square(tf.subtract(anchor_mean, positive_embedding)), 1)
+                buffer_sb = tf.reshape(tf.subtract(negative, average_total), shape=(2, 1))
+                buffer_sb = tf.matmul(buffer_sb, tf.reshape(buffer_sb, shape=(1, 2)))
 
-            #loss = s_w/s_b
+                if Sw is None:
+                    Sw = buffer_sw
+                    Sb = buffer_sb
+                else:
+                    Sw = tf.add(Sw, buffer_sw)
+                    Sb = tf.add(Sb, buffer_sb)
 
-            #return s_w, p_minus_mean
-            #return tf.multiply(p_minus_mean, tf.transpose(p_minus_mean))
+            # Sw = tf.trace(Sw)
+            # Sb = tf.trace(Sb)
+            #loss = tf.trace(tf.div(Sb, Sw))
+            loss = tf.trace(tf.div(Sw, Sb))
+
+            return loss, tf.trace(Sb), tf.trace(Sw)
