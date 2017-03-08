@@ -15,8 +15,8 @@ class TripletFisherLoss(BaseLoss):
     """
     """
 
-    def __init__(self, margin=0.2):
-        self.margin = margin
+    def __init__(self):
+        pass
 
     def __call__(self, anchor_embedding, positive_embedding, negative_embedding):
 
@@ -31,6 +31,7 @@ class TripletFisherLoss(BaseLoss):
                             tf.reduce_mean(negative_embedding, axis=0)), 2)
 
             length = anchor_embedding.get_shape().as_list()[0]
+            dim = anchor_embedding.get_shape().as_list()[1]
             split_positive = tf.unstack(positive_embedding, num=length, axis=0)
             split_negative = tf.unstack(negative_embedding, num=length, axis=0)
 
@@ -40,11 +41,11 @@ class TripletFisherLoss(BaseLoss):
                 positive = s[0]
                 negative = s[1]
 
-                buffer_sw = tf.reshape(tf.subtract(positive, average_class), shape=(2, 1))
-                buffer_sw = tf.matmul(buffer_sw, tf.reshape(buffer_sw, shape=(1, 2)))
+                buffer_sw = tf.reshape(tf.subtract(positive, average_class), shape=(dim, 1))
+                buffer_sw = tf.matmul(buffer_sw, tf.reshape(buffer_sw, shape=(1, dim)))
 
-                buffer_sb = tf.reshape(tf.subtract(negative, average_total), shape=(2, 1))
-                buffer_sb = tf.matmul(buffer_sb, tf.reshape(buffer_sb, shape=(1, 2)))
+                buffer_sb = tf.reshape(tf.subtract(negative, average_total), shape=(dim, 1))
+                buffer_sb = tf.matmul(buffer_sb, tf.reshape(buffer_sb, shape=(1, dim)))
 
                 if Sw is None:
                     Sw = buffer_sw

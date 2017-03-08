@@ -43,7 +43,7 @@ def main():
                              prefetch=PREFETCH,
                              learning_rate=config.learning_rate,
                              temp_dir=OUTPUT_DIR,
-                             snapshot=10,
+                             snapshot=100,
                              model_from_file=PRETRAINED_NET,
                              use_gpu=USE_GPU
                              )
