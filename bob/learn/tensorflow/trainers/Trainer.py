@@ -69,7 +69,7 @@ class Trainer(object):
     """
 
     def __init__(self,
-                 architecture,
+                 graph,
                  optimizer=tf.train.AdamOptimizer(),
                  use_gpu=False,
                  loss=None,
@@ -93,10 +93,10 @@ class Trainer(object):
 
                  verbosity_level=2):
 
-        if not isinstance(architecture, SequenceNetwork):
-            raise ValueError("`architecture` should be instance of `SequenceNetwork`")
+        #if not isinstance(graph, SequenceNetwork):
+        #    raise ValueError("`architecture` should be instance of `SequenceNetwork`")
 
-        self.architecture = architecture
+        self.graph = graph
         self.optimizer_class = optimizer
         self.use_gpu = use_gpu
         self.loss = loss
@@ -140,8 +140,8 @@ class Trainer(object):
     def __del__(self):
         tf.reset_default_graph()
 
+    """
     def compute_graph(self, data_shuffler, prefetch=False, name="", training=True):
-        """
         Computes the graph for the trainer.
 
         ** Parameters **
@@ -150,7 +150,6 @@ class Trainer(object):
             prefetch: Uses prefetch
             name: Name of the graph
             training: Is it a training graph?
-        """
 
         # Defining place holders
         if prefetch:
@@ -177,6 +176,7 @@ class Trainer(object):
         graph = self.loss(network_graph, label_batch)
 
         return graph
+    """
 
     def get_feed_dict(self, data_shuffler):
         """
@@ -214,43 +214,24 @@ class Trainer(object):
         logger.info("Loss training set step={0} = {1}".format(step, l))
         self.train_summary_writter.add_summary(summary, step)
 
-    def compute_validation(self, data_shuffler, step):
-        """
-        Computes the loss in the validation set
-
-        ** Parameters **
-            session: Tensorflow session
-            data_shuffler: The data shuffler to be used
-            step: Iteration number
-
-        """
-        # Opening a new session for validation
-        feed_dict = self.get_feed_dict(data_shuffler)
-        l = self.session.run(self.validation_graph, feed_dict=feed_dict)
-
-        if self.validation_summary_writter is None:
-            self.validation_summary_writter = tf.summary.FileWriter(os.path.join(self.temp_dir, 'validation'), self.session.graph)
-
-        summaries = [summary_pb2.Summary.Value(tag="loss", simple_value=float(l))]
-        self.validation_summary_writter.add_summary(summary_pb2.Summary(value=summaries), step)
-        logger.info("Loss VALIDATION set step={0} = {1}".format(step, l))
-
+    """
     def create_general_summary(self):
-        """
+
         Creates a simple tensorboard summary with the value of the loss and learning rate
-        """
+
         # Train summary
         tf.summary.scalar('loss', self.training_graph)
         tf.summary.scalar('lr', self.learning_rate)
         return tf.summary.merge_all()
 
+
     def start_thread(self):
-        """
+
         Start pool of threads for pre-fetching
 
         **Parameters**
           session: Tensorflow session
-        """
+
 
         threads = []
         for n in range(3):
@@ -261,12 +242,12 @@ class Trainer(object):
         return threads
 
     def load_and_enqueue(self):
-        """
+
         Injecting data in the place holder queue
 
         **Parameters**
           session: Tensorflow session
-        """
+
 
         while not self.thread_pool.should_stop():
             [train_data, train_labels] = self.train_data_shuffler.get_batch()
@@ -277,51 +258,7 @@ class Trainer(object):
 
             self.session.run(self.enqueue_op, feed_dict=feed_dict)
 
-    def bootstrap_graphs(self, train_data_shuffler, validation_data_shuffler):
-        """
-        Create all the necessary graphs for training, validation and inference graphs
-        """
-        # Creating train graph
-        self.training_graph = self.compute_graph(train_data_shuffler, prefetch=self.prefetch, name="train")
-        tf.add_to_collection("training_graph", self.training_graph)
-
-        # Creating inference graph
-        self.architecture.compute_inference_placeholder(train_data_shuffler.deployment_shape)
-        self.architecture.compute_inference_graph()
-        tf.add_to_collection("inference_placeholder", self.architecture.inference_placeholder)
-        tf.add_to_collection("inference_graph", self.architecture.inference_graph)
-
-        # Creating validation graph
-        if validation_data_shuffler is not None:
-            self.validation_graph = self.compute_graph(validation_data_shuffler, name="validation", training=False)
-            tf.add_to_collection("validation_graph", self.validation_graph)
-
-        self.bootstrap_placeholders(train_data_shuffler, validation_data_shuffler)
-
-    def bootstrap_placeholders(self, train_data_shuffler, validation_data_shuffler):
-        """
-        Persist the placeholders
-
-         ** Parameters **
-           train_data_shuffler: Data shuffler for training
-           validation_data_shuffler: Data shuffler for validation
-
-        """
-
-        # Persisting the placeholders
-        if self.prefetch:
-            batch, label = train_data_shuffler.get_placeholders_forprefetch()
-        else:
-            batch, label = train_data_shuffler.get_placeholders()
-
-        tf.add_to_collection("train_placeholder_data", batch)
-        tf.add_to_collection("train_placeholder_label", label)
-
-        # Creating validation graph
-        if validation_data_shuffler is not None:
-            batch, label = validation_data_shuffler.get_placeholders()
-            tf.add_to_collection("validation_placeholder_data", batch)
-            tf.add_to_collection("validation_placeholder_label", label)
+    """
 
     def bootstrap_graphs_fromfile(self, train_data_shuffler, validation_data_shuffler):
         """
@@ -352,24 +289,6 @@ class Trainer(object):
 
         return saver
 
-    def bootstrap_placeholders_fromfile(self, train_data_shuffler, validation_data_shuffler):
-        """
-        Load placeholders from file
-
-         ** Parameters **
-
-           train_data_shuffler: Data shuffler for training
-           validation_data_shuffler: Data shuffler for validation
-
-        """
-
-        train_data_shuffler.set_placeholders(tf.get_collection("train_placeholder_data")[0],
-                                             tf.get_collection("train_placeholder_label")[0])
-
-        if validation_data_shuffler is not None:
-            train_data_shuffler.set_placeholders(tf.get_collection("validation_placeholder_data")[0],
-                                                 tf.get_collection("validation_placeholder_label")[0])
-
     def train(self, train_data_shuffler, validation_data_shuffler=None):
         """
         Train the network:
@@ -387,7 +306,10 @@ class Trainer(object):
         logger.info("Initializing !!")
 
         # Pickle the architecture to save
-        self.architecture.pickle_net(train_data_shuffler.deployment_shape)
+        #self.architecture.pickle_net(train_data_shuffler.deployment_shape)
+
+        if not isinstance(tf.Tensor, self.graph):
+            raise NotImplemented("Not tensor still not implemented")
 
         self.session = Session.instance(new=True).session
 
@@ -400,8 +322,6 @@ class Trainer(object):
 
         else:
             start_step = 0
-            # Bootstraping all the graphs
-            self.bootstrap_graphs(train_data_shuffler, validation_data_shuffler)
 
             # TODO: find an elegant way to provide this as a parameter of the trainer
             self.global_step = tf.Variable(0, trainable=False, name="global_step")
@@ -414,24 +334,19 @@ class Trainer(object):
             tf.add_to_collection("learning_rate", self.learning_rate)
 
             # Train summary
-            self.summaries_train = self.create_general_summary()
-            tf.add_to_collection("summaries_train", self.summaries_train)
-
-            tf.add_to_collection("summaries_train", self.summaries_train)
-
             tf.global_variables_initializer().run(session=self.session)
 
             # Original tensorflow saver object
             saver = tf.train.Saver(var_list=tf.global_variables())
 
-        if isinstance(train_data_shuffler, OnlineSampling):
-            train_data_shuffler.set_feature_extractor(self.architecture, session=self.session)
+        #if isinstance(train_data_shuffler, OnlineSampling):
+        #    train_data_shuffler.set_feature_extractor(self.architecture, session=self.session)
 
         # Start a thread to enqueue data asynchronously, and hide I/O latency.
-        if self.prefetch:
-            self.thread_pool = tf.train.Coordinator()
-            tf.train.start_queue_runners(coord=self.thread_pool, sess=self.session)
-            threads = self.start_thread()
+        #if self.prefetch:
+        #    self.thread_pool = tf.train.Coordinator()
+        #    tf.train.start_queue_runners(coord=self.thread_pool, sess=self.session)
+        #    threads = self.start_thread()
 
         # TENSOR BOARD SUMMARY
         self.train_summary_writter = tf.summary.FileWriter(os.path.join(self.temp_dir, 'train'), self.session.graph)
@@ -443,12 +358,12 @@ class Trainer(object):
             self.train_summary_writter.add_summary(summary_pb2.Summary(value=[summary]), step)
 
             # Running validation
-            if validation_data_shuffler is not None and step % self.validation_snapshot == 0:
-                self.compute_validation(validation_data_shuffler, step)
+            #if validation_data_shuffler is not None and step % self.validation_snapshot == 0:
+            #    self.compute_validation(validation_data_shuffler, step)
 
-                if self.analizer is not None:
-                    self.validation_summary_writter.add_summary(self.analizer(
-                         validation_data_shuffler, self.architecture, self.session), step)
+            #    if self.analizer is not None:
+            #        self.validation_summary_writter.add_summary(self.analizer(
+            #             validation_data_shuffler, self.architecture, self.session), step)
 
             # Taking snapshot
             if step % self.snapshot == 0:

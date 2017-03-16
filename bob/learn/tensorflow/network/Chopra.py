@@ -9,11 +9,8 @@
 
 import tensorflow as tf
 from .SequenceNetwork import SequenceNetwork
-from ..layers import Conv2D, FullyConnected, MaxPooling
-import bob.learn.tensorflow
-from bob.learn.tensorflow.initialization import Xavier
-from bob.learn.tensorflow.initialization import Constant
-
+#from bob.learn.tensorflow.initialization import Xavier
+#from bob.learn.tensorflow.initialization import Constant
 
 class Chopra(SequenceNetwork):
     """Class that creates the architecture presented in the paper:
@@ -60,16 +57,16 @@ class Chopra(SequenceNetwork):
         seed:
     """
     def __init__(self,
-                 conv1_kernel_size=7,
+                 conv1_kernel_size=[7, 7],
                  conv1_output=15,
 
-                 pooling1_size=[1, 2, 2, 1],
+                 pooling1_size=[2, 2],
 
 
-                 conv2_kernel_size=6,
+                 conv2_kernel_size=[6, 6],
                  conv2_output=45,
 
-                 pooling2_size=[1, 4, 3, 1],
+                 pooling2_size=[4, 3],
 
                  fc1_output=250,
                  default_feature_layer="fc1",
@@ -78,27 +75,18 @@ class Chopra(SequenceNetwork):
                  use_gpu=False,
                  batch_norm=False):
 
+        slim = tf.contrib.slim
+        graph = slim.conv2d(data_placeholder, conv1_output, conv1_kernel_size, activation_fn=tf.nn.relu,
+                            stride=2, scope='conv1')
+        graph = slim.max_pool2d(graph, pooling1_size, scope='pool1')
+
+        graph = slim.conv2d(graph, conv2_output, conv2_kernel_size, activation_fn=tf.nn.relu,
+                            stride=2, scope='conv2')
+        graph = slim.max_pool2d(graph, pooling2_size, scope='pool2')
+
+        graph = slim.flatten(graph, scope='flatten1')
+
+        graph = slim.fully_connected(graph, fc1_output, scope='fc1')
+
         super(Chopra, self).__init__(default_feature_layer=default_feature_layer,
                                      use_gpu=use_gpu)
-
-        self.add(Conv2D(name="conv1", kernel_size=conv1_kernel_size,
-                        filters=conv1_output,
-                        activation=None,
-                        weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
-                        bias_initialization=Constant(use_gpu=self.use_gpu),
-                        batch_norm=batch_norm
-                        ))
-        self.add(MaxPooling(name="pooling1", shape=pooling1_size, activation=tf.nn.tanh, batch_norm=False))
-
-        self.add(Conv2D(name="conv2", kernel_size=conv2_kernel_size,
-                        filters=conv2_output,
-                        activation=None,
-                        weights_initialization=Xavier(seed=seed,  use_gpu=self.use_gpu),
-                        bias_initialization=Constant(use_gpu=self.use_gpu),
-                        batch_norm=batch_norm))
-        self.add(MaxPooling(name="pooling2", shape=pooling2_size, activation=tf.nn.tanh, batch_norm=False))
-
-        self.add(FullyConnected(name="fc1", output_dim=fc1_output,
-                                activation=None,
-                                weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
-                                bias_initialization=Constant(use_gpu=self.use_gpu), batch_norm=False))
