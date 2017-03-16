@@ -55,6 +55,7 @@ def dummy_experiment(data_s, architecture):
     # Probing
     positive_scores = numpy.zeros(shape=0)
     negative_scores = numpy.zeros(shape=0)
+
     for i in range(len(data_shuffler.possible_labels)):
         # Positive scoring
         indexes = probe_labels == data_shuffler.possible_labels[i]
