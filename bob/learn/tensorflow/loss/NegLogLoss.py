@@ -25,9 +25,9 @@ class NegLogLoss(BaseLoss):
         rank = len(shape)
         flat_params = tf.reshape(params, [-1])
         if rank > 2:
-            indices_unpacked = tf.unpack(tf.transpose(indices, [rank - 1] + range(0, rank - 1), name))
+            indices_unpacked = tf.unstack(tf.transpose(indices, [rank - 1] + range(0, rank - 1), name))
         elif rank == 2:
-            indices_unpacked = tf.unpack(indices)
+            indices_unpacked = tf.unstack(indices)
         else:
             indices_unpacked = indices
         flat_indices = [i * rank + indices_unpacked[i] for i in range(0, len(indices_unpacked))]
@@ -38,6 +38,6 @@ class NegLogLoss(BaseLoss):
         log_probabilities = tf.nn.log_softmax(graph)
         # negative of the log-probability that correspond to the correct label
         correct_probabilities = self.gather_nd(log_probabilities, label)
-        neg_log_prob = tf.neg(correct_probabilities)
+        neg_log_prob = tf.negative(correct_probabilities)
         # use negative log likelihood as the loss
         return self.operation(neg_log_prob)

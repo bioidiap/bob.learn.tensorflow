@@ -64,7 +64,7 @@ class Layer(object):
         NotImplementedError("Please implement this function in derived classes")
 
     def variable_exist(self, var):
-        return var in [v.name.split("/")[0] for v in tf.all_variables()]
+        return var in [v.name.split("/")[0] for v in tf.global_variables()]
 
     def batch_normalize(self, x, phase_train):
         """
@@ -124,7 +124,7 @@ class Layer(object):
         Doing this because of that https://github.com/tensorflow/tensorflow/issues/1325
         """
 
-        for v in tf.all_variables():
+        for v in tf.global_variables():
             if (len(v.name.split("/")) > 1) and (var in v.name.split("/")[1]):
                 return v
 

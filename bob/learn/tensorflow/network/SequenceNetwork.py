@@ -160,13 +160,13 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         """Attach a lot of summaries to a Tensor."""
         with tf.name_scope('summaries'):
             mean = tf.reduce_mean(var)
-            tf.scalar_summary('mean/' + name, mean)
+            tf.summary.scalar('mean/' + name, mean)
             with tf.name_scope('stddev'):
                 stddev = tf.sqrt(tf.reduce_sum(tf.square(var - mean)))
-            tf.scalar_summary('sttdev/' + name, stddev)
-            tf.scalar_summary('max/' + name, tf.reduce_max(var))
-            tf.scalar_summary('min/' + name, tf.reduce_min(var))
-            tf.histogram_summary(name, var)
+            tf.summary.scalar('sttdev/' + name, stddev)
+            tf.summary.scalar('max/' + name, tf.reduce_max(var))
+            tf.summary.scalar('min/' + name, tf.reduce_min(var))
+            tf.summary.histogram(name, var)
 
     def generate_summaries(self):
         for k in self.sequence_net.keys():
@@ -310,7 +310,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         # Loading variables
         place_holder = tf.placeholder(tf.float32, shape=shape, name="load")
         self.compute_graph(place_holder)
-        tf.initialize_all_variables().run(session=session)
+        tf.global_variables_initializer().run(session=session)
         self.load_variables_only(hdf5, session)
 
     def save(self, saver, path):

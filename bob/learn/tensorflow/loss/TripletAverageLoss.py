@@ -11,7 +11,7 @@ from .BaseLoss import BaseLoss
 from bob.learn.tensorflow.utils import compute_euclidean_distance
 
 
-class TripletLoss(BaseLoss):
+class TripletAverageLoss(BaseLoss):
     """
     Compute the triplet loss as in
 
@@ -37,7 +37,7 @@ class TripletLoss(BaseLoss):
 
     """
 
-    def __init__(self, margin=5.0):
+    def __init__(self, margin=0.1):
         self.margin = margin
 
     def __call__(self, anchor_embedding, positive_embedding, negative_embedding):
@@ -48,10 +48,13 @@ class TripletLoss(BaseLoss):
             positive_embedding = tf.nn.l2_normalize(positive_embedding, 1, 1e-10, name="positive")
             negative_embedding = tf.nn.l2_normalize(negative_embedding, 1, 1e-10, name="negative")
 
-            d_positive = tf.reduce_sum(tf.square(tf.subtract(anchor_embedding, positive_embedding)), 1)
-            d_negative = tf.reduce_sum(tf.square(tf.subtract(anchor_embedding, negative_embedding)), 1)
+            anchor_mean = tf.reduce_mean(anchor_embedding, 0)
+
+            d_positive = tf.reduce_sum(tf.square(tf.subtract(anchor_mean, positive_embedding)), 1)
+            d_negative = tf.reduce_sum(tf.square(tf.subtract(anchor_mean, negative_embedding)), 1)
 
             basic_loss = tf.add(tf.subtract(d_positive, d_negative), self.margin)
             loss = tf.reduce_mean(tf.maximum(basic_loss, 0.0), 0)
 
             return loss, tf.reduce_mean(d_negative), tf.reduce_mean(d_positive)
+

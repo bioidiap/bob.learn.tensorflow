@@ -5,13 +5,15 @@
 
 import tensorflow as tf
 from .singleton import Singleton
-
+from tensorflow.python import debug as tf_debug
 
 @Singleton
 class Session(object):
 
     def __init__(self):
-        config = tf.ConfigProto(log_device_placement=True,
-                                gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=0.333))
+        config = tf.ConfigProto(log_device_placement=False,
+                                allow_soft_placement=True,
+                                gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=0.5))
         config.gpu_options.allow_growth = True
         self.session = tf.Session()
+        #self.session = tf_debug.LocalCLIDebugWrapperSession(self.session)

@@ -1,6 +1,8 @@
 from .BaseLoss import BaseLoss
 from .ContrastiveLoss import ContrastiveLoss
 from .TripletLoss import TripletLoss
+from .TripletAverageLoss import TripletAverageLoss
+from .TripletFisherLoss import TripletFisherLoss
 from .NegLogLoss import NegLogLoss
 
 
@@ -22,6 +24,8 @@ __appropriate__(
     BaseLoss,
     ContrastiveLoss,
     TripletLoss,
+    TripletFisherLoss,
+    TripletAverageLoss,
     NegLogLoss,
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]

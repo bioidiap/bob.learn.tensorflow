@@ -25,7 +25,7 @@ import imp
 def main():
     args = docopt(__doc__, version='Train Neural Net')
 
-    #USE_GPU = args['--use-gpu']
+    USE_GPU = args['--use-gpu']
     OUTPUT_DIR = str(args['--output-dir'])
     PREFETCH = args['--prefetch']
     ITERATIONS = int(args['--iterations'])
@@ -43,7 +43,9 @@ def main():
                              prefetch=PREFETCH,
                              learning_rate=config.learning_rate,
                              temp_dir=OUTPUT_DIR,
-                             model_from_file=PRETRAINED_NET
+                             snapshot=100,
+                             model_from_file=PRETRAINED_NET,
+                             use_gpu=USE_GPU
                              )
 
     trainer.train(config.train_data_shuffler)

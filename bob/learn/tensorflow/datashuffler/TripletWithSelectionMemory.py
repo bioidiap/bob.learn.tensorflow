@@ -9,8 +9,11 @@ import tensorflow as tf
 from .OnlineSampling import OnlineSampling
 from .Memory import Memory
 from .Triplet import Triplet
-from scipy.spatial.distance import euclidean
 from bob.learn.tensorflow.datashuffler.Normalizer import Linear
+from scipy.spatial.distance import euclidean, cdist
+
+import logging
+logger = logging.getLogger("bob.learn")
 
 
 class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
@@ -61,7 +64,6 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
     def __init__(self, data, labels,
                  input_shape,
                  input_dtype="float64",
-                 scale=True,
                  batch_size=1,
                  seed=10,
                  data_augmentation=None,
@@ -73,7 +75,6 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
             labels=labels,
             input_shape=input_shape,
             input_dtype=input_dtype,
-            scale=scale,
             batch_size=batch_size,
             seed=seed,
             data_augmentation=data_augmentation,
@@ -86,26 +87,7 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
         self.data = self.data.astype(input_dtype)
         self.total_identities = total_identities
         self.first_batch = True
-
-
-    def get_random_batch(self):
-        """
-        Get a random triplet
-
-        **Parameters**
-            is_target_set_train: Defining the target set to get the batch
-
-        **Return**
-        """
-
-        data_a = numpy.zeros(shape=self.shape, dtype='float32')
-        data_p = numpy.zeros(shape=self.shape, dtype='float32')
-        data_n = numpy.zeros(shape=self.shape, dtype='float32')
-
-        for i in range(self.shape[0]):
-            data_a[i, ...], data_p[i, ...], data_n[i, ...] = self.get_one_triplet(self.data, self.labels)
-
-        return [data_a, data_p, data_n]
+        self.batch_increase_factor = 4
 
     def get_batch(self):
         """
@@ -117,54 +99,27 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
         **Return**
         """
 
-        if self.first_batch:
-            self.first_batch = False
-            return self.get_random_batch()
-
         # Selecting the classes used in the selection
         indexes = numpy.random.choice(len(self.possible_labels), self.total_identities, replace=False)
-        samples_per_identity = self.batch_size/self.total_identities
-        anchor_labels = numpy.ones(samples_per_identity) * indexes[0]
+        samples_per_identity = numpy.ceil(self.batch_size/float(self.total_identities))
+        anchor_labels = numpy.ones(samples_per_identity) * self.possible_labels[indexes[0]]
+
         for i in range(1, self.total_identities):
-            anchor_labels = numpy.hstack((anchor_labels,numpy.ones(samples_per_identity) * indexes[i]))
+            anchor_labels = numpy.hstack((anchor_labels,numpy.ones(samples_per_identity) * self.possible_labels[indexes[i]]))
         anchor_labels = anchor_labels[0:self.batch_size]
 
-        data_a = numpy.zeros(shape=self.shape, dtype='float32')
-        data_p = numpy.zeros(shape=self.shape, dtype='float32')
-        data_n = numpy.zeros(shape=self.shape, dtype='float32')
+        samples_a = numpy.zeros(shape=self.shape, dtype='float32')
 
-        # Fetching the anchors
+        # Computing the embedding
         for i in range(self.shape[0]):
-            data_a[i, ...] = self.get_anchor(anchor_labels[i])
-        features_a = self.project(data_a)
+            samples_a[i, ...] = self.get_anchor(anchor_labels[i])
+        embedding_a = self.project(samples_a)
 
-        for i in range(self.shape[0]):
-            label = anchor_labels[i]
-            #anchor = self.get_anchor(label)
-            positive, distance_anchor_positive = self.get_positive(label, features_a[i])
-            negative = self.get_negative(label, features_a[i], distance_anchor_positive)
+        # Getting the positives
+        samples_p, embedding_p, d_anchor_positive = self.get_positives(anchor_labels, embedding_a)
+        samples_n = self.get_negative(anchor_labels, embedding_a, d_anchor_positive)
 
-            data_p[i, ...] = positive
-            data_n[i, ...] = negative
-
-        # Applying the data augmentation
-        if self.data_augmentation is not None:
-            for i in range(data_a.shape[0]):
-                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(data_a[i, ...])))
-                data_a[i, ...] = d
-
-                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(data_p[i, ...])))
-                data_p[i, ...] = d
-
-                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(data_n[i, ...])))
-                data_n[i, ...] = d
-
-        # Scaling
-        data_a = self.normalize_sample(data_a)
-        data_p = self.normalize_sample(data_p)
-        data_n = self.normalize_sample(data_n)
-
-        return data_a, data_p, data_n
+        return samples_a, samples_p, samples_n
 
     def get_anchor(self, label):
         """
@@ -175,61 +130,67 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
         indexes = numpy.where(self.labels == label)[0]
         numpy.random.shuffle(indexes)
 
-        return self.data[indexes[0], ...]
+        return self.normalize_sample(self.data[indexes[0], ...])
 
-    def get_positive(self, label, anchor_feature):
+    def get_positives(self, anchor_labels, embedding_a):
         """
-        Get the best positive sample given the anchor.
-        The best positive sample for the anchor is the farthest from the anchor
+        Get the a random set of positive pairs
+        """
+        samples_p = numpy.zeros(shape=self.shape, dtype='float32')
+        for i in range(self.shape[0]):
+            l = anchor_labels[i]
+            indexes = numpy.where(self.labels == l)[0]
+            numpy.random.shuffle(indexes)
+            samples_p[i, ...] = self.normalize_sample(self.data[indexes[0], ...])
+
+        embedding_p = self.project(samples_p)
+
+        # Computing the distances
+        d_anchor_positive = []
+        for i in range(self.shape[0]):
+            d_anchor_positive.append(euclidean(embedding_a[i, :], embedding_p[i, :]))
+
+        return samples_p, embedding_p, d_anchor_positive
+
+    def get_negative(self, anchor_labels, embedding_a, d_anchor_positive):
+        """
+        Get the the semi-hard negative
         """
 
-        # Projecting the anchor
-        #anchor_feature = self.feature_extractor(self.reshape_for_deploy(anchor), session=self.session)
-
-        indexes = numpy.where(self.labels == label)[0]
+        # Shuffling all the dataset
+        indexes = range(len(self.labels))
         numpy.random.shuffle(indexes)
-        indexes = indexes[
-                  0:self.batch_size]  # Limiting to the batch size, otherwise the number of comparisons will explode
-        distances = []
-        positive_features = self.project(self.data[indexes, ...])
 
-        # Projecting the positive instances
-        for p in positive_features:
-            distances.append(euclidean(anchor_feature, p))
+        negative_samples_search = self.batch_size * self.batch_increase_factor
 
-        # Geting the max
-        index = numpy.argmax(distances)
-        return self.data[indexes[index], ...], distances[index]
+        # Limiting to the batch size, otherwise the number of comparisons will explode
+        indexes = indexes[0:negative_samples_search]
 
-    def get_negative(self, label, anchor_feature, distance_anchor_positive):
-        """
-        Get the best negative sample for a pair anchor-positive
-        """
-        # Projecting the anchor
-        #anchor_feature = self.feature_extractor(self.reshape_for_deploy(anchor), session=self.session)
+        # Loading samples for the semi-hard search
+        shape = tuple([len(indexes)] + list(self.shape[1:]))
+        temp_samples_n = numpy.zeros(shape=shape, dtype='float32')
+        samples_n = numpy.zeros(shape=self.shape, dtype='float32')
+        for i in range(shape[0]):
+            temp_samples_n[i, ...] = self.normalize_sample(self.data[indexes[i], ...])
+
+        # Computing all the embeddings
+        embedding_temp_n = self.project(temp_samples_n)
+
+        # Computing the distances
+        d_anchor_negative = cdist(embedding_a, embedding_temp_n, metric='euclidean')
 
         # Selecting the negative samples
-        indexes = numpy.where(self.labels != label)[0]
-        numpy.random.shuffle(indexes)
-        indexes = indexes[
-                  0:self.batch_size] # Limiting to the batch size, otherwise the number of comparisons will explode
-        negative_features = self.project(self.data[indexes, ...])
+        for i in range(self.shape[0]):
+            label = anchor_labels[i]
+            possible_candidates = [d if d > d_anchor_positive[i] else numpy.inf for d in d_anchor_negative[i]]
 
-        distances = []
-        for n in negative_features:
-            d = euclidean(anchor_feature, n)
+            for j in numpy.argsort(possible_candidates):
 
-            # Semi-hard samples criteria
-            if d > distance_anchor_positive:
-                distances.append(d)
-            else:
-                distances.append(numpy.inf)
+                # Checking if they don't have the same label
+                if self.labels[indexes[j]] != label:
+                    samples_n[i, ...] = temp_samples_n[j, ...]
+                    if numpy.isinf(possible_candidates[j]):
+                        logger.info("SEMI-HARD negative not found, took the first one")
+                    break
 
-        # Getting the minimum negative sample as the reference for the pair
-        index = numpy.argmin(distances)
-
-        # if the semi-hardest is inf take the first
-        if numpy.isinf(distances[index]):
-            index = 0
-
-        return self.data[indexes[index], ...]
+        return samples_n

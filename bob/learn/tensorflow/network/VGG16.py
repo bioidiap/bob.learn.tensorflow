@@ -225,17 +225,22 @@ class VGG16(SequenceNetwork):
                         ))
         self.add(MaxPooling(name="pooling5", strides=[1, 2, 2, 1]))
 
+
         self.add(FullyConnected(name="fc6", output_dim=fc6_output,
                                 activation=tf.nn.relu,
                                 weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
                                 bias_initialization=Constant(use_gpu=self.use_gpu)
                                 ))
+
+
         self.add(Dropout(name="dropout", keep_prob=0.5))
         self.add(FullyConnected(name="fc7", output_dim=fc7_output,
                                 activation=tf.nn.relu,
                                 weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
                                 bias_initialization=Constant(use_gpu=self.use_gpu)
                                 ))
+
+
         self.add(Dropout(name="dropout", keep_prob=0.5))
         self.add(FullyConnected(name="fc8", output_dim=n_classes,
                                 activation=None,
