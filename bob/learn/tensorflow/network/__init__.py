@@ -9,6 +9,7 @@ from .FaceNetSimple import FaceNetSimple
 from .VGG16 import VGG16
 from .VGG16_mod import VGG16_mod
 from .SimpleAudio import SimpleAudio
+from .Embedding import Embedding
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):

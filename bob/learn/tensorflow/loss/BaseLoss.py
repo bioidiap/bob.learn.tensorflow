@@ -4,6 +4,7 @@
 # @date: Tue 09 Aug 2016 16:38 CEST
 
 import logging
+import tensorflow as tf
 logger = logging.getLogger("bob.learn.tensorflow")
 
 

@@ -69,6 +69,7 @@ class Trainer(object):
     """
 
     def __init__(self,
+                 inputs,
                  graph,
                  optimizer=tf.train.AdamOptimizer(),
                  use_gpu=False,
@@ -96,10 +97,13 @@ class Trainer(object):
         #if not isinstance(graph, SequenceNetwork):
         #    raise ValueError("`architecture` should be instance of `SequenceNetwork`")
 
+        self.inputs = inputs
         self.graph = graph
+        self.loss = loss
+        self.predictor = self.loss(self.graph, inputs['label'])
+
         self.optimizer_class = optimizer
         self.use_gpu = use_gpu
-        self.loss = loss
         self.temp_dir = temp_dir
 
         if learning_rate is None and model_from_file == "":
@@ -187,10 +191,9 @@ class Trainer(object):
 
         """
         [data, labels] = data_shuffler.get_batch()
-        [data_placeholder, label_placeholder] = data_shuffler.get_placeholders()
 
-        feed_dict = {data_placeholder: data,
-                     label_placeholder: labels}
+        feed_dict = {self.inputs['data']: data,
+                     self.inputs['label']: labels}
         return feed_dict
 
     def fit(self, step):
@@ -204,27 +207,27 @@ class Trainer(object):
         """
 
         if self.prefetch:
-            _, l, lr, summary = self.session.run([self.optimizer, self.training_graph,
+            _, l, lr, summary = self.session.run([self.optimizer, self.predictor,
                                                   self.learning_rate, self.summaries_train])
         else:
             feed_dict = self.get_feed_dict(self.train_data_shuffler)
-            _, l, lr, summary = self.session.run([self.optimizer, self.training_graph,
+            _, l, lr, summary = self.session.run([self.optimizer, self.predictor,
                                                   self.learning_rate, self.summaries_train], feed_dict=feed_dict)
 
         logger.info("Loss training set step={0} = {1}".format(step, l))
         self.train_summary_writter.add_summary(summary, step)
 
-    """
     def create_general_summary(self):
-
+        """
         Creates a simple tensorboard summary with the value of the loss and learning rate
+        """
 
         # Train summary
-        tf.summary.scalar('loss', self.training_graph)
+        tf.summary.scalar('loss', self.predictor)
         tf.summary.scalar('lr', self.learning_rate)
         return tf.summary.merge_all()
 
-
+    """
     def start_thread(self):
 
         Start pool of threads for pre-fetching
@@ -289,6 +292,24 @@ class Trainer(object):
 
         return saver
 
+    def compute_validation(self, data_shuffler, step):
+        """
+        Computes the loss in the validation set
+
+        ** Parameters **
+            session: Tensorflow session
+            data_shuffler: The data shuffler to be used
+            step: Iteration number
+
+        """
+        # Opening a new session for validation
+        feed_dict = self.get_feed_dict(data_shuffler)
+        l = self.session.run(self.predictor, feed_dict=feed_dict)
+
+        summaries = [summary_pb2.Summary.Value(tag="loss", simple_value=float(l))]
+        self.validation_summary_writter.add_summary(summary_pb2.Summary(value=summaries), step)
+        logger.info("Loss VALIDATION set step={0} = {1}".format(step, l))
+
     def train(self, train_data_shuffler, validation_data_shuffler=None):
         """
         Train the network:
@@ -305,10 +326,7 @@ class Trainer(object):
 
         logger.info("Initializing !!")
 
-        # Pickle the architecture to save
-        #self.architecture.pickle_net(train_data_shuffler.deployment_shape)
-
-        if not isinstance(tf.Tensor, self.graph):
+        if not isinstance(self.graph, tf.Tensor):
             raise NotImplemented("Not tensor still not implemented")
 
         self.session = Session.instance(new=True).session
@@ -329,9 +347,12 @@ class Trainer(object):
 
             # Preparing the optimizer
             self.optimizer_class._learning_rate = self.learning_rate
-            self.optimizer = self.optimizer_class.minimize(self.training_graph, global_step=self.global_step)
+            self.optimizer = self.optimizer_class.minimize(self.predictor, global_step=self.global_step)
             tf.add_to_collection("optimizer", self.optimizer)
             tf.add_to_collection("learning_rate", self.learning_rate)
+
+            self.summaries_train = self.create_general_summary()
+            tf.add_to_collection("summaries_train", self.summaries_train)
 
             # Train summary
             tf.global_variables_initializer().run(session=self.session)
@@ -350,6 +371,10 @@ class Trainer(object):
 
         # TENSOR BOARD SUMMARY
         self.train_summary_writter = tf.summary.FileWriter(os.path.join(self.temp_dir, 'train'), self.session.graph)
+        if validation_data_shuffler is not None:
+            self.validation_summary_writter = tf.summary.FileWriter(os.path.join(self.temp_dir, 'validation'),
+                                                                    self.session.graph)
+
         for step in range(start_step, self.iterations):
             start = time.time()
             self.fit(step)
@@ -358,18 +383,19 @@ class Trainer(object):
             self.train_summary_writter.add_summary(summary_pb2.Summary(value=[summary]), step)
 
             # Running validation
-            #if validation_data_shuffler is not None and step % self.validation_snapshot == 0:
-            #    self.compute_validation(validation_data_shuffler, step)
+            if validation_data_shuffler is not None and step % self.validation_snapshot == 0:
+                self.compute_validation(validation_data_shuffler, step)
 
-            #    if self.analizer is not None:
-            #        self.validation_summary_writter.add_summary(self.analizer(
-            #             validation_data_shuffler, self.architecture, self.session), step)
+                #if self.analizer is not None:
+                #    self.validation_summary_writter.add_summary(self.analizer(
+                #         validation_data_shuffler, self.architecture, self.session), step)
 
             # Taking snapshot
             if step % self.snapshot == 0:
                 logger.info("Taking snapshot")
                 path = os.path.join(self.temp_dir, 'model_snapshot{0}.ckp'.format(step))
-                self.architecture.save(saver, path)
+                saver.save(self.session, path)
+                #self.architecture.save(saver, path)
 
         logger.info("Training finally finished")
 
@@ -379,9 +405,9 @@ class Trainer(object):
 
         # Saving the final network
         path = os.path.join(self.temp_dir, 'model.ckp')
-        self.architecture.save(saver, path)
+        saver.save(self.session, path)
 
         if self.prefetch:
             # now they should definetely stop
             self.thread_pool.request_stop()
-            self.thread_pool.join(threads)
+            #self.thread_pool.join(threads)
