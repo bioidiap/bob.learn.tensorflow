@@ -3,16 +3,10 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 # @date: Wed 11 May 2016 09:39:36 CEST 
 
-"""
-
-"""
-
 import tensorflow as tf
-from .SequenceNetwork import SequenceNetwork
-#from bob.learn.tensorflow.initialization import Xavier
-#from bob.learn.tensorflow.initialization import Constant
 
-class Chopra(SequenceNetwork):
+
+class Chopra(object):
     """Class that creates the architecture presented in the paper:
 
     Chopra, Sumit, Raia Hadsell, and Yann LeCun. "Learning a similarity metric discriminatively, with application to
@@ -69,24 +63,49 @@ class Chopra(SequenceNetwork):
                  pooling2_size=[4, 3],
 
                  fc1_output=250,
-                 default_feature_layer="fc1",
-
                  seed=10,
-                 use_gpu=False,
+                 device="/cpu:0",
                  batch_norm=False):
 
+
+            self.conv1_kernel_size = conv1_kernel_size
+            self.conv1_output = conv1_output
+            self.pooling1_size = pooling1_size
+
+            self.conv2_output = conv2_output
+            self.conv2_kernel_size = conv2_kernel_size
+            self.pooling2_size = pooling2_size
+
+            self.fc1_output = fc1_output
+
+            self.seed = seed
+            self.device = device
+            self.batch_norm = batch_norm
+
+    def __call__(self, inputs):
         slim = tf.contrib.slim
-        graph = slim.conv2d(data_placeholder, conv1_output, conv1_kernel_size, activation_fn=tf.nn.relu,
-                            stride=2, scope='conv1')
-        graph = slim.max_pool2d(graph, pooling1_size, scope='pool1')
+        initializer = tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=self.seed)
 
-        graph = slim.conv2d(graph, conv2_output, conv2_kernel_size, activation_fn=tf.nn.relu,
-                            stride=2, scope='conv2')
-        graph = slim.max_pool2d(graph, pooling2_size, scope='pool2')
+        with tf.device(self.device):
 
-        graph = slim.flatten(graph, scope='flatten1')
+            initializer = tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=self.seed)
 
-        graph = slim.fully_connected(graph, fc1_output, scope='fc1')
+            graph = slim.conv2d(inputs, self.conv1_output, self.conv1_kernel_size, activation_fn=tf.nn.relu,
+                                stride=2,
+                                weights_initializer=initializer,
+                                scope='conv1')
+            graph = slim.max_pool2d(graph, self.pooling1_size, scope='pool1')
 
-        super(Chopra, self).__init__(default_feature_layer=default_feature_layer,
-                                     use_gpu=use_gpu)
+            graph = slim.conv2d(graph, self.conv2_output, self.conv2_kernel_size, activation_fn=tf.nn.relu,
+                                stride=2,
+                                weights_initializer=initializer,
+                                scope='conv2')
+            graph = slim.max_pool2d(graph, self.pooling2_size, scope='pool2')
+
+            graph = slim.flatten(graph, scope='flatten1')
+
+            graph = slim.fully_connected(graph, self.fc1_output,
+                                         weights_initializer=initializer,
+                                         scope='fc1')
+
+        return graph

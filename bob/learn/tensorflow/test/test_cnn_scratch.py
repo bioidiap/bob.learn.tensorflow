@@ -103,5 +103,5 @@ def test_cnn_trainer_scratch():
 
     accuracy = validate_network(embedding, validation_data, validation_labels)
     assert accuracy > 80
-    #shutil.rmtree(directory)
+    shutil.rmtree(directory)
     del trainer

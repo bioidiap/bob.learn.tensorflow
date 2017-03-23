@@ -9,7 +9,7 @@ from bob.learn.tensorflow.network import Chopra, SequenceNetwork
 from bob.learn.tensorflow.loss import BaseLoss, ContrastiveLoss, TripletLoss
 from bob.learn.tensorflow.trainers import Trainer, SiameseTrainer, TripletTrainer, constant
 from .test_cnn_scratch import validate_network
-import pkg_resources
+from bob.learn.tensorflow.network import Embedding
 
 from bob.learn.tensorflow.utils import load_mnist
 import tensorflow as tf
@@ -22,9 +22,9 @@ import bob.measure
 Some unit tests for the datashuffler
 """
 
-batch_size = 16
+batch_size = 32
 validation_batch_size = 400
-iterations = 50
+iterations = 1000
 seed = 10
 
 
@@ -90,32 +90,42 @@ def test_cnn_trainer():
 
     directory = "./temp/cnn"
 
-    # Preparing the architecture
-    architecture = Chopra(seed=seed, fc1_output=10)
-
     # Loss for the softmax
     loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
 
+    inputs = {}
+    inputs['data'] = tf.placeholder(tf.float32, shape=[None, 28, 28, 1], name="train_data")
+    inputs['label'] = tf.placeholder(tf.int64, shape=[None], name="train_label")
+
+    # Preparing the architecture
+    architecture = Chopra(seed=seed,
+                          conv1_kernel_size=[3,3],
+                          conv2_kernel_size=[3,3],
+                          fc1_output=10)
+    graph = architecture(inputs['data'])
+    embedding = Embedding(inputs['data'], graph)
+
+
     # One graph trainer
-    trainer = Trainer(architecture=architecture,
+    trainer = Trainer(inputs=inputs,
+                      graph=graph,
                       loss=loss,
                       iterations=iterations,
                       analizer=None,
                       prefetch=False,
-                      learning_rate=constant(0.05, name="regular_lr"),
-                      optimizer=tf.train.AdamOptimizer(name="adam_softmax"),
+                      learning_rate=constant(0.1, name="regular_lr"),
+                      optimizer=tf.train.GradientDescentOptimizer(0.1),
                       temp_dir=directory
                       )
-
     trainer.train(train_data_shuffler)
-
-    accuracy = validate_network(validation_data, validation_labels, architecture)
+    accuracy = validate_network(embedding, validation_data, validation_labels)
+    #import ipdb; ipdb.set_trace()
 
     # At least 80% of accuracy
     assert accuracy > 80.
-    shutil.rmtree(directory)
+    #shutil.rmtree(directory)
     del trainer
-    del architecture
+    del graph
 
 
 def test_siamesecnn_trainer():
