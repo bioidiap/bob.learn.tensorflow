@@ -91,13 +91,13 @@ class Chopra(object):
             initializer = tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=self.seed)
 
             graph = slim.conv2d(inputs, self.conv1_output, self.conv1_kernel_size, activation_fn=tf.nn.relu,
-                                stride=2,
+                                stride=1,
                                 weights_initializer=initializer,
                                 scope='conv1')
             graph = slim.max_pool2d(graph, self.pooling1_size, scope='pool1')
 
             graph = slim.conv2d(graph, self.conv2_output, self.conv2_kernel_size, activation_fn=tf.nn.relu,
-                                stride=2,
+                                stride=1,
                                 weights_initializer=initializer,
                                 scope='conv2')
             graph = slim.max_pool2d(graph, self.pooling2_size, scope='pool2')

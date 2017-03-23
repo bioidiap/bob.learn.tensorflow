@@ -4,7 +4,7 @@
 # @date: Thu 13 Oct 2016 13:35 CEST
 
 import numpy
-from bob.learn.tensorflow.datashuffler import Memory, SiameseMemory, TripletMemory, ImageAugmentation
+from bob.learn.tensorflow.datashuffler import Memory, SiameseMemory, TripletMemory, ImageAugmentation, ScaleFactor
 from bob.learn.tensorflow.network import Chopra, SequenceNetwork
 from bob.learn.tensorflow.loss import BaseLoss, ContrastiveLoss, TripletLoss
 from bob.learn.tensorflow.trainers import Trainer, SiameseTrainer, TripletTrainer, constant
@@ -24,7 +24,7 @@ Some unit tests for the datashuffler
 
 batch_size = 32
 validation_batch_size = 400
-iterations = 1000
+iterations = 300
 seed = 10
 
 
@@ -86,7 +86,8 @@ def test_cnn_trainer():
     train_data_shuffler = Memory(train_data, train_labels,
                                  input_shape=[28, 28, 1],
                                  batch_size=batch_size,
-                                 data_augmentation=data_augmentation)
+                                 data_augmentation=data_augmentation,
+                                 normalizer=ScaleFactor())
 
     directory = "./temp/cnn"
 
@@ -99,8 +100,6 @@ def test_cnn_trainer():
 
     # Preparing the architecture
     architecture = Chopra(seed=seed,
-                          conv1_kernel_size=[3,3],
-                          conv2_kernel_size=[3,3],
                           fc1_output=10)
     graph = architecture(inputs['data'])
     embedding = Embedding(inputs['data'], graph)
@@ -113,8 +112,7 @@ def test_cnn_trainer():
                       iterations=iterations,
                       analizer=None,
                       prefetch=False,
-                      learning_rate=constant(0.1, name="regular_lr"),
-                      optimizer=tf.train.GradientDescentOptimizer(0.1),
+                      learning_rate=constant(0.01, name="regular_lr"),
                       temp_dir=directory
                       )
     trainer.train(train_data_shuffler)
