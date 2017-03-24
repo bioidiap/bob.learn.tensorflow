@@ -104,7 +104,6 @@ def test_cnn_trainer():
     graph = architecture(inputs['data'])
     embedding = Embedding(inputs['data'], graph)
 
-
     # One graph trainer
     trainer = Trainer(inputs=inputs,
                       graph=graph,
@@ -113,15 +112,15 @@ def test_cnn_trainer():
                       analizer=None,
                       prefetch=False,
                       learning_rate=constant(0.01, name="regular_lr"),
+                      optimizer=tf.train.GradientDescentOptimizer(0.01),
                       temp_dir=directory
                       )
     trainer.train(train_data_shuffler)
     accuracy = validate_network(embedding, validation_data, validation_labels)
-    #import ipdb; ipdb.set_trace()
 
     # At least 80% of accuracy
     assert accuracy > 80.
-    #shutil.rmtree(directory)
+    shutil.rmtree(directory)
     del trainer
     del graph
 
@@ -143,12 +142,21 @@ def test_siamesecnn_trainer():
 
     # Preparing the architecture
     architecture = Chopra(seed=seed, fc1_output=10)
+    inputs = {}
+    inputs['left'] = tf.placeholder(tf.float32, shape=[None, 28, 28, 1], name="input_left")
+    inputs['right'] = tf.placeholder(tf.float32, shape=[None, 28, 28, 1], name="input_right")
+    inputs['label'] = tf.placeholder(tf.int64, shape=[None], name="label")
+
+    graph = {}
+    graph['left'] = architecture(inputs['left'])
+    graph['right'] = architecture(inputs['right'])
 
     # Loss for the Siamese
     loss = ContrastiveLoss(contrastive_margin=4.)
 
     # One graph trainer
-    trainer = SiameseTrainer(architecture=architecture,
+    trainer = SiameseTrainer(inputs=inputs,
+                             graph=graph,
                              loss=loss,
                              iterations=iterations,
                              prefetch=False,
@@ -158,6 +166,7 @@ def test_siamesecnn_trainer():
                              temp_dir=directory
                              )
 
+    import ipdb; ipdb.set_trace();
     trainer.train(train_data_shuffler)
 
     eer = dummy_experiment(validation_data_shuffler, architecture)

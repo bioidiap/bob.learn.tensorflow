@@ -8,6 +8,7 @@ from tensorflow.core.framework import summary_pb2
 from ..analyzers import ExperimentAnalizer, SoftmaxAnalizer
 from ..network import SequenceNetwork
 from .Trainer import Trainer
+from .learning_rate import constant
 import os
 import logging
 logger = logging.getLogger("bob.learn")
@@ -60,7 +61,8 @@ class SiameseTrainer(Trainer):
     """
 
     def __init__(self,
-                 architecture,
+                 inputs,
+                 graph,
                  optimizer=tf.train.AdamOptimizer(),
                  use_gpu=False,
                  loss=None,
@@ -84,36 +86,63 @@ class SiameseTrainer(Trainer):
                  verbosity_level=2
                  ):
 
-        super(SiameseTrainer, self).__init__(
-            architecture=architecture,
-            optimizer=optimizer,
-            use_gpu=use_gpu,
-            loss=loss,
-            temp_dir=temp_dir,
+        import ipdb;
+        ipdb.set_trace();
 
-            # Learning rate
-            learning_rate=learning_rate,
+        self.inputs = inputs
+        self.graph = graph
+        self.loss = loss
 
-            ###### training options ##########
-            convergence_threshold=convergence_threshold,
-            iterations=iterations,
-            snapshot=snapshot,
-            validation_snapshot=validation_snapshot,
-            prefetch=prefetch,
+        if not isinstance(self.graph, dict) or not(('left' and 'right') in self.graph.keys()):
+            raise ValueError("Expected a dict with the elements `right` and `left` as input for the keywork `graph`")
 
-            ## Analizer
-            analizer=analizer,
+        self.predictor = self.loss(self.graph, inputs['label'])
 
-            model_from_file=model_from_file,
+        self.optimizer_class = optimizer
+        self.use_gpu = use_gpu
+        self.temp_dir = temp_dir
 
-            verbosity_level=verbosity_level
-        )
+        if learning_rate is None and model_from_file == "":
+            self.learning_rate = constant()
+        else:
+            self.learning_rate = learning_rate
+
+        self.iterations = iterations
+        self.snapshot = snapshot
+        self.validation_snapshot = validation_snapshot
+        self.convergence_threshold = convergence_threshold
+        self.prefetch = prefetch
+
+        # Training variables used in the fit
+        self.optimizer = None
+        self.training_graph = None
+        self.train_data_shuffler = None
+        self.summaries_train = None
+        self.train_summary_writter = None
+        self.thread_pool = None
+
+        # Validation data
+        self.validation_graph = None
+        self.validation_summary_writter = None
+
+        # Analizer
+        self.analizer = analizer
+
+        self.thread_pool = None
+        self.enqueue_op = None
+        self.global_step = None
+
+        self.model_from_file = model_from_file
+        self.session = None
+
+        bob.core.log.set_verbosity_level(logger, verbosity_level)
 
         self.between_class_graph_train = None
         self.within_class_graph_train = None
 
         self.between_class_graph_validation = None
         self.within_class_graph_validation = None
+
 
     def bootstrap_placeholders(self, train_data_shuffler, validation_data_shuffler):
         """

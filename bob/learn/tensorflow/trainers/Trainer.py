@@ -94,12 +94,13 @@ class Trainer(object):
 
                  verbosity_level=2):
 
-        #if not isinstance(graph, SequenceNetwork):
-        #    raise ValueError("`architecture` should be instance of `SequenceNetwork`")
-
         self.inputs = inputs
         self.graph = graph
         self.loss = loss
+
+        if not isinstance(self.graph, tf.Tensor):
+            raise ValueError("Expected a tf.Tensor as input for the keywork `graph`")
+
         self.predictor = self.loss(self.graph, inputs['label'])
 
         self.optimizer_class = optimizer
@@ -325,10 +326,6 @@ class Trainer(object):
         self.train_data_shuffler = train_data_shuffler
 
         logger.info("Initializing !!")
-
-        if not isinstance(self.graph, tf.Tensor):
-            raise NotImplemented("Not tensor still not implemented")
-
         self.session = Session.instance(new=True).session
 
         # Loading a pretrained model

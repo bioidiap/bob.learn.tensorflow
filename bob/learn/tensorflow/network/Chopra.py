@@ -67,7 +67,6 @@ class Chopra(object):
                  device="/cpu:0",
                  batch_norm=False):
 
-
             self.conv1_kernel_size = conv1_kernel_size
             self.conv1_output = conv1_output
             self.pooling1_size = pooling1_size
@@ -84,7 +83,6 @@ class Chopra(object):
 
     def __call__(self, inputs):
         slim = tf.contrib.slim
-        initializer = tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=self.seed)
 
         with tf.device(self.device):
 
@@ -106,6 +104,6 @@ class Chopra(object):
 
             graph = slim.fully_connected(graph, self.fc1_output,
                                          weights_initializer=initializer,
+                                         activation_fn=None,
                                          scope='fc1')
-
         return graph
