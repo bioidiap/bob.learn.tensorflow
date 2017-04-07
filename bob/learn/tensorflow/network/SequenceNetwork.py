@@ -320,15 +320,15 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
 
         # self.pickle_net(shape)
 
-    def save(self, saver, path):
+    def save(self, saver, path, session):
 
-        session = Session.instance().session
+#        session = Session.instance().session
 
         open(path+"_sequence_net.pickle", 'w').write(self.pickle_architecture)
         # print("SAVING TO path: ", path)
         return saver.save(session, path)
 
-    def load(self, path, clear_devices=False):
+    def load(self, path, session, clear_devices=False):
 
         session = Session.instance().session
 

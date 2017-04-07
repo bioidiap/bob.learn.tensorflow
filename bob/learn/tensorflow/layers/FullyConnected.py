@@ -101,6 +101,7 @@ class FullyConnected(Layer):
             else:
                 fc = self.input_layer
 
+            print("FC layer shape: ", fc.get_shape().as_list())
             if self.batch_norm:
                 fc = self.batch_normalize(fc, training_phase)
 

@@ -264,9 +264,9 @@ class TrainerSeq(object):
         Creates a simple tensorboard summary with the value of the loss and learning rate
         """
         # Train summary
-        tf.scalar_summary('loss', self.training_graph, name="train")
-        tf.scalar_summary('lr', self.learning_rate, name="train")
-        return tf.merge_all_summaries()
+        tf.summary.scalar('loss', self.training_graph)
+        tf.summary.scalar('lr', self.learning_rate)
+        return tf.summary.merge_all()
 
     def start_thread(self, training=True):
         """
@@ -415,7 +415,7 @@ class TrainerSeq(object):
         tf.initialize_all_variables().run(session=self.session)
 
         # Original tensorflow saver object
-        saver = tf.train.Saver(var_list=tf.all_variables())
+        saver = tf.train.Saver(var_list=tf.all_variables(), max_to_keep=30)
 
         self.architecture.load_hdf5(self.model_from_file, shape=[1, 6560, 1])
         # fname, _ = os.path.splitext(self.model_from_file)
@@ -434,7 +434,7 @@ class TrainerSeq(object):
 
 
         """
-        saver = self.architecture.load(self.model_from_file, clear_devices=False)
+        saver = self.architecture.load(self.model_from_file, self.session, clear_devices=False)
 
         # Loading training graph
         self.training_graph = tf.get_collection("training_graph")[0]
@@ -501,7 +501,7 @@ class TrainerSeq(object):
         self.architecture.pickle_net(train_data_shuffler.deployment_shape)
 
         Session.create()
-        self.session = Session.instance().session
+        self.session = Session.instance(new=True).session
 
         # Loading a pretrained model
         if self.model_from_file != "":
@@ -540,18 +540,18 @@ class TrainerSeq(object):
             tf.initialize_all_variables().run(session=self.session)
 
             # Original tensorflow saver object
-            saver = tf.train.Saver(var_list=tf.all_variables())
+            saver = tf.train.Saver(var_list=tf.all_variables(), max_to_keep=30)
 
         if isinstance(train_data_shuffler, OnLineSampling):
             train_data_shuffler.set_feature_extractor(self.architecture, session=self.session)
 
-        self.architecture.save(saver, os.path.join(self.temp_dir, 'model_initial.ckp'))
+        self.architecture.save(saver, os.path.join(self.temp_dir, 'model_initial.ckp'), self.session)
         with self.session.as_default():
             path = os.path.join(self.temp_dir, 'model_initial.hdf5')
             self.architecture.save_hdf5(bob.io.base.HDF5File(path, 'w'))
 
         # TENSOR BOARD SUMMARY
-        self.train_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'train'), self.session.graph)
+        self.train_summary_writter = tf.summary.FileWriter(os.path.join(self.temp_dir, 'train'), self.session.graph)
         start = time.time()
         total_train_data = 0
         total_valid_data = 0
@@ -579,7 +579,7 @@ class TrainerSeq(object):
                 total_train_loss += cur_loss
 
                 # Reporting loss for each snapshot
-                if batch_num % self.snapshot == 0:
+                if (batch_num/2.0) % self.snapshot == 0:
                     logger.info("Loss training set, epoch={0}, batch_num={1} = {2}".format(
                         epoch, batch_num, total_train_loss/batch_num))
                     self.train_summary_writter.add_summary(summary, epoch*total_train_data+batch_num)
@@ -589,7 +589,7 @@ class TrainerSeq(object):
                     self.train_summary_writter.add_summary(
                         summary_pb2.Summary(value=[summary]), epoch*total_train_data+batch_num)
                     path = os.path.join(self.temp_dir, 'model_epoch{0}_batch{1}.ckp'.format(epoch, batch_num))
-                    self.architecture.save(saver, path)
+                    self.architecture.save(saver, path, self.session)
                     with self.session.as_default():
                         path = os.path.join(self.temp_dir, 'model_epoch{0}_batch{1}.hdf5'.format(epoch, batch_num))
                         self.architecture.save_hdf5(bob.io.base.HDF5File(path, 'w'))
@@ -602,7 +602,7 @@ class TrainerSeq(object):
                 logger.info("Loss total TRAINING for epoch={0} = {1}".format(
                     epoch, total_train_loss / total_train_data))
             path = os.path.join(self.temp_dir, 'model_epoch{0}.ckp'.format(epoch))
-            self.architecture.save(saver, path)
+            self.architecture.save(saver, path, self.session)
             with self.session.as_default():
                 path = os.path.join(self.temp_dir, 'model_epoch{0}.hdf5'.format(epoch))
                 self.architecture.save_hdf5(bob.io.base.HDF5File(path, 'w'))
@@ -632,9 +632,9 @@ class TrainerSeq(object):
                     total_prediction_err += numpy.mean(numpy.array(prediction_err))
 
                     if self.validation_summary_writter is None:
-                        self.validation_summary_writter = tf.train.SummaryWriter(
+                        self.validation_summary_writter = tf.summary.FileWriter(
                             os.path.join(self.temp_dir, 'validation'), self.session.graph)
-                    if batch_num % self.validation_snapshot == 0:
+                    if (batch_num/2.0) % self.validation_snapshot == 0:
                         summaries = [summary_pb2.Summary.Value(tag="loss", simple_value=float(total_valid_loss/batch_num))]
                         self.validation_summary_writter.add_summary(
                             summary_pb2.Summary(value=summaries), epoch*total_valid_data+batch_num)
@@ -666,7 +666,7 @@ class TrainerSeq(object):
 
         # Saving the final network
         path = os.path.join(self.temp_dir, 'model.ckp')
-        self.architecture.save(saver, path)
+        self.architecture.save(saver, path, self.session)
         with self.session.as_default():
             path = os.path.join(self.temp_dir, 'model.hdf5')
             self.architecture.save_hdf5(bob.io.base.HDF5File(path, 'w'))

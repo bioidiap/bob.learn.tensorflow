@@ -11,7 +11,6 @@ class Singleton(object):
     To get the singleton instance, use the :py:meth:`instance` method. Trying to use `__call__` will result in a `TypeError` being raised.
 
     Limitations:
-
     * The decorated class cannot be inherited from.
     * The documentation of the decorated class is replaced with the documentation of this class.
     """
@@ -24,17 +23,20 @@ class Singleton(object):
         self.__module__ = decorated.__module__
         self.__mro__ = decorated.__mro__
         self.__bases__ = []
-
         self._instance = None
 
     def create(self, *args, **kwargs):
         """Creates the singleton instance, by passing the given parameters to the class' constructor."""
+        # TODO: I still having problems in killing all the elements of the current session
+        if self._instance is not None:
+            self._instance.session.close()
+            del self._instance
         self._instance = self._decorated(*args, **kwargs)
 
-    def instance(self):
+    def instance(self, new=False):
         """Returns the singleton instance.
         The function :py:meth:`create` must have been called before."""
-        if self._instance is None:
+        if self._instance is None or new:
             self.create()
         return self._instance
 
