@@ -5,7 +5,7 @@
 
 import numpy
 from bob.learn.tensorflow.datashuffler import Memory, SiameseMemory, TripletMemory, ImageAugmentation, ScaleFactor
-from bob.learn.tensorflow.network import Chopra, SequenceNetwork
+from bob.learn.tensorflow.network import Chopra
 from bob.learn.tensorflow.loss import BaseLoss, ContrastiveLoss, TripletLoss
 from bob.learn.tensorflow.trainers import Trainer, SiameseTrainer, TripletTrainer, constant
 from .test_cnn_scratch import validate_network
@@ -23,7 +23,7 @@ Some unit tests for the datashuffler
 """
 
 batch_size = 32
-validation_batch_size = 400
+validation_batch_size = 32
 iterations = 300
 seed = 10
 
@@ -77,6 +77,7 @@ def dummy_experiment(data_s, architecture):
 
 def test_cnn_trainer():
 
+    # Loading data
     train_data, train_labels, validation_data, validation_labels = load_mnist()
     train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
@@ -84,40 +85,45 @@ def test_cnn_trainer():
     # Creating datashufflers
     data_augmentation = ImageAugmentation()
     train_data_shuffler = Memory(train_data, train_labels,
-                                 input_shape=[28, 28, 1],
+                                 input_shape=[None, 28, 28, 1],
                                  batch_size=batch_size,
                                  data_augmentation=data_augmentation,
                                  normalizer=ScaleFactor())
+
+    validation_data_shuffler = Memory(validation_data, validation_labels,
+                                      input_shape=[None, 28, 28, 1],
+                                      batch_size=batch_size,
+                                      data_augmentation=data_augmentation,
+                                      normalizer=ScaleFactor())
 
     directory = "./temp/cnn"
 
     # Loss for the softmax
     loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
 
-    inputs = {}
-    inputs['data'] = tf.placeholder(tf.float32, shape=[None, 28, 28, 1], name="train_data")
-    inputs['label'] = tf.placeholder(tf.int64, shape=[None], name="train_label")
-
     # Preparing the architecture
     architecture = Chopra(seed=seed,
                           fc1_output=10)
-    graph = architecture(inputs['data'])
-    embedding = Embedding(inputs['data'], graph)
+    input_pl = train_data_shuffler("data", from_queue=True)
+    graph = architecture(input_pl)
+    embedding = Embedding(train_data_shuffler("data", from_queue=False), graph)
 
     # One graph trainer
-    trainer = Trainer(inputs=inputs,
-                      graph=graph,
-                      loss=loss,
+    trainer = Trainer(train_data_shuffler,
                       iterations=iterations,
                       analizer=None,
-                      prefetch=False,
-                      learning_rate=constant(0.01, name="regular_lr"),
-                      optimizer=tf.train.GradientDescentOptimizer(0.01),
                       temp_dir=directory
                       )
-    trainer.train(train_data_shuffler)
-    accuracy = validate_network(embedding, validation_data, validation_labels)
+    trainer.create_network_from_scratch(graph=graph,
+                                        loss=loss,
+                                        learning_rate=constant(0.01, name="regular_lr"),
+                                        optimizer=tf.train.GradientDescentOptimizer(0.01),
+                                        )
+    trainer.train()
+    #trainer.train(validation_data_shuffler)
 
+    # Using embedding to compute the accuracy
+    accuracy = validate_network(embedding, validation_data, validation_labels)
     # At least 80% of accuracy
     assert accuracy > 80.
     shutil.rmtree(directory)
@@ -165,8 +171,6 @@ def test_siamesecnn_trainer():
                              optimizer=tf.train.AdamOptimizer(name="adam_siamese"),
                              temp_dir=directory
                              )
-
-    import ipdb; ipdb.set_trace();
     trainer.train(train_data_shuffler)
 
     eer = dummy_experiment(validation_data_shuffler, architecture)

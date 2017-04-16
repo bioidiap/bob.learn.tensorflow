@@ -39,16 +39,26 @@ class Base(object):
 
      normalizer:
        The algorithm used for feature scaling. Look :py:class:`bob.learn.tensorflow.datashuffler.ScaleFactor`, :py:class:`bob.learn.tensorflow.datashuffler.Linear` and :py:class:`bob.learn.tensorflow.datashuffler.MeanOffset`
+       
+     prefetch:
+        Do prefetch?
+        
+     prefetch_capacity:
+        
 
     """
 
     def __init__(self, data, labels,
-                 input_shape,
+                 input_shape=[None, 28, 28, 1],
                  input_dtype="float64",
-                 batch_size=1,
+                 batch_size=32,
                  seed=10,
                  data_augmentation=None,
-                 normalizer=Linear()):
+                 normalizer=Linear(),
+                 prefetch=False,
+                 prefetch_capacity=10):
+
+        # Setting the seed for the pseudo random number generator
         self.seed = seed
         numpy.random.seed(seed)
 
@@ -58,10 +68,9 @@ class Base(object):
         # TODO: Check if the bacth size is higher than the input data
         self.batch_size = batch_size
 
+        # Preparing the inputs
         self.data = data
-        self.shape = tuple([batch_size] + input_shape)
         self.input_shape = tuple(input_shape)
-
         self.labels = labels
         self.possible_labels = list(set(self.labels))
 
@@ -72,43 +81,72 @@ class Base(object):
         self.indexes = numpy.array(range(self.n_samples))
         numpy.random.shuffle(self.indexes)
 
-        self.data_placeholder = None
-        self.label_placeholder = None
-
+        # Use data data augmentation?
         self.data_augmentation = data_augmentation
-        self.deployment_shape = [None] + list(input_shape)
 
-    def set_placeholders(self, data, label):
-        self.data_placeholder = data
-        self.label_placeholder = label
+        # Preparing placeholders
+        self.data_ph = None
+        self.label_ph = None
+        # Prefetch variables
+        self.prefetch = prefetch
+        self.data_ph_from_queue = None
+        self.label_ph_from_queue = None
+
+    def create_placeholders(self):
+        """
+        Create place holder instances
+        
+        :return: 
+        """
+        with tf.name_scope("Input"):
+
+            self.data_ph = tf.placeholder(tf.float32, shape=self.input_shape, name="data")
+            self.label_ph = tf.placeholder(tf.int64, shape=[None], name="label")
+
+            # If prefetch, setup the queue to feed data
+            if self.prefetch:
+                queue = tf.FIFOQueue(capacity=self.prefetch_capacity,
+                                     dtypes=[tf.float32, tf.int64],
+                                     shapes=[self.input_shape[1:], []])
+
+                # Fetching the place holders from the queue
+                self.enqueue_op = queue.enqueue_many([self.data_ph, self.label_ph])
+                self.data_ph_from_queue, self.label_ph_from_queue = queue.dequeue_many(self.batch_size)
+
+            else:
+                self.data_ph_from_queue = self.data_ph
+                self.label_ph_from_queue = self.label_ph
+
+    def __call__(self, element, from_queue=False):
+        """
+        Return the necessary placeholder
+        
+        """
+
+        if not element in ["data", "label"]:
+            raise ValueError("Value '{0}' invalid. Options available are {1}".format(element, self.placeholder_options))
+
+        # If None, create the placeholders from scratch
+        if self.data_ph is None:
+            self.create_placeholders()
+
+        if element == "data":
+            if from_queue:
+                return self.data_ph_from_queue
+            else:
+                return self.data_ph
+
+        else:
+            if from_queue:
+                return self.label_ph_from_queue
+            else:
+                return self.label_ph
 
     def get_batch(self):
         """
         Shuffle dataset and get a random batch.
         """
         raise NotImplementedError("Method not implemented in this level. You should use one of the derived classes.")
-
-    def get_placeholders(self, name=""):
-        """
-        Returns a place holder with the size of your batch
-        """
-
-        if self.data_placeholder is None:
-            self.data_placeholder = tf.placeholder(tf.float32, shape=self.shape, name=name)
-
-        if self.label_placeholder is None:
-            self.label_placeholder = tf.placeholder(tf.int64, shape=self.shape[0])
-
-        return [self.data_placeholder, self.label_placeholder]
-
-    def get_placeholders_forprefetch(self, name=""):
-        """
-        Returns a place holder with the size of your batch
-        """
-        if self.data_placeholder is None:
-            self.data_placeholder = tf.placeholder(tf.float32, shape=tuple([None] + list(self.shape[1:])), name=name)
-            self.label_placeholder = tf.placeholder(tf.int64, shape=[None, ])
-        return [self.data_placeholder, self.label_placeholder]
 
     def bob2skimage(self, bob_image):
         """
@@ -166,10 +204,6 @@ class Base(object):
             return dst
         else:
             return data
-
-    def reshape_for_deploy(self, data):
-        shape = tuple([1] + list(data.shape))
-        return numpy.reshape(data, shape)
 
     def normalize_sample(self, x):
         """

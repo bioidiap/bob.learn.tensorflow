@@ -48,7 +48,7 @@ def scratch_network():
 def validate_network(embedding, validation_data, validation_labels):
     # Testing
     validation_data_shuffler = Memory(validation_data, validation_labels,
-                                      input_shape=[28, 28, 1],
+                                      input_shape=[None, 28, 28, 1],
                                       batch_size=validation_batch_size,
                                       normalizer=ScaleFactor())
 
