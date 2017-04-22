@@ -131,8 +131,6 @@ class Trainer(object):
                                     learning_rate=None,
                                     ):
 
-        self.saver = tf.train.Saver(var_list=tf.global_variables())
-
         self.data_ph = self.train_data_shuffler("data")
         self.label_ph = self.train_data_shuffler("label")
         self.graph = graph
@@ -144,6 +142,10 @@ class Trainer(object):
 
         # TODO: find an elegant way to provide this as a parameter of the trainer
         self.global_step = tf.Variable(0, trainable=False, name="global_step")
+
+        # Saving all the variables
+        self.saver = tf.train.Saver(var_list=tf.global_variables())
+
         tf.add_to_collection("global_step", self.global_step)
 
         tf.add_to_collection("graph", self.graph)
@@ -161,6 +163,7 @@ class Trainer(object):
         self.summaries_train = self.create_general_summary()
         tf.add_to_collection("summaries_train", self.summaries_train)
 
+
         # Creating the variables
         tf.global_variables_initializer().run(session=self.session)
 
@@ -173,15 +176,14 @@ class Trainer(object):
            train_data_shuffler: Data shuffler for training
            validation_data_shuffler: Data shuffler for validation
 
-
         """
         #saver = self.architecture.load(self.model_from_file, clear_devices=False)
         self.saver = tf.train.import_meta_graph(model_from_file + ".meta")
         self.saver.restore(self.session, model_from_file)
 
         # Loading training graph
-        self.data_ph = tf.get_collection("data_ph")
-        self.label_ph = tf.get_collection("label_ph")
+        self.data_ph = tf.get_collection("data_ph")[0]
+        self.label_ph = tf.get_collection("label_ph")[0]
 
         self.graph = tf.get_collection("graph")[0]
         self.predictor = tf.get_collection("predictor")[0]
@@ -194,10 +196,7 @@ class Trainer(object):
         self.from_scratch = False
 
         # Creating the variables
-        tf.global_variables_initializer().run(session=self.session)
-        import ipdb; ipdb.set_trace()
-        x=0
-
+        #tf.global_variables_initializer().run(session=self.session)
 
     def __del__(self):
         tf.reset_default_graph()
@@ -356,7 +355,7 @@ class Trainer(object):
             if step % self.snapshot == 0:
                 logger.info("Taking snapshot")
                 path = os.path.join(self.temp_dir, 'model_snapshot{0}.ckp'.format(step))
-                self.saver.save(self.session, path)
+                self.saver.save(self.session, path, global_step=step)
                 #self.architecture.save(saver, path)
 
         logger.info("Training finally finished")

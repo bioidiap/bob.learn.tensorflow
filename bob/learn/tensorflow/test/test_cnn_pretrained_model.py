@@ -6,7 +6,7 @@
 import numpy
 import bob.io.base
 import os
-from bob.learn.tensorflow.datashuffler import Memory, ImageAugmentation, TripletMemory, SiameseMemory
+from bob.learn.tensorflow.datashuffler import Memory, ImageAugmentation, TripletMemory, SiameseMemory, ScaleFactor
 from bob.learn.tensorflow.loss import BaseLoss, TripletLoss, ContrastiveLoss
 from bob.learn.tensorflow.trainers import Trainer, constant, TripletTrainer, SiameseTrainer
 from bob.learn.tensorflow.utils import load_mnist
@@ -33,17 +33,19 @@ def scratch_network(input_pl):
     # Creating a random network
     slim = tf.contrib.slim
 
-    initializer = tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=10)
+    with tf.device("/cpu:0"):
+        initializer = tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=10)
 
-    scratch = slim.conv2d(input_pl, 10, 3, activation_fn=tf.nn.tanh,
-                          stride=1,
-                          weights_initializer=initializer,
-                          scope='conv1')
-    scratch = slim.flatten(scratch, scope='flatten1')
-    scratch = slim.fully_connected(scratch, 10,
-                                   weights_initializer=initializer,
-                                   activation_fn=None,
-                                   scope='fc1')
+        scratch = slim.conv2d(input_pl, 16, [3, 3], activation_fn=tf.nn.relu,
+                              stride=1,
+                              weights_initializer=initializer,
+                              scope='conv1')
+        scratch = slim.max_pool2d(scratch, kernel_size=[2, 2], scope='pool1')
+        scratch = slim.flatten(scratch, scope='flatten1')
+        scratch = slim.fully_connected(scratch, 10,
+                                       weights_initializer=initializer,
+                                       activation_fn=None,
+                                       scope='fc1')
 
     return scratch
 
@@ -58,7 +60,8 @@ def test_cnn_pretrained():
     train_data_shuffler = Memory(train_data, train_labels,
                                  input_shape=[None, 28, 28, 1],
                                  batch_size=batch_size,
-                                 data_augmentation=data_augmentation)
+                                 data_augmentation=data_augmentation,
+                                 normalizer=ScaleFactor())
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
 
     directory = "./temp/cnn"
@@ -81,39 +84,35 @@ def test_cnn_pretrained():
                       )
     trainer.create_network_from_scratch(graph=graph,
                                         loss=loss,
-                                        learning_rate=constant(0.01, name="regular_lr"),
-                                        optimizer=tf.train.GradientDescentOptimizer(0.01),
+                                        learning_rate=constant(0.1, name="regular_lr"),
+                                        optimizer=tf.train.GradientDescentOptimizer(0.1),
                                         )
     trainer.train()
     accuracy = validate_network(embedding, validation_data, validation_labels)
+
     assert accuracy > 80
+    tf.reset_default_graph()
 
     del graph
     del loss
     del trainer
+    del embedding
     # Training the network using a pre trained model
     loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean, name="loss")
-    graph = scratch_network(input_pl)
 
     # One graph trainer
     trainer = Trainer(train_data_shuffler,
-                      iterations=iterations,
+                      iterations=iterations*3,
                       analizer=None,
                       temp_dir=directory
                       )
     trainer.create_network_from_file(os.path.join(directory, "model.ckp"))
-
-    import ipdb;
-    ipdb.set_trace()
-
     trainer.train()
-
+    embedding = Embedding(trainer.data_ph, trainer.graph)
     accuracy = validate_network(embedding, validation_data, validation_labels)
     assert accuracy > 90
     shutil.rmtree(directory)
-    shutil.rmtree(directory2)
 
-    del graph
     del loss
     del trainer
 
