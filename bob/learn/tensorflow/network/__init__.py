@@ -1,14 +1,7 @@
 from .SequenceNetwork import SequenceNetwork
-from .Lenet import Lenet
 from .Chopra import Chopra
 from .Dummy import Dummy
-from .LenetDropout import LenetDropout
 from .MLP import MLP
-from .FaceNet import FaceNet
-from .FaceNetSimple import FaceNetSimple
-from .VGG16 import VGG16
-from .VGG16_mod import VGG16_mod
-from .SimpleAudio import SimpleAudio
 from .Embedding import Embedding
 #from .Input import Input
 
@@ -28,16 +21,9 @@ def __appropriate__(*args):
 
 __appropriate__(
     SequenceNetwork,
-    Lenet,
     Chopra,
     Dummy,
-    LenetDropout,
     MLP,
-    FaceNet,
-    FaceNetSimple,
-    VGG16,
-    VGG16_mod,
-    SimpleAudio,
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]
 

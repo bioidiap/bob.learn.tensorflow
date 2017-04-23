@@ -8,23 +8,17 @@ Summy architecture
 """
 
 import tensorflow as tf
-from .SequenceNetwork import SequenceNetwork
-from ..layers import Conv2D, FullyConnected, MaxPooling
-import bob.learn.tensorflow
-from bob.learn.tensorflow.initialization import Xavier
-from bob.learn.tensorflow.initialization import Constant
 
-
-class Dummy(SequenceNetwork):
+class Dummy(object):
 
     def __init__(self,
                  conv1_kernel_size=3,
                  conv1_output=1,
 
-                 n_classes=2,
-                 default_feature_layer="fc1",
+                 fc1_output=2,
 
                  seed=10,
+                 device="/cpu:0",
                  use_gpu=False):
         """
         Create all the necessary variables for this CNN
@@ -37,16 +31,27 @@ class Dummy(SequenceNetwork):
 
             seed = 10
         """
-        super(Dummy, self).__init__(default_feature_layer=default_feature_layer,
-                                    use_gpu=use_gpu)
+        self.conv1_output = conv1_output
+        self.conv1_kernel_size = conv1_kernel_size
+        self.fc1_output = fc1_output
+        self.seed = seed
+        self.device = device
 
-        self.add(Conv2D(name="conv1", kernel_size=conv1_kernel_size,
-                        filters=conv1_output,
-                        activation=tf.nn.tanh,
-                        weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
-                        bias_initialization=Constant(use_gpu=self.use_gpu)
-                        ))
-        self.add(FullyConnected(name="fc1", output_dim=n_classes,
-                                activation=None,
-                                weights_initialization=Xavier(seed=seed, use_gpu=self.use_gpu),
-                                bias_initialization=Constant(use_gpu=self.use_gpu)))
+    def __call__(self, inputs):
+        slim = tf.contrib.slim
+
+        with tf.device(self.device):
+
+            initializer = tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=self.seed)
+
+            graph = slim.conv2d(inputs, self.conv1_output, self.conv1_kernel_size, activation_fn=tf.nn.relu,
+                                stride=1,
+                                weights_initializer=initializer,
+                                scope='conv1')
+            graph = slim.flatten(graph, scope='flatten1')
+
+            graph = slim.fully_connected(graph, self.fc1_output,
+                                         weights_initializer=initializer,
+                                         activation_fn=None,
+                                         scope='fc1')
+        return graph
