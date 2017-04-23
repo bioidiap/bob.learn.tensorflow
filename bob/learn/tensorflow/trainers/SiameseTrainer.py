@@ -5,12 +5,13 @@
 
 import tensorflow as tf
 from tensorflow.core.framework import summary_pb2
-from ..analyzers import ExperimentAnalizer, SoftmaxAnalizer
-from ..network import SequenceNetwork
 from .Trainer import Trainer
+from ..analyzers import SoftmaxAnalizer
 from .learning_rate import constant
 import os
 import logging
+from bob.learn.tensorflow.utils.session import Session
+import bob.core
 logger = logging.getLogger("bob.learn")
 
 
@@ -61,215 +62,109 @@ class SiameseTrainer(Trainer):
     """
 
     def __init__(self,
-                 inputs,
-                 graph,
-                 optimizer=tf.train.AdamOptimizer(),
-                 use_gpu=False,
-                 loss=None,
-                 temp_dir="cnn",
-
-                 # Learning rate
-                 learning_rate=None,
+                 train_data_shuffler,
 
                  ###### training options ##########
-                 convergence_threshold=0.01,
                  iterations=5000,
                  snapshot=500,
-                 prefetch=False,
                  validation_snapshot=100,
 
                  ## Analizer
-                 analizer=ExperimentAnalizer(),
+                 analizer=SoftmaxAnalizer(),
 
-                 model_from_file="",
+                 # Temporatu dir
+                 temp_dir="siamese_cnn",
 
                  verbosity_level=2
                  ):
 
-        import ipdb;
-        ipdb.set_trace();
-
-        self.inputs = inputs
-        self.graph = graph
-        self.loss = loss
-
-        if not isinstance(self.graph, dict) or not(('left' and 'right') in self.graph.keys()):
-            raise ValueError("Expected a dict with the elements `right` and `left` as input for the keywork `graph`")
-
-        self.predictor = self.loss(self.graph, inputs['label'])
-
-        self.optimizer_class = optimizer
-        self.use_gpu = use_gpu
+        self.train_data_shuffler = train_data_shuffler
         self.temp_dir = temp_dir
-
-        if learning_rate is None and model_from_file == "":
-            self.learning_rate = constant()
-        else:
-            self.learning_rate = learning_rate
 
         self.iterations = iterations
         self.snapshot = snapshot
         self.validation_snapshot = validation_snapshot
-        self.convergence_threshold = convergence_threshold
-        self.prefetch = prefetch
 
         # Training variables used in the fit
-        self.optimizer = None
-        self.training_graph = None
-        self.train_data_shuffler = None
         self.summaries_train = None
         self.train_summary_writter = None
-        self.thread_pool = None
 
         # Validation data
-        self.validation_graph = None
         self.validation_summary_writter = None
 
         # Analizer
         self.analizer = analizer
-
-        self.thread_pool = None
-        self.enqueue_op = None
         self.global_step = None
 
-        self.model_from_file = model_from_file
         self.session = None
+
+        self.graph = None
+        self.loss = None
+        self.predictor = None
+        self.optimizer_class = None
+        self.learning_rate = None
+        # Training variables used in the fit
+        self.optimizer = None
+        self.data_ph = None
+        self.label_ph = None
+        self.saver = None
 
         bob.core.log.set_verbosity_level(logger, verbosity_level)
 
-        self.between_class_graph_train = None
-        self.within_class_graph_train = None
+        # Creating the session
+        self.session = Session.instance(new=True).session
+        self.from_scratch = True
 
-        self.between_class_graph_validation = None
-        self.within_class_graph_validation = None
+        bob.core.log.set_verbosity_level(logger, verbosity_level)
 
+    def create_network_from_scratch(self,
+                                    graph,
+                                    optimizer=tf.train.AdamOptimizer(),
+                                    loss=None,
 
-    def bootstrap_placeholders(self, train_data_shuffler, validation_data_shuffler):
-        """
-        Persist the placeholders
-        """
+                                    # Learning rate
+                                    learning_rate=None,
+                                    ):
 
-        # Persisting the placeholders
-        if self.prefetch:
-            batch, batch2, label = train_data_shuffler.get_placeholders_forprefetch()
-        else:
-            batch, batch2, label = train_data_shuffler.get_placeholders()
+        self.data_ph = self.train_data_shuffler("data")
+        self.label_ph = self.train_data_shuffler("label")
 
-        tf.add_to_collection("train_placeholder_data", batch)
-        tf.add_to_collection("train_placeholder_data2", batch2)
-        tf.add_to_collection("train_placeholder_label", label)
+        self.graph = graph
+        if "left" and "right" not in self.graph:
+            raise ValueError("`graph` should be a dictionary with two elements (`left`and `right`)")
 
-        # Creating validation graph
-        if validation_data_shuffler is not None:
-            batch, batch2, label = validation_data_shuffler.get_placeholders()
-            tf.add_to_collection("validation_placeholder_data", batch)
-            tf.add_to_collection("validation_placeholder_data2", batch2)
-            tf.add_to_collection("validation_placeholder_label", label)
+        self.loss = loss
+        self.predictor = self.loss(self.label_ph,
+                                   self.graph["left"],
+                                   self.graph["right"])
+        self.optimizer_class = optimizer
+        self.learning_rate = learning_rate
 
-    def bootstrap_placeholders_fromfile(self, train_data_shuffler, validation_data_shuffler):
-        """
-        Load placeholders from file
-        """
+        # TODO: find an elegant way to provide this as a parameter of the trainer
+        self.global_step = tf.Variable(0, trainable=False, name="global_step")
 
-        train_data_shuffler.set_placeholders(tf.get_collection("train_placeholder_data")[0],
-                                             tf.get_collection("train_placeholder_data2")[0],
-                                             tf.get_collection("train_placeholder_label")[0])
+        # Saving all the variables
+        self.saver = tf.train.Saver(var_list=tf.global_variables())
 
-        if validation_data_shuffler is not None:
-            train_data_shuffler.set_placeholders(tf.get_collection("validation_placeholder_data")[0],
-                                                 tf.get_collection("validation_placeholder_data2")[0],
-                                                 tf.get_collection("validation_placeholder_label")[0])
+        tf.add_to_collection("global_step", self.global_step)
 
-    def bootstrap_graphs(self, train_data_shuffler, validation_data_shuffler):
-        """
-        Create all the necessary graphs for training, validation and inference graphs
-        """
-        super(SiameseTrainer, self).bootstrap_graphs(train_data_shuffler, validation_data_shuffler)
+        tf.add_to_collection("graph", self.graph)
+        tf.add_to_collection("predictor", self.predictor)
 
-        # Triplet specific
-        tf.add_to_collection("between_class_graph_train", self.between_class_graph_train)
-        tf.add_to_collection("within_class_graph_train", self.within_class_graph_train)
+        tf.add_to_collection("data_ph", self.data_ph)
+        tf.add_to_collection("label_ph", self.label_ph)
 
-        # Creating validation graph
-        if validation_data_shuffler is not None:
-            tf.add_to_collection("between_class_graph_validation", self.between_class_graph_validation)
-            tf.add_to_collection("within_class_graph_validation", self.within_class_graph_validation)
+        # Preparing the optimizer
+        self.optimizer_class._learning_rate = self.learning_rate
+        self.optimizer = self.optimizer_class.minimize(self.predictor[0], global_step=self.global_step)
+        tf.add_to_collection("optimizer", self.optimizer)
+        tf.add_to_collection("learning_rate", self.learning_rate)
 
-        self.bootstrap_placeholders(train_data_shuffler, validation_data_shuffler)
+        self.summaries_train = self.create_general_summary()
+        tf.add_to_collection("summaries_train", self.summaries_train)
 
-    def bootstrap_graphs_fromfile(self, train_data_shuffler, validation_data_shuffler):
-        """
-        Bootstrap all the necessary data from file
-
-         ** Parameters **
-           session: Tensorflow session
-           train_data_shuffler: Data shuffler for training
-           validation_data_shuffler: Data shuffler for validation
-        """
-
-        saver = super(SiameseTrainer, self).bootstrap_graphs_fromfile(train_data_shuffler, validation_data_shuffler)
-
-        self.between_class_graph_train = tf.get_collection("between_class_graph_train")[0]
-        self.within_class_graph_train = tf.get_collection("within_class_graph_train")[0]
-
-        if validation_data_shuffler is not None:
-            self.between_class_graph_validation = tf.get_collection("between_class_graph_validation")[0]
-            self.within_class_graph_validation = tf.get_collection("within_class_graph_validation")[0]
-
-        self.bootstrap_placeholders_fromfile(train_data_shuffler, validation_data_shuffler)
-
-        return saver
-
-    def compute_graph(self, data_shuffler, prefetch=False, name="", training=True):
-        """
-        Computes the graph for the trainer.
-
-
-        ** Parameters **
-
-            data_shuffler: Data shuffler
-            prefetch:
-            name: Name of the graph
-        """
-
-        # Defining place holders
-        if prefetch:
-            [placeholder_left_data, placeholder_right_data, placeholder_labels] = data_shuffler.get_placeholders_forprefetch(name=name)
-
-            # Defining a placeholder queue for prefetching
-            queue = tf.FIFOQueue(capacity=100,
-                                 dtypes=[tf.float32, tf.float32, tf.int64],
-                                 shapes=[placeholder_left_data.get_shape().as_list()[1:],
-                                         placeholder_right_data.get_shape().as_list()[1:],
-                                         []])
-
-            # Fetching the place holders from the queue
-            self.enqueue_op = queue.enqueue_many([placeholder_left_data, placeholder_right_data, placeholder_labels])
-            feature_left_batch, feature_right_batch, label_batch = queue.dequeue_many(data_shuffler.batch_size)
-
-            # Creating the architecture for train and validation
-            if not isinstance(self.architecture, SequenceNetwork):
-                raise ValueError("The variable `architecture` must be an instance of "
-                                 "`bob.learn.tensorflow.network.SequenceNetwork`")
-        else:
-            [feature_left_batch, feature_right_batch, label_batch] = data_shuffler.get_placeholders(name=name)
-
-        # Creating the siamese graph
-        train_left_graph = self.architecture.compute_graph(feature_left_batch, training=training)
-        train_right_graph = self.architecture.compute_graph(feature_right_batch, training=training)
-
-        graph, between_class_graph, within_class_graph = self.loss(label_batch,
-                                                                   train_left_graph,
-                                                                   train_right_graph)
-
-        if training:
-            self.between_class_graph_train = between_class_graph
-            self.within_class_graph_train = within_class_graph
-        else:
-            self.between_class_graph_validation = between_class_graph
-            self.within_class_graph_validation = within_class_graph
-
-        return graph
+        # Creating the variables
+        tf.global_variables_initializer().run(session=self.session)
 
     def get_feed_dict(self, data_shuffler):
         """
@@ -279,13 +174,11 @@ class SiameseTrainer(Trainer):
             data_shuffler:
 
         """
-
         [batch_left, batch_right, labels] = data_shuffler.get_batch()
-        [placeholder_left_data, placeholder_right_data, placeholder_label] = data_shuffler.get_placeholders()
 
-        feed_dict = {placeholder_left_data: batch_left,
-                     placeholder_right_data: batch_right,
-                     placeholder_label: labels}
+        feed_dict = {self.data_ph['left']: batch_left,
+                     self.data_ph['right']: batch_right,
+                     self.label_ph: labels}
 
         return feed_dict
 
@@ -298,45 +191,15 @@ class SiameseTrainer(Trainer):
             step: Iteration number
 
         """
-        if self.prefetch:
-            _, l, bt_class, wt_class, lr, summary = self.session.run([self.optimizer,
-                                                    self.training_graph, self.between_class_graph_train, self.within_class_graph_train,
-                                                    self.learning_rate, self.summaries_train])
-        else:
-            feed_dict = self.get_feed_dict(self.train_data_shuffler)
-            _, l, bt_class, wt_class, lr, summary = self.session.run([self.optimizer,
-                                             self.training_graph, self.between_class_graph_train, self.within_class_graph_train,
-                                             self.learning_rate, self.summaries_train], feed_dict=feed_dict)
+        feed_dict = self.get_feed_dict(self.train_data_shuffler)
+        _, l, bt_class, wt_class, lr, summary = self.session.run([
+                                                self.optimizer,
+                                                self.predictor[0], self.predictor[1],
+                                                self.predictor[2],
+                                                self.learning_rate, self.summaries_train], feed_dict=feed_dict)
 
         logger.info("Loss training set step={0} = {1}".format(step, l))
         self.train_summary_writter.add_summary(summary, step)
-
-    def compute_validation(self, data_shuffler, step):
-        """
-        Computes the loss in the validation set
-
-        ** Parameters **
-            session: Tensorflow session
-            data_shuffler: The data shuffler to be used
-            step: Iteration number
-
-        """
-
-        if self.validation_summary_writter is None:
-            self.validation_summary_writter = tf.summary.FileWriter(os.path.join(self.temp_dir, 'validation'), self.session.graph)
-
-        self.validation_graph = self.compute_graph(data_shuffler, name="validation", training=False)
-        feed_dict = self.get_feed_dict(data_shuffler)
-        l, bt_class, wt_class = self.session.run([self.validation_graph,
-                                                  self.between_class_graph_validation, self.within_class_graph_validation],
-                                                  feed_dict=feed_dict)
-
-        summaries = []
-        summaries.append(summary_pb2.Summary.Value(tag="loss", simple_value=float(l)))
-        summaries.append(summary_pb2.Summary.Value(tag="between_class_loss", simple_value=float(bt_class)))
-        summaries.append(summary_pb2.Summary.Value(tag="within_class_loss", simple_value=float(wt_class)))
-        self.validation_summary_writter.add_summary(summary_pb2.Summary(value=summaries), step)
-        logger.info("Loss VALIDATION set step={0} = {1}".format(step, l))
 
     def create_general_summary(self):
         """
@@ -344,27 +207,9 @@ class SiameseTrainer(Trainer):
         """
 
         # Train summary
-        tf.summary.scalar('loss', self.training_graph)
-        tf.summary.scalar('between_class_loss', self.between_class_graph_train)
-        tf.summary.scalar('within_class_loss', self.within_class_graph_train)
+        tf.summary.scalar('loss', self.predictor[0])
+        tf.summary.scalar('between_class_loss', self.predictor[1])
+        tf.summary.scalar('within_class_loss', self.predictor[2])
         tf.summary.scalar('lr', self.learning_rate)
         return tf.summary.merge_all()
 
-    def load_and_enqueue(self):
-        """
-        Injecting data in the place holder queue
-
-        **Parameters**
-          session: Tensorflow session
-        """
-
-        while not self.thread_pool.should_stop():
-
-            [batch_left, batch_right, labels] = self.train_data_shuffler.get_batch()
-            [placeholder_left_data, placeholder_right_data, placeholder_label] = self.train_data_shuffler.get_placeholders()
-
-            feed_dict = {placeholder_left_data: batch_left,
-                         placeholder_right_data: batch_right,
-                         placeholder_label: labels}
-
-            self.session.run(self.enqueue_op, feed_dict=feed_dict)

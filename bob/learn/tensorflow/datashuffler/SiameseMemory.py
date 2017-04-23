@@ -45,12 +45,13 @@ class SiameseMemory(Siamese, Memory):
     """
 
     def __init__(self, data, labels,
-                 input_shape,
-                 input_dtype="float",
-                 batch_size=1,
+                 input_shape=[None, 28, 28, 1],
+                 input_dtype="float32",
+                 batch_size=32,
                  seed=10,
                  data_augmentation=None,
-                 normalizer=Linear()):
+                 normalizer=Linear()
+                 ):
 
         super(SiameseMemory, self).__init__(
             data=data,
@@ -64,7 +65,6 @@ class SiameseMemory(Siamese, Memory):
         )
         # Seting the seed
         numpy.random.seed(seed)
-
         self.data = self.data.astype(input_dtype)
 
     def get_batch(self, zero_one_labels=True):
@@ -76,12 +76,15 @@ class SiameseMemory(Siamese, Memory):
 
         **Return**
         """
-        sample_l = numpy.zeros(shape=self.shape, dtype='float')
-        sample_r = numpy.zeros(shape=self.shape, dtype='float')
-        labels_siamese = numpy.zeros(shape=self.shape[0], dtype='float')
+
+        shape = [self.batch_size] + list(self.input_shape[1:])
+
+        sample_l = numpy.zeros(shape=shape, dtype='float32')
+        sample_r = numpy.zeros(shape=shape, dtype='float32')
+        labels_siamese = numpy.zeros(shape=shape[0], dtype='float32')
 
         genuine = True
-        for i in range(self.shape[0]):
+        for i in range(shape[0]):
             sample_l[i, ...], sample_r[i, ...] = self.get_genuine_or_not(self.data, self.labels, genuine=genuine)
             if zero_one_labels:
                 labels_siamese[i] = not genuine

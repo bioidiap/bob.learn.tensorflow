@@ -63,9 +63,7 @@ def test_cnn_pretrained():
                                  data_augmentation=data_augmentation,
                                  normalizer=ScaleFactor())
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
-
     directory = "./temp/cnn"
-    directory2 = "./temp/cnn2"
 
     # Creating a random network
     input_pl = train_data_shuffler("data", from_queue=True)

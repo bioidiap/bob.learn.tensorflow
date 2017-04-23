@@ -23,27 +23,26 @@ Some unit tests for the datashuffler
 """
 
 batch_size = 32
-validation_batch_size = 32
+validation_batch_size = 400
 iterations = 300
 seed = 10
 
 
-def dummy_experiment(data_s, architecture):
+def dummy_experiment(data_s, embedding):
     """
     Create a dummy experiment and return the EER
     """
-
     data_shuffler = object.__new__(Memory)
     data_shuffler.__dict__ = data_s.__dict__.copy()
 
     # Extracting features for enrollment
     enroll_data, enroll_labels = data_shuffler.get_batch()
-    enroll_features = architecture(enroll_data)
+    enroll_features = embedding(enroll_data)
     del enroll_data
 
     # Extracting features for probing
     probe_data, probe_labels = data_shuffler.get_batch()
-    probe_features = architecture(probe_data)
+    probe_features = embedding(probe_data)
     del probe_data
 
     # Creating models
@@ -90,12 +89,6 @@ def test_cnn_trainer():
                                  data_augmentation=data_augmentation,
                                  normalizer=ScaleFactor())
 
-    validation_data_shuffler = Memory(validation_data, validation_labels,
-                                      input_shape=[None, 28, 28, 1],
-                                      batch_size=batch_size,
-                                      data_augmentation=data_augmentation,
-                                      normalizer=ScaleFactor())
-
     directory = "./temp/cnn"
 
     # Loss for the softmax
@@ -138,45 +131,40 @@ def test_siamesecnn_trainer():
 
     # Creating datashufflers
     train_data_shuffler = SiameseMemory(train_data, train_labels,
-                                        input_shape=[28, 28, 1],
-                                        batch_size=batch_size)
+                                        input_shape=[None, 28, 28, 1],
+                                        batch_size=batch_size,
+                                        normalizer=ScaleFactor())
     validation_data_shuffler = SiameseMemory(validation_data, validation_labels,
-                                             input_shape=[28, 28, 1],
-                                             batch_size=validation_batch_size)
-
+                                             input_shape=[None, 28, 28, 1],
+                                             batch_size=validation_batch_size,
+                                             normalizer=ScaleFactor())
     directory = "./temp/siamesecnn"
 
     # Preparing the architecture
     architecture = Chopra(seed=seed, fc1_output=10)
-    inputs = {}
-    inputs['left'] = tf.placeholder(tf.float32, shape=[None, 28, 28, 1], name="input_left")
-    inputs['right'] = tf.placeholder(tf.float32, shape=[None, 28, 28, 1], name="input_right")
-    inputs['label'] = tf.placeholder(tf.int64, shape=[None], name="label")
-
-    graph = {}
-    graph['left'] = architecture(inputs['left'])
-    graph['right'] = architecture(inputs['right'])
 
     # Loss for the Siamese
     loss = ContrastiveLoss(contrastive_margin=4.)
 
-    # One graph trainer
-    trainer = SiameseTrainer(inputs=inputs,
-                             graph=graph,
-                             loss=loss,
+    input_pl = train_data_shuffler("data")
+    graph = {}
+    graph['left'] = architecture(input_pl['left'])
+    graph['right'] = architecture(input_pl['right'])
+
+    trainer = SiameseTrainer(train_data_shuffler,
                              iterations=iterations,
-                             prefetch=False,
                              analizer=None,
-                             learning_rate=constant(0.05, name="siamese_lr"),
-                             optimizer=tf.train.AdamOptimizer(name="adam_siamese"),
-                             temp_dir=directory
-                             )
+                             temp_dir=directory)
+
+    trainer.create_network_from_scratch(graph=graph,
+                                        loss=loss,
+                                        learning_rate=constant(0.01, name="regular_lr"),
+                                        optimizer=tf.train.GradientDescentOptimizer(0.01),)
     trainer.train(train_data_shuffler)
+    embedding = Embedding(train_data_shuffler("data", from_queue=False)['left'], graph['left'])
+    eer = dummy_experiment(validation_data_shuffler, embedding)
 
-    eer = dummy_experiment(validation_data_shuffler, architecture)
-
-    # At least 80% of accuracy
-    assert eer < 0.25
+    assert eer < 0.15
     shutil.rmtree(directory)
 
     del architecture

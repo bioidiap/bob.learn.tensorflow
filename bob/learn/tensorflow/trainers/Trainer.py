@@ -195,9 +195,6 @@ class Trainer(object):
         self.global_step = tf.get_collection("global_step")[0]
         self.from_scratch = False
 
-        # Creating the variables
-        #tf.global_variables_initializer().run(session=self.session)
-
     def __del__(self):
         tf.reset_default_graph()
 
