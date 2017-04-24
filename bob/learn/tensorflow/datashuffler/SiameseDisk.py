@@ -73,7 +73,7 @@ class SiameseDisk(Siamese, Disk):
         numpy.random.seed(seed)
 
         # TODO: very bad solution to deal with bob.shape images an tf shape images
-        self.bob_shape = tuple([input_shape[2]] + list(input_shape[0:2]))
+        self.bob_shape = tuple([input_shape[3]] + list(input_shape[1:3]))
 
     def get_batch(self):
         """
@@ -84,13 +84,14 @@ class SiameseDisk(Siamese, Disk):
 
         **Return**
         """
+        shape = [self.batch_size] + list(self.input_shape[1:])
 
-        sample_l = numpy.zeros(shape=self.shape, dtype='float32')
-        sample_r = numpy.zeros(shape=self.shape, dtype='float32')
-        labels_siamese = numpy.zeros(shape=self.shape[0], dtype='float32')
+        sample_l = numpy.zeros(shape=shape, dtype='float32')
+        sample_r = numpy.zeros(shape=shape, dtype='float32')
+        labels_siamese = numpy.zeros(shape=shape[0], dtype='float32')
 
         genuine = True
-        for i in range(self.shape[0]):
+        for i in range(shape[0]):
             file_name, file_name_p = self.get_genuine_or_not(self.data, self.labels, genuine=genuine)
             sample_l[i, ...] = self.normalize_sample(self.load_from_file(str(file_name)))
             sample_r[i, ...] = self.normalize_sample(self.load_from_file(str(file_name_p)))

@@ -178,11 +178,13 @@ def test_tripletcnn_trainer():
 
     # Creating datashufflers
     train_data_shuffler = TripletMemory(train_data, train_labels,
-                                        input_shape=[28, 28, 1],
-                                        batch_size=batch_size)
+                                        input_shape=[None, 28, 28, 1],
+                                        batch_size=batch_size,
+                                        normalizer=ScaleFactor())
     validation_data_shuffler = TripletMemory(validation_data, validation_labels,
-                                             input_shape=[28, 28, 1],
-                                             batch_size=validation_batch_size)
+                                             input_shape=[None, 28, 28, 1],
+                                             batch_size=validation_batch_size,
+                                             normalizer=ScaleFactor())
 
     directory = "./temp/tripletcnn"
 
@@ -192,24 +194,27 @@ def test_tripletcnn_trainer():
     # Loss for the Siamese
     loss = TripletLoss(margin=4.)
 
+    input_pl = train_data_shuffler("data")
+    graph = {}
+    graph['anchor'] = architecture(input_pl['anchor'])
+    graph['positive'] = architecture(input_pl['positive'])
+    graph['negative'] = architecture(input_pl['negative'])
+
     # One graph trainer
-    trainer = TripletTrainer(architecture=architecture,
-                             loss=loss,
+    trainer = TripletTrainer(train_data_shuffler,
                              iterations=iterations,
-                             prefetch=False,
                              analizer=None,
-                             learning_rate=constant(0.05, name="triplet_lr"),
-                             optimizer=tf.train.AdamOptimizer(name="adam_triplet"),
                              temp_dir=directory
                              )
-
+    trainer.create_network_from_scratch(graph=graph,
+                                        loss=loss,
+                                        learning_rate=constant(0.01, name="regular_lr"),
+                                        optimizer=tf.train.GradientDescentOptimizer(0.01),)
     trainer.train(train_data_shuffler)
 
-    # Testing
-    eer = dummy_experiment(validation_data_shuffler, architecture)
-
-    # At least 80% of accuracy
-    assert eer < 0.25
+    embedding = Embedding(train_data_shuffler("data", from_queue=False)['anchor'], graph['anchor'])
+    eer = dummy_experiment(validation_data_shuffler, embedding)
+    assert eer < 0.15
     shutil.rmtree(directory)
 
     del architecture

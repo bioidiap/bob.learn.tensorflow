@@ -212,4 +212,3 @@ class SiameseTrainer(Trainer):
         tf.summary.scalar('within_class_loss', self.predictor[2])
         tf.summary.scalar('lr', self.learning_rate)
         return tf.summary.merge_all()
-

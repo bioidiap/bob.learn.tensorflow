@@ -99,11 +99,13 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnlineSampling):
         **Return**
         """
 
-        sample_a = numpy.zeros(shape=self.shape, dtype='float32')
-        sample_p = numpy.zeros(shape=self.shape, dtype='float32')
-        sample_n = numpy.zeros(shape=self.shape, dtype='float32')
+        shape = [self.batch_size] + list(self.input_shape[1:])
 
-        for i in range(self.shape[0]):
+        sample_a = numpy.zeros(shape=shape, dtype='float32')
+        sample_p = numpy.zeros(shape=shape, dtype='float32')
+        sample_n = numpy.zeros(shape=shape, dtype='float32')
+
+        for i in range(shape[0]):
             file_name_a, file_name_p, file_name_n = self.get_one_triplet(self.data, self.labels)
             sample_a[i, ...] = self.normalize_sample(self.load_from_file(str(file_name_a)))
             sample_p[i, ...] = self.normalize_sample(self.load_from_file(str(file_name_p)))

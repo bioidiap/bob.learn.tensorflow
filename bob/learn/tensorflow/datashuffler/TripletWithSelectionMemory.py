@@ -99,6 +99,8 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
         **Return**
         """
 
+        shape = [self.batch_size] + list(self.input_shape[1:])
+
         # Selecting the classes used in the selection
         indexes = numpy.random.choice(len(self.possible_labels), self.total_identities, replace=False)
         samples_per_identity = numpy.ceil(self.batch_size/float(self.total_identities))
@@ -108,10 +110,10 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
             anchor_labels = numpy.hstack((anchor_labels,numpy.ones(samples_per_identity) * self.possible_labels[indexes[i]]))
         anchor_labels = anchor_labels[0:self.batch_size]
 
-        samples_a = numpy.zeros(shape=self.shape, dtype='float32')
+        samples_a = numpy.zeros(shape=shape, dtype='float32')
 
         # Computing the embedding
-        for i in range(self.shape[0]):
+        for i in range(shape[0]):
             samples_a[i, ...] = self.get_anchor(anchor_labels[i])
         embedding_a = self.project(samples_a)
 
@@ -136,7 +138,9 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
         """
         Get the a random set of positive pairs
         """
-        samples_p = numpy.zeros(shape=self.shape, dtype='float32')
+        shape = [self.batch_size] + list(self.input_shape[1:])
+
+        samples_p = numpy.zeros(shape=shape, dtype='float32')
         for i in range(self.shape[0]):
             l = anchor_labels[i]
             indexes = numpy.where(self.labels == l)[0]
@@ -147,7 +151,7 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
 
         # Computing the distances
         d_anchor_positive = []
-        for i in range(self.shape[0]):
+        for i in range(shape[0]):
             d_anchor_positive.append(euclidean(embedding_a[i, :], embedding_p[i, :]))
 
         return samples_p, embedding_p, d_anchor_positive
@@ -156,6 +160,8 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
         """
         Get the the semi-hard negative
         """
+
+        shape = [self.batch_size] + list(self.input_shape[1:])
 
         # Shuffling all the dataset
         indexes = range(len(self.labels))
@@ -167,9 +173,8 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
         indexes = indexes[0:negative_samples_search]
 
         # Loading samples for the semi-hard search
-        shape = tuple([len(indexes)] + list(self.shape[1:]))
         temp_samples_n = numpy.zeros(shape=shape, dtype='float32')
-        samples_n = numpy.zeros(shape=self.shape, dtype='float32')
+        samples_n = numpy.zeros(shape=shape, dtype='float32')
         for i in range(shape[0]):
             temp_samples_n[i, ...] = self.normalize_sample(self.data[indexes[i], ...])
 
@@ -180,7 +185,7 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
         d_anchor_negative = cdist(embedding_a, embedding_temp_n, metric='euclidean')
 
         # Selecting the negative samples
-        for i in range(self.shape[0]):
+        for i in range(shape[0]):
             label = anchor_labels[i]
             possible_candidates = [d if d > d_anchor_positive[i] else numpy.inf for d in d_anchor_negative[i]]
 

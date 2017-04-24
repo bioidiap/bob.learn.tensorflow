@@ -20,44 +20,23 @@ class Triplet(Base):
 
     def __init__(self, **kwargs):
         super(Triplet, self).__init__(**kwargs)
-        self.data2_placeholder = None
-        self.data3_placeholder = None
 
-    def set_placeholders(self, data, data2, data3):
-        self.data_placeholder = data
-        self.data2_placeholder = data2
-        self.data3_placeholder = data3
-
-
-    def get_placeholders(self, name=""):
+    def create_placeholders(self):
         """
-        Returns a place holder with the size of your batch
+        Create place holder instances
+
+        :return: 
         """
-        if self.data_placeholder is None:
-            self.data_placeholder = tf.placeholder(tf.float32, shape=self.shape, name=name+"_anchor")
+        with tf.name_scope("Input"):
+            self.data_ph = {}
+            self.data_ph['anchor'] = tf.placeholder(tf.float32, shape=self.input_shape, name="anchor")
+            self.data_ph['positive'] = tf.placeholder(tf.float32, shape=self.input_shape, name="positive")
+            self.data_ph['negative'] = tf.placeholder(tf.float32, shape=self.input_shape, name="negative")
 
-        if self.data2_placeholder is None:
-            self.data2_placeholder = tf.placeholder(tf.float32, shape=self.shape, name=name+"_positive")
+            # If prefetch, setup the queue to feed data
+            if self.prefetch:
+                raise ValueError("There is no prefetch for siamease networks")
 
-        if self.data3_placeholder is None:
-            self.data3_placeholder = tf.placeholder(tf.float32, shape=self.shape, name=name+"_negative")
-
-        return [self.data_placeholder, self.data2_placeholder, self.data3_placeholder]
-
-    def get_placeholders_forprefetch(self, name=""):
-        """
-        Returns a place holder with the size of your batch
-        """
-        if self.data_placeholder is None:
-            self.data_placeholder = tf.placeholder(tf.float32, shape=tuple([None] + list(self.shape[1:])), name=name)
-
-        if self.data2_placeholder is None:
-            self.data2_placeholder = tf.placeholder(tf.float32, shape=tuple([None] + list(self.shape[1:])), name=name)
-
-        if self.data3_placeholder is None:
-            self.data3_placeholder = tf.placeholder(tf.float32, shape=tuple([None] + list(self.shape[1:])), name=name)
-
-        return [self.data_placeholder, self.data2_placeholder, self.data3_placeholder]
 
     def get_one_triplet(self, input_data, input_labels):
         # Getting a pair of clients

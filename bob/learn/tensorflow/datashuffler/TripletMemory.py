@@ -45,8 +45,8 @@ class TripletMemory(Triplet, Memory):
     """
 
     def __init__(self, data, labels,
-                 input_shape,
-                 input_dtype="float64",
+                 input_shape=[None, 28, 28, 1],
+                 input_dtype="float32",
                  batch_size=1,
                  seed=10,
                  data_augmentation=None,
@@ -77,11 +77,13 @@ class TripletMemory(Triplet, Memory):
         **Return**
         """
 
-        sample_a = numpy.zeros(shape=self.shape, dtype='float32')
-        sample_p = numpy.zeros(shape=self.shape, dtype='float32')
-        sample_n = numpy.zeros(shape=self.shape, dtype='float32')
+        shape = [self.batch_size] + list(self.input_shape[1:])
 
-        for i in range(self.shape[0]):
+        sample_a = numpy.zeros(shape=shape, dtype='float32')
+        sample_p = numpy.zeros(shape=shape, dtype='float32')
+        sample_n = numpy.zeros(shape=shape, dtype='float32')
+
+        for i in range(shape[0]):
             sample_a[i, ...], sample_p[i, ...], sample_n[i, ...] = self.get_one_triplet(self.data, self.labels)
 
         # Applying the data augmentation

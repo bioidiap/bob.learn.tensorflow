@@ -75,7 +75,7 @@ class Disk(Base):
         numpy.random.seed(seed)
 
         # TODO: very bad solution to deal with bob.shape images an tf shape images
-        self.bob_shape = tuple([input_shape[2]] + list(input_shape[0:2]))
+        self.bob_shape = tuple([input_shape[3]] + list(input_shape[1:3]))
 
     def load_from_file(self, file_name):
         d = bob.io.base.load(file_name)
@@ -111,11 +111,13 @@ class Disk(Base):
           Correspondent labels
         """
 
+        shape = [self.batch_size] + list(self.input_shape[1:])
+
         # Shuffling samples
         indexes = numpy.array(range(self.data.shape[0]))
         numpy.random.shuffle(indexes)
 
-        selected_data = numpy.zeros(shape=self.shape)
+        selected_data = numpy.zeros(shape=shape)
         for i in range(self.batch_size):
 
             file_name = self.data[indexes[i]]
