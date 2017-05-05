@@ -12,11 +12,14 @@ import bob.core
 from ..analyzers import SoftmaxAnalizer
 from tensorflow.core.framework import summary_pb2
 import time
-from bob.learn.tensorflow.datashuffler.OnlineSampling import OnLineSampling
+from bob.learn.tensorflow.datashuffler import OnlineSampling
 from bob.learn.tensorflow.utils.session import Session
 from .learning_rate import constant
 
-logger = bob.core.log.setup("bob.learn.tensorflow")
+#logger = bob.core.log.setup("bob.learn.tensorflow")
+
+import logging
+logger = logging.getLogger("bob.learn")
 
 
 class Trainer(object):
@@ -25,6 +28,7 @@ class Trainer(object):
     Use this trainer when your CNN is composed by one graph
 
     **Parameters**
+
     architecture:
       The architecture that you want to run. Should be a :py:class`bob.learn.tensorflow.network.SequenceNetwork`
 
@@ -40,7 +44,7 @@ class Trainer(object):
     temp_dir: str
       The output directory
 
-    learning_rate: :py:class:`bob.learn.tensorflow.trainers.learningrate`
+    learning_rate: `bob.learn.tensorflow.trainers.learning_rate`
       Initial learning rate
 
     convergence_threshold:
@@ -72,7 +76,7 @@ class Trainer(object):
                  temp_dir="cnn",
 
                  # Learning rate
-                 learning_rate=constant(),
+                 learning_rate=None,
 
                  ###### training options ##########
                  convergence_threshold=0.01,
@@ -98,7 +102,10 @@ class Trainer(object):
         self.loss = loss
         self.temp_dir = temp_dir
 
-        self.learning_rate = learning_rate
+        if learning_rate is None and model_from_file == "":
+            self.learning_rate = constant()
+        else:
+            self.learning_rate = learning_rate
 
         self.iterations = iterations
         self.snapshot = snapshot
@@ -198,7 +205,7 @@ class Trainer(object):
 
         if self.prefetch:
             _, l, lr, summary = self.session.run([self.optimizer, self.training_graph,
-                                             self.learning_rate, self.summaries_train])
+                                                  self.learning_rate, self.summaries_train])
         else:
             feed_dict = self.get_feed_dict(self.train_data_shuffler)
             _, l, lr, summary = self.session.run([self.optimizer, self.training_graph,
@@ -222,7 +229,7 @@ class Trainer(object):
         l = self.session.run(self.validation_graph, feed_dict=feed_dict)
 
         if self.validation_summary_writter is None:
-            self.validation_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'validation'), self.session.graph)
+            self.validation_summary_writter = tf.summary.FileWriter(os.path.join(self.temp_dir, 'validation'), self.session.graph)
 
         summaries = [summary_pb2.Summary.Value(tag="loss", simple_value=float(l))]
         self.validation_summary_writter.add_summary(summary_pb2.Summary(value=summaries), step)
@@ -233,9 +240,9 @@ class Trainer(object):
         Creates a simple tensorboard summary with the value of the loss and learning rate
         """
         # Train summary
-        tf.scalar_summary('loss', self.training_graph, name="train")
-        tf.scalar_summary('lr', self.learning_rate, name="train")
-        return tf.merge_all_summaries()
+        tf.summary.scalar('loss', self.training_graph)
+        tf.summary.scalar('lr', self.learning_rate)
+        return tf.summary.merge_all()
 
     def start_thread(self):
         """
@@ -274,7 +281,6 @@ class Trainer(object):
         """
         Create all the necessary graphs for training, validation and inference graphs
         """
-
         # Creating train graph
         self.training_graph = self.compute_graph(train_data_shuffler, prefetch=self.prefetch, name="train")
         tf.add_to_collection("training_graph", self.training_graph)
@@ -383,8 +389,7 @@ class Trainer(object):
         # Pickle the architecture to save
         self.architecture.pickle_net(train_data_shuffler.deployment_shape)
 
-        Session.create()
-        self.session = Session.instance().session
+        self.session = Session.instance(new=True).session
 
         # Loading a pretrained model
         if self.model_from_file != "":
@@ -414,12 +419,12 @@ class Trainer(object):
 
             tf.add_to_collection("summaries_train", self.summaries_train)
 
-            tf.initialize_all_variables().run(session=self.session)
+            tf.global_variables_initializer().run(session=self.session)
 
             # Original tensorflow saver object
-            saver = tf.train.Saver(var_list=tf.all_variables())
+            saver = tf.train.Saver(var_list=tf.global_variables())
 
-        if isinstance(train_data_shuffler, OnLineSampling):
+        if isinstance(train_data_shuffler, OnlineSampling):
             train_data_shuffler.set_feature_extractor(self.architecture, session=self.session)
 
         # Start a thread to enqueue data asynchronously, and hide I/O latency.
@@ -429,9 +434,8 @@ class Trainer(object):
             threads = self.start_thread()
 
         # TENSOR BOARD SUMMARY
-        self.train_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'train'), self.session.graph)
+        self.train_summary_writter = tf.summary.FileWriter(os.path.join(self.temp_dir, 'train'), self.session.graph)
         for step in range(start_step, self.iterations):
-
             start = time.time()
             self.fit(step)
             end = time.time()

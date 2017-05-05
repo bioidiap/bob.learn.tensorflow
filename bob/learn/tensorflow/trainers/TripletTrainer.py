@@ -3,19 +3,16 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 # @date: Tue 09 Aug 2016 15:25:22 CEST
 
-import logging
-
-logger = logging.getLogger("bob.learn.tensorflow")
 import tensorflow as tf
 from tensorflow.core.framework import summary_pb2
 import threading
 from ..analyzers import ExperimentAnalizer
 from ..network import SequenceNetwork
-import bob.io.base
 from .Trainer import Trainer
 import os
-import sys
-from .learning_rate import constant
+
+import logging
+logger = logging.getLogger("bob.learn")
 
 
 class TripletTrainer(Trainer):
@@ -23,6 +20,7 @@ class TripletTrainer(Trainer):
     Trainer for Triple networks.
 
     **Parameters**
+
     architecture:
       The architecture that you want to run. Should be a :py:class`bob.learn.tensorflow.network.SequenceNetwork`
 
@@ -38,7 +36,7 @@ class TripletTrainer(Trainer):
     temp_dir: str
       The output directory
 
-    learning_rate: :py:class:`bob.learn.tensorflow.trainers.learningrate`
+    learning_rate: `bob.learn.tensorflow.trainers.learning_rate`
       Initial learning rate
 
     convergence_threshold:
@@ -70,7 +68,7 @@ class TripletTrainer(Trainer):
                  temp_dir="cnn",
 
                  # Learning rate
-                 learning_rate=constant(),
+                 learning_rate=None,
 
                  ###### training options ##########
                  convergence_threshold=0.01,
@@ -84,7 +82,8 @@ class TripletTrainer(Trainer):
 
                  model_from_file="",
 
-                 verbosity_level=2):
+                 verbosity_level=2
+                 ):
 
         super(TripletTrainer, self).__init__(
             architecture=architecture,
@@ -115,6 +114,46 @@ class TripletTrainer(Trainer):
 
         self.between_class_graph_validation = None
         self.within_class_graph_validation = None
+
+    def bootstrap_graphs(self, train_data_shuffler, validation_data_shuffler):
+        """
+        Create all the necessary graphs for training, validation and inference graphs
+        """
+        super(TripletTrainer, self).bootstrap_graphs(train_data_shuffler, validation_data_shuffler)
+
+        # Triplet specific
+        tf.add_to_collection("between_class_graph_train", self.between_class_graph_train)
+        tf.add_to_collection("within_class_graph_train", self.within_class_graph_train)
+
+        # Creating validation graph
+        if validation_data_shuffler is not None:
+            tf.add_to_collection("between_class_graph_validation", self.between_class_graph_validation)
+            tf.add_to_collection("within_class_graph_validation", self.within_class_graph_validation)
+
+        self.bootstrap_placeholders(train_data_shuffler, validation_data_shuffler)
+
+    def bootstrap_graphs_fromfile(self, train_data_shuffler, validation_data_shuffler):
+        """
+        Bootstrap all the necessary data from file
+
+         ** Parameters **
+           session: Tensorflow session
+           train_data_shuffler: Data shuffler for training
+           validation_data_shuffler: Data shuffler for validation
+        """
+
+        saver = super(TripletTrainer, self).bootstrap_graphs_fromfile(train_data_shuffler, validation_data_shuffler)
+
+        self.between_class_graph_train = tf.get_collection("between_class_graph_train")[0]
+        self.within_class_graph_train = tf.get_collection("within_class_graph_train")[0]
+
+        if validation_data_shuffler is not None:
+            self.between_class_graph_validation = tf.get_collection("between_class_graph_validation")[0]
+            self.within_class_graph_validation = tf.get_collection("within_class_graph_validation")[0]
+
+        self.bootstrap_placeholders_fromfile(train_data_shuffler, validation_data_shuffler)
+
+        return saver
 
     def bootstrap_placeholders(self, train_data_shuffler, validation_data_shuffler):
         """
@@ -249,6 +288,7 @@ class TripletTrainer(Trainer):
                                                                       self.within_class_graph_train,
                                                                       self.learning_rate, self.summaries_train],
                                                                       feed_dict=feed_dict)
+
         logger.info("Loss training set step={0} = {1}".format(step, l))
         self.train_summary_writter.add_summary(summary, step)
 
@@ -264,7 +304,7 @@ class TripletTrainer(Trainer):
         """
 
         if self.validation_summary_writter is None:
-            self.validation_summary_writter = tf.train.SummaryWriter(os.path.join(self.temp_dir, 'validation'),
+            self.validation_summary_writter = tf.summary.FileWriter(os.path.join(self.temp_dir, 'validation'),
                                                                      self.session.graph)
 
         self.validation_graph = self.compute_graph(data_shuffler, name="validation", training=False)
@@ -286,11 +326,11 @@ class TripletTrainer(Trainer):
         """
 
         # Train summary
-        tf.scalar_summary('loss', self.training_graph, name="train")
-        tf.scalar_summary('between_class_loss', self.between_class_graph_train, name="train")
-        tf.scalar_summary('within_class_loss', self.within_class_graph_train, name="train")
-        tf.scalar_summary('lr', self.learning_rate, name="train")
-        return tf.merge_all_summaries()
+        tf.summary.scalar('loss', self.training_graph)
+        tf.summary.scalar('between_class_loss', self.between_class_graph_train)
+        tf.summary.scalar('within_class_loss', self.within_class_graph_train)
+        tf.summary.scalar('lr', self.learning_rate)
+        return tf.summary.merge_all()
 
     def load_and_enqueue(self):
         """

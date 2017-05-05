@@ -23,6 +23,12 @@ class Triplet(Base):
         self.data2_placeholder = None
         self.data3_placeholder = None
 
+    def set_placeholders(self, data, data2, data3):
+        self.data_placeholder = data
+        self.data2_placeholder = data2
+        self.data3_placeholder = data3
+
+
     def get_placeholders(self, name=""):
         """
         Returns a place holder with the size of your batch

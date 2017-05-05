@@ -1,7 +1,6 @@
 .. vim: set fileencoding=utf-8 :
 .. date: Thu Sep 20 11:58:57 CEST 2012
 
-.. _bob.learn.tensorflow:
 
 ===========
  User guide
@@ -14,10 +13,9 @@ Quick start
 Before explain the base elements of this library, lets first do a simple example.
 The example consists in training a very simple **CNN** with `MNIST` dataset in 4 steps.
 
-
 1. Preparing your input data
 
-.. doctest::
+.. code-block:: python
 
     >>> import tensorflow as tf
     >>> import bob.learn.tensorflow
@@ -29,24 +27,33 @@ The example consists in training a very simple **CNN** with `MNIST` dataset in 4
 
 2. Create an architecture
 
-.. doctest::
+.. code-block:: python
 
     >>> architecture = bob.learn.tensorflow.network.SequenceNetwork()
     >>> architecture.add(bob.learn.tensorflow.layers.Conv2D(name="conv1", kernel_size=3, filters=10, activation=tf.nn.tanh))
     >>> architecture.add(bob.learn.tensorflow.layers.FullyConnected(name="fc1", output_dim=10, activation=None))
 
-3. Defining a loss and training
+3. Defining a loss and training algorithm
 
-.. doctest::
+.. code-block:: python
 
     >>> loss = bob.learn.tensorflow.loss.BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
-    >>> trainer = bob.learn.tensorflow.trainers.Trainer(architecture=architecture, loss=loss, iterations=100, temp_dir="./cnn")
-    >>> trainer.train(train_data_shuffler)
+    >>> from bob.learn.tensorflow.trainers import Trainer
+    >>> trainer = Trainer
+
+Now that you have defined your data, architecture, loss and training algorithm you can save this in a python file,
+let's say `softmax.py`, and run:
+
+.. code-block:: shell
+
+    >>> ./bin/train.py softmax.py
 
 
 4. Predicting and computing the accuracy
 
-.. doctest::
+Run the following code to evalutate the network that was just trained.
+
+.. code-block:: python
 
     >>> # Loading the model
     >>> architecture = bob.learn.tensorflow.network.SequenceNetwork()
@@ -125,7 +132,7 @@ The data can be fetched either from the memory (:py:class:`bob.learn.tensorflow.
 disk (:py:class:`bob.learn.tensorflow.datashuffler.Disk`).
 To train networks fetched from the disk, your training data must be a list of paths like in the example below:
 
-.. doctest::
+.. code-block:: python
 
     >>> train_data = ['./file/id1_0.jpg', './file/id1_1.jpg', './file/id2_1.jpg']
     >>> train_labels = [0, 0, 1]
@@ -138,17 +145,17 @@ Type of the trainer?
 
 Here we have one data shuffler for each type of the trainer.
 
-You will see in the section `Trainers`_ that we have three types of trainer.
+You will see in the section `Trainers <py_api.html#trainers>`_ that we have three types of trainer.
 The first one is the regular trainer, which deals with one graph only (for example, if you training a network with
 a softmax loss).
 The data shuflers for this type of trainer must be a direct instance of either :py:class:`bob.learn.tensorflow.datashuffler.Memory`
 or :py:class:`bob.learn.tensorflow.datashuffler.Disk`.
 
-The second one is the :py:class:`bob.learn.tensorflow.trainers.Siamese` trainer, which is designed to train Siamese networks.
+The second one is the :py:class:`bob.learn.tensorflow.trainers.SiameseTrainer` trainer, which is designed to train Siamese networks.
 The data shuflers for this type of trainer must be a direct instance of either :py:class:`bob.learn.tensorflow.datashuffler.SiameseDisk` or
 :py:class:`bob.learn.tensorflow.datashuffler.SiameseMemory`.
 
-The third one is the :py:class:`bob.learn.tensorflow.trainers.Triplet` trainer, which is designed to train Triplet networks.
+The third one is the :py:class:`bob.learn.tensorflow.trainers.TripletTrainer` trainer, which is designed to train Triplet networks.
 The data shuflers for this type of trainer must be a direct instance of either :py:class:`bob.learn.tensorflow.datashuffler.TripletDisk`,
 :py:class:`bob.learn.tensorflow.datashuffler.TripletMemory`, :py:class:`bob.learn.tensorflow.datashuffler.TripletWithFastSelectionDisk`
 or :py:class:`bob.learn.tensorflow.datashuffler.TripletWithSelectionDisk`.
@@ -159,7 +166,7 @@ How the data is sampled ?
 
 The paper [facenet_2015]_ introduced a new strategy to select triplets to train triplet networks (this is better described
 here :py:class:`bob.learn.tensorflow.datashuffler.TripletWithSelectionDisk` and :py:class:`bob.learn.tensorflow.datashuffler.TripletWithFastSelectionDisk`).
-This triplet selection relies in the current state of the network and are extensions of :py:class:`bob.learn.tensorflow.datashuffler.OnlineSampling`.
+This triplet selection relies in the current state of the network and are extensions of `bob.learn.tensorflow.datashuffler.OnlineSampling`.
 
 
 Architecture
@@ -172,7 +179,7 @@ The library has already some crafted networks implemented in `Architectures <py_
 It is also possible to craft simple MLPs with this library using the class :py:class:`bob.learn.tensorflow.network.MLP`.
 The example bellow shows how to create a simple MLP with 10 putputs and 2 hidden layers.
 
-.. doctest::
+.. code-block:: python
 
     >>> architecture = bob.learn.tensorflow.network.MLP(10, hidden_layers=[20, 40])
 
@@ -213,7 +220,7 @@ Initialization
 ..............
 
 We have implemented some strategies to initialize the tensorflow variables.
-Check it out `Layers <py_api.html#initialization>`_.
+Check it out `Initialization <py_api.html#initialization>`_.
 
 
 Loss
@@ -222,7 +229,7 @@ Loss
 Loss functions must be wrapped as a :py:class:`bob.learn.tensorflow.loss.BaseLoss` objects.
 For instance, if you want to use the sparse softmax cross entropy loss between logits and labels you should do like this.
 
-.. doctest::
+.. code-block:: python
 
     >>> loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
 
@@ -242,10 +249,10 @@ To be discussed.
 Sandbox
 -------
 
-We have a sandbox of examples in a git repository `https://gitlab.idiap.ch/tiago.pereira/bob.learn.tensorflow_sandbox`_
+We have a sandbox of examples in a git repository `https://gitlab.idiap.ch/tiago.pereira/bob.learn.tensorflow_sandbox`
 The sandbox has some example of training:
- - MNIST with softmax
- - MNIST with Siamese Network
- - MNIST with Triplet Network
- - Face recognition with MOBIO database
- - Face recognition with CASIA WebFace database
+- MNIST with softmax
+- MNIST with Siamese Network
+- MNIST with Triplet Network
+- Face recognition with MOBIO database
+- Face recognition with CASIA WebFace database

@@ -1,4 +1,3 @@
-
 from .SequenceNetwork import SequenceNetwork
 from .Lenet import Lenet
 from .Chopra import Chopra
@@ -41,4 +40,3 @@ __appropriate__(
     DeeperAudio,
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]
-

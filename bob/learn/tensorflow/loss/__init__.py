@@ -1,8 +1,9 @@
-
 from .BaseLoss import BaseLoss
 from .ContrastiveLoss import ContrastiveLoss
 from .TripletLoss import TripletLoss
-from NegLogLoss import NegLogLoss
+from .TripletAverageLoss import TripletAverageLoss
+from .TripletFisherLoss import TripletFisherLoss
+from .NegLogLoss import NegLogLoss
 
 
 # gets sphinx autodoc done right - don't remove it
@@ -23,6 +24,8 @@ __appropriate__(
     BaseLoss,
     ContrastiveLoss,
     TripletLoss,
+    TripletFisherLoss,
+    TripletAverageLoss,
     NegLogLoss,
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]

@@ -29,7 +29,7 @@ class Initialization(object):
         tf.set_random_seed(seed)
 
     def variable_exist(self, var):
-        return var in [v.name.split("/")[0] for v in tf.all_variables()]
+        return var in [v.name.split("/")[0] for v in tf.global_variables()]
 
     def __call__(self, shape, name, scope, init_value=None):
         NotImplementedError("Please implement this function in derived classes")

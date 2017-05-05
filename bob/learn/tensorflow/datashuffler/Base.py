@@ -15,6 +15,7 @@ class Base(object):
      The class provide base functionalities to shuffle the data to train a neural network
 
      **Parameters**
+
      data:
        Input data to be trainer
 

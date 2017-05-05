@@ -3,12 +3,12 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 # @date: Wed 11 May 2016 09:39:36 CEST 
 
-import numpy
 import tensorflow as tf
+from .Base import Base
 from bob.learn.tensorflow.network import SequenceNetwork
 
 
-class OnLineSampling(object):
+class OnlineSampling(object):
     """
     This data shuffler uses the current state of the network to select the samples.
     This class is not meant to be used, but extended.
@@ -44,8 +44,7 @@ class OnLineSampling(object):
         if self.feature_placeholder is None:
             shape = tuple([None] + list(data.shape[1:]))
             self.feature_placeholder = tf.placeholder(tf.float32, shape=shape, name="feature")
-            embbeding = self.feature_extractor.compute_graph(self.feature_placeholder, self.feature_extractor.default_feature_layer,
-                                                              training=False)
+            embbeding = self.feature_extractor.compute_graph(self.feature_placeholder, self.feature_extractor.default_feature_layer)
 
             self.graph = tf.nn.l2_normalize(embbeding, 1, 1e-10, name='embeddings')
 

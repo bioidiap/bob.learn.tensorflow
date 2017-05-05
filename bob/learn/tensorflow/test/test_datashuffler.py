@@ -234,3 +234,44 @@ def test_diskaudio_shuffler():
     placeholders = data_shuffler.get_placeholders(name="train")
     assert placeholders[0].get_shape().as_list() == batch_shape
     assert placeholders[1].get_shape().as_list()[0] == batch_shape[0]
+
+
+
+
+"""
+Some unit tests that create networks on the fly
+"""
+
+batch_size = 16
+validation_batch_size = 400
+iterations = 50
+seed = 10
+directory = "./temp/cnn_scratch"
+
+
+def scratch_network():
+    # Creating a random network
+    scratch = SequenceNetwork(default_feature_layer="fc1")
+    scratch.add(Conv2D(name="conv1", kernel_size=3,
+                       filters=10,
+                       activation=tf.nn.tanh,
+                       batch_norm=False))
+    scratch.add(FullyConnected(name="fc1", output_dim=10,
+                               activation=None,
+                               batch_norm=False
+                               ))
+
+    return scratch
+
+
+def validate_network(validation_data, validation_labels, network):
+    # Testing
+    validation_data_shuffler = Memory(validation_data, validation_labels,
+                                      input_shape=[28, 28, 1],
+                                      batch_size=validation_batch_size)
+
+    [data, labels] = validation_data_shuffler.get_batch()
+    predictions = network.predict(data)
+    accuracy = 100. * numpy.sum(predictions == labels) / predictions.shape[0]
+
+    return accuracy

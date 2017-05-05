@@ -28,6 +28,7 @@ class Singleton(object):
     def create(self, *args, **kwargs):
         """Creates the singleton instance, by passing the given parameters to the class' constructor."""
         # TODO: I still having problems in killing all the elements of the current session
+
         if self._instance is not None:
             self._instance.session.close()
             del self._instance
@@ -37,6 +38,7 @@ class Singleton(object):
         """Returns the singleton instance.
         The function :py:meth:`create` must have been called before."""
         if self._instance is None or new:
+
             self.create()
         return self._instance
 
