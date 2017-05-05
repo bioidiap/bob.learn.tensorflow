@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
+# @author: Pavel Korshunov <pavel.korshunov@idiap.ch>
 # @date: Tue 09 Aug 2016 15:25:22 CEST
 
 import tensorflow as tf
@@ -22,8 +23,8 @@ logger = bob.core.log.setup("bob.learn.tensorflow")
 
 class TrainerSeq(object):
     """
-    One graph trainer.
-    Use this trainer when your CNN is composed by one graph
+    One graph trainer that trains in epochs (go through all data in one epoch) but by computing forward-backward pass for each mini batch.
+    Use this trainer when your CNN consists of one graph, as oppose to Seamese or Triplet networks
 
     **Parameters**
     architecture:
@@ -434,7 +435,7 @@ class TrainerSeq(object):
 
 
         """
-        saver = self.architecture.load(self.model_from_file, self.session, clear_devices=False)
+        saver = self.architecture.load(self.model_from_file, clear_devices=False)
 
         # Loading training graph
         self.training_graph = tf.get_collection("training_graph")[0]
@@ -545,7 +546,7 @@ class TrainerSeq(object):
         if isinstance(train_data_shuffler, OnLineSampling):
             train_data_shuffler.set_feature_extractor(self.architecture, session=self.session)
 
-        self.architecture.save(saver, os.path.join(self.temp_dir, 'model_initial.ckp'), self.session)
+        self.architecture.save(saver, os.path.join(self.temp_dir, 'model_initial.ckp'))
         with self.session.as_default():
             path = os.path.join(self.temp_dir, 'model_initial.hdf5')
             self.architecture.save_hdf5(bob.io.base.HDF5File(path, 'w'))
@@ -589,7 +590,7 @@ class TrainerSeq(object):
                     self.train_summary_writter.add_summary(
                         summary_pb2.Summary(value=[summary]), epoch*total_train_data+batch_num)
                     path = os.path.join(self.temp_dir, 'model_epoch{0}_batch{1}.ckp'.format(epoch, batch_num))
-                    self.architecture.save(saver, path, self.session)
+                    self.architecture.save(saver, path)
                     with self.session.as_default():
                         path = os.path.join(self.temp_dir, 'model_epoch{0}_batch{1}.hdf5'.format(epoch, batch_num))
                         self.architecture.save_hdf5(bob.io.base.HDF5File(path, 'w'))
@@ -602,7 +603,7 @@ class TrainerSeq(object):
                 logger.info("Loss total TRAINING for epoch={0} = {1}".format(
                     epoch, total_train_loss / total_train_data))
             path = os.path.join(self.temp_dir, 'model_epoch{0}.ckp'.format(epoch))
-            self.architecture.save(saver, path, self.session)
+            self.architecture.save(saver, path)
             with self.session.as_default():
                 path = os.path.join(self.temp_dir, 'model_epoch{0}.hdf5'.format(epoch))
                 self.architecture.save_hdf5(bob.io.base.HDF5File(path, 'w'))
@@ -666,7 +667,7 @@ class TrainerSeq(object):
 
         # Saving the final network
         path = os.path.join(self.temp_dir, 'model.ckp')
-        self.architecture.save(saver, path, self.session)
+        self.architecture.save(saver, path)
         with self.session.as_default():
             path = os.path.join(self.temp_dir, 'model.hdf5')
             self.architecture.save_hdf5(bob.io.base.HDF5File(path, 'w'))

@@ -4,7 +4,7 @@
 # @date: Thu 06 April 2017 09:39:36 CEST
 
 """
-Class that creates the lenet architecture
+A deeper 5-layers architecture for audio data
 """
 
 import tensorflow as tf
@@ -83,13 +83,6 @@ class DeeperAudio(SequenceNetwork):
                        ))
 
         self.add(MaxPooling(name="pooling3", shape=pooling_shape))
-
-#        self.add(FullyConnected(name="fc1", output_dim=fc1_output,
-#                               activation=hard_tanh,
-#                               weights_initialization=Uniform(seed=seed, use_gpu=use_gpu),
-#                               bias_initialization=Uniform(seed=seed, use_gpu=use_gpu),
-#                               use_gpu=use_gpu
-#                               ))
 
         self.add(FullyConnected(name="fc1", output_dim=fc1_output,
                                activation=hard_tanh,

@@ -239,7 +239,7 @@ class Trainer(object):
 
     def start_thread(self):
         """
-        Start pool of train_threads for pre-fetching
+        Start pool of threads for pre-fetching
 
         **Parameters**
           session: Tensorflow session
@@ -337,7 +337,7 @@ class Trainer(object):
         self.optimizer = tf.get_collection("optimizer")[0]
         self.learning_rate = tf.get_collection("learning_rate")[0]
         self.summaries_train = tf.get_collection("summaries_train")[0]
-        self.global_step = tf.get_collection("global_epoch")[0]
+        self.global_step = tf.get_collection("global_step")[0]
 
         if validation_data_shuffler is not None:
             self.validation_graph = tf.get_collection("validation_graph")[0]
@@ -399,8 +399,8 @@ class Trainer(object):
             self.bootstrap_graphs(train_data_shuffler, validation_data_shuffler)
 
             # TODO: find an elegant way to provide this as a parameter of the trainer
-            self.global_step = tf.Variable(0, trainable=False, name="global_epoch")
-            tf.add_to_collection("global_epoch", self.global_step)
+            self.global_step = tf.Variable(0, trainable=False, name="global_step")
+            tf.add_to_collection("global_step", self.global_step)
 
             # Preparing the optimizer
             self.optimizer_class._learning_rate = self.learning_rate
@@ -451,9 +451,6 @@ class Trainer(object):
                 logger.info("Taking snapshot")
                 path = os.path.join(self.temp_dir, 'model_snapshot{0}.ckp'.format(step))
                 self.architecture.save(saver, path)
-                with self.session.as_default():
-                    path = os.path.join(self.temp_dir, 'model_snapshot{0}.hdf5'.format(step))
-                    self.architecture.save_hdf5(bob.io.base.HDF5File(path, 'w'))
 
         logger.info("Training finally finished")
 
@@ -464,9 +461,6 @@ class Trainer(object):
         # Saving the final network
         path = os.path.join(self.temp_dir, 'model.ckp')
         self.architecture.save(saver, path)
-        with self.session.as_default():
-            path = os.path.join(self.temp_dir, 'model.hdf5')
-            self.architecture.save_hdf5(bob.io.base.HDF5File(path, 'w'))
 
         if self.prefetch:
             # now they should definetely stop
