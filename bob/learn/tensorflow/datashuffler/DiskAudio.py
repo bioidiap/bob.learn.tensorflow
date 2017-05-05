@@ -94,14 +94,6 @@ class DiskAudio(Base):
         # start = time.time()
         if self.data_finished:
             return None, None
-        # if we ran through the whole data already (we ignore the last incomplete batch)
-        if self.cur_index >= (self.data.shape[0]-self.batch_size) and len(self.labels_storage) < self.batch_size:
-            # reset everything
-            self.frames_storage = Queue(self.max_queue_size)
-            self.labels_storage = []
-            self.cur_index = 0
-            self.data_finished = True
-            return None, None
 
         if self.indices is None or self.cur_index == 0:
             self.indices = self.randomized_indices(self.data.shape[0])
@@ -111,7 +103,7 @@ class DiskAudio(Base):
             f = open(self.out_file, "a")
         i = self.cur_index
         # if not enough in the storage, we pre-load frames from the audio files
-        while len(self.labels_storage) < self.batch_size:
+        while len(self.labels_storage) < self.batch_size and i < self.indices.shape[0]:
             if f is not None:
                 f.write("%s\n" % self.data[self.indices[i]])
             frames, labels = self.extract_frames_from_file(self.data[self.indices[i]], self.labels[self.indices[i]])
@@ -119,9 +111,21 @@ class DiskAudio(Base):
             # self.frames_storage.extend(frames)
             self.labels_storage.extend(labels)
             i += 1
-        self.cur_index = i
         if f is not None:
             f.close()
+        self.cur_index = i
+
+        # if we ran through the whole data already (we ignore the last incomplete batch)
+        # self.indices is a list of file names
+        # so, we want exit current datashuffling thread if cur_index reached the end of the file list
+        if self.cur_index >= self.indices.shape[0] and len(self.labels_storage) < self.batch_size:
+            # reset everything
+            self.frames_storage = Queue(self.max_queue_size)
+            self.labels_storage = []
+            self.cur_index = 0
+            self.data_finished = True
+            return None, None
+
         # our temp frame queue should have enough data
         # selected_data = numpy.asarray(self.frames_storage[:self.batch_size])
         selected_labels = numpy.asarray(self.labels_storage[:self.batch_size])

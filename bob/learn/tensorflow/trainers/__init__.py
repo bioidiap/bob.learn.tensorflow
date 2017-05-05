@@ -37,10 +37,10 @@ __appropriate__(
     Trainer,
     SiameseTrainer,
     TripletTrainer,
+    TrainerSeq,
     exponential_decay,
     constant,
-    TrainerSeq,
-    )
+)
 __all__ = [_ for _ in dir() if not _.startswith('_')]
 
 

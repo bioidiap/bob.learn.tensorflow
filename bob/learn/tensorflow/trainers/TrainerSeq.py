@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
-# @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 # @author: Pavel Korshunov <pavel.korshunov@idiap.ch>
-# @date: Tue 09 Aug 2016 15:25:22 CEST
+# @date: Thu 09 Mar 2017 15:25:22 CEST
 
 import tensorflow as tf
 from ..network import SequenceNetwork
@@ -13,9 +12,9 @@ import bob.core
 from ..analyzers import SoftmaxAnalizer
 from tensorflow.core.framework import summary_pb2
 import time
-from bob.learn.tensorflow.datashuffler.OnlineSampling import OnLineSampling
+from bob.learn.tensorflow.datashuffler import OnlineSampling
 from bob.learn.tensorflow.utils.session import Session
-from .learning_rate import constant
+from bob.learn.tensorflow.trainers.learning_rate import constant
 
 import numpy
 logger = bob.core.log.setup("bob.learn.tensorflow")
@@ -23,10 +22,12 @@ logger = bob.core.log.setup("bob.learn.tensorflow")
 
 class TrainerSeq(object):
     """
-    One graph trainer that trains in epochs (go through all data in one epoch) but by computing forward-backward pass for each mini batch.
+    One graph trainer that trains in epochs (go through all data in one epoch) but by computing forward-backward
+    pass for each mini batch.
     Use this trainer when your CNN consists of one graph, as oppose to Seamese or Triplet networks
 
     **Parameters**
+
     architecture:
       The architecture that you want to run. Should be a :py:class`bob.learn.tensorflow.network.SequenceNetwork`
 
@@ -42,7 +43,7 @@ class TrainerSeq(object):
     temp_dir: str
       The output directory
 
-    learning_rate: :py:class:`bob.learn.tensorflow.trainers.learningrate`
+    learning_rate: `bob.learn.tensorflow.trainers.learning_rate`
       Initial learning rate
 
     convergence_threshold:
@@ -302,9 +303,9 @@ class TrainerSeq(object):
 
             # if we run out of data, stop
             if train_data is None or self.train_data_shuffler.data_finished:
-#                print("None data, exiting the thread")
+                #                print("None data, exiting the thread")
                 self.train_thread_pool.request_stop()
-#                self.train_thread_pool.join(self.train_threads)
+                #                self.train_thread_pool.join(self.train_threads)
                 return
 
             [train_placeholder_data, train_placeholder_labels] = self.train_data_shuffler.get_placeholders()
@@ -330,9 +331,9 @@ class TrainerSeq(object):
 
             # if we run out of data, stop
             if valid_data is None or self.validation_data_shuffler.data_finished:
-#                print("None validation data, exiting the thread")
+                #                print("None validation data, exiting the thread")
                 self.valid_thread_pool.request_stop()
-#                self.valid_thread_pool.join(self.valid_threads)
+                #                self.valid_thread_pool.join(self.valid_threads)
                 return
 
             [valid_placeholder_data, valid_placeholder_labels] = self.validation_data_shuffler.get_placeholders()
@@ -543,7 +544,7 @@ class TrainerSeq(object):
             # Original tensorflow saver object
             saver = tf.train.Saver(var_list=tf.all_variables(), max_to_keep=30)
 
-        if isinstance(train_data_shuffler, OnLineSampling):
+        if isinstance(train_data_shuffler, OnlineSampling):
             train_data_shuffler.set_feature_extractor(self.architecture, session=self.session)
 
         self.architecture.save(saver, os.path.join(self.temp_dir, 'model_initial.ckp'))
