@@ -5,7 +5,7 @@
 
 import tensorflow as tf
 from .singleton import Singleton
-from tensorflow.python import debug as tf_debug
+# from tensorflow.python import debug as tf_debug
 
 @Singleton
 class Session(object):
