@@ -6,7 +6,8 @@
 import numpy
 import bob.core
 from .Base import Base
-from Queue import Queue
+
+import sys
 
 from scipy.io.wavfile import read as readWAV
 import time
@@ -16,6 +17,11 @@ import logging
 logger = logging.getLogger("bob.learn.tensorflow")
 # logger.propagate = False
 
+is_py2 = sys.version[0] == '2'
+if is_py2:
+    import Queue as queue
+else:
+    import queue as queue
 
 class DiskAudio(Base):
     def __init__(self, data, labels,
@@ -62,7 +68,7 @@ class DiskAudio(Base):
         self.max_queue_size = 20000
 
         # a flexible queue that stores audio frames extracted from files
-        self.frames_storage = Queue(self.max_queue_size)
+        self.frames_storage = queue.Queue(self.max_queue_size)
         # a similar queue for the corresponding labels
         self.labels_storage = []
 
@@ -120,7 +126,7 @@ class DiskAudio(Base):
         # so, we want exit current datashuffling thread if cur_index reached the end of the file list
         if self.cur_index >= self.indices.shape[0] and len(self.labels_storage) < self.batch_size:
             # reset everything
-            self.frames_storage = Queue(self.max_queue_size)
+            self.frames_storage = queue.Queue(self.max_queue_size)
             self.labels_storage = []
             self.cur_index = 0
             self.data_finished = True
