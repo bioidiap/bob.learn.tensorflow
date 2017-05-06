@@ -1,9 +1,8 @@
-
+from .learning_rate import exponential_decay, constant
 from .Trainer import Trainer
 from .TrainerSeq import TrainerSeq
 from .SiameseTrainer import SiameseTrainer
 from .TripletTrainer import TripletTrainer
-from .learning_rate import exponential_decay, constant
 import numpy
 
 
@@ -37,9 +36,9 @@ __appropriate__(
     Trainer,
     SiameseTrainer,
     TripletTrainer,
-    TrainerSeq,
     exponential_decay,
     constant,
+    TrainerSeq,
 )
 __all__ = [_ for _ in dir() if not _.startswith('_')]
 

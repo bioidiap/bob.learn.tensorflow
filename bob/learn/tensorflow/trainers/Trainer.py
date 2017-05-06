@@ -12,7 +12,7 @@ import bob.core
 from ..analyzers import SoftmaxAnalizer
 from tensorflow.core.framework import summary_pb2
 import time
-from bob.learn.tensorflow.datashuffler import OnlineSampling
+from ..datashuffler import OnlineSampling
 from bob.learn.tensorflow.utils.session import Session
 from .learning_rate import constant
 

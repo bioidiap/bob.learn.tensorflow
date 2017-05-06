@@ -10,7 +10,7 @@ logger = bob.core.log.setup("bob.learn.tensorflow")
 from .Disk import Disk
 from .Siamese import Siamese
 
-from bob.learn.tensorflow.datashuffler.Normalizer import Linear
+from .Normalizer import Linear
 
 
 class SiameseDisk(Siamese, Disk):

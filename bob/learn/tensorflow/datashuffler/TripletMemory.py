@@ -8,7 +8,7 @@ import tensorflow as tf
 
 from .Memory import Memory
 from .Triplet import Triplet
-from bob.learn.tensorflow.datashuffler.Normalizer import Linear
+from .Normalizer import Linear
 
 
 class TripletMemory(Triplet, Memory):

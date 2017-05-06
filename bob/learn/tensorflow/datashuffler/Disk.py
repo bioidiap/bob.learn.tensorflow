@@ -11,7 +11,7 @@ import bob.core
 from .Base import Base
 
 logger = bob.core.log.setup("bob.learn.tensorflow")
-from bob.learn.tensorflow.datashuffler.Normalizer import Linear
+from .Normalizer import Linear
 
 
 class Disk(Base):

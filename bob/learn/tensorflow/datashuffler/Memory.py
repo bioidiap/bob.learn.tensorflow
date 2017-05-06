@@ -5,7 +5,7 @@
 
 import numpy
 from .Base import Base
-from bob.learn.tensorflow.datashuffler.Normalizer import Linear
+from .Normalizer import Linear
 import tensorflow as tf
 
 

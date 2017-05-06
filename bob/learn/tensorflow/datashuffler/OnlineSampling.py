@@ -5,7 +5,7 @@
 
 import tensorflow as tf
 from .Base import Base
-from bob.learn.tensorflow.network import SequenceNetwork
+from ..network import SequenceNetwork
 
 
 class OnlineSampling(object):
