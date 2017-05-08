@@ -4,24 +4,16 @@
 # @date: Wed 19 Oct 23:43:22 2016
 
 import numpy
-import bob.core
 from .Base import Base
 
-import sys
+#import time
 
 from scipy.io.wavfile import read as readWAV
-import time
 
 # logger = bob.core.log.setup("bob.learn.tensorflow")
 import logging
 logger = logging.getLogger("bob.learn.tensorflow")
-# logger.propagate = False
 
-is_py2 = sys.version[0] == '2'
-if is_py2:
-    import Queue as queue
-else:
-    import queue as queue
 
 class DiskAudio(Base):
     def __init__(self, data, labels,
@@ -32,7 +24,7 @@ class DiskAudio(Base):
                  context_size=20,
                  win_length_ms=10,
                  rate=16000,
-                 out_file=""
+                 out_file="temp.txt"
                  ):
         """
          This datashuffler deals with speech databases that are stored in the disk.
@@ -42,7 +34,7 @@ class DiskAudio(Base):
         self.out_file = out_file
         self.context_size = context_size
         self.win_length_ms = win_length_ms
-        self.m_win_length = self.win_length_ms * rate / 1000  # number of values in a given window
+        self.m_win_length = int(self.win_length_ms * rate / 1000)  # number of values in a given window
         self.m_frame_length = self.m_win_length * (2 * self.context_size + 1)
 
         input_shape = [self.m_frame_length, 1]
@@ -65,10 +57,11 @@ class DiskAudio(Base):
         # Seting the seed
         numpy.random.seed(seed)
 
-        self.max_queue_size = 20000
+#        self.max_queue_size = 20000
 
         # a flexible queue that stores audio frames extracted from files
-        self.frames_storage = queue.Queue(self.max_queue_size)
+#        self.frames_storage = queue.Queue(self.max_queue_size)
+        self.frames_storage = []
         # a similar queue for the corresponding labels
         self.labels_storage = []
 
@@ -107,41 +100,40 @@ class DiskAudio(Base):
         f = None
         if self.out_file != "":
             f = open(self.out_file, "a")
+
         i = self.cur_index
         # if not enough in the storage, we pre-load frames from the audio files
         while len(self.labels_storage) < self.batch_size and i < self.indices.shape[0]:
             if f is not None:
                 f.write("%s\n" % self.data[self.indices[i]])
             frames, labels = self.extract_frames_from_file(self.data[self.indices[i]], self.labels[self.indices[i]])
-            map(self.frames_storage.put, frames)
-            # self.frames_storage.extend(frames)
+            self.frames_storage.extend(frames)
             self.labels_storage.extend(labels)
             i += 1
+
+        self.cur_index = i
         if f is not None:
             f.close()
-        self.cur_index = i
+            f= None
 
         # if we ran through the whole data already (we ignore the last incomplete batch)
         # self.indices is a list of file names
         # so, we want exit current datashuffling thread if cur_index reached the end of the file list
         if self.cur_index >= self.indices.shape[0] and len(self.labels_storage) < self.batch_size:
             # reset everything
-            self.frames_storage = queue.Queue(self.max_queue_size)
+            self.frames_storage = []
             self.labels_storage = []
             self.cur_index = 0
             self.data_finished = True
             return None, None
 
         # our temp frame queue should have enough data
-        # selected_data = numpy.asarray(self.frames_storage[:self.batch_size])
+        selected_data = numpy.asarray(self.frames_storage[:self.batch_size])
         selected_labels = numpy.asarray(self.labels_storage[:self.batch_size])
         # remove them from the list
-        # del self.frames_storage[:self.batch_size]
+        del self.frames_storage[:self.batch_size]
         del self.labels_storage[:self.batch_size]
 
-        selected_data = numpy.empty([self.batch_size, self.m_frame_length], dtype=numpy.float32)
-        for i in range(0, self.batch_size):
-            selected_data[i, :] = self.frames_storage.get()
         selected_data = numpy.reshape(selected_data, (self.batch_size, -1, 1))
 
         # end = time.time()
