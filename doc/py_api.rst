@@ -22,6 +22,8 @@ Architectures
     bob.learn.tensorflow.network.MLP
     bob.learn.tensorflow.network.VGG16
     bob.learn.tensorflow.network.VGG16_mod
+    bob.learn.tensorflow.network.SimpleAudio
+    bob.learn.tensorflow.network.DeeperAudio
 
 
 Trainers
@@ -32,6 +34,7 @@ Trainers
     bob.learn.tensorflow.trainers.Trainer
     bob.learn.tensorflow.trainers.SiameseTrainer
     bob.learn.tensorflow.trainers.TripletTrainer
+    bob.learn.tensorflow.trainers.TrainerSeq
 
 Learning rate
 -------------
@@ -48,11 +51,13 @@ Layers
 .. autosummary::
 
     bob.learn.tensorflow.layers.Layer
+    bob.learn.tensorflow.layers.Conv1D
     bob.learn.tensorflow.layers.Conv2D
     bob.learn.tensorflow.layers.Dropout
     bob.learn.tensorflow.layers.FullyConnected
     bob.learn.tensorflow.layers.MaxPooling
     bob.learn.tensorflow.layers.AveragePooling
+    bob.learn.tensorflow.layers.LogSoftMax
 
 
 Data Shufflers
@@ -72,6 +77,7 @@ Data Shufflers
     bob.learn.tensorflow.datashuffler.TripletWithFastSelectionDisk
     bob.learn.tensorflow.datashuffler.TripletWithSelectionDisk
     bob.learn.tensorflow.datashuffler.OnlineSampling
+    bob.learn.tensorflow.datashuffler.DiskAudio
 
 
 

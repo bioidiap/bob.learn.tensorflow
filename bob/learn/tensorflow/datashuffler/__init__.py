@@ -1,4 +1,5 @@
 # see https://docs.python.org/3/library/pkgutil.html
+from .Normalizer import ScaleFactor, MeanOffset, Linear
 from .Base import Base
 from .OnlineSampling import OnlineSampling
 from .Siamese import Siamese
@@ -17,8 +18,6 @@ from .TripletWithSelectionDisk import TripletWithSelectionDisk
 
 from .DataAugmentation import DataAugmentation
 from .ImageAugmentation import ImageAugmentation
-
-from .Normalizer import ScaleFactor, MeanOffset, Linear
 
 from .DiskAudio import DiskAudio
 

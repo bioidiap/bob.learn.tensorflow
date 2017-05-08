@@ -11,7 +11,7 @@ import bob.measure
 from tensorflow.core.framework import summary_pb2
 from scipy.spatial.distance import cosine
 
-from bob.learn.tensorflow.datashuffler import Memory, Disk
+from ..datashuffler import Memory, Disk
 
 
 class ExperimentAnalizer:

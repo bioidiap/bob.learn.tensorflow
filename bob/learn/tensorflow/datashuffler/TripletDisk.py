@@ -14,7 +14,7 @@ import tensorflow as tf
 
 from .Disk import Disk
 from .Triplet import Triplet
-from bob.learn.tensorflow.datashuffler.Normalizer import Linear
+from .Normalizer import Linear
 
 
 class TripletDisk(Triplet, Disk):

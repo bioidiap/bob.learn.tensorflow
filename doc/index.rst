@@ -3,9 +3,9 @@
 
 .. _bob.learn.tensorflow:
 
-========================
+=========================
  Tensorflow Bob Bindings
-========================
+=========================
 
 `bob.learn.tensorflow` is a high-level library, written in Python that runs on top of TensorFlow.
 The goal here is to be able to do fast experimentation with neural networks.

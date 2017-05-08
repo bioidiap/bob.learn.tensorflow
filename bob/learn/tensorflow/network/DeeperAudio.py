@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
-# @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 11 May 2016 09:39:36 CEST 
+# @author: Pavel Korshunov <pavel.korshunov@idiap.ch>
+# @date: Thu 06 April 2017 09:39:36 CEST
 
 """
-Class that creates the lenet architecture
+A deeper 5-layers architecture for audio data
 """
 
 import tensorflow as tf
 from .SequenceNetwork import SequenceNetwork
-from ..layers import Conv1D, FullyConnected, LogSoftMax
+from ..layers import Conv1D, FullyConnected, LogSoftMax, MaxPooling
 from bob.learn.tensorflow.initialization import Uniform
 
 
@@ -20,14 +20,25 @@ def hard_tanh(x, name=None):
     return tf.minimum(tf.maximum(x, neg_one), one)
 
 
-class SimpleAudio(SequenceNetwork):
+class DeeperAudio(SequenceNetwork):
 
     def __init__(self,
-                 conv1_kernel_size=300,
-                 conv1_output=20,
-                 conv1_stride=100,
+                 conv1_kernel_size=160,
+                 conv1_output=32,
+                 conv1_stride=20,
 
-                 fc1_output=40,
+                 pooling_shape=[1, 1, 2, 1],
+                 pooling_stride=[1, 1, 2, 1],
+
+                 conv2_kernel_size=32,
+                 conv2_output=64,
+                 conv2_stride=2,
+
+                 conv3_kernel_size=1,
+                 conv3_output=64,
+                 conv3_stride=1,
+
+                 fc1_output=60,
 
                  n_classes=2,
                  default_feature_layer="fc2",
@@ -36,7 +47,7 @@ class SimpleAudio(SequenceNetwork):
                  use_gpu=False
                  ):
 
-        super(SimpleAudio, self).__init__(default_feature_layer=default_feature_layer,
+        super(DeeperAudio, self).__init__(default_feature_layer=default_feature_layer,
                                           use_gpu=use_gpu)
 
         self.add(Conv1D(name="conv1", kernel_size=conv1_kernel_size,
@@ -47,6 +58,31 @@ class SimpleAudio(SequenceNetwork):
                        bias_initialization=Uniform(seed=seed, use_gpu=use_gpu),
                        use_gpu=use_gpu
                        ))
+
+        self.add(MaxPooling(name="pooling1", shape=pooling_shape))
+
+        self.add(Conv1D(name="conv2", kernel_size=conv2_kernel_size,
+                       filters=conv2_output,
+                       stride=conv2_stride,
+                       activation=hard_tanh,
+                       weights_initialization=Uniform(seed=seed, use_gpu=use_gpu),
+                       bias_initialization=Uniform(seed=seed, use_gpu=use_gpu),
+                       use_gpu=use_gpu
+                       ))
+
+        self.add(MaxPooling(name="pooling2", shape=pooling_shape))
+
+
+        self.add(Conv1D(name="conv3", kernel_size=conv3_kernel_size,
+                       filters=conv3_output,
+                       stride=conv3_stride,
+                       activation=hard_tanh,
+                       weights_initialization=Uniform(seed=seed, use_gpu=use_gpu),
+                       bias_initialization=Uniform(seed=seed, use_gpu=use_gpu),
+                       use_gpu=use_gpu
+                       ))
+
+        self.add(MaxPooling(name="pooling3", shape=pooling_shape))
 
         self.add(FullyConnected(name="fc1", output_dim=fc1_output,
                                activation=hard_tanh,

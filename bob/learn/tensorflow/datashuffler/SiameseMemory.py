@@ -8,7 +8,7 @@ import numpy
 from .Memory import Memory
 from .Siamese import Siamese
 import tensorflow as tf
-from bob.learn.tensorflow.datashuffler.Normalizer import Linear
+from .Normalizer import Linear
 
 
 class SiameseMemory(Siamese, Memory):

@@ -39,7 +39,12 @@ class MaxPooling(Layer):
         self.strides = strides
 
     def create_variables(self, input_layer):
-        self.input_layer = input_layer
+        if len(input_layer.get_shape()) == 3:
+            shape = input_layer.get_shape().as_list()
+            self.input_layer = tf.reshape(input_layer, [-1, 1, shape[1], shape[2]])
+        else:
+            self.input_layer = input_layer
+        print("MaxPooling layer shape: ", self.input_layer.get_shape().as_list())
         return
 
     def get_graph(self, training_phase=True):

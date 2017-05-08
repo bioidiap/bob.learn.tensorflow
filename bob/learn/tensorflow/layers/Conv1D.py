@@ -70,13 +70,19 @@ class Conv1D(Layer):
         self.init_value = init_value
 
     def create_variables(self, input_layer):
-        self.input_layer = input_layer
 
         # TODO: Do an assert here
-        if len(input_layer.get_shape().as_list()) != 3:
-            raise ValueError("The input as a convolutional layer must have 3 dimensions, "
-                             "but {0} were provided".format(len(input_layer.get_shape().as_list())))
-        n_channels = input_layer.get_shape().as_list()[2]
+        input_shape = input_layer.get_shape().as_list()
+        if len(input_shape) != 3:
+            if len(input_shape) == 4:
+                self.input_layer = tf.reshape(input_layer, [-1, input_shape[2], input_shape[3]])
+            else:
+                raise ValueError("The input as a convolutional layer must have 3 dimensions, "
+                                 "but {0} were provided".format(len(input_layer.get_shape().as_list())))
+        else:
+            self.input_layer = input_layer
+        print("Conv1 layer shape: ", self.input_layer.get_shape().as_list())
+        n_channels = self.input_layer.get_shape().as_list()[2]
 
         if self.W is None:
             if self.init_value is None:

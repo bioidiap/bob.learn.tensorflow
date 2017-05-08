@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 11 May 2016 09:39:36 CEST 
+# @date: Wed 11 May 2016 09:39:36 CEST
 
 import tensorflow as tf
 from .singleton import Singleton
-from tensorflow.python import debug as tf_debug
+# from tensorflow.python import debug as tf_debug
 
 @Singleton
 class Session(object):

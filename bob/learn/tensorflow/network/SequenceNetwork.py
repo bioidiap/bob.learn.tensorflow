@@ -10,8 +10,10 @@ import six
 import numpy
 import pickle
 
+import bob.io.base
+
 from collections import OrderedDict
-from bob.learn.tensorflow.layers import Layer, MaxPooling, Dropout, Conv2D, FullyConnected
+from bob.learn.tensorflow.layers import Layer, MaxPooling, Dropout, Conv2D, FullyConnected, LogSoftMax
 from bob.learn.tensorflow.utils.session import Session
 
 
@@ -123,11 +125,11 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
 
         # Feeding the placeholder
         if self.inference_placeholder is None:
-            self.compute_inference_placeholder(data.shape[1:])
+            self.compute_inference_placeholder([None] + list(data.shape[1:]))
         feed_dict = {self.inference_placeholder: data}
 
         if self.inference_graph is None:
-            self.compute_inference_graph(self.inference_placeholder, feature_layer)
+            self.compute_inference_graph(feature_layer)
 
         embedding = session.run([self.inference_graph], feed_dict=feed_dict)[0]
 
@@ -143,7 +145,9 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         variables = {}
         for k in self.sequence_net:
             # TODO: IT IS NOT SMART TESTING ALONG THIS PAGE
-            if not isinstance(self.sequence_net[k], MaxPooling) and not isinstance(self.sequence_net[k], Dropout):
+            if not isinstance(self.sequence_net[k], MaxPooling) and \
+                    not isinstance(self.sequence_net[k], Dropout) and \
+                    not isinstance(self.sequence_net[k], LogSoftMax):
                 variables[self.sequence_net[k].W.name] = self.sequence_net[k].W
                 variables[self.sequence_net[k].b.name] = self.sequence_net[k].b
 
@@ -172,7 +176,9 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         for k in self.sequence_net.keys():
             current_layer = self.sequence_net[k]
 
-            if not isinstance(self.sequence_net[k], MaxPooling) and not isinstance(self.sequence_net[k], Dropout):
+            if not isinstance(self.sequence_net[k], MaxPooling) and \
+                    not isinstance(self.sequence_net[k], Dropout) and \
+                    not isinstance(self.sequence_net[k], LogSoftMax):
                 self.variable_summaries(current_layer.W, current_layer.name + '/weights')
                 self.variable_summaries(current_layer.b, current_layer.name + '/bias')
 
@@ -235,7 +241,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         # Saving the architecture
         if self.pickle_architecture is not None:
             hdf5.set('architecture', self.pickle_architecture)
-            hdf5.set('deployment_shape', self.deployment_shape)
+            # hdf5.set('deployment_shape', numpy.array(self.deployment_shape))
 
         # Directory that stores the tensorflow variables
         hdf5.create_group('/tensor_flow')
@@ -265,7 +271,8 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         hdf5.cd('/tensor_flow')
         for k in self.sequence_net:
             # TODO: IT IS NOT SMART TESTING ALONG THIS PAGE
-            if not isinstance(self.sequence_net[k], MaxPooling):
+            if not isinstance(self.sequence_net[k], MaxPooling) and \
+                    not isinstance(self.sequence_net[k], LogSoftMax):
                 self.sequence_net[k].W.assign(hdf5.read(self.sequence_net[k].W.name)).eval(session=session)
                 session.run(self.sequence_net[k].W)
                 self.sequence_net[k].b.assign(hdf5.read(self.sequence_net[k].b.name)).eval(session=session)
@@ -277,7 +284,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
 
         hdf5.cd("..")
 
-    def load_hdf5(self, hdf5, shape=None, batch=1, use_gpu=False):
+    def load_hdf5(self, hdf5path, shape=None, batch=1, use_gpu=False):
         """
         Load the network from scratch.
         This will build the graphs
@@ -290,6 +297,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
             batch: The size of the batch
             use_gpu: Load all the variables in the GPU?
         """
+        hdf5 = bob.io.base.HDF5File(hdf5path)
 
         session = Session.instance().session
 
@@ -299,19 +307,21 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
 
         # Loading architecture
         self.sequence_net = pickle.loads(hdf5.read('architecture'))
-        self.deployment_shape = hdf5.read('deployment_shape')
 
         self.turn_gpu_onoff(use_gpu)
 
         if shape is None:
+            self.deployment_shape = hdf5.read('deployment_shape')
             shape = self.deployment_shape
             shape[0] = batch
 
         # Loading variables
         place_holder = tf.placeholder(tf.float32, shape=shape, name="load")
         self.compute_graph(place_holder)
-        tf.global_variables_initializer().run(session=session)
-        self.load_variables_only(hdf5, session)
+        tf.initialize_all_variables().run(session=session)
+        self.load_variables_only(hdf5)
+
+        # self.pickle_net(shape)
 
     def save(self, saver, path):
 

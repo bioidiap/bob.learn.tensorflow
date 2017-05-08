@@ -9,7 +9,7 @@ import tensorflow as tf
 from .OnlineSampling import OnlineSampling
 from .Memory import Memory
 from .Triplet import Triplet
-from bob.learn.tensorflow.datashuffler.Normalizer import Linear
+from .Normalizer import Linear
 from scipy.spatial.distance import euclidean, cdist
 
 import logging

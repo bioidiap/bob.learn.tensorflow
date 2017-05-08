@@ -7,7 +7,7 @@ import numpy
 import tensorflow as tf
 import bob.ip.base
 import numpy
-from bob.learn.tensorflow.datashuffler.Normalizer import Linear
+from .Normalizer import Linear
 
 
 class Base(object):

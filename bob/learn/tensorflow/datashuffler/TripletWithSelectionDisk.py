@@ -14,7 +14,7 @@ from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 import logging
 logger = logging.getLogger("bob.learn.tensorflow")
-from bob.learn.tensorflow.datashuffler.Normalizer import Linear
+from .Normalizer import Linear
 
 
 class TripletWithSelectionDisk(Triplet, Disk, OnlineSampling):

@@ -7,6 +7,7 @@ from .MaxPooling import MaxPooling
 from .AveragePooling import AveragePooling
 from .Dropout import Dropout
 from .InputLayer import InputLayer
+from .LogSoftMax import LogSoftMax
 
 
 # gets sphinx autodoc done right - don't remove it
@@ -32,6 +33,7 @@ __appropriate__(
     AveragePooling,
     Dropout,
     InputLayer,
+    LogSoftMax,
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]
 
