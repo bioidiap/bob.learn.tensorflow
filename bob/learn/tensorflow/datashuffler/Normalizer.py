@@ -40,3 +40,10 @@ class Linear(object):
         return x
 
 
+class ZeroOne(object):
+
+  def __init__(self):
+    pass
+
+  def __call__(sel, x):
+    return x / 255.
