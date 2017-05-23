@@ -8,6 +8,8 @@ from .AveragePooling import AveragePooling
 from .Dropout import Dropout
 from .InputLayer import InputLayer
 
+from .FlatTo2D import FlatTo2D
+from .Conv2DTranspose import Conv2DTranspose
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):
@@ -32,6 +34,8 @@ __appropriate__(
     AveragePooling,
     Dropout,
     InputLayer,
+    FlatTo2D,
+    Conv2DTranspose,
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]
 
