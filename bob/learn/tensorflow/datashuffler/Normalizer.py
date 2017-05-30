@@ -3,6 +3,8 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 # @date: Mon 07 Nov 2016 09:39:36 CET
 
+import numpy
+
 
 class ScaleFactor(object):
     """
@@ -45,5 +47,24 @@ class ZeroOne(object):
   def __init__(self):
     pass
 
-  def __call__(sel, x):
+  def __call__(self, x):
     return x / 255.
+
+
+class MinusOneOne(object):
+
+  def __init__(self):
+    pass
+
+  def __call__(self, x):
+    target_min = -1
+    target_max = 1
+    for j in range(x.shape[0]):
+      for i in range(x.shape[3]):
+        mini = numpy.min(x[j, :, :, i])
+        maxi = numpy.max(x[j, :, :, i])
+        x[j, :, :, i] = (x[j, :, :, i] - mini) * (target_max - target_min) / (maxi - mini) + target_min
+        #print "new min -> {0}".format(numpy.min(x[j, :, :, i]))
+        #print "new max -> {0}".format(numpy.max(x[j, :, :, i]))
+      
+    return x
