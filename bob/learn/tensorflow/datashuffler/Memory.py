@@ -79,8 +79,16 @@ class Memory(Base):
         indexes = numpy.array(range(self.data.shape[0]))
         numpy.random.shuffle(indexes)
 
-        selected_data = self.data[indexes[0:self.batch_size], ...]
+        selected_data = numpy.zeros(shape=self.shape)
+        for i in range(self.batch_size):
+
+            selected_data[i, ...] = self.data[indexes[i], ...]
+            # Scaling
+            selected_data[i, ...] = self.normalize_sample(selected_data[i, ...])
+
         selected_labels = self.labels[indexes[0:self.batch_size]]
+
+        
 
         # Applying the data augmentation
         if self.data_augmentation is not None:
