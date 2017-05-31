@@ -59,12 +59,13 @@ class MinusOneOne(object):
   def __call__(self, x):
     target_min = -1
     target_max = 1
-    for j in range(x.shape[0]):
-      for i in range(x.shape[3]):
-        mini = numpy.min(x[j, :, :, i])
-        maxi = numpy.max(x[j, :, :, i])
-        x[j, :, :, i] = (x[j, :, :, i] - mini) * (target_max - target_min) / (maxi - mini) + target_min
-        #print "new min -> {0}".format(numpy.min(x[j, :, :, i]))
-        #print "new max -> {0}".format(numpy.max(x[j, :, :, i]))
+    #print x.shape
+    for i in range(x.shape[2]):
+      mini = numpy.min(x[:, :, i])
+      maxi = numpy.max(x[:, :, i])
+      if (maxi - mini) != 0:
+        x[:, :, i] = ((x[:, :, i] - mini) * ((target_max - target_min) / (maxi - mini))) + target_min
+      else:
+        x[:, :, i] = 0 
       
     return x
