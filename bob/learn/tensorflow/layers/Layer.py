@@ -76,8 +76,18 @@ class Layer(object):
             phase_train:
 
         """
+        
+        # XXX THAT'S UGLY ...
+        reuse = False
+        for var in tf.global_variables():
+          if scope in var.name and ('beta' in var.name or 'gamma' in var.name):
+            print "{0} already exists".format(var.name)
+            reuse = True 
 
-        return tf.contrib.layers.batch_norm(x, decay=1.9, updates_collections=None, epsilon=1e-5, scale=True, is_training=phase_train, scope=scope)
+        if reuse:
+          return tf.contrib.layers.batch_norm(x, decay=0.9, updates_collections=None, epsilon=1e-5, scale=True, scope=scope, is_training=phase_train, reuse=True)
+        else:  
+          return tf.contrib.layers.batch_norm(x, decay=0.9, updates_collections=None, epsilon=1e-5, scale=True, scope=scope, is_training=phase_train, reuse=None)
 
         from tensorflow.python.ops import control_flow_ops
         
