@@ -71,7 +71,7 @@ class FullyConnected(Layer):
         logger.info("+ adding a Fully Connected layer ({0}) +".format(name))
 
 
-    def create_variables(self, input_layer, scope=None):
+    def create_variables(self, input_layer, scope="net"):
 
       # get the scope as "network_name/layer_name"
       if scope is not None:

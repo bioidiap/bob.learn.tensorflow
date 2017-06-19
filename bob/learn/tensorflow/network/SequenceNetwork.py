@@ -65,7 +65,7 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
         self.pickle_architecture = pickle.dumps(self.sequence_net)
         self.deployment_shape = shape
 
-    def compute_graph(self, input_data, feature_layer=None, training=True, scope=None):
+    def compute_graph(self, input_data, feature_layer=None, training=True, scope="net"):
         """Given the current network, return the Tensorflow graph
 
          **Parameter**

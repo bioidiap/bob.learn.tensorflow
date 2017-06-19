@@ -80,7 +80,7 @@ class Conv2D(Layer):
         logger.info("\t number of output features maps = {0}".format(filters))
 
 
-    def create_variables(self, input_layer, scope=None):
+    def create_variables(self, input_layer, scope="net"):
       
       # get the scope as "network_name/layer_name"
       if scope is not None:
