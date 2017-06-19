@@ -58,16 +58,21 @@ class MLP(SequenceNetwork):
         if (not (isinstance(hidden_layers, list) or isinstance(hidden_layers, tuple))) or len(hidden_layers) == 0:
             raise ValueError("Invalid input for hidden_layers: {0} ".format(hidden_layers))
 
+        print "Use GPU ? -> {0}".format(use_gpu)
+
         for i in range(len(hidden_layers)):
             l = hidden_layers[i]
             self.add(FullyConnected(name="mlp_fc{0}".format(i),
                                     output_dim=l,
                                     activation=hidden_activation,
-                                    weights_initialization=weights_initialization,
-                                    bias_initialization=bias_initialization))
+                                    weights_initialization=Xavier(use_gpu=use_gpu),
+                                    bias_initialization=Constant(use_gpu=use_gpu),
+                                    use_gpu=use_gpu))
+
 
         self.add(FullyConnected(name="mlp_fc_output",
                                 output_dim=output_shape,
                                 activation=output_activation,
-                                weights_initialization=weights_initialization,
-                                bias_initialization=bias_initialization))
+                                weights_initialization=Xavier(use_gpu=use_gpu),
+                                bias_initialization=Constant(use_gpu=use_gpu),
+                                use_gpu=use_gpu))
