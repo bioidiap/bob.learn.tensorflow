@@ -10,6 +10,8 @@ from .InputLayer import InputLayer
 
 from .FlatTo2D import FlatTo2D
 from .Conv2DTranspose import Conv2DTranspose
+from .ImToCondFeatureMap import ImToCondFeatureMap
+from .ConditionConcat import ConditionConcat
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):
@@ -36,6 +38,7 @@ __appropriate__(
     InputLayer,
     FlatTo2D,
     Conv2DTranspose,
+    ImToCondFeatureMap,
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]
 
