@@ -20,7 +20,8 @@ def compute_euclidean_distance(x, y):
 def load_mnist(data_dir="./src/bob.db.mnist/bob/db/mnist/", perc_train=0.9):
 
     import bob.db.mnist
-    db = bob.db.mnist.Database(data_dir)
+    #db = bob.db.mnist.Database(data_dir)
+    db = bob.db.mnist.Database()
     raw_data = db.data()
 
     # data  = raw_data[0].astype(numpy.float64)
