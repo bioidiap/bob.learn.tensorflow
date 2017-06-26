@@ -12,6 +12,7 @@ import pickle
 
 from collections import OrderedDict
 from bob.learn.tensorflow.layers import Layer, MaxPooling, Dropout, Conv2D, FullyConnected
+from bob.learn.tensorflow.layers import ConditionConcat, ImToCondFeatureMap 
 from bob.learn.tensorflow.utils.session import Session
 
 
@@ -90,6 +91,34 @@ class SequenceNetwork(six.with_metaclass(abc.ABCMeta, object)):
 
 
         return input_offset
+
+    def compute_conditional_graph(self, input_data, conditional_data, training=True, scope="net"):
+        """ Given the current conditional network, return the Tensorflow graph.
+
+            Main difference is in the first layer, where we have to take the conditional input into account
+
+        **Parameters**
+
+        input_data: placeholder for the input data
+
+        conditional_data: placeholder for the conditional data
+        """
+        input_offset = input_data
+
+        for k in self.sequence_net.keys():
+          current_layer = self.sequence_net[k]
+          
+          if training:
+            if isinstance(current_layer, ConditionConcat) or isinstance(current_layer, ImToCondFeatureMap):
+              current_layer.create_variables(input_offset, scope=scope)
+              input_offset = current_layer.get_graph(conditional_data)
+            else:
+              current_layer.create_variables(input_offset, scope=scope)
+              input_offset = current_layer.get_graph(training_phase=training)
+
+        return input_offset
+
+
 
     def compute_inference_graph(self, feature_layer=None):
         """Generate a graph for feature extraction
