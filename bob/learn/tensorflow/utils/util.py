@@ -17,10 +17,11 @@ def compute_euclidean_distance(x, y):
         d = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(x, y)), 1))
         return d
 
-def load_mnist(data_dir="./src/bob.db.mnist/bob/db/mnist/", perc_train=0.9):
+
+def load_mnist(perc_train=0.9):
 
     import bob.db.mnist
-    db = bob.db.mnist.Database(data_dir)
+    db = bob.db.mnist.Database()
     raw_data = db.data()
 
     # data  = raw_data[0].astype(numpy.float64)

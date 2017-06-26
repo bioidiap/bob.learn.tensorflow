@@ -20,7 +20,7 @@ Options:
 
 from docopt import docopt
 import imp
-
+import bob.learn.tensorflow
 
 def main():
     args = docopt(__doc__, version='Train Neural Net')
@@ -36,16 +36,28 @@ def main():
 
     config = imp.load_source('config', args['<configuration>'])
 
-    trainer = config.Trainer(architecture=config.architecture,
-                             loss=config.loss,
+    # One graph trainer
+    trainer = config.Trainer(config.train_data_shuffler,
                              iterations=ITERATIONS,
                              analizer=None,
-                             prefetch=PREFETCH,
-                             learning_rate=config.learning_rate,
-                             temp_dir=OUTPUT_DIR,
-                             snapshot=100,
-                             model_from_file=PRETRAINED_NET,
-                             use_gpu=USE_GPU
-                             )
+                             temp_dir=OUTPUT_DIR)
 
+    # Preparing the architecture
+    input_pl = config.train_data_shuffler("data", from_queue=False)
+    if isinstance(trainer, bob.learn.tensorflow.trainers.SiameseTrainer):
+        graph = dict()
+        graph['left'] = config.architecture(input_pl['left'])
+        graph['right'] = config.architecture(input_pl['right'])
+
+    elif isinstance(trainer, bob.learn.tensorflow.trainers.TripletTrainer):
+        graph = dict()
+        graph['anchor'] = config.architecture(input_pl['anchor'])
+        graph['positive'] = config.architecture(input_pl['positive'])
+        graph['negative'] = config.architecture(input_pl['negative'])
+    else:
+        graph = config.architecture(input_pl)
+
+    trainer.create_network_from_scratch(graph, loss=config.loss,
+                                        learning_rate=config.learning_rate,
+                                        optimizer=config.optimizer)
     trainer.train(config.train_data_shuffler)
