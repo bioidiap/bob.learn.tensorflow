@@ -46,7 +46,5 @@ class ConditionConcat(Layer):
 
   def get_graph(self, y):
     
-    batch_size = input_layer.get_shape()[0]
-    yb = tf.reshape(y, [batch_size, 1, 1, self.conditional_dim])
-    return tf.concat([input_layer, y], 1)
+    return tf.concat([self.input_layer, y], 1)
 
