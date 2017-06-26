@@ -165,14 +165,24 @@ class TripletTrainer(Trainer):
 
         tf.add_to_collection("global_step", self.global_step)
 
-        tf.add_to_collection("graph", self.graph)
-        tf.add_to_collection("predictor", self.predictor)
+        # Saving the pointers to the graph
+        tf.add_to_collection("graph_anchor", self.graph['anchor'])
+        tf.add_to_collection("graph_positive", self.graph['positive'])
+        tf.add_to_collection("graph_negative", self.graph['negative'])
 
-        tf.add_to_collection("data_ph", self.data_ph)
+        # Saving pointers to the loss
+        tf.add_to_collection("predictor_loss", self.predictor['loss'])
+        tf.add_to_collection("predictor_between_class_loss", self.predictor['between_class'])
+        tf.add_to_collection("predictor_within_class_loss", self.predictor['within_class'])
+
+        # Saving the pointers to the placeholders
+        tf.add_to_collection("data_ph_anchor", self.data_ph['anchor'])
+        tf.add_to_collection("data_ph_positive", self.data_ph['positive'])
+        tf.add_to_collection("data_ph_negative", self.data_ph['negative'])
 
         # Preparing the optimizer
         self.optimizer_class._learning_rate = self.learning_rate
-        self.optimizer = self.optimizer_class.minimize(self.predictor[0], global_step=self.global_step)
+        self.optimizer = self.optimizer_class.minimize(self.predictor['loss'], global_step=self.global_step)
         tf.add_to_collection("optimizer", self.optimizer)
         tf.add_to_collection("learning_rate", self.learning_rate)
 
@@ -210,8 +220,8 @@ class TripletTrainer(Trainer):
         feed_dict = self.get_feed_dict(self.train_data_shuffler)
         _, l, bt_class, wt_class, lr, summary = self.session.run([
                                                 self.optimizer,
-                                                self.predictor[0], self.predictor[1],
-                                                self.predictor[2],
+                                                self.predictor['loss'], self.predictor['between_class'],
+                                                self.predictor['within_class'],
                                                 self.learning_rate, self.summaries_train], feed_dict=feed_dict)
 
         logger.info("Loss training set step={0} = {1}".format(step, l))
@@ -224,9 +234,9 @@ class TripletTrainer(Trainer):
         """
 
         # Train summary
-        tf.summary.scalar('loss', self.predictor[0])
-        tf.summary.scalar('between_class_loss', self.predictor[1])
-        tf.summary.scalar('within_class_loss', self.predictor[2])
+        tf.summary.scalar('loss', self.predictor['loss'])
+        tf.summary.scalar('between_class_loss', self.predictor['between_class'])
+        tf.summary.scalar('within_class_loss', self.predictor['within_class'])
         tf.summary.scalar('lr', self.learning_rate)
         return tf.summary.merge_all()
 

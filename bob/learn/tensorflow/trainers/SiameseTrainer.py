@@ -145,18 +145,25 @@ class SiameseTrainer(Trainer):
 
         # Saving all the variables
         self.saver = tf.train.Saver(var_list=tf.global_variables())
-
         tf.add_to_collection("global_step", self.global_step)
 
-        tf.add_to_collection("graph", self.graph)
-        tf.add_to_collection("predictor", self.predictor)
+        # Saving the pointers to the graph
+        tf.add_to_collection("graph_left", self.graph['left'])
+        tf.add_to_collection("graph_right", self.graph['right'])
 
-        tf.add_to_collection("data_ph", self.data_ph)
+        # Saving pointers to the loss
+        tf.add_to_collection("predictor_loss", self.predictor['loss'])
+        tf.add_to_collection("predictor_between_class_loss", self.predictor['between_class'])
+        tf.add_to_collection("predictor_within_class_loss", self.predictor['within_class'])
+
+        # Saving the pointers to the placeholders
+        tf.add_to_collection("data_ph_left", self.data_ph['left'])
+        tf.add_to_collection("data_ph_right", self.data_ph['right'])
         tf.add_to_collection("label_ph", self.label_ph)
 
         # Preparing the optimizer
         self.optimizer_class._learning_rate = self.learning_rate
-        self.optimizer = self.optimizer_class.minimize(self.predictor[0], global_step=self.global_step)
+        self.optimizer = self.optimizer_class.minimize(self.predictor['loss'], global_step=self.global_step)
         tf.add_to_collection("optimizer", self.optimizer)
         tf.add_to_collection("learning_rate", self.learning_rate)
 
@@ -165,6 +172,44 @@ class SiameseTrainer(Trainer):
 
         # Creating the variables
         tf.global_variables_initializer().run(session=self.session)
+
+    def create_network_from_file(self, model_from_file):
+        """
+        Bootstrap all the necessary data from file
+
+         ** Parameters **
+           session: Tensorflow session
+           train_data_shuffler: Data shuffler for training
+           validation_data_shuffler: Data shuffler for validation
+
+        """
+        #saver = self.architecture.load(self.model_from_file, clear_devices=False)
+        self.saver = tf.train.import_meta_graph(model_from_file + ".meta")
+        self.saver.restore(self.session, model_from_file)
+
+        # Loading the graph from the graph pointers
+        self.graph = dict()
+        self.graph['left'] = tf.get_collection("graph_left")[0]
+        self.graph['right'] = tf.get_collection("graph_right")[0]
+
+        # Loading the place holders by the pointer
+        self.data_ph = dict()
+        self.data_ph['left'] = tf.get_collection("data_ph_left")[0]
+        self.data_ph['right'] = tf.get_collection("data_ph_right")[0]
+        self.label_ph = tf.get_collection("label_ph")[0]
+
+        self.predictor = []
+
+        self.predictor = tf.get_collection("predictor")[0]
+
+
+
+        # Loding other elements
+        self.optimizer = tf.get_collection("optimizer")[0]
+        self.learning_rate = tf.get_collection("learning_rate")[0]
+        self.summaries_train = tf.get_collection("summaries_train")[0]
+        self.global_step = tf.get_collection("global_step")[0]
+        self.from_scratch = False
 
     def get_feed_dict(self, data_shuffler):
         """
@@ -194,8 +239,8 @@ class SiameseTrainer(Trainer):
         feed_dict = self.get_feed_dict(self.train_data_shuffler)
         _, l, bt_class, wt_class, lr, summary = self.session.run([
                                                 self.optimizer,
-                                                self.predictor[0], self.predictor[1],
-                                                self.predictor[2],
+                                                self.predictor['loss'], self.predictor['between_class'],
+                                                self.predictor['within_class'],
                                                 self.learning_rate, self.summaries_train], feed_dict=feed_dict)
 
         logger.info("Loss training set step={0} = {1}".format(step, l))
@@ -207,8 +252,8 @@ class SiameseTrainer(Trainer):
         """
 
         # Train summary
-        tf.summary.scalar('loss', self.predictor[0])
-        tf.summary.scalar('between_class_loss', self.predictor[1])
-        tf.summary.scalar('within_class_loss', self.predictor[2])
+        tf.summary.scalar('loss', self.predictor['loss'])
+        tf.summary.scalar('between_class_loss', self.predictor['between_class'])
+        tf.summary.scalar('within_class_loss', self.predictor['within_class'])
         tf.summary.scalar('lr', self.learning_rate)
         return tf.summary.merge_all()

@@ -163,7 +163,6 @@ def test_siamesecnn_trainer():
     trainer.train(train_data_shuffler)
     embedding = Embedding(train_data_shuffler("data", from_queue=False)['left'], graph['left'])
     eer = dummy_experiment(validation_data_shuffler, embedding)
-
     assert eer < 0.15
     shutil.rmtree(directory)
 

@@ -54,4 +54,9 @@ class TripletLoss(BaseLoss):
             basic_loss = tf.add(tf.subtract(d_positive, d_negative), self.margin)
             loss = tf.reduce_mean(tf.maximum(basic_loss, 0.0), 0)
 
-            return loss, tf.reduce_mean(d_negative), tf.reduce_mean(d_positive)
+            loss_dict = dict()
+            loss_dict['loss'] = loss
+            loss_dict['between_class'] = tf.reduce_mean(d_negative)
+            loss_dict['within_class'] = tf.reduce_mean(d_positive)
+
+            return loss_dict
