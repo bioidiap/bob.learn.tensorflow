@@ -147,7 +147,7 @@ def test_siamesecnn_trainer():
     loss = ContrastiveLoss(contrastive_margin=4.)
 
     input_pl = train_data_shuffler("data")
-    graph = {}
+    graph = dict()
     graph['left'] = architecture(input_pl['left'])
     graph['right'] = architecture(input_pl['right'])
 
@@ -160,7 +160,7 @@ def test_siamesecnn_trainer():
                                         loss=loss,
                                         learning_rate=constant(0.01, name="regular_lr"),
                                         optimizer=tf.train.GradientDescentOptimizer(0.01),)
-    trainer.train(train_data_shuffler)
+    trainer.train()
     embedding = Embedding(train_data_shuffler("data", from_queue=False)['left'], graph['left'])
     eer = dummy_experiment(validation_data_shuffler, embedding)
     assert eer < 0.15
@@ -194,7 +194,7 @@ def test_tripletcnn_trainer():
     loss = TripletLoss(margin=4.)
 
     input_pl = train_data_shuffler("data")
-    graph = {}
+    graph = dict()
     graph['anchor'] = architecture(input_pl['anchor'])
     graph['positive'] = architecture(input_pl['positive'])
     graph['negative'] = architecture(input_pl['negative'])

@@ -28,7 +28,7 @@ class Siamese(Base):
         :return: 
         """
         with tf.name_scope("Input"):
-            self.data_ph = {}
+            self.data_ph = dict()
             self.data_ph['left'] = tf.placeholder(tf.float32, shape=self.input_shape, name="left")
             self.data_ph['right'] = tf.placeholder(tf.float32, shape=self.input_shape, name="right")
             self.label_ph = tf.placeholder(tf.int64, shape=[None], name="label")

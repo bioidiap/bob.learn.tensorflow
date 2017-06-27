@@ -28,7 +28,7 @@ class Triplet(Base):
         :return: 
         """
         with tf.name_scope("Input"):
-            self.data_ph = {}
+            self.data_ph = dict()
             self.data_ph['anchor'] = tf.placeholder(tf.float32, shape=self.input_shape, name="anchor")
             self.data_ph['positive'] = tf.placeholder(tf.float32, shape=self.input_shape, name="positive")
             self.data_ph['negative'] = tf.placeholder(tf.float32, shape=self.input_shape, name="negative")

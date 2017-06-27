@@ -4,14 +4,11 @@
 # @date: Thu 13 Oct 2016 13:35 CEST
 
 import numpy
-import bob.io.base
-import os
 from bob.learn.tensorflow.datashuffler import Memory, ImageAugmentation, ScaleFactor
 from bob.learn.tensorflow.network import Embedding
 from bob.learn.tensorflow.loss import BaseLoss
-from bob.learn.tensorflow.trainers import Trainer, learning_rate
+from bob.learn.tensorflow.trainers import Trainer, constant
 from bob.learn.tensorflow.utils import load_mnist
-from bob.learn.tensorflow.layers import Conv2D, FullyConnected
 import tensorflow as tf
 import shutil
 
@@ -30,20 +27,20 @@ slim = tf.contrib.slim
 
 def scratch_network():
     # Creating a random network
-
-    inputs = {}
+    inputs = dict()
     inputs['data'] = tf.placeholder(tf.float32, shape=[None, 28, 28, 1], name="train_data")
     inputs['label'] = tf.placeholder(tf.int64, shape=[None], name="train_label")
 
     initializer = tf.contrib.layers.xavier_initializer(seed=seed)
-    scratch = slim.conv2d(inputs['data'], 10, [3, 3], activation_fn=tf.nn.relu, stride=1, scope='conv1',
-                          weights_initializer=initializer)
-    scratch = slim.max_pool2d(scratch, [4, 4], scope='pool1')
-    scratch = slim.flatten(scratch, scope='flatten1')
-    scratch = slim.fully_connected(scratch, 10, activation_fn=None, scope='fc1',
-                                   weights_initializer=initializer)
+    graph = slim.conv2d(inputs['data'], 10, [3, 3], activation_fn=tf.nn.relu, stride=1, scope='conv1',
+                        weights_initializer=initializer)
+    graph = slim.max_pool2d(graph, [4, 4], scope='pool1')
+    graph = slim.flatten(graph, scope='flatten1')
+    graph = slim.fully_connected(graph, 10, activation_fn=None, scope='fc1',
+                                 weights_initializer=initializer)
 
-    return inputs, scratch
+    return inputs, graph
+
 
 def validate_network(embedding, validation_data, validation_labels):
     # Testing
@@ -67,41 +64,43 @@ def test_cnn_trainer_scratch():
     # Creating datashufflers
     data_augmentation = ImageAugmentation()
     train_data_shuffler = Memory(train_data, train_labels,
-                                 input_shape=[28, 28, 1],
+                                 input_shape=[None, 28, 28, 1],
                                  batch_size=batch_size,
                                  data_augmentation=data_augmentation,
                                  normalizer=ScaleFactor())
-    validation_data_shuffler = Memory(train_data, train_labels,
-                                 input_shape=[28, 28, 1],
-                                 batch_size=batch_size,
-                                 data_augmentation=data_augmentation,
-                                 normalizer=ScaleFactor())
+
+    #validation_data_shuffler = Memory(train_data, train_labels,
+    #                                  input_shape=[28, 28, 1],
+    #                                  batch_size=batch_size,
+    #                                  data_augmentation=data_augmentation,
+    #                                  normalizer=ScaleFactor())
+
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
-
-
     # Create scratch network
     inputs, scratch = scratch_network()
+
+    # Setting the placeholders
+    train_data_shuffler.data_ph = inputs['data']
+    train_data_shuffler.label_ph = inputs['label']
     embedding = Embedding(inputs['data'], scratch)
 
     # Loss for the softmax
     loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
 
     # One graph trainer
-    trainer = Trainer(inputs=inputs,
-                      graph=scratch,
+    trainer = Trainer(train_data_shuffler,
                       iterations=iterations,
-                      loss=loss,
                       analizer=None,
-                      prefetch=False,
-                      temp_dir=directory,
-                      optimizer=tf.train.GradientDescentOptimizer(0.01),
-                      learning_rate=learning_rate.constant(base_learning_rate=0.01, name="constant_learning_rate"),
-                      validation_snapshot=20
-                      )
+                      temp_dir=directory)
 
-    trainer.train(train_data_shuffler, validation_data_shuffler)
+    trainer.create_network_from_scratch(graph=scratch,
+                                        loss=loss,
+                                        learning_rate=constant(0.01, name="regular_lr"),
+                                        optimizer=tf.train.GradientDescentOptimizer(0.01),
+                                        )
 
+    trainer.train()
     accuracy = validate_network(embedding, validation_data, validation_labels)
-    assert accuracy > 80
+    assert accuracy > 70
     shutil.rmtree(directory)
     del trainer

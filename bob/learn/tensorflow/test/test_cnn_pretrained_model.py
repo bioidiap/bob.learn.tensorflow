@@ -74,17 +74,14 @@ def test_cnn_pretrained():
     loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
 
     # One graph trainer
-    # One graph trainer
     trainer = Trainer(train_data_shuffler,
                       iterations=iterations,
                       analizer=None,
-                      temp_dir=directory
-                      )
+                      temp_dir=directory)
     trainer.create_network_from_scratch(graph=graph,
                                         loss=loss,
                                         learning_rate=constant(0.1, name="regular_lr"),
-                                        optimizer=tf.train.GradientDescentOptimizer(0.1),
-                                        )
+                                        optimizer=tf.train.GradientDescentOptimizer(0.1))
     trainer.train()
     accuracy = validate_network(embedding, validation_data, validation_labels)
 
@@ -193,65 +190,65 @@ def test_siamese_cnn_pretrained():
     # Creating datashufflers
     data_augmentation = ImageAugmentation()
     train_data_shuffler = SiameseMemory(train_data, train_labels,
-                                        input_shape=[28, 28, 1],
+                                        input_shape=[None, 28, 28, 1],
                                         batch_size=batch_size,
-                                        data_augmentation=data_augmentation)
+                                        data_augmentation=data_augmentation,
+                                        normalizer=ScaleFactor())
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
 
     validation_data_shuffler = SiameseMemory(validation_data, validation_labels,
-                                             input_shape=[28, 28, 1],
-                                             batch_size=validation_batch_size)
+                                             input_shape=[None, 28, 28, 1],
+                                             batch_size=validation_batch_size,
+                                             normalizer=ScaleFactor())
 
     directory = "./temp/cnn"
     directory2 = "./temp/cnn2"
 
-    # Creating a random network
-    scratch = scratch_network()
+    # Creating graph
+    input_pl = train_data_shuffler("data")
+    graph = dict()
+    graph['left'] = scratch_network(input_pl['left'])
+    graph['right'] = scratch_network(input_pl['right'])
 
     # Loss for the softmax
     loss = ContrastiveLoss(contrastive_margin=4.)
     # One graph trainer
-    trainer = SiameseTrainer(architecture=scratch,
-                             loss=loss,
+    trainer = SiameseTrainer(train_data_shuffler,
                              iterations=iterations,
                              analizer=None,
-                             prefetch=False,
-                             learning_rate=constant(0.05, name="regular_lr"),
-                             optimizer=tf.train.AdamOptimizer(name="adam_pretrained_model"),
-                             temp_dir=directory
-                             )
-    trainer.train(train_data_shuffler)
+                             temp_dir=directory)
+
+    trainer.create_network_from_scratch(graph=graph,
+                                        loss=loss,
+                                        learning_rate=constant(0.01, name="regular_lr"),
+                                        optimizer=tf.train.GradientDescentOptimizer(0.01))
+    trainer.train()
 
     # Testing
-    eer = dummy_experiment(validation_data_shuffler, scratch)
-    # The result is not so good
-    assert eer < 0.28
+    embedding = Embedding(train_data_shuffler("data", from_queue=False)['left'], graph['left'])
+    eer = dummy_experiment(validation_data_shuffler, embedding)
+    assert eer < 0.10
 
-    del scratch
+    del graph
     del loss
     del trainer
 
-    # Training the network using a pre trained model
-    loss = ContrastiveLoss(contrastive_margin=4.)
-    scratch = scratch_network()
-    trainer = SiameseTrainer(architecture=scratch,
-                             loss=loss,
-                             iterations=iterations + 1000,
+    trainer = SiameseTrainer(train_data_shuffler,
+                             iterations=iterations*2,
                              analizer=None,
-                             prefetch=False,
-                             learning_rate=None,
-                             temp_dir=directory2,
-                             model_from_file=os.path.join(directory, "model.ckp")
-                             )
+                             temp_dir=directory)
 
-    trainer.train(train_data_shuffler)
+    trainer.create_network_from_file(os.path.join(directory, "model.ckp"))
+    trainer.train()
 
-    eer = dummy_experiment(validation_data_shuffler, scratch)
-    # Now it is better
-    assert eer < 0.27
+    #import ipdb; ipdb.set_trace()
+    embedding = Embedding(train_data_shuffler("data", from_queue=False)['left'], trainer.graph['left'])
+    eer = dummy_experiment(validation_data_shuffler, embedding)
+    assert eer < 0.10
+
     shutil.rmtree(directory)
     shutil.rmtree(directory2)
 
-    del scratch
+    del graph
     del loss
     del trainer

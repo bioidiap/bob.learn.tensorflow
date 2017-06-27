@@ -135,7 +135,8 @@ class Trainer(object):
         self.label_ph = self.train_data_shuffler("label")
         self.graph = graph
         self.loss = loss
-        self.predictor = self.loss(self.graph, self.train_data_shuffler("label", from_queue=True))
+        #self.predictor = self.loss(self.graph, self.train_data_shuffler("label", from_queue=True))
+        self.predictor = self.loss(self.graph, self.train_data_shuffler("label", from_queue=False))
 
         self.optimizer_class = optimizer
         self.learning_rate = learning_rate

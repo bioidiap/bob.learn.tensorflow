@@ -192,19 +192,19 @@ class SiameseTrainer(Trainer):
         self.graph['left'] = tf.get_collection("graph_left")[0]
         self.graph['right'] = tf.get_collection("graph_right")[0]
 
-        # Loading the place holders by the pointer
+        # Loading the placeholders from the pointers
         self.data_ph = dict()
         self.data_ph['left'] = tf.get_collection("data_ph_left")[0]
         self.data_ph['right'] = tf.get_collection("data_ph_right")[0]
         self.label_ph = tf.get_collection("label_ph")[0]
 
-        self.predictor = []
+        # Loading loss from the pointers
+        self.predictor = dict()
+        self.predictor['loss'] = tf.get_collection("predictor_loss")[0]
+        self.predictor['between_class'] = tf.get_collection("predictor_between_class_loss")[0]
+        self.predictor['within_class'] = tf.get_collection("predictor_within_class_loss")[0]
 
-        self.predictor = tf.get_collection("predictor")[0]
-
-
-
-        # Loding other elements
+        # Loading other elements
         self.optimizer = tf.get_collection("optimizer")[0]
         self.learning_rate = tf.get_collection("learning_rate")[0]
         self.summaries_train = tf.get_collection("summaries_train")[0]
