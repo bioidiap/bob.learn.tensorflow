@@ -8,13 +8,9 @@ Class that creates the lenet architecture
 """
 
 import tensorflow as tf
-from .SequenceNetwork import SequenceNetwork
-from ..layers import Conv2D, FullyConnected, MaxPooling
-from bob.learn.tensorflow.initialization import Xavier
-from bob.learn.tensorflow.initialization import Constant
 
 
-class MLP(SequenceNetwork):
+class MLP(object):
     """An MLP is a representation of a Multi-Layer Perceptron.
 
     This implementation is feed-forward and fully-connected.
@@ -35,39 +31,44 @@ class MLP(SequenceNetwork):
 
         output_activation: Activation of the output layer.  If you set to `None`, the activation will be linear
 
-        weights_initialization: How you will initialize the neurons.
-                                See :py:mod:`bob.learn.tensorflow.initialization`.
+        seed: 
 
-        bias_initialization:   How you will initialize the biases.
-                               See :py:mod:`bob.learn.tensorflow.initialization`.
-
-        use_gpu: If ``True`` uses the GPU in the computation
-
-        seed = 10
+        device:
     """
     def __init__(self,
                  output_shape,
                  hidden_layers=[10],
                  hidden_activation=tf.nn.tanh,
                  output_activation=None,
-                 weights_initialization=Xavier(),
-                 bias_initialization=Constant(),
-                 use_gpu=False):
-        super(MLP, self).__init__(use_gpu=use_gpu)
+                 seed=10,
+                 device="/cpu:0"):
 
-        if (not (isinstance(hidden_layers, list) or isinstance(hidden_layers, tuple))) or len(hidden_layers) == 0:
-            raise ValueError("Invalid input for hidden_layers: {0} ".format(hidden_layers))
+        self.output_shape = output_shape
+        self.hidden_layers = hidden_layers
+        self.hidden_activation = hidden_activation
+        self.output_activation = output_activation
+        self.seed = seed
+        self.device = device
 
-        for i in range(len(hidden_layers)):
-            l = hidden_layers[i]
-            self.add(FullyConnected(name="mlp_fc{0}".format(i),
-                                    output_dim=l,
-                                    activation=hidden_activation,
-                                    weights_initialization=weights_initialization,
-                                    bias_initialization=bias_initialization))
+    def __call__(self, inputs):
+        slim = tf.contrib.slim
+        initializer = tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=self.seed)
 
-        self.add(FullyConnected(name="mlp_fc_output",
-                                output_dim=output_shape,
-                                activation=output_activation,
-                                weights_initialization=weights_initialization,
-                                bias_initialization=bias_initialization))
+        #if (not (isinstance(hidden_layers, list) or isinstance(hidden_layers, tuple))) or len(hidden_layers) == 0:
+        #    raise ValueError("Invalid input for hidden_layers: {0} ".format(hidden_layers))
+
+        graph = inputs
+        for i in range(len(self.hidden_layers)):
+
+            weights = self.hidden_layers[i]
+            graph = slim.fully_connected(graph, weights,
+                                         weights_initializer=initializer,
+                                         activation_fn=self.hidden_activation,
+                                         scope='fc_{0}'.format(i))
+
+        graph = slim.fully_connected(graph, self.output_shape,
+                                     weights_initializer=initializer,
+                                     activation_fn=self.output_activation,
+                                     scope='fc_output')
+
+        return graph
