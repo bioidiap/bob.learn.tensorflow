@@ -51,24 +51,21 @@ def test_siamesememory_shuffler():
     train_data, train_labels, validation_data, validation_labels = load_mnist()
     train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
 
-    batch_shape = [16, 28, 28, 1]
+    batch_shape = [None, 28, 28, 1]
+    batch_size = 16
     data_augmentation = ImageAugmentation()
     data_shuffler = SiameseMemory(train_data, train_labels,
-                                  input_shape=batch_shape[1:],
-                                  batch_size=batch_shape[0],
+                                  input_shape=batch_shape,
+                                  batch_size=batch_size,
                                   data_augmentation=data_augmentation)
 
     batch = data_shuffler.get_batch()
-
     assert len(batch) == 3
-    assert batch[0].shape == tuple(batch_shape)
-    assert batch[1].shape == tuple(batch_shape)
-    assert batch[2].shape[0] == batch_shape[0]
+    assert batch[0].shape == (batch_size, 28, 28, 1)
 
-    placeholders = data_shuffler.get_placeholders(name="train")
-    assert placeholders[0].get_shape().as_list() == batch_shape
-    assert placeholders[1].get_shape().as_list() == batch_shape
-    assert placeholders[2].get_shape().as_list()[0] == batch_shape[0]
+    placeholders = data_shuffler("data", from_queue=False)
+    assert placeholders['left'].get_shape().as_list() == batch_shape
+    assert placeholders['right'].get_shape().as_list() == batch_shape
 
 
 def test_tripletmemory_shuffler():
@@ -76,91 +73,84 @@ def test_tripletmemory_shuffler():
     train_data, train_labels, validation_data, validation_labels = load_mnist()
     train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
 
-    batch_shape = [16, 28, 28, 1]
+    batch_shape = [None, 28, 28, 1]
+    batch_size = 16
+
     data_augmentation = ImageAugmentation()
     data_shuffler = TripletMemory(train_data, train_labels,
-                                  input_shape=batch_shape[1:],
-                                  batch_size=batch_shape[0],
+                                  input_shape=batch_shape,
+                                  batch_size=batch_size,
                                   data_augmentation=data_augmentation)
 
     batch = data_shuffler.get_batch()
-
     assert len(batch) == 3
-    assert batch[0].shape == tuple(batch_shape)
-    assert batch[1].shape == tuple(batch_shape)
-    assert batch[2].shape == tuple(batch_shape)
+    assert batch[0].shape == (batch_size, 28, 28, 1)
 
-    placeholders = data_shuffler.get_placeholders(name="train")
-    assert placeholders[0].get_shape().as_list() == batch_shape
-    assert placeholders[1].get_shape().as_list() == batch_shape
-    assert placeholders[2].get_shape().as_list() == batch_shape
+    placeholders = data_shuffler("data", from_queue=False)
+    assert placeholders['anchor'].get_shape().as_list() == batch_shape
+    assert placeholders['positive'].get_shape().as_list() == batch_shape
+    assert placeholders['negative'].get_shape().as_list() == batch_shape
 
 
 def test_disk_shuffler():
 
     train_data, train_labels = get_dummy_files()
 
-    batch_shape = [2, 125, 125, 3]
+    batch_shape = [None, 125, 125, 3]
+    batch_size = 2
+
     data_augmentation = ImageAugmentation()
     data_shuffler = Disk(train_data, train_labels,
-                         input_shape=batch_shape[1:],
-                         batch_size=batch_shape[0],
+                         input_shape=batch_shape,
+                         batch_size=batch_size,
                          data_augmentation=data_augmentation)
-
     batch = data_shuffler.get_batch()
 
     assert len(batch) == 2
-    assert batch[0].shape == tuple(batch_shape)
-    assert batch[1].shape[0] == batch_shape[0]
+    assert batch[0].shape == (batch_size, 125, 125, 3)
 
-    placeholders = data_shuffler.get_placeholders(name="train")
-    assert placeholders[0].get_shape().as_list() == batch_shape
-    assert placeholders[1].get_shape().as_list()[0] == batch_shape[0]
+    placeholders = data_shuffler("data", from_queue=False)
+    assert placeholders.get_shape().as_list() == batch_shape
 
 
 def test_siamesedisk_shuffler():
 
     train_data, train_labels = get_dummy_files()
 
-    batch_shape = [2, 125, 125, 3]
+    batch_shape = [None, 125, 125, 3]
+    batch_size = 2
     data_augmentation = ImageAugmentation()
     data_shuffler = SiameseDisk(train_data, train_labels,
-                                input_shape=batch_shape[1:],
-                                batch_size=batch_shape[0],
+                                input_shape=batch_shape,
+                                batch_size=batch_size,
                                 data_augmentation=data_augmentation)
 
     batch = data_shuffler.get_batch()
-
     assert len(batch) == 3
-    assert batch[0].shape == tuple(batch_shape)
-    assert batch[1].shape == tuple(batch_shape)
-    assert batch[2].shape[0] == batch_shape[0]
+    assert batch[0].shape == (batch_size, 125, 125, 3)
 
-    placeholders = data_shuffler.get_placeholders(name="train")
-    assert placeholders[0].get_shape().as_list() == batch_shape
-    assert placeholders[1].get_shape().as_list() == batch_shape
-    assert placeholders[2].get_shape().as_list()[0] == batch_shape[0]
+    placeholders = data_shuffler("data", from_queue=False)
+    assert placeholders['left'].get_shape().as_list() == batch_shape
+    assert placeholders['right'].get_shape().as_list() == batch_shape
 
 
 def test_tripletdisk_shuffler():
 
     train_data, train_labels = get_dummy_files()
 
-    batch_shape = [1, 125, 125, 3]
+    batch_shape = [None, 125, 125, 3]
+    batch_size = 1
     data_augmentation = ImageAugmentation()
     data_shuffler = TripletDisk(train_data, train_labels,
-                                input_shape=batch_shape[1:],
-                                batch_size=batch_shape[0],
+                                input_shape=batch_shape,
+                                batch_size=batch_size,
                                 data_augmentation=data_augmentation)
 
     batch = data_shuffler.get_batch()
-
     assert len(batch) == 3
-    assert batch[0].shape == tuple(batch_shape)
-    assert batch[1].shape == tuple(batch_shape)
-    assert batch[2].shape == tuple(batch_shape)
+    assert batch[0].shape == (1, 125, 125, 3)
 
-    placeholders = data_shuffler.get_placeholders(name="train")
-    assert placeholders[0].get_shape().as_list() == batch_shape
-    assert placeholders[1].get_shape().as_list() == batch_shape
-    assert placeholders[2].get_shape().as_list() == batch_shape
+    placeholders = data_shuffler("data", from_queue=False)
+    assert placeholders['anchor'].get_shape().as_list() == batch_shape
+    assert placeholders['positive'].get_shape().as_list() == batch_shape
+    assert placeholders['positive'].get_shape().as_list() == batch_shape
