@@ -25,7 +25,7 @@ Some unit tests that create networks on the fly and load variables
 
 batch_size = 16
 validation_batch_size = 400
-iterations =300
+iterations = 300
 seed = 10
 
 
@@ -119,67 +119,65 @@ def test_triplet_cnn_pretrained():
     # Creating datashufflers
     data_augmentation = ImageAugmentation()
     train_data_shuffler = TripletMemory(train_data, train_labels,
-                                        input_shape=[28, 28, 1],
+                                        input_shape=[None, 28, 28, 1],
                                         batch_size=batch_size,
                                         data_augmentation=data_augmentation)
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
 
     validation_data_shuffler = TripletMemory(validation_data, validation_labels,
-                                             input_shape=[28, 28, 1],
+                                             input_shape=[None, 28, 28, 1],
                                              batch_size=validation_batch_size)
 
     directory = "./temp/cnn"
-    directory2 = "./temp/cnn2"
 
     # Creating a random network
-    scratch = scratch_network()
+    input_pl = train_data_shuffler("data", from_queue=False)
+    graph = dict()
+    graph['anchor'] = scratch_network(input_pl['anchor'])
+    graph['positive'] = scratch_network(input_pl['positive'])
+    graph['negative'] = scratch_network(input_pl['negative'])
 
     # Loss for the softmax
     loss = TripletLoss(margin=4.)
 
     # One graph trainer
-    trainer = TripletTrainer(architecture=scratch,
-                             loss=loss,
+    trainer = TripletTrainer(train_data_shuffler,
                              iterations=iterations,
                              analizer=None,
-                             prefetch=False,
-                             learning_rate=constant(0.05, name="regular_lr"),
-                             optimizer=tf.train.AdamOptimizer(name="adam_pretrained_model"),
-                             temp_dir=directory
-                             )
-    trainer.train(train_data_shuffler)
+                             temp_dir=directory)
+
+    trainer.create_network_from_scratch(graph=graph,
+                                        loss=loss,
+                                        learning_rate=constant(0.01, name="regular_lr"),
+                                        optimizer=tf.train.GradientDescentOptimizer(0.01))
+    trainer.train()
     # Testing
-    eer = dummy_experiment(validation_data_shuffler, scratch)
+    embedding = Embedding(trainer.data_ph['anchor'], trainer.graph['anchor'])
+    eer = dummy_experiment(validation_data_shuffler, embedding)
+
     # The result is not so good
     assert eer < 0.25
 
-    del scratch
+    del graph
     del loss
     del trainer
 
     # Training the network using a pre trained model
-    loss = TripletLoss(margin=4.)
-    scratch = scratch_network()
-    trainer = TripletTrainer(architecture=scratch,
-                             loss=loss,
-                             iterations=iterations + 200,
+    trainer = TripletTrainer(train_data_shuffler,
+                             iterations=iterations*2,
                              analizer=None,
-                             prefetch=False,
-                             learning_rate=None,
-                             temp_dir=directory2,
-                             model_from_file=os.path.join(directory, "model.ckp")
-                             )
+                             temp_dir=directory)
 
-    trainer.train(train_data_shuffler)
+    trainer.create_network_from_file(os.path.join(directory, "model.ckp"))
+    trainer.train()
 
-    eer = dummy_experiment(validation_data_shuffler, scratch)
+    embedding = Embedding(trainer.data_ph['anchor'], trainer.graph['anchor'])
+    eer = dummy_experiment(validation_data_shuffler, embedding)
+
     # Now it is better
-    assert eer < 0.15
+    assert eer < 0.20
     shutil.rmtree(directory)
-    shutil.rmtree(directory2)
 
-    del scratch
-    del loss
     del trainer
 
 
@@ -200,9 +198,7 @@ def test_siamese_cnn_pretrained():
                                              input_shape=[None, 28, 28, 1],
                                              batch_size=validation_batch_size,
                                              normalizer=ScaleFactor())
-
     directory = "./temp/cnn"
-    directory2 = "./temp/cnn2"
 
     # Creating graph
     input_pl = train_data_shuffler("data")
@@ -225,7 +221,8 @@ def test_siamese_cnn_pretrained():
     trainer.train()
 
     # Testing
-    embedding = Embedding(train_data_shuffler("data", from_queue=False)['left'], graph['left'])
+    #embedding = Embedding(train_data_shuffler("data", from_queue=False)['left'], graph['left'])
+    embedding = Embedding(trainer.data_ph['left'], trainer.graph['left'])
     eer = dummy_experiment(validation_data_shuffler, embedding)
     assert eer < 0.10
 
@@ -241,14 +238,11 @@ def test_siamese_cnn_pretrained():
     trainer.create_network_from_file(os.path.join(directory, "model.ckp"))
     trainer.train()
 
-    #import ipdb; ipdb.set_trace()
-    embedding = Embedding(train_data_shuffler("data", from_queue=False)['left'], trainer.graph['left'])
+    #embedding = Embedding(train_data_shuffler("data", from_queue=False)['left'], trainer.graph['left'])
+    embedding = Embedding(trainer.data_ph['left'], trainer.graph['left'])
     eer = dummy_experiment(validation_data_shuffler, embedding)
     assert eer < 0.10
 
     shutil.rmtree(directory)
-    shutil.rmtree(directory2)
 
-    del graph
-    del loss
     del trainer

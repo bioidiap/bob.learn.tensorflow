@@ -192,6 +192,45 @@ class TripletTrainer(Trainer):
         # Creating the variables
         tf.global_variables_initializer().run(session=self.session)
 
+    def create_network_from_file(self, model_from_file):
+        """
+        Bootstrap all the necessary data from file
+
+         ** Parameters **
+           session: Tensorflow session
+           train_data_shuffler: Data shuffler for training
+           validation_data_shuffler: Data shuffler for validation
+
+        """
+        #saver = self.architecture.load(self.model_from_file, clear_devices=False)
+        self.saver = tf.train.import_meta_graph(model_from_file + ".meta")
+        self.saver.restore(self.session, model_from_file)
+
+        # Loading the graph from the graph pointers
+        self.graph = dict()
+        self.graph['anchor'] = tf.get_collection("graph_anchor")[0]
+        self.graph['positive'] = tf.get_collection("graph_positive")[0]
+        self.graph['negative'] = tf.get_collection("graph_negative")[0]
+
+        # Loading the placeholders from the pointers
+        self.data_ph = dict()
+        self.data_ph['anchor'] = tf.get_collection("data_ph_anchor")[0]
+        self.data_ph['positive'] = tf.get_collection("data_ph_positive")[0]
+        self.data_ph['negative'] = tf.get_collection("data_ph_negative")[0]
+
+        # Loading loss from the pointers
+        self.predictor = dict()
+        self.predictor['loss'] = tf.get_collection("predictor_loss")[0]
+        self.predictor['between_class'] = tf.get_collection("predictor_between_class_loss")[0]
+        self.predictor['within_class'] = tf.get_collection("predictor_within_class_loss")[0]
+
+        # Loading other elements
+        self.optimizer = tf.get_collection("optimizer")[0]
+        self.learning_rate = tf.get_collection("learning_rate")[0]
+        self.summaries_train = tf.get_collection("summaries_train")[0]
+        self.global_step = tf.get_collection("global_step")[0]
+        self.from_scratch = False
+
     def get_feed_dict(self, data_shuffler):
         """
         Given a data shuffler prepared the dictionary to be injected in the graph
