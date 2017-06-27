@@ -79,9 +79,9 @@ class TripletMemory(Triplet, Memory):
 
         shape = [self.batch_size] + list(self.input_shape[1:])
 
-        sample_a = numpy.zeros(shape=shape, dtype='float32')
-        sample_p = numpy.zeros(shape=shape, dtype='float32')
-        sample_n = numpy.zeros(shape=shape, dtype='float32')
+        sample_a = numpy.zeros(shape=shape, dtype=self.input_dtype)
+        sample_p = numpy.zeros(shape=shape, dtype=self.input_dtype)
+        sample_n = numpy.zeros(shape=shape, dtype=self.input_dtype)
 
         for i in range(shape[0]):
             sample_a[i, ...], sample_p[i, ...], sample_n[i, ...] = self.get_one_triplet(self.data, self.labels)
@@ -103,4 +103,4 @@ class TripletMemory(Triplet, Memory):
         sample_p = self.normalize_sample(sample_p)
         sample_n = self.normalize_sample(sample_n)
 
-        return [sample_a.astype("float32"), sample_p.astype("float32"), sample_n.astype("float32")]
+        return [sample_a.astype(self.input_dtype), sample_p.astype(self.input_dtype), sample_n.astype(self.input_dtype)]

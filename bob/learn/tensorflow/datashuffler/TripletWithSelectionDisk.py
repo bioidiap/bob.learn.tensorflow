@@ -52,7 +52,7 @@ class TripletWithSelectionDisk(Triplet, Disk, OnlineSampling):
 
     def __init__(self, data, labels,
                  input_shape,
-                 input_dtype="float64",
+                 input_dtype="float32",
                  batch_size=1,
                  seed=10,
                  data_augmentation=None,
@@ -88,9 +88,9 @@ class TripletWithSelectionDisk(Triplet, Disk, OnlineSampling):
 
         shape = [self.batch_size] + list(self.input_shape[1:])
 
-        sample_a = numpy.zeros(shape=shape, dtype='float32')
-        sample_p = numpy.zeros(shape=shape, dtype='float32')
-        sample_n = numpy.zeros(shape=shape, dtype='float32')
+        sample_a = numpy.zeros(shape=shape, dtype=self.input_dtype)
+        sample_p = numpy.zeros(shape=shape, dtype=self.input_dtype)
+        sample_n = numpy.zeros(shape=shape, dtype=self.input_dtype)
 
         for i in range(shape[0]):
             file_name_a, file_name_p, file_name_n = self.get_one_triplet(self.data, self.labels)
@@ -123,9 +123,9 @@ class TripletWithSelectionDisk(Triplet, Disk, OnlineSampling):
             anchor_labels = numpy.hstack((anchor_labels,numpy.ones(samples_per_identity) * self.possible_labels[indexes[i]]))
         anchor_labels = anchor_labels[0:self.batch_size]
 
-        data_a = numpy.zeros(shape=self.shape, dtype='float32')
-        data_p = numpy.zeros(shape=self.shape, dtype='float32')
-        data_n = numpy.zeros(shape=self.shape, dtype='float32')
+        data_a = numpy.zeros(shape=self.shape, dtype=self.input_dtype)
+        data_p = numpy.zeros(shape=self.shape, dtype=self.input_dtype)
+        data_n = numpy.zeros(shape=self.shape, dtype=self.input_dtype)
 
         #logger.info("Fetching anchor")
         # Fetching the anchors
@@ -185,7 +185,7 @@ class TripletWithSelectionDisk(Triplet, Disk, OnlineSampling):
                   0:self.batch_size]  # Limiting to the batch size, otherwise the number of comparisons will explode
         distances = []
         shape = tuple([len(indexes)] + list(self.shape[1:]))
-        sample_p = numpy.zeros(shape=shape, dtype='float32')
+        sample_p = numpy.zeros(shape=shape, dtype=self.input_dtype)
 
         for i in range(shape[0]):
             file_name = self.data[indexes[i], ...]
@@ -215,7 +215,7 @@ class TripletWithSelectionDisk(Triplet, Disk, OnlineSampling):
                   0:self.batch_size*3] # Limiting to the batch size, otherwise the number of comparisons will explode
 
         shape = tuple([len(indexes)] + list(self.shape[1:]))
-        sample_n = numpy.zeros(shape=shape, dtype='float32')
+        sample_n = numpy.zeros(shape=shape, dtype=self.input_dtype)
         for i in range(shape[0]):
             file_name = self.data[indexes[i], ...]
             sample_n[i, ...] =  self.normalize_sample(self.load_from_file(str(file_name)))

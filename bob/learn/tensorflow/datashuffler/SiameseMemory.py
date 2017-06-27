@@ -79,9 +79,9 @@ class SiameseMemory(Siamese, Memory):
 
         shape = [self.batch_size] + list(self.input_shape[1:])
 
-        sample_l = numpy.zeros(shape=shape, dtype='float32')
-        sample_r = numpy.zeros(shape=shape, dtype='float32')
-        labels_siamese = numpy.zeros(shape=shape[0], dtype='float32')
+        sample_l = numpy.zeros(shape=shape, dtype=self.input_dtype)
+        sample_r = numpy.zeros(shape=shape, dtype=self.input_dtype)
+        labels_siamese = numpy.zeros(shape=shape[0], dtype=self.input_dtype)
 
         genuine = True
         for i in range(shape[0]):
@@ -104,4 +104,4 @@ class SiameseMemory(Siamese, Memory):
         sample_l = self.normalize_sample(sample_l)
         sample_r = self.normalize_sample(sample_r)
 
-        return [sample_l.astype("float32"), sample_r.astype("float32"), labels_siamese]
+        return [sample_l.astype(self.input_dtype), sample_r.astype(self.input_dtype), labels_siamese]

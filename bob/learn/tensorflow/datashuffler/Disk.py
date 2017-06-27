@@ -49,7 +49,7 @@ class Disk(Base):
 
     def __init__(self, data, labels,
                  input_shape,
-                 input_dtype="float64",
+                 input_dtype="float32",
                  batch_size=1,
                  seed=10,
                  data_augmentation=None,

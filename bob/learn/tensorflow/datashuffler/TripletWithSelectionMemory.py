@@ -63,7 +63,7 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
 
     def __init__(self, data, labels,
                  input_shape,
-                 input_dtype="float64",
+                 input_dtype="float32",
                  batch_size=1,
                  seed=10,
                  data_augmentation=None,
@@ -110,7 +110,7 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
             anchor_labels = numpy.hstack((anchor_labels,numpy.ones(samples_per_identity) * self.possible_labels[indexes[i]]))
         anchor_labels = anchor_labels[0:self.batch_size]
 
-        samples_a = numpy.zeros(shape=shape, dtype='float32')
+        samples_a = numpy.zeros(shape=shape, dtype=self.input_dtype)
 
         # Computing the embedding
         for i in range(shape[0]):

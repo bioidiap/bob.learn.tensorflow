@@ -62,7 +62,7 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnlineSampling):
 
     def __init__(self, data, labels,
                  input_shape,
-                 input_dtype="float64",
+                 input_dtype="float32",
                  batch_size=1,
                  seed=10,
                  data_augmentation=None,
@@ -101,9 +101,9 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnlineSampling):
 
         shape = [self.batch_size] + list(self.input_shape[1:])
 
-        sample_a = numpy.zeros(shape=shape, dtype='float32')
-        sample_p = numpy.zeros(shape=shape, dtype='float32')
-        sample_n = numpy.zeros(shape=shape, dtype='float32')
+        sample_a = numpy.zeros(shape=shape, dtype=self.input_dtype)
+        sample_p = numpy.zeros(shape=shape, dtype=self.input_dtype)
+        sample_n = numpy.zeros(shape=shape, dtype=self.input_dtype)
 
         for i in range(shape[0]):
             file_name_a, file_name_p, file_name_n = self.get_one_triplet(self.data, self.labels)
@@ -133,10 +133,10 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnlineSampling):
         anchor_labels = numpy.ones(samples_per_identity) * self.possible_labels[indexes[0]]
 
         for i in range(1, self.total_identities):
-            anchor_labels = numpy.hstack((anchor_labels,numpy.ones(samples_per_identity) * self.possible_labels[indexes[i]]))
+            anchor_labels = numpy.hstack((anchor_labels, numpy.ones(samples_per_identity) * self.possible_labels[indexes[i]]))
         anchor_labels = anchor_labels[0:self.batch_size]
 
-        samples_a = numpy.zeros(shape=self.shape, dtype='float32')
+        samples_a = numpy.zeros(shape=self.shape, dtype=self.input_dtype)
 
         # Computing the embedding
         for i in range(self.shape[0]):
@@ -169,7 +169,7 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnlineSampling):
         """
         Get the a random set of positive pairs
         """
-        samples_p = numpy.zeros(shape=self.shape, dtype='float32')
+        samples_p = numpy.zeros(shape=self.shape, dtype=self.input_dtype)
         for i in range(self.shape[0]):
             l = anchor_labels[i]
             indexes = numpy.where(self.labels == l)[0]
@@ -202,8 +202,8 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnlineSampling):
 
         # Loading samples for the semi-hard search
         shape = tuple([len(indexes)] + list(self.shape[1:]))
-        temp_samples_n = numpy.zeros(shape=shape, dtype='float32')
-        samples_n = numpy.zeros(shape=self.shape, dtype='float32')
+        temp_samples_n = numpy.zeros(shape=shape, dtype=self.input_dtype)
+        samples_n = numpy.zeros(shape=self.shape, dtype=self.input_dtype)
         for i in range(shape[0]):
             file_name = self.data[indexes[i], ...]
             temp_samples_n[i, ...] = self.normalize_sample(self.load_from_file(str(file_name)))

@@ -52,7 +52,7 @@ class TripletDisk(Triplet, Disk):
 
     def __init__(self, data, labels,
                  input_shape,
-                 input_dtype="float64",
+                 input_dtype="float32",
                  batch_size=1,
                  seed=10,
                  data_augmentation=None,
@@ -91,9 +91,9 @@ class TripletDisk(Triplet, Disk):
 
         shape = [self.batch_size] + list(self.input_shape[1:])
 
-        sample_a = numpy.zeros(shape=shape, dtype='float32')
-        sample_p = numpy.zeros(shape=shape, dtype='float32')
-        sample_n = numpy.zeros(shape=shape, dtype='float32')
+        sample_a = numpy.zeros(shape=shape, dtype=self.input_dtype)
+        sample_p = numpy.zeros(shape=shape, dtype=self.input_dtype)
+        sample_n = numpy.zeros(shape=shape, dtype=self.input_dtype)
 
         for i in range(shape[0]):
             file_name_a, file_name_p, file_name_n = self.get_one_triplet(self.data, self.labels)

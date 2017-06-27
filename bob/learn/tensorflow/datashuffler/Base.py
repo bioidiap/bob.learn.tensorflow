@@ -50,7 +50,7 @@ class Base(object):
 
     def __init__(self, data, labels,
                  input_shape=[None, 28, 28, 1],
-                 input_dtype="float64",
+                 input_dtype="float32",
                  batch_size=32,
                  seed=10,
                  data_augmentation=None,
