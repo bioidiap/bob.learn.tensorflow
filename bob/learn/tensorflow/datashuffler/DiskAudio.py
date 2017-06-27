@@ -15,7 +15,8 @@ logger.propagate = False
 
 class DiskAudio(Base):
     def __init__(self, data, labels,
-                 input_dtype="float64",
+                 input_shape,
+                 input_dtype="float32",
                  batch_size=1,
                  seed=10,
                  data_augmentation=None,
@@ -24,6 +25,7 @@ class DiskAudio(Base):
                  rate=16000,
                  out_file=""
                  ):
+
         """
          This datashuffler deals with speech databases that are stored in the disk.
          The data is loaded and preprocessed on the fly.
@@ -34,8 +36,6 @@ class DiskAudio(Base):
         self.win_length_ms = win_length_ms
         self.m_win_length = self.win_length_ms * rate / 1000  # number of values in a given window
         self.m_frame_length = self.m_win_length * (2 * self.context_size + 1)
-
-        input_shape = [self.m_frame_length, 1]
 
         if isinstance(data, list):
             data = numpy.array(data)
@@ -65,7 +65,6 @@ class DiskAudio(Base):
 #            for i in range(0, self.data.shape[0]):
 #                f.write("%d %s\n" % (self.labels[i], str(self.data[i])))
 #            f.close()
-
 
     def load_from_file(self, file_name):
         rate, audio = readWAV(file_name)
