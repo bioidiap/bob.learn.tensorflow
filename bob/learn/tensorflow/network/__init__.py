@@ -1,9 +1,7 @@
-from .SequenceNetwork import SequenceNetwork
 from .Chopra import Chopra
 from .Dummy import Dummy
 from .MLP import MLP
 from .Embedding import Embedding
-#from .Input import Input
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):
@@ -20,7 +18,6 @@ def __appropriate__(*args):
   for obj in args: obj.__module__ = __name__
 
 __appropriate__(
-    SequenceNetwork,
     Chopra,
     Dummy,
     MLP,

@@ -14,14 +14,9 @@ Architectures
 
 .. autosummary::
 
-    bob.learn.tensorflow.network.SequenceNetwork
     bob.learn.tensorflow.network.Chopra
     bob.learn.tensorflow.network.Dummy
-    bob.learn.tensorflow.network.Lenet
-    bob.learn.tensorflow.network.LenetDropout
     bob.learn.tensorflow.network.MLP
-    bob.learn.tensorflow.network.VGG16
-    bob.learn.tensorflow.network.VGG16_mod
 
 
 Trainers

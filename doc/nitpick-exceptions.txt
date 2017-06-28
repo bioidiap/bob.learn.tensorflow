@@ -1,2 +1,1 @@
-py:class bob.learn.tensorflow.datashuffler.OnlineSampling
-py:class bob.learn.tensorflow.datashuffler.OnlineSampling.OnlineSampling
+py:class list

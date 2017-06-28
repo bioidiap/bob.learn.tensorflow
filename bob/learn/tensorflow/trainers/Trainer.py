@@ -4,7 +4,6 @@
 # @date: Tue 09 Aug 2016 15:25:22 CEST
 
 import tensorflow as tf
-from ..network import SequenceNetwork
 import threading
 import os
 import bob.io.base
@@ -29,40 +28,23 @@ class Trainer(object):
 
     **Parameters**
 
-    architecture:
-      The architecture that you want to run. Should be a :py:class`bob.learn.tensorflow.network.SequenceNetwork`
+    train_data_shuffler:
+      The data shuffler used for batching data for training
 
-    optimizer:
-      One of the tensorflow optimizers https://www.tensorflow.org/versions/r0.10/api_docs/python/train.html
-
-    use_gpu: bool
-      Use GPUs in the training
-
-    loss: :py:class:`bob.learn.tensorflow.loss.BaseLoss`
-      Loss function
-
-    temp_dir: str
-      The output directory
-
-    learning_rate: `bob.learn.tensorflow.trainers.learning_rate`
-      Initial learning rate
-
-    convergence_threshold:
-
-    iterations: int
+    iterations:
       Maximum number of iterations
-
-    snapshot: int
+      
+    snapshot:
       Will take a snapshot of the network at every `n` iterations
-
-    prefetch: bool
-      Use extra Threads to deal with the I/O
-
-    model_from_file: str
-      If you want to use a pretrained model
+      
+    validation_snapshot:
+      Test with validation each `n` iterations
 
     analizer:
       Neural network analizer :py:mod:`bob.learn.tensorflow.analyzers`
+
+    temp_dir: str
+      The output directory
 
     verbosity_level:
 

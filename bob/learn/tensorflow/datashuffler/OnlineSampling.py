@@ -5,8 +5,6 @@
 
 import tensorflow as tf
 from .Base import Base
-from bob.learn.tensorflow.network import SequenceNetwork
-
 
 class OnlineSampling(object):
     """
@@ -32,8 +30,8 @@ class OnlineSampling(object):
         """
         Set the current feature extraction used in the sampling
         """
-        if not isinstance(feature_extractor, SequenceNetwork):
-            raise ValueError("Feature extractor must be a `bob.learn.tensoflow.network.SequenceNetwork` object")
+        #if not isinstance(feature_extractor, SequenceNetwork):
+        #    raise ValueError("Feature extractor must be a `bob.learn.tensoflow.network.SequenceNetwork` object")
 
         self.feature_extractor = feature_extractor
         self.session = session

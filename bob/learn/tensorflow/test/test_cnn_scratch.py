@@ -25,21 +25,20 @@ directory = "./temp/cnn_scratch"
 slim = tf.contrib.slim
 
 
-def scratch_network():
-    # Creating a random network
-    inputs = dict()
-    inputs['data'] = tf.placeholder(tf.float32, shape=[None, 28, 28, 1], name="train_data")
-    inputs['label'] = tf.placeholder(tf.int64, shape=[None], name="train_label")
+def scratch_network(train_data_shuffler):
 
+    inputs = train_data_shuffler("data", from_queue=False)
+
+    # Creating a random network
     initializer = tf.contrib.layers.xavier_initializer(seed=seed)
-    graph = slim.conv2d(inputs['data'], 10, [3, 3], activation_fn=tf.nn.relu, stride=1, scope='conv1',
+    graph = slim.conv2d(inputs, 10, [3, 3], activation_fn=tf.nn.relu, stride=1, scope='conv1',
                         weights_initializer=initializer)
     graph = slim.max_pool2d(graph, [4, 4], scope='pool1')
     graph = slim.flatten(graph, scope='flatten1')
     graph = slim.fully_connected(graph, 10, activation_fn=None, scope='fc1',
                                  weights_initializer=initializer)
 
-    return inputs, graph
+    return graph
 
 
 def validate_network(embedding, validation_data, validation_labels):
@@ -69,20 +68,12 @@ def test_cnn_trainer_scratch():
                                  data_augmentation=data_augmentation,
                                  normalizer=ScaleFactor())
 
-    #validation_data_shuffler = Memory(train_data, train_labels,
-    #                                  input_shape=[28, 28, 1],
-    #                                  batch_size=batch_size,
-    #                                  data_augmentation=data_augmentation,
-    #                                  normalizer=ScaleFactor())
-
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
     # Create scratch network
-    inputs, scratch = scratch_network()
+    graph = scratch_network(train_data_shuffler)
 
     # Setting the placeholders
-    train_data_shuffler.data_ph = inputs['data']
-    train_data_shuffler.label_ph = inputs['label']
-    embedding = Embedding(inputs['data'], scratch)
+    embedding = Embedding(train_data_shuffler("data", from_queue=False), graph)
 
     # Loss for the softmax
     loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
@@ -93,7 +84,7 @@ def test_cnn_trainer_scratch():
                       analizer=None,
                       temp_dir=directory)
 
-    trainer.create_network_from_scratch(graph=scratch,
+    trainer.create_network_from_scratch(graph=graph,
                                         loss=loss,
                                         learning_rate=constant(0.01, name="regular_lr"),
                                         optimizer=tf.train.GradientDescentOptimizer(0.01),
