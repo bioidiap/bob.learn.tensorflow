@@ -6,6 +6,7 @@
 import tensorflow as tf
 from .Base import Base
 
+
 class OnlineSampling(object):
     """
     This data shuffler uses the current state of the network to select the samples.

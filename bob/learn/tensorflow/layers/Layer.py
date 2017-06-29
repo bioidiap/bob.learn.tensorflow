@@ -4,8 +4,6 @@
 # @date: Wed 11 May 2016 17:38 CEST
 
 import tensorflow as tf
-from bob.learn.tensorflow.initialization import Xavier
-from bob.learn.tensorflow.initialization import Constant
 
 
 class Layer(object):
@@ -37,8 +35,8 @@ class Layer(object):
 
     def __init__(self, name,
                  activation=None,
-                 weights_initialization=Xavier(),
-                 bias_initialization=Constant(),
+                 weights_initialization=tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=10),
+                 bias_initialization=tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=10),
                  batch_norm=False,
                  use_gpu=False):
 

@@ -89,6 +89,7 @@ class Base(object):
         self.label_ph = None
         # Prefetch variables
         self.prefetch = prefetch
+        self.prefetch_capacity = prefetch_capacity
         self.data_ph_from_queue = None
         self.label_ph_from_queue = None
 

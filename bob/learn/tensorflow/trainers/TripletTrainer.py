@@ -18,7 +18,10 @@ logger = logging.getLogger("bob.learn")
 
 class TripletTrainer(Trainer):
     """
-    Trainer for Triple networks.
+    Trainer for Triple networks:
+    
+    Schroff, Florian, Dmitry Kalenichenko, and James Philbin. 
+    "Facenet: A unified embedding for face recognition and clustering." Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition. 2015.
 
     **Parameters**
 
@@ -42,8 +45,8 @@ class TripletTrainer(Trainer):
 
     verbosity_level:
 
-    """
 
+    """
 
     def __init__(self,
                  train_data_shuffler,
@@ -176,15 +179,7 @@ class TripletTrainer(Trainer):
         tf.global_variables_initializer().run(session=self.session)
 
     def create_network_from_file(self, model_from_file):
-        """
-        Bootstrap all the necessary data from file
 
-         ** Parameters **
-           session: Tensorflow session
-           train_data_shuffler: Data shuffler for training
-           validation_data_shuffler: Data shuffler for validation
-
-        """
         #saver = self.architecture.load(self.model_from_file, clear_devices=False)
         self.saver = tf.train.import_meta_graph(model_from_file + ".meta")
         self.saver.restore(self.session, model_from_file)
@@ -215,13 +210,6 @@ class TripletTrainer(Trainer):
         self.from_scratch = False
 
     def get_feed_dict(self, data_shuffler):
-        """
-        Given a data shuffler prepared the dictionary to be injected in the graph
-
-        ** Parameters **
-            data_shuffler:
-
-        """
 
         [batch_anchor, batch_positive, batch_negative] = data_shuffler.get_batch()
         feed_dict = {self.data_ph['anchor']: batch_anchor,
@@ -231,14 +219,6 @@ class TripletTrainer(Trainer):
         return feed_dict
 
     def fit(self, step):
-        """
-        Run one iteration (`forward` and `backward`)
-
-        ** Parameters **
-            session: Tensorflow session
-            step: Iteration number
-
-        """
         feed_dict = self.get_feed_dict(self.train_data_shuffler)
         _, l, bt_class, wt_class, lr, summary = self.session.run([
                                                 self.optimizer,
@@ -249,11 +229,7 @@ class TripletTrainer(Trainer):
         logger.info("Loss training set step={0} = {1}".format(step, l))
         self.train_summary_writter.add_summary(summary, step)
 
-
     def create_general_summary(self):
-        """
-        Creates a simple tensorboard summary with the value of the loss and learning rate
-        """
 
         # Train summary
         tf.summary.scalar('loss', self.predictor['loss'])

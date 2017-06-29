@@ -24,6 +24,7 @@ logger = logging.getLogger("bob.learn")
 class Trainer(object):
     """
     One graph trainer.
+    
     Use this trainer when your CNN is composed by one graph
 
     **Parameters**
@@ -113,11 +114,24 @@ class Trainer(object):
                                     learning_rate=None,
                                     ):
 
+        """
+        Prepare all the tensorflow variables before training.
+        
+        **Parameters**
+        
+            graph: Input graph for training
+            
+            optimizer: Solver
+            
+            loss: Loss function
+            
+            learning_rate: Learning rate
+        """
+
         self.data_ph = self.train_data_shuffler("data")
         self.label_ph = self.train_data_shuffler("label")
         self.graph = graph
         self.loss = loss
-        #self.predictor = self.loss(self.graph, self.train_data_shuffler("label", from_queue=True))
         self.predictor = self.loss(self.graph, self.train_data_shuffler("label", from_queue=False))
 
         self.optimizer_class = optimizer
@@ -150,19 +164,16 @@ class Trainer(object):
         # Creating the variables
         tf.global_variables_initializer().run(session=self.session)
 
-    def create_network_from_file(self, model_from_file):
+    def create_network_from_file(self, file_name):
         """
-        Bootstrap all the necessary data from file
+        Bootstrap a graph from a checkpoint
 
          ** Parameters **
-           session: Tensorflow session
-           train_data_shuffler: Data shuffler for training
-           validation_data_shuffler: Data shuffler for validation
 
+           file_name: Name of of the checkpoing
         """
-        #saver = self.architecture.load(self.model_from_file, clear_devices=False)
-        self.saver = tf.train.import_meta_graph(model_from_file + ".meta")
-        self.saver.restore(self.session, model_from_file)
+        self.saver = tf.train.import_meta_graph(file_name + ".meta")
+        self.saver.restore(self.session, file_name)
 
         # Loading training graph
         self.data_ph = tf.get_collection("data_ph")[0]
@@ -186,7 +197,8 @@ class Trainer(object):
         Given a data shuffler prepared the dictionary to be injected in the graph
 
         ** Parameters **
-            data_shuffler:
+            
+            data_shuffler: Data shuffler :py:class:`bob.learn.tensorflow.datashuffler.Base` 
 
         """
         [data, labels] = data_shuffler.get_batch()
@@ -284,8 +296,6 @@ class Trainer(object):
         Train the network:
 
          ** Parameters **
-
-           train_data_shuffler: Data shuffler for training
            validation_data_shuffler: Data shuffler for validation
         """
 

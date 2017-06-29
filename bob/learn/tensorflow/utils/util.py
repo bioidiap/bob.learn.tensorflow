@@ -195,7 +195,6 @@ def debug_embbeding(image, architecture, embbeding_dim=2, feature_layer="fc3"):
     """
     """
     import tensorflow as tf
-    from bob.learn.tensorflow.network import SequenceNetwork
     from bob.learn.tensorflow.utils.session import Session
     
     session = Session.instance(new=False).session    
@@ -210,4 +209,3 @@ def debug_embbeding(image, architecture, embbeding_dim=2, feature_layer="fc3"):
 
     return embeddings
 
-    

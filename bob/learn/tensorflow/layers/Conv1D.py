@@ -6,8 +6,8 @@
 
 import tensorflow as tf
 from .Layer import Layer
-from bob.learn.tensorflow.initialization import Xavier
-from bob.learn.tensorflow.initialization import Constant
+#from bob.learn.tensorflow.initialization import Xavier
+#from bob.learn.tensorflow.initialization import Constant
 
 
 class Conv1D(Layer):
@@ -49,9 +49,9 @@ class Conv1D(Layer):
                  kernel_size=300,
                  filters=20,
                  stride=100,
-                 weights_initialization=Xavier(),
+                 weights_initialization=tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=10),
                  init_value=None,
-                 bias_initialization=Constant(),
+                 bias_initialization=tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=10),
                  batch_norm=False,
                  use_gpu=False
                  ):

@@ -10,7 +10,6 @@ from bob.learn.tensorflow.datashuffler import Memory, ImageAugmentation, Triplet
 from bob.learn.tensorflow.loss import BaseLoss, TripletLoss, ContrastiveLoss
 from bob.learn.tensorflow.trainers import Trainer, constant, TripletTrainer, SiameseTrainer
 from bob.learn.tensorflow.utils import load_mnist
-from bob.learn.tensorflow.layers import Conv2D, FullyConnected
 from bob.learn.tensorflow.network import Embedding
 from .test_cnn import dummy_experiment
 from .test_cnn_scratch import validate_network

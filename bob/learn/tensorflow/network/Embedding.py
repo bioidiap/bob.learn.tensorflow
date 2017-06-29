@@ -10,7 +10,14 @@ from bob.learn.tensorflow.utils.session import Session
 
 class Embedding(object):
     """
-    Embedding
+    Embedding abstraction
+    
+    **Parameters**
+    
+      input: Input placeholder
+      
+      graph: Embedding graph
+    
     """
     def __init__(self, input, graph):
         self.input = input

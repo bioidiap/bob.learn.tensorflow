@@ -1,12 +1,5 @@
-#from DataShuffler import *
 from .Layer import Layer
 from .Conv1D import Conv1D
-from .Conv2D import Conv2D
-from .FullyConnected import FullyConnected
-from .MaxPooling import MaxPooling
-from .AveragePooling import AveragePooling
-from .Dropout import Dropout
-from .InputLayer import InputLayer
 
 
 # gets sphinx autodoc done right - don't remove it
@@ -25,13 +18,7 @@ def __appropriate__(*args):
 
 __appropriate__(
     Layer,
-    Conv1D,
-    Conv2D,
-    FullyConnected,
-    MaxPooling,
-    AveragePooling,
-    Dropout,
-    InputLayer,
+    Conv1D
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]
 

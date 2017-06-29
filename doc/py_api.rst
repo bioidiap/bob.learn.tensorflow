@@ -37,18 +37,6 @@ Learning rate
     bob.learn.tensorflow.trainers.exponential_decay
 
 
-Layers
-------
-
-.. autosummary::
-
-    bob.learn.tensorflow.layers.Layer
-    bob.learn.tensorflow.layers.Conv2D
-    bob.learn.tensorflow.layers.Dropout
-    bob.learn.tensorflow.layers.FullyConnected
-    bob.learn.tensorflow.layers.MaxPooling
-    bob.learn.tensorflow.layers.AveragePooling
-
 
 Data Shufflers
 --------------
@@ -86,17 +74,6 @@ Analizers
 
     bob.learn.tensorflow.analyzers.ExperimentAnalizer
 
-Initialization
---------------
-
-.. autosummary::
-
-    bob.learn.tensorflow.initialization.Initialization
-    bob.learn.tensorflow.initialization.Constant
-    bob.learn.tensorflow.initialization.Gaussian
-    bob.learn.tensorflow.initialization.SimplerXavier
-    bob.learn.tensorflow.initialization.Xavier
-
 
 Loss
 ----
@@ -116,5 +93,4 @@ Detailed Information
 .. automodule:: bob.learn.tensorflow.layers
 .. automodule:: bob.learn.tensorflow.datashuffler
 .. automodule:: bob.learn.tensorflow.analyzers
-.. automodule:: bob.learn.tensorflow.initialization
 .. automodule:: bob.learn.tensorflow.loss

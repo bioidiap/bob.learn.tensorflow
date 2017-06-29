@@ -4,10 +4,11 @@
 # @date: Wed 11 May 2016 09:39:36 CEST 
 
 """
-Summy architecture
+Dummy architecture
 """
 
 import tensorflow as tf
+
 
 class Dummy(object):
 

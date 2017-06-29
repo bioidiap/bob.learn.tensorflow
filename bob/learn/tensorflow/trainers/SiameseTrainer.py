@@ -17,7 +17,11 @@ logger = logging.getLogger("bob.learn")
 
 class SiameseTrainer(Trainer):
     """
-    Trainer for siamese networks.
+    Trainer for siamese networks:
+     
+    Chopra, Sumit, Raia Hadsell, and Yann LeCun. "Learning a similarity metric discriminatively, with application to
+    face verification." 2005 IEEE Computer Society Conference on Computer Vision and Pattern Recognition (CVPR'05). Vol. 1. IEEE, 2005.
+    
 
     **Parameters**
 
@@ -156,15 +160,7 @@ class SiameseTrainer(Trainer):
         tf.global_variables_initializer().run(session=self.session)
 
     def create_network_from_file(self, model_from_file):
-        """
-        Bootstrap all the necessary data from file
 
-         ** Parameters **
-           session: Tensorflow session
-           train_data_shuffler: Data shuffler for training
-           validation_data_shuffler: Data shuffler for validation
-
-        """
         #saver = self.architecture.load(self.model_from_file, clear_devices=False)
         self.saver = tf.train.import_meta_graph(model_from_file + ".meta")
         self.saver.restore(self.session, model_from_file)
@@ -194,13 +190,7 @@ class SiameseTrainer(Trainer):
         self.from_scratch = False
 
     def get_feed_dict(self, data_shuffler):
-        """
-        Given a data shuffler prepared the dictionary to be injected in the graph
 
-        ** Parameters **
-            data_shuffler:
-
-        """
         [batch_left, batch_right, labels] = data_shuffler.get_batch()
 
         feed_dict = {self.data_ph['left']: batch_left,
@@ -210,14 +200,7 @@ class SiameseTrainer(Trainer):
         return feed_dict
 
     def fit(self, step):
-        """
-        Run one iteration (`forward` and `backward`)
 
-        ** Parameters **
-            session: Tensorflow session
-            step: Iteration number
-
-        """
         feed_dict = self.get_feed_dict(self.train_data_shuffler)
         _, l, bt_class, wt_class, lr, summary = self.session.run([
                                                 self.optimizer,
@@ -229,9 +212,6 @@ class SiameseTrainer(Trainer):
         self.train_summary_writter.add_summary(summary, step)
 
     def create_general_summary(self):
-        """
-        Creates a simple tensorboard summary with the value of the loss and learning rate
-        """
 
         # Train summary
         tf.summary.scalar('loss', self.predictor['loss'])
