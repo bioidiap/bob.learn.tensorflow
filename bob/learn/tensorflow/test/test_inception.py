@@ -11,7 +11,7 @@ import shutil
 import tensorflow as tf
 from tensorflow.contrib.slim.python.slim.nets import inception
 
-from test_datashuffler import get_dummy_files
+from .test_datashuffler import get_dummy_files
 
 """
 Some unit tests for the datashuffler

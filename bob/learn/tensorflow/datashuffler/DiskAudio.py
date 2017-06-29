@@ -115,7 +115,7 @@ class DiskAudio(Base):
         wav_signal /= numpy.std(wav_signal)
 
         # make sure the array is divided into equal chunks
-        windows = numpy.split(wav_signal[:self.m_win_length * m_num_win], m_num_win)
+        windows = numpy.split(wav_signal[:int(self.m_win_length) * int(m_num_win)], int(m_num_win))
 
         final_frames = []
         final_labels = [label] * m_num_win
