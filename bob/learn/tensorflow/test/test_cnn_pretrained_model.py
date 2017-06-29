@@ -29,7 +29,7 @@ iterations = 300
 seed = 10
 
 
-def scratch_network(input_pl):
+def scratch_network(input_pl, reuse=False):
     # Creating a random network
     slim = tf.contrib.slim
 
@@ -39,13 +39,13 @@ def scratch_network(input_pl):
         scratch = slim.conv2d(input_pl, 16, [3, 3], activation_fn=tf.nn.relu,
                               stride=1,
                               weights_initializer=initializer,
-                              scope='conv1')
+                              scope='conv1', reuse=reuse)
         scratch = slim.max_pool2d(scratch, kernel_size=[2, 2], scope='pool1')
         scratch = slim.flatten(scratch, scope='flatten1')
         scratch = slim.fully_connected(scratch, 10,
                                        weights_initializer=initializer,
                                        activation_fn=None,
-                                       scope='fc1')
+                                       scope='fc1', reuse=reuse)
 
     return scratch
 
@@ -134,8 +134,8 @@ def test_triplet_cnn_pretrained():
     input_pl = train_data_shuffler("data", from_queue=False)
     graph = dict()
     graph['anchor'] = scratch_network(input_pl['anchor'])
-    graph['positive'] = scratch_network(input_pl['positive'])
-    graph['negative'] = scratch_network(input_pl['negative'])
+    graph['positive'] = scratch_network(input_pl['positive'], reuse=True)
+    graph['negative'] = scratch_network(input_pl['negative'], reuse=True)
 
     # Loss for the softmax
     loss = TripletLoss(margin=4.)
@@ -204,7 +204,7 @@ def test_siamese_cnn_pretrained():
     input_pl = train_data_shuffler("data")
     graph = dict()
     graph['left'] = scratch_network(input_pl['left'])
-    graph['right'] = scratch_network(input_pl['right'])
+    graph['right'] = scratch_network(input_pl['right'], reuse=True)
 
     # Loss for the softmax
     loss = ContrastiveLoss(contrastive_margin=4.)

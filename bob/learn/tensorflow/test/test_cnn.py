@@ -149,7 +149,7 @@ def test_siamesecnn_trainer():
     input_pl = train_data_shuffler("data")
     graph = dict()
     graph['left'] = architecture(input_pl['left'])
-    graph['right'] = architecture(input_pl['right'])
+    graph['right'] = architecture(input_pl['right'], reuse=True)
 
     trainer = SiameseTrainer(train_data_shuffler,
                              iterations=iterations,
@@ -196,8 +196,8 @@ def test_tripletcnn_trainer():
     input_pl = train_data_shuffler("data")
     graph = dict()
     graph['anchor'] = architecture(input_pl['anchor'])
-    graph['positive'] = architecture(input_pl['positive'])
-    graph['negative'] = architecture(input_pl['negative'])
+    graph['positive'] = architecture(input_pl['positive'], reuse=True)
+    graph['negative'] = architecture(input_pl['negative'], reuse=True)
 
     # One graph trainer
     trainer = TripletTrainer(train_data_shuffler,

@@ -22,6 +22,7 @@ from docopt import docopt
 import imp
 import bob.learn.tensorflow
 
+
 def main():
     args = docopt(__doc__, version='Train Neural Net')
 
@@ -47,13 +48,13 @@ def main():
     if isinstance(trainer, bob.learn.tensorflow.trainers.SiameseTrainer):
         graph = dict()
         graph['left'] = config.architecture(input_pl['left'])
-        graph['right'] = config.architecture(input_pl['right'])
+        graph['right'] = config.architecture(input_pl['right'], reuse=True)
 
     elif isinstance(trainer, bob.learn.tensorflow.trainers.TripletTrainer):
         graph = dict()
         graph['anchor'] = config.architecture(input_pl['anchor'])
-        graph['positive'] = config.architecture(input_pl['positive'])
-        graph['negative'] = config.architecture(input_pl['negative'])
+        graph['positive'] = config.architecture(input_pl['positive'], reuse=True)
+        graph['negative'] = config.architecture(input_pl['negative'], reuse=True)
     else:
         graph = config.architecture(input_pl)
 

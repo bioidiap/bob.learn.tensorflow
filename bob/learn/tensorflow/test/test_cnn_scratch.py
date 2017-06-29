@@ -25,18 +25,18 @@ directory = "./temp/cnn_scratch"
 slim = tf.contrib.slim
 
 
-def scratch_network(train_data_shuffler):
+def scratch_network(train_data_shuffler, reuse=False):
 
     inputs = train_data_shuffler("data", from_queue=False)
 
     # Creating a random network
     initializer = tf.contrib.layers.xavier_initializer(seed=seed)
     graph = slim.conv2d(inputs, 10, [3, 3], activation_fn=tf.nn.relu, stride=1, scope='conv1',
-                        weights_initializer=initializer)
+                        weights_initializer=initializer, reuse=reuse)
     graph = slim.max_pool2d(graph, [4, 4], scope='pool1')
     graph = slim.flatten(graph, scope='flatten1')
     graph = slim.fully_connected(graph, 10, activation_fn=None, scope='fc1',
-                                 weights_initializer=initializer)
+                                 weights_initializer=initializer, reuse=reuse)
 
     return graph
 

@@ -81,7 +81,7 @@ class Chopra(object):
             self.device = device
             self.batch_norm = batch_norm
 
-    def __call__(self, inputs):
+    def __call__(self, inputs, reuse=False):
         slim = tf.contrib.slim
 
         with tf.device(self.device):
@@ -91,13 +91,14 @@ class Chopra(object):
             graph = slim.conv2d(inputs, self.conv1_output, self.conv1_kernel_size, activation_fn=tf.nn.relu,
                                 stride=1,
                                 weights_initializer=initializer,
-                                scope='conv1')
+                                scope='conv1',
+                                reuse=reuse)
             graph = slim.max_pool2d(graph, self.pooling1_size, scope='pool1')
 
             graph = slim.conv2d(graph, self.conv2_output, self.conv2_kernel_size, activation_fn=tf.nn.relu,
                                 stride=1,
                                 weights_initializer=initializer,
-                                scope='conv2')
+                                scope='conv2', reuse=reuse)
             graph = slim.max_pool2d(graph, self.pooling2_size, scope='pool2')
 
             graph = slim.flatten(graph, scope='flatten1')
@@ -105,5 +106,6 @@ class Chopra(object):
             graph = slim.fully_connected(graph, self.fc1_output,
                                          weights_initializer=initializer,
                                          activation_fn=None,
-                                         scope='fc1')
+                                         scope='fc1',
+                                         reuse=reuse)
         return graph
