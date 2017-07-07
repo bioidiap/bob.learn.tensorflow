@@ -183,11 +183,11 @@ class Base(object):
 
             # TODO: Implement a better way to do this reescaling
             # If it is gray scale
-            if self.input_shape[2] == 1:
+            if self.input_shape[3] == 1:
                 copy = data[:, :, 0].copy()
-                dst = numpy.zeros(shape=self.input_shape[0:2])
+                dst = numpy.zeros(shape=self.input_shape[1:3])
                 bob.ip.base.scale(copy, dst)
-                dst = numpy.reshape(dst, self.input_shape)
+                dst = numpy.reshape(dst, self.input_shape[1:4])
             else:
                 # dst = numpy.resize(data, self.bob_shape) # Scaling with numpy, because bob is c,w,d instead of w,h,c
                 dst = numpy.zeros(shape=self.bob_shape)
