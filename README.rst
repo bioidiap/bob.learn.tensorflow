@@ -4,9 +4,9 @@
 
 
 .. image:: http://img.shields.io/badge/docs-stable-yellow.png
-   :target: http://pythonhosted.org/bob.learn.tensorflow/index.html
+   :target: http://beatubulatest.lab.idiap.ch/private/docs/bob/bob.learn.tensorflow/stable/index.html
 .. image:: http://img.shields.io/badge/docs-latest-orange.png
-   :target: https://www.idiap.ch/software/bob/docs/latest/bob/bob.learn.tensorflow/master/index.html
+   :target: http://beatubulatest.lab.idiap.ch/private/docs/bob/bob.learn.tensorflow/master/index.html
 .. image:: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/badges/master/build.svg
    :target: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/commits/master
 .. image:: https://img.shields.io/badge/gitlab-project-0000c0.svg
@@ -47,5 +47,5 @@ development `mailing list`_.
 .. _bob: https://www.idiap.ch/software/bob
 .. _installation: https://gitlab.idiap.ch/bob/bob/wikis/Installation
 .. _mailing list: https://groups.google.com/forum/?fromgroups#!forum/bob-devel
-.. _user guide: http://pythonhosted.org/bob.bio.base
+.. _user guide: https://www.idiap.ch/software/bob/docs/bob/bob.bio.base/stable/index.html
 .. _tensorflow: https://www.tensorflow.org/versions/r0.11/get_started/os_setup.html
