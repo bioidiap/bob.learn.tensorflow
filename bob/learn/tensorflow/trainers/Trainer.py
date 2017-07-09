@@ -164,7 +164,7 @@ class Trainer(object):
         # Creating the variables
         tf.global_variables_initializer().run(session=self.session)
 
-    def create_network_from_file(self, file_name):
+    def create_network_from_file(self, file_name, clear_devices=True):
         """
         Bootstrap a graph from a checkpoint
 
@@ -172,7 +172,7 @@ class Trainer(object):
 
            file_name: Name of of the checkpoing
         """
-        self.saver = tf.train.import_meta_graph(file_name + ".meta")
+        self.saver = tf.train.import_meta_graph(file_name + ".meta", clear_devices=clear_devices)
         self.saver.restore(self.session, file_name)
 
         # Loading training graph

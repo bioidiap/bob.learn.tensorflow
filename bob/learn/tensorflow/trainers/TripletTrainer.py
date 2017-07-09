@@ -178,10 +178,10 @@ class TripletTrainer(Trainer):
         # Creating the variables
         tf.global_variables_initializer().run(session=self.session)
 
-    def create_network_from_file(self, model_from_file):
+    def create_network_from_file(self, model_from_file, clear_devices=True):
 
         #saver = self.architecture.load(self.model_from_file, clear_devices=False)
-        self.saver = tf.train.import_meta_graph(model_from_file + ".meta")
+        self.saver = tf.train.import_meta_graph(model_from_file + ".meta", clear_devices=clear_devices)
         self.saver.restore(self.session, model_from_file)
 
         # Loading the graph from the graph pointers
