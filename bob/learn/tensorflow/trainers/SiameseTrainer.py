@@ -77,6 +77,7 @@ class SiameseTrainer(Trainer):
 
         # Validation data
         self.validation_summary_writter = None
+        self.summaries_validation = None
 
         # Analizer
         self.analizer = analizer
@@ -156,6 +157,9 @@ class SiameseTrainer(Trainer):
         self.summaries_train = self.create_general_summary()
         tf.add_to_collection("summaries_train", self.summaries_train)
 
+        self.summaries_validation = self.create_general_summary()
+        tf.add_to_collection("summaries_validation", self.summaries_validation)
+
         # Creating the variables
         tf.global_variables_initializer().run(session=self.session)
 
@@ -219,3 +223,23 @@ class SiameseTrainer(Trainer):
         tf.summary.scalar('within_class_loss', self.predictor['within_class'])
         tf.summary.scalar('lr', self.learning_rate)
         return tf.summary.merge_all()
+
+    def compute_validation(self, data_shuffler, step):
+        """
+        Computes the loss in the validation set
+
+        ** Parameters **
+            session: Tensorflow session
+            data_shuffler: The data shuffler to be used
+            step: Iteration number
+
+        """
+        # Opening a new session for validation
+        feed_dict = self.get_feed_dict(data_shuffler)
+
+        l, summary = self.session.run([self.predictor, self.summaries_validation], feed_dict=feed_dict)
+        self.validation_summary_writter.add_summary(summary, step)
+
+        #summaries = [summary_pb2.Summary.Value(tag="loss", simple_value=float(l))]
+        #self.validation_summary_writter.add_summary(summary_pb2.Summary(value=summaries), step)
+        logger.info("Loss VALIDATION set step={0} = {1}".format(step, l))

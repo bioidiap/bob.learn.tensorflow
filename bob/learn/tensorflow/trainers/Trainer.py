@@ -81,6 +81,7 @@ class Trainer(object):
 
         # Validation data
         self.validation_summary_writter = None
+        self.summaries_validation = None
 
         # Analizer
         self.analizer = analizer
@@ -160,6 +161,8 @@ class Trainer(object):
         self.summaries_train = self.create_general_summary()
         tf.add_to_collection("summaries_train", self.summaries_train)
 
+        self.summaries_validation = self.create_general_summary()
+        self.summaries_validation = tf.add_to_collection("summaries_validation", self.summaries_validation)
 
         # Creating the variables
         tf.global_variables_initializer().run(session=self.session)
@@ -186,6 +189,7 @@ class Trainer(object):
         self.optimizer = tf.get_collection("optimizer")[0]
         self.learning_rate = tf.get_collection("learning_rate")[0]
         self.summaries_train = tf.get_collection("summaries_train")[0]
+        self.summaries_validation = tf.get_collection("summaries_validation")[0]
         self.global_step = tf.get_collection("global_step")[0]
         self.from_scratch = False
 
