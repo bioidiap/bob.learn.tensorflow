@@ -129,11 +129,11 @@ class Trainer(object):
             learning_rate: Learning rate
         """
 
-        self.data_ph = self.train_data_shuffler("data")
-        self.label_ph = self.train_data_shuffler("label")
+        self.data_ph = self.train_data_shuffler("data", from_queue=True)
+        self.label_ph = self.train_data_shuffler("label", from_queue=True)
         self.graph = graph
         self.loss = loss
-        self.predictor = self.loss(self.graph, self.train_data_shuffler("label", from_queue=False))
+        self.predictor = self.loss(self.graph, self.label_ph)
 
         self.optimizer_class = optimizer
         self.learning_rate = learning_rate
@@ -272,7 +272,7 @@ class Trainer(object):
         """
 
         threads = []
-        for n in range(3):
+        for n in range(self.train_data_shuffler.prefetch_threads):
             t = threading.Thread(target=self.load_and_enqueue, args=())
             t.daemon = True  # thread will close when parent quits
             t.start()
@@ -290,10 +290,13 @@ class Trainer(object):
         while not self.thread_pool.should_stop():
             [train_data, train_labels] = self.train_data_shuffler.get_batch()
 
-            feed_dict = {self.data_ph: train_data,
-                         self.label_ph: train_labels}
+            data_ph = self.train_data_shuffler("data", from_queue=False)
+            label_ph = self.train_data_shuffler("label", from_queue=False)
 
-            self.session.run(self.inputs.enqueue_op, feed_dict=feed_dict)
+            feed_dict = {data_ph: train_data,
+                         label_ph: train_labels}
+
+            self.session.run(self.train_data_shuffler.enqueue_op, feed_dict=feed_dict)
 
     def train(self, validation_data_shuffler=None):
         """

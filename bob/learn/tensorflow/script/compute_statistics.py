@@ -46,7 +46,7 @@ def main():
 
     BASE_PATH = args['<base_path>']
     EXTENSION = args['--extension']
-    SHAPE = [3, 250, 250]
+    SHAPE = [1, 224, 224]
 
     count, sum_data = process_images(BASE_PATH, EXTENSION, SHAPE)
 
@@ -54,4 +54,5 @@ def main():
     for s in range(SHAPE[0]):
         means[s, ...] = sum_data[s, ...] / float(count)
 
-    bob.io.base.save(means, "means.hdf5")
+    bob.io.base.save(means, "means_casia.hdf5")
+    bob.io.base.save(means[0, :, :].astype("uint8"), "means_casia.png")

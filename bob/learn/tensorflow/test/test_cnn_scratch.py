@@ -56,7 +56,8 @@ def validate_network(embedding, validation_data, validation_labels):
 
 
 def test_cnn_trainer_scratch():
-
+    tf.reset_default_graph()
+    
     train_data, train_labels, validation_data, validation_labels = load_mnist()
     train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
 

@@ -56,7 +56,8 @@ class Base(object):
                  data_augmentation=None,
                  normalizer=Linear(),
                  prefetch=False,
-                 prefetch_capacity=10):
+                 prefetch_capacity=50,
+                 prefetch_threads=5):
 
         # Setting the seed for the pseudo random number generator
         self.seed = seed
@@ -90,6 +91,7 @@ class Base(object):
         # Prefetch variables
         self.prefetch = prefetch
         self.prefetch_capacity = prefetch_capacity
+        self.prefetch_threads = prefetch_threads
         self.data_ph_from_queue = None
         self.label_ph_from_queue = None
 
