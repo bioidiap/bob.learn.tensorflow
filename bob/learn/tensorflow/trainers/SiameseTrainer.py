@@ -244,7 +244,6 @@ class SiameseTrainer(Trainer):
         #self.validation_summary_writter.add_summary(summary_pb2.Summary(value=summaries), step)
         logger.info("Loss VALIDATION set step={0} = {1}".format(step, l))
 
-
     def load_and_enqueue(self):
         """
         Injecting data in the place holder queue
@@ -254,12 +253,15 @@ class SiameseTrainer(Trainer):
 
         """
         while not self.thread_pool.should_stop():
-            [train_data, train_labels] = self.train_data_shuffler.get_batch()
+            [train_data_left, train_data_right, train_labels] = self.train_data_shuffler.get_batch()
 
-            data_ph = self.train_data_shuffler("data", from_queue=False)
+            data_ph = dict()
+            data_ph['left'] = self.train_data_shuffler("data", from_queue=False)['left']
+            data_ph['right'] = self.train_data_shuffler("data", from_queue=False)['right']
             label_ph = self.train_data_shuffler("label", from_queue=False)
 
-            feed_dict = {data_ph: train_data,
+            feed_dict = {data_ph['left']: train_data_left,
+                         data_ph['right']: train_data_right,
                          label_ph: train_labels}
 
             self.session.run(self.train_data_shuffler.enqueue_op, feed_dict=feed_dict)

@@ -51,7 +51,11 @@ class SiameseDisk(Siamese, Disk):
                  batch_size=1,
                  seed=10,
                  data_augmentation=None,
-                 normalizer=Linear()):
+                 normalizer=Linear(),
+                 prefetch=False,
+                 prefetch_capacity=10,
+                 prefetch_threads=5
+                 ):
 
         if isinstance(data, list):
             data = numpy.array(data)
@@ -67,7 +71,10 @@ class SiameseDisk(Siamese, Disk):
             batch_size=batch_size,
             seed=seed,
             data_augmentation=data_augmentation,
-            normalizer=normalizer
+            normalizer=normalizer,
+            prefetch=prefetch,
+            prefetch_capacity=prefetch_capacity,
+            prefetch_threads=prefetch_threads
         )
         # Seting the seed
         numpy.random.seed(seed)

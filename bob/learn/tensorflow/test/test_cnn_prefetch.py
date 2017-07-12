@@ -17,6 +17,7 @@ import bob.io.base
 import shutil
 from scipy.spatial.distance import cosine
 import bob.measure
+from .test_cnn import dummy_experiment
 
 """
 Some unit tests for the datashuffler
@@ -83,3 +84,53 @@ def test_cnn_trainer():
     del embedding
     tf.reset_default_graph()
 
+
+def test_siamesecnn_trainer():
+    train_data, train_labels, validation_data, validation_labels = load_mnist()
+    train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
+    validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
+
+    # Creating datashufflers
+    train_data_shuffler = SiameseMemory(train_data, train_labels,
+                                        input_shape=[None, 28, 28, 1],
+                                        batch_size=batch_size,
+                                        normalizer=ScaleFactor(),
+                                        prefetch=True)
+
+    validation_data_shuffler = Memory(validation_data, validation_labels,
+                                      input_shape=[None, 28, 28, 1],
+                                      batch_size=validation_batch_size,
+                                      normalizer=ScaleFactor())
+
+    directory = "./temp/siamesecnn"
+
+    # Preparing the architecture
+    architecture = Chopra(seed=seed, fc1_output=10)
+
+    # Loss for the Siamese
+    loss = ContrastiveLoss(contrastive_margin=4.)
+
+    input_pl = train_data_shuffler("data")
+    graph = dict()
+    graph['left'] = architecture(input_pl['left'])
+    graph['right'] = architecture(input_pl['right'], reuse=True)
+
+    trainer = SiameseTrainer(train_data_shuffler,
+                             iterations=iterations,
+                             analizer=None,
+                             temp_dir=directory)
+
+    trainer.create_network_from_scratch(graph=graph,
+                                        loss=loss,
+                                        learning_rate=constant(0.01, name="regular_lr"),
+                                        optimizer=tf.train.GradientDescentOptimizer(0.01),)
+    trainer.train()
+    embedding = Embedding(validation_data_shuffler("data", from_queue=False),
+                          architecture(validation_data_shuffler("data", from_queue=False), reuse=True))
+    eer = dummy_experiment(validation_data_shuffler, embedding)
+    assert eer < 0.15
+    shutil.rmtree(directory)
+
+    del architecture
+    del trainer  # Just to clean tf.variables
+    tf.reset_default_graph()

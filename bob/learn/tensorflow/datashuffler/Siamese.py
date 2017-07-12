@@ -33,9 +33,25 @@ class Siamese(Base):
             self.data_ph['right'] = tf.placeholder(tf.float32, shape=self.input_shape, name="right")
             self.label_ph = tf.placeholder(tf.int64, shape=[None], name="label")
 
-            # If prefetch, setup the queue to feed data
-            if self.prefetch:
-                raise ValueError("There is no prefetch for siamease networks")
+        if self.prefetch:
+            queue = tf.FIFOQueue(capacity=self.prefetch_capacity,
+                                 dtypes=[tf.float32, tf.float32, tf.int64],
+                                 shapes=[self.input_shape[1:], self.input_shape[1:], []])
+
+            self.data_ph_from_queue = dict()
+            self.data_ph_from_queue['left'] = None
+            self.data_ph_from_queue['right'] = None
+
+            # Fetching the place holders from the queue
+            self.enqueue_op = queue.enqueue_many([self.data_ph['left'], self.data_ph['right'], self.label_ph])
+            self.data_ph_from_queue['left'], self.data_ph_from_queue['right'], self.label_ph_from_queue = queue.dequeue_many(self.batch_size)
+
+        else:
+            self.data_ph_from_queue = dict()
+            self.data_ph_from_queue['left'] = self.data_ph['left']
+            self.data_ph_from_queue['right'] = self.data_ph['right']
+            self.label_ph_from_queue = self.label_ph
+
 
     def get_genuine_or_not(self, input_data, input_labels, genuine=True):
 
