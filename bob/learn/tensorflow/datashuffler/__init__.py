@@ -22,6 +22,8 @@ from .Normalizer import ScaleFactor, MeanOffset, Linear
 
 from .DiskAudio import DiskAudio
 
+from .DrGanDisk import DrGanDisk
+
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):
   """Says object was actually declared here, an not on the import module.
@@ -54,5 +56,6 @@ __appropriate__(
     ImageAugmentation,
     ScaleFactor, MeanOffset, Linear,
     DiskAudio,
+    DrGanDisk,
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]

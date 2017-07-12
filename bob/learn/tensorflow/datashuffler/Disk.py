@@ -150,7 +150,7 @@ class Disk(Base):
       if len(self.indexes) < self.batch_size:
 
         print "should add examples to the current minibatch {0}".format(len(self.indexes))
-        # since we reached the end of an epoch, we'll hace to reconsider all the data
+        # since we reached the end of an epoch, we'll have to reconsider all the data
         epoch_done = True
         number_of_examples_to_add = self.batch_size - len(self.indexes) 
         added_examples = 0
