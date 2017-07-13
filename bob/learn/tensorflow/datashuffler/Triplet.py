@@ -33,10 +33,25 @@ class Triplet(Base):
             self.data_ph['positive'] = tf.placeholder(tf.float32, shape=self.input_shape, name="positive")
             self.data_ph['negative'] = tf.placeholder(tf.float32, shape=self.input_shape, name="negative")
 
-            # If prefetch, setup the queue to feed data
             if self.prefetch:
-                raise ValueError("There is no prefetch for siamease networks")
+                queue = tf.FIFOQueue(capacity=self.prefetch_capacity,
+                                     dtypes=[tf.float32, tf.float32, tf.float32],
+                                     shapes=[self.input_shape[1:], self.input_shape[1:], self.input_shape[1:]])
 
+                self.data_ph_from_queue = dict()
+                self.data_ph_from_queue['anchor'] = None
+                self.data_ph_from_queue['positive'] = None
+                self.data_ph_from_queue['negative'] = None
+
+                # Fetching the place holders from the queue
+                self.enqueue_op = queue.enqueue_many([self.data_ph['anchor'], self.data_ph['positive'], self.data_ph['negative']])
+                self.data_ph_from_queue['anchor'], self.data_ph_from_queue['positive'], self.data_ph_from_queue['negative'] = queue.dequeue_many(self.batch_size)
+
+            else:
+                self.data_ph_from_queue = dict()
+                self.data_ph_from_queue['anchor'] = self.data_ph['anchor']
+                self.data_ph_from_queue['positive'] = self.data_ph['positive']
+                self.data_ph_from_queue['negative'] = self.data_ph['negative']
 
     def get_one_triplet(self, input_data, input_labels):
         # Getting a pair of clients

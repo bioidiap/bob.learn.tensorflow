@@ -56,7 +56,11 @@ class TripletDisk(Triplet, Disk):
                  batch_size=1,
                  seed=10,
                  data_augmentation=None,
-                 normalizer=Linear()):
+                 normalizer=Linear(),
+                 prefetch=False,
+                 prefetch_capacity=50,
+                 prefetch_threads=10
+                 ):
 
         if isinstance(data, list):
             data = numpy.array(data)
@@ -71,7 +75,10 @@ class TripletDisk(Triplet, Disk):
             input_dtype=input_dtype,
             batch_size=batch_size,
             data_augmentation=data_augmentation,
-            normalizer=normalizer
+            normalizer=normalizer,
+            prefetch=prefetch,
+            prefetch_capacity=prefetch_capacity,
+            prefetch_threads=prefetch_threads
         )
         # Seting the seed
         numpy.random.seed(seed)

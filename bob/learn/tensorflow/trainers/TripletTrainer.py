@@ -238,3 +238,24 @@ class TripletTrainer(Trainer):
         tf.summary.scalar('lr', self.learning_rate)
         return tf.summary.merge_all()
 
+    def load_and_enqueue(self):
+        """
+        Injecting data in the place holder queue
+
+        **Parameters**
+          session: Tensorflow session
+
+        """
+        while not self.thread_pool.should_stop():
+            [train_data_anchor, train_data_positive, train_data_negative] = self.train_data_shuffler.get_batch()
+
+            data_ph = dict()
+            data_ph['anchor'] = self.train_data_shuffler("data", from_queue=False)['anchor']
+            data_ph['positive'] = self.train_data_shuffler("data", from_queue=False)['positive']
+            data_ph['negative'] = self.train_data_shuffler("data", from_queue=False)['negative']
+
+            feed_dict = {data_ph['anchor']: train_data_anchor,
+                         data_ph['positive']: train_data_positive,
+                         data_ph['negative']: train_data_negative}
+
+            self.session.run(self.train_data_shuffler.enqueue_op, feed_dict=feed_dict)

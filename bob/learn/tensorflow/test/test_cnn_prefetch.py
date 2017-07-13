@@ -110,7 +110,7 @@ def test_siamesecnn_trainer():
     # Loss for the Siamese
     loss = ContrastiveLoss(contrastive_margin=4.)
 
-    input_pl = train_data_shuffler("data")
+    input_pl = train_data_shuffler("data", from_queue=True)
     graph = dict()
     graph['left'] = architecture(input_pl['left'])
     graph['right'] = architecture(input_pl['right'], reuse=True)
@@ -127,6 +127,58 @@ def test_siamesecnn_trainer():
     trainer.train()
     embedding = Embedding(validation_data_shuffler("data", from_queue=False),
                           architecture(validation_data_shuffler("data", from_queue=False), reuse=True))
+    eer = dummy_experiment(validation_data_shuffler, embedding)
+    assert eer < 0.15
+    shutil.rmtree(directory)
+
+    del architecture
+    del trainer  # Just to clean tf.variables
+    tf.reset_default_graph()
+
+
+def test_tripletcnn_trainer():
+    train_data, train_labels, validation_data, validation_labels = load_mnist()
+    train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
+    validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
+
+    # Creating datashufflers
+    train_data_shuffler = TripletMemory(train_data, train_labels,
+                                        input_shape=[None, 28, 28, 1],
+                                        batch_size=batch_size,
+                                        normalizer=ScaleFactor(),
+                                        prefetch=True)
+    validation_data_shuffler = Memory(validation_data, validation_labels,
+                                      input_shape=[None, 28, 28, 1],
+                                      batch_size=validation_batch_size,
+                                      normalizer=ScaleFactor())
+
+    directory = "./temp/tripletcnn"
+
+    # Preparing the architecture
+    architecture = Chopra(seed=seed, fc1_output=10)
+
+    # Loss for the Siamese
+    loss = TripletLoss(margin=4.)
+
+    input_pl = train_data_shuffler("data", from_queue=True)
+    graph = dict()
+    graph['anchor'] = architecture(input_pl['anchor'])
+    graph['positive'] = architecture(input_pl['positive'], reuse=True)
+    graph['negative'] = architecture(input_pl['negative'], reuse=True)
+
+    # One graph trainer
+    trainer = TripletTrainer(train_data_shuffler,
+                             iterations=iterations,
+                             analizer=None,
+                             temp_dir=directory
+                             )
+    trainer.create_network_from_scratch(graph=graph,
+                                        loss=loss,
+                                        learning_rate=constant(0.01, name="regular_lr"),
+                                        optimizer=tf.train.GradientDescentOptimizer(0.01),)
+    trainer.train(train_data_shuffler)
+
+    embedding = Embedding(train_data_shuffler("data", from_queue=False)['anchor'], graph['anchor'])
     eer = dummy_experiment(validation_data_shuffler, embedding)
     assert eer < 0.15
     shutil.rmtree(directory)
