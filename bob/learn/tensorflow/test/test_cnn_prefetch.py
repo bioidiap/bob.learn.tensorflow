@@ -178,7 +178,9 @@ def test_tripletcnn_trainer():
                                         optimizer=tf.train.GradientDescentOptimizer(0.01),)
     trainer.train(train_data_shuffler)
 
-    embedding = Embedding(train_data_shuffler("data", from_queue=False)['anchor'], graph['anchor'])
+    embedding = Embedding(validation_data_shuffler("data", from_queue=False),
+                          architecture(validation_data_shuffler("data", from_queue=False), reuse=True))
+
     eer = dummy_experiment(validation_data_shuffler, embedding)
     assert eer < 0.15
     shutil.rmtree(directory)
