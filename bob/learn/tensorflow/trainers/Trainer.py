@@ -14,6 +14,7 @@ import time
 from bob.learn.tensorflow.datashuffler import OnlineSampling
 from bob.learn.tensorflow.utils.session import Session
 from .learning_rate import constant
+import time
 
 #logger = bob.core.log.setup("bob.learn.tensorflow")
 
@@ -325,6 +326,7 @@ class Trainer(object):
             self.thread_pool = tf.train.Coordinator()
             tf.train.start_queue_runners(coord=self.thread_pool, sess=self.session)
             threads = self.start_thread()
+            time.sleep(20) # As suggested in https://stackoverflow.com/questions/39840323/benchmark-of-howto-reading-data/39842628#39842628
 
         # TENSOR BOARD SUMMARY
         self.train_summary_writter = tf.summary.FileWriter(os.path.join(self.temp_dir, 'train'), self.session.graph)
