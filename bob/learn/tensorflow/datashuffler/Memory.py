@@ -70,6 +70,26 @@ class Memory(Base):
         numpy.random.seed(seed)
         self.data = self.data.astype(input_dtype)
 
+    def _fetch_batch(self):
+        # Shuffling samples
+        indexes = numpy.array(range(self.data.shape[0]))
+        numpy.random.shuffle(indexes)
+
+        for i in range(self.batch_size):
+
+            sample = self.data[indexes[i], ...]
+            label = self.labels[indexes[i]]
+
+            if self.data_augmentation is not None:
+                sample = self.skimage2bob(sample)
+                sample = self.data_augmentation(sample)
+                sample = self.bob2skimage(sample)
+
+            if self.normalize_sample is not None:
+                sample = self.normalize_sample(sample)
+
+            yield [sample, label]
+
     def get_batch(self):
         """
         Shuffle the Memory dataset and get a random batch.
@@ -82,20 +102,23 @@ class Memory(Base):
         labels:
           Correspondent labels
         """
-        # Shuffling samples
-        indexes = numpy.array(range(self.data.shape[0]))
-        numpy.random.shuffle(indexes)
 
-        selected_data = self.data[indexes[0:self.batch_size], ...]
-        selected_labels = self.labels[indexes[0:self.batch_size]]
+        holder = []
+        for d in self._fetch_batch():
+            holder.append(d)
+        data, labels = self._aggregate_batch(holder, False)
+
+        return data, labels
+
+        #selected_data = self.data[indexes[0:self.batch_size], ...]
+        #selected_labels = self.labels[indexes[0:self.batch_size]]
 
         # Applying the data augmentation
-        if self.data_augmentation is not None:
-            for i in range(selected_data.shape[0]):
-                img = self.skimage2bob(selected_data[i, ...])
-                img = self.data_augmentation(img)
-                selected_data[i, ...] = self.bob2skimage(img)
+        #if self.data_augmentation is not None:
+        #    for i in range(selected_data.shape[0]):
+        #        img = self.skimage2bob(selected_data[i, ...])
+        #        img = self.data_augmentation(img)
+        #        selected_data[i, ...] = self.bob2skimage(img)
 
-        selected_data = self.normalize_sample(selected_data)
-
-        return [selected_data.astype("float32"), selected_labels.astype("int64")]
+        #selected_data = self.normalize_sample(selected_data)
+        #return [selected_data.astype("float32"), selected_labels.astype("int64")]

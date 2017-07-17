@@ -339,6 +339,7 @@ class Trainer(object):
             start = time.time()
             self.fit(step)
             end = time.time()
+
             summary = summary_pb2.Summary.Value(tag="elapsed_time", simple_value=float(end-start))
             self.train_summary_writter.add_summary(summary_pb2.Summary(value=[summary]), step)
 
@@ -355,7 +356,6 @@ class Trainer(object):
                 logger.info("Taking snapshot")
                 path = os.path.join(self.temp_dir, 'model_snapshot{0}.ckp'.format(step))
                 self.saver.save(self.session, path, global_step=step)
-                #self.architecture.save(saver, path)
 
         logger.info("Training finally finished")
 

@@ -216,3 +216,34 @@ class Base(object):
         """
 
         return self.normalizer(x)
+
+    @staticmethod
+    def _aggregate_batch(data_holder, use_list=False):
+        size = len(data_holder[0])
+        result = []
+        for k in range(size):
+            if use_list:
+                result.append(
+                    [x[k] for x in data_holder])
+            else:
+                dt = data_holder[0][k]
+                if type(dt) in [int, bool]:
+                    tp = 'int32'
+                elif type(dt) == float:
+                    tp = 'float32'
+                else:
+                    try:
+                        tp = dt.dtype
+                    except:
+                        raise TypeError("Unsupported type to batch: {}".format(type(dt)))
+                try:
+                    result.append(
+                        numpy.asarray([x[k] for x in data_holder], dtype=tp))
+                except KeyboardInterrupt:
+                    raise
+                except:
+                    #logger.exception("Cannot batch data. Perhaps they are of inconsistent shape?")
+                    import IPython as IP
+                    IP.embed(config=IP.terminal.ipapp.load_default_config())
+        return result
+
