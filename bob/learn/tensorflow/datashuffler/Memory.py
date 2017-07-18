@@ -75,7 +75,7 @@ class Memory(Base):
         indexes = numpy.array(range(self.data.shape[0]))
         numpy.random.shuffle(indexes)
 
-        for i in range(self.batch_size):
+        for i in range(len(indexes)):
 
             sample = self.data[indexes[i], ...]
             label = self.labels[indexes[i]]
@@ -104,11 +104,18 @@ class Memory(Base):
         """
 
         holder = []
-        for d in self._fetch_batch():
-            holder.append(d)
-        data, labels = self._aggregate_batch(holder, False)
+        for data in self._fetch_batch():
+            holder.append(data)
+            if len(holder) == self.batch_size:
+                yield self._aggregate_batch(holder, False)
+                del holder[:]
 
-        return data, labels
+        #holder = []
+        #for d in self._fetch_batch():
+        #    holder.append(d)
+        #data, labels = self._aggregate_batch(holder, False)
+
+        #return data, labels
 
         #selected_data = self.data[indexes[0:self.batch_size], ...]
         #selected_labels = self.labels[indexes[0:self.batch_size]]
