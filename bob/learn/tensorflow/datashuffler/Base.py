@@ -95,6 +95,10 @@ class Base(object):
         self.data_ph_from_queue = None
         self.label_ph_from_queue = None
 
+        self.generator = None
+        self.epoch = 0
+
+
     def create_placeholders(self):
         """
         Create place holder instances

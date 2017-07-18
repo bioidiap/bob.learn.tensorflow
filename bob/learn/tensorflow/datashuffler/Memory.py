@@ -75,6 +75,8 @@ class Memory(Base):
         indexes = numpy.array(range(self.data.shape[0]))
         numpy.random.shuffle(indexes)
 
+        #import ipdb; ipdb.set_trace();
+
         for i in range(len(indexes)):
 
             sample = self.data[indexes[i], ...]
@@ -103,29 +105,18 @@ class Memory(Base):
           Correspondent labels
         """
 
+        if self.generator is None:
+            self.generator = self._fetch_batch()
+
         holder = []
-        for data in self._fetch_batch():
-            holder.append(data)
-            if len(holder) == self.batch_size:
-                yield self._aggregate_batch(holder, False)
-                del holder[:]
+        try:
+            for i in range(self.batch_size):
+                data = self.generator.next()
+                holder.append(data)
+                if len(holder) == self.batch_size:
+                    return self._aggregate_batch(holder, False)
 
-        #holder = []
-        #for d in self._fetch_batch():
-        #    holder.append(d)
-        #data, labels = self._aggregate_batch(holder, False)
-
-        #return data, labels
-
-        #selected_data = self.data[indexes[0:self.batch_size], ...]
-        #selected_labels = self.labels[indexes[0:self.batch_size]]
-
-        # Applying the data augmentation
-        #if self.data_augmentation is not None:
-        #    for i in range(selected_data.shape[0]):
-        #        img = self.skimage2bob(selected_data[i, ...])
-        #        img = self.data_augmentation(img)
-        #        selected_data[i, ...] = self.bob2skimage(img)
-
-        #selected_data = self.normalize_sample(selected_data)
-        #return [selected_data.astype("float32"), selected_labels.astype("int64")]
+        except StopIteration:
+            self.generator = None
+            self.epoch += 1
+            return self._aggregate_batch(holder, False)
