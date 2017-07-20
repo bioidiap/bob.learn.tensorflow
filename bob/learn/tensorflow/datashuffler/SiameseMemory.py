@@ -73,7 +73,7 @@ class SiameseMemory(Siamese, Memory):
         numpy.random.seed(seed)
         self.data = self.data.astype(input_dtype)
 
-    def get_batch(self, zero_one_labels=True):
+    def _fetch_batch(self, zero_one_labels=True):
         """
         Get a random pair of samples
 
@@ -83,31 +83,33 @@ class SiameseMemory(Siamese, Memory):
         **Return**
         """
 
-        shape = [self.batch_size] + list(self.input_shape[1:])
+        #shape = [self.batch_size] + list(self.input_shape[1:])
 
-        sample_l = numpy.zeros(shape=shape, dtype=self.input_dtype)
-        sample_r = numpy.zeros(shape=shape, dtype=self.input_dtype)
-        labels_siamese = numpy.zeros(shape=shape[0], dtype=self.input_dtype)
+        #sample_l = numpy.zeros(shape=shape, dtype=self.input_dtype)
+        #sample_r = numpy.zeros(shape=shape, dtype=self.input_dtype)
+        #labels_siamese = numpy.zeros(shape=shape[0], dtype=self.input_dtype)
 
         genuine = True
-        for i in range(shape[0]):
-            sample_l[i, ...], sample_r[i, ...] = self.get_genuine_or_not(self.data, self.labels, genuine=genuine)
+        for i in range(self.data.shape[0]):
+            left, right = self.get_genuine_or_not(self.data, self.labels, genuine=genuine)
             if zero_one_labels:
-                labels_siamese[i] = not genuine
+                label = not genuine
             else:
-                labels_siamese[i] = -1 if genuine else +1
+                label = -1 if genuine else +1
             genuine = not genuine
 
-        # Applying the data augmentation
-        if self.data_augmentation is not None:
-            for i in range(sample_l.shape[0]):
-                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(sample_l[i, ...])))
-                sample_l[i, ...] = d
+            # Applying the data augmentation
+            if self.data_augmentation is not None:
+                for i in range(left.shape[0]):
+                    d = self.bob2skimage(self.data_augmentation(self.skimage2bob(left)))
+                    left = d
 
-                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(sample_r[i, ...])))
-                sample_r[i, ...] = d
+                    d = self.bob2skimage(self.data_augmentation(self.skimage2bob(right)))
+                    right = d
 
-        sample_l = self.normalize_sample(sample_l)
-        sample_r = self.normalize_sample(sample_r)
+            left = self.normalize_sample(left)
+            right = self.normalize_sample(right)
 
-        return [sample_l.astype(self.input_dtype), sample_r.astype(self.input_dtype), labels_siamese]
+            yield left.astype(self.input_dtype), right.astype(self.input_dtype), label
+
+            #return [sample_l.astype(self.input_dtype), sample_r.astype(self.input_dtype), labels_siamese]

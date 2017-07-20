@@ -75,8 +75,6 @@ class Memory(Base):
         indexes = numpy.array(range(self.data.shape[0]))
         numpy.random.shuffle(indexes)
 
-        #import ipdb; ipdb.set_trace();
-
         for i in range(len(indexes)):
 
             sample = self.data[indexes[i], ...]
@@ -91,32 +89,3 @@ class Memory(Base):
                 sample = self.normalize_sample(sample)
 
             yield [sample, label]
-
-    def get_batch(self):
-        """
-        Shuffle the Memory dataset and get a random batch.
-
-        ** Returns **
-
-        data:
-          Selected samples
-
-        labels:
-          Correspondent labels
-        """
-
-        if self.generator is None:
-            self.generator = self._fetch_batch()
-
-        holder = []
-        try:
-            for i in range(self.batch_size):
-                data = self.generator.next()
-                holder.append(data)
-                if len(holder) == self.batch_size:
-                    return self._aggregate_batch(holder, False)
-
-        except StopIteration:
-            self.generator = None
-            self.epoch += 1
-            return self._aggregate_batch(holder, False)

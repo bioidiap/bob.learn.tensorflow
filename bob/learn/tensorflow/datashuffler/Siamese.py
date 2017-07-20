@@ -14,7 +14,10 @@ class Siamese(Base):
      Basically the py:meth:`get_batch` method provides you 3 elements in the returned list.
 
      The first two are the batch data, and the last is the label. Either `0` for samples from the same class or `1`
-      for samples from different class.
+     for samples from different class.
+      
+    
+     Here, an epoch is not all possible pairs. An epoch is when you pass thought all the samples at least once.
 
     """
 
@@ -51,7 +54,6 @@ class Siamese(Base):
                 self.data_ph_from_queue['left'] = self.data_ph['left']
                 self.data_ph_from_queue['right'] = self.data_ph['right']
                 self.label_ph_from_queue = self.label_ph
-
 
     def get_genuine_or_not(self, input_data, input_labels, genuine=True):
 
