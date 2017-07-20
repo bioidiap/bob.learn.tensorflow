@@ -105,7 +105,7 @@ class Disk(Base):
 
         return data
 
-    def get_batch(self):
+    def _fetch_batch(self):
         """
         Shuffle the Disk dataset, get a random batch and load it on the fly.
 
@@ -118,23 +118,25 @@ class Disk(Base):
           Correspondent labels
         """
 
-        shape = [self.batch_size] + list(self.input_shape[1:])
-
         # Shuffling samples
         indexes = numpy.array(range(self.data.shape[0]))
         numpy.random.shuffle(indexes)
 
-        selected_data = numpy.zeros(shape=shape)
-        for i in range(self.batch_size):
+        #selected_data = numpy.zeros(shape=shape)
+        for i in indexes:
 
-            file_name = self.data[indexes[i]]
+            file_name = self.data[i]
             data = self.load_from_file(file_name)
 
-            selected_data[i, ...] = data
+            if self.data_augmentation is not None:
+                data = self.skimage2bob(data)
+                data = self.data_augmentation(data)
+                data = self.bob2skimage(data)
 
-            # Scaling
-            selected_data[i, ...] = self.normalize_sample(selected_data[i, ...])
+            if self.normalize_sample is not None:
+                data = self.normalize_sample(data)
 
-        selected_labels = self.labels[indexes[0:self.batch_size]]
+            data = data.astype(self.input_dtype)
+            label = self.labels[i]
 
-        return [selected_data.astype("float32"), selected_labels.astype("int64")]
+            yield [data, label]

@@ -95,9 +95,8 @@ class Base(object):
         self.data_ph_from_queue = None
         self.label_ph_from_queue = None
 
-        self.generator = None
+        self.batch_generator = None
         self.epoch = 0
-
 
     def create_placeholders(self):
         """
@@ -149,11 +148,6 @@ class Base(object):
             else:
                 return self.label_ph
 
-    def get_batch(self):
-        """
-        Shuffle dataset and get a random batch.
-        """
-        raise NotImplementedError("Method not implemented in this level. You should use one of the derived classes.")
 
     def bob2skimage(self, bob_image):
         """
@@ -221,8 +215,7 @@ class Base(object):
 
         return self.normalizer(x)
 
-    @staticmethod
-    def _aggregate_batch(data_holder, use_list=False):
+    def _aggregate_batch(self, data_holder, use_list=False):
         size = len(data_holder[0])
         result = []
         for k in range(size):
@@ -232,9 +225,9 @@ class Base(object):
             else:
                 dt = data_holder[0][k]
                 if type(dt) in [int, bool]:
-                    tp = 'int32'
+                    tp = 'int64'
                 elif type(dt) == float:
-                    tp = 'float32'
+                    tp = self.input_dtype
                 else:
                     try:
                         tp = dt.dtype
@@ -251,3 +244,31 @@ class Base(object):
                     IP.embed(config=IP.terminal.ipapp.load_default_config())
         return result
 
+    def get_batch(self):
+        """
+        Shuffle the Memory dataset and get a random batch.
+
+        ** Returns **
+
+        data:
+          Selected samples
+
+        labels:
+          Correspondent labels
+        """
+
+        if self.batch_generator is None:
+            self.batch_generator = self._fetch_batch()
+
+        holder = []
+        try:
+            for i in range(self.batch_size):
+                data = self.batch_generator.next()
+                holder.append(data)
+                if len(holder) == self.batch_size:
+                    return self._aggregate_batch(holder, False)
+
+        except StopIteration:
+            self.batch_generator = None
+            self.epoch += 1
+            return self._aggregate_batch(holder, False)
