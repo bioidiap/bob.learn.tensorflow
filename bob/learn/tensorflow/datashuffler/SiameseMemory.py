@@ -86,12 +86,6 @@ class SiameseMemory(Siamese, Memory):
         #genuine = True
         pairs_generator = self.get_genuine_or_not(self.data, self.labels)
         for i in range(self.data.shape[0]):
-            #left, right = self.get_genuine_or_not(self.data, self.labels, genuine=genuine)
-            #if zero_one_labels:
-            #    label = not genuine
-            #else:
-            #    label = -1 if genuine else +1
-            #genuine = not genuine
 
             left, right, label = pairs_generator.next()
 

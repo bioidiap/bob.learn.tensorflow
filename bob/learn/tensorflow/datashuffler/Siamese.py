@@ -66,12 +66,15 @@ class Siamese(Base):
             indexes_per_labels[l] = numpy.where(input_labels == l)[0]
             numpy.random.shuffle(indexes_per_labels[l])
 
+        left_possible_indexes = numpy.random.choice(len(self.possible_labels), input_data.shape[0], replace=True)
+        right_possible_indexes = numpy.random.choice(len(self.possible_labels), input_data.shape[0], replace=True)
+
         genuine = True
         for i in range(input_data.shape[0]):
 
             if genuine:
                 # Selecting the class
-                class_index = numpy.random.randint(len(self.possible_labels))
+                class_index = left_possible_indexes[i]
 
                 # Now selecting the samples for the pair
                 left = input_data[indexes_per_labels[class_index][numpy.random.randint(len(indexes_per_labels[class_index]))]]
@@ -81,8 +84,14 @@ class Siamese(Base):
 
             else:
                 # Selecting the 2 classes
-                class_index = numpy.random.choice(len(self.possible_labels), 2, replace=False)
+                class_index = list()
+                class_index.append(left_possible_indexes[i])
 
+                # Finding the right pair
+                for j in range(i, input_data.shape[0]):
+                    if left_possible_indexes[i] != right_possible_indexes[j]:
+                        class_index.append(right_possible_indexes[j])
+                        break
                 # Now selecting the samples for the pair
                 left = input_data[indexes_per_labels[class_index[0]][numpy.random.randint(len(indexes_per_labels[class_index[0]]))]]
                 right = input_data[indexes_per_labels[class_index[1]][numpy.random.randint(len(indexes_per_labels[class_index[1]]))]]
