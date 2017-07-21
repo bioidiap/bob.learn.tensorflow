@@ -82,7 +82,7 @@ class SiameseDisk(Siamese, Disk):
         # TODO: very bad solution to deal with bob.shape images an tf shape images
         self.bob_shape = tuple([input_shape[3]] + list(input_shape[1:3]))
 
-    def get_batch(self):
+    def _fetch_batch(self, zero_one_labels=True):
         """
         Get a random pair of samples
 
@@ -91,19 +91,23 @@ class SiameseDisk(Siamese, Disk):
 
         **Return**
         """
-        shape = [self.batch_size] + list(self.input_shape[1:])
 
-        sample_l = numpy.zeros(shape=shape, dtype=self.input_dtype)
-        sample_r = numpy.zeros(shape=shape, dtype=self.input_dtype)
-        labels_siamese = numpy.zeros(shape=shape[0], dtype=self.input_dtype)
+        pairs_generator = self.get_genuine_or_not(self.data, self.labels)
+        for i in range(self.data.shape[0]):
 
-        genuine = True
-        for i in range(shape[0]):
-            file_name, file_name_p = self.get_genuine_or_not(self.data, self.labels, genuine=genuine)
-            sample_l[i, ...] = self.normalize_sample(self.load_from_file(str(file_name)))
-            sample_r[i, ...] = self.normalize_sample(self.load_from_file(str(file_name_p)))
+            left_filename, right_filename, label = pairs_generator.next()
+            left = self.load_from_file(left_filename)
+            right = self.load_from_file(right_filename)
 
-            labels_siamese[i] = not genuine
-            genuine = not genuine
+            # Applying the data augmentation
+            if self.data_augmentation is not None:
+                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(left)))
+                left = d
 
-        return sample_l, sample_r, labels_siamese
+                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(right)))
+                right = d
+
+            left = self.normalize_sample(left)
+            right = self.normalize_sample(right)
+
+            yield left.astype(self.input_dtype), right.astype(self.input_dtype), label

@@ -66,10 +66,11 @@ class Siamese(Base):
             indexes_per_labels[l] = numpy.where(input_labels == l)[0]
             numpy.random.shuffle(indexes_per_labels[l])
 
-        left_possible_indexes = numpy.random.choice(len(self.possible_labels), input_data.shape[0], replace=True)
-        right_possible_indexes = numpy.random.choice(len(self.possible_labels), input_data.shape[0], replace=True)
+        left_possible_indexes = numpy.random.choice(self.possible_labels, input_data.shape[0], replace=True)
+        right_possible_indexes = numpy.random.choice(self.possible_labels, input_data.shape[0], replace=True)
 
         genuine = True
+
         for i in range(input_data.shape[0]):
 
             if genuine:
