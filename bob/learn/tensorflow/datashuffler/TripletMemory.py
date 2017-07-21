@@ -84,15 +84,6 @@ class TripletMemory(Triplet, Memory):
         **Return**
         """
 
-        #shape = [self.batch_size] + list(self.input_shape[1:])
-
-        #sample_a = numpy.zeros(shape=shape, dtype=self.input_dtype)
-        #sample_p = numpy.zeros(shape=shape, dtype=self.input_dtype)
-        #sample_n = numpy.zeros(shape=shape, dtype=self.input_dtype)
-
-        #for i in range(shape[0]):
-        #    sample_a[i, ...], sample_p[i, ...], sample_n[i, ...] = self.get_one_triplet(self.data, self.labels)
-
         triplets = self.get_triplets(self.data, self.labels)
 
         for i in range(self.data.shape[0]):
