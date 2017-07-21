@@ -74,7 +74,7 @@ class TripletMemory(Triplet, Memory):
 
         self.data = self.data.astype(input_dtype)
 
-    def get_batch(self):
+    def _fetch_batch(self):
         """
         Get a random triplet
 
@@ -84,30 +84,35 @@ class TripletMemory(Triplet, Memory):
         **Return**
         """
 
-        shape = [self.batch_size] + list(self.input_shape[1:])
+        #shape = [self.batch_size] + list(self.input_shape[1:])
 
-        sample_a = numpy.zeros(shape=shape, dtype=self.input_dtype)
-        sample_p = numpy.zeros(shape=shape, dtype=self.input_dtype)
-        sample_n = numpy.zeros(shape=shape, dtype=self.input_dtype)
+        #sample_a = numpy.zeros(shape=shape, dtype=self.input_dtype)
+        #sample_p = numpy.zeros(shape=shape, dtype=self.input_dtype)
+        #sample_n = numpy.zeros(shape=shape, dtype=self.input_dtype)
 
-        for i in range(shape[0]):
-            sample_a[i, ...], sample_p[i, ...], sample_n[i, ...] = self.get_one_triplet(self.data, self.labels)
+        #for i in range(shape[0]):
+        #    sample_a[i, ...], sample_p[i, ...], sample_n[i, ...] = self.get_one_triplet(self.data, self.labels)
 
-        # Applying the data augmentation
-        if self.data_augmentation is not None:
-            for i in range(sample_a.shape[0]):
-                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(sample_a[i, ...])))
-                sample_a[i, ...] = d
+        triplets = self.get_triplets(self.data, self.labels)
 
-                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(sample_p[i, ...])))
-                sample_p[i, ...] = d
+        for i in range(self.data.shape[0]):
 
-                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(sample_n[i, ...])))
-                sample_n[i, ...] = d
+            anchor, positive, negative = triplets.next()
 
-        # Scaling
-        sample_a = self.normalize_sample(sample_a)
-        sample_p = self.normalize_sample(sample_p)
-        sample_n = self.normalize_sample(sample_n)
+            # Applying the data augmentation
+            if self.data_augmentation is not None:
+                    d = self.bob2skimage(self.data_augmentation(self.skimage2bob(anchor)))
+                    anchor = d
 
-        return [sample_a.astype(self.input_dtype), sample_p.astype(self.input_dtype), sample_n.astype(self.input_dtype)]
+                    d = self.bob2skimage(self.data_augmentation(self.skimage2bob(positive)))
+                    positive = d
+
+                    d = self.bob2skimage(self.data_augmentation(self.skimage2bob(negative)))
+                    negative = d
+
+            # Scaling
+            anchor = self.normalize_sample(anchor).astype(self.input_dtype)
+            positive = self.normalize_sample(positive).astype(self.input_dtype)
+            negative = self.normalize_sample(negative).astype(self.input_dtype)
+
+            yield anchor, positive, negative

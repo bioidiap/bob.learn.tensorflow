@@ -15,6 +15,8 @@ class Triplet(Base):
 
      The first element is the batch for the anchor, the second one is the batch for the positive class, w.r.t the
      anchor, and  the last one is the batch for the negative class , w.r.t the anchor.
+     
+     Here, an epoch is not all possible triplets. An epoch is when you pass thought all the samples at least once.
 
     """
 
@@ -53,23 +55,48 @@ class Triplet(Base):
                 self.data_ph_from_queue['positive'] = self.data_ph['positive']
                 self.data_ph_from_queue['negative'] = self.data_ph['negative']
 
-    def get_one_triplet(self, input_data, input_labels):
+    def get_triplets(self, input_data, input_labels):
+
+        # Shuffling all the indexes
+        indexes_per_labels = dict()
+        for l in self.possible_labels:
+            indexes_per_labels[l] = numpy.where(input_labels == l)[0]
+            numpy.random.shuffle(indexes_per_labels[l])
+
+        # searching for random triplets
+        offset_class = 0
+        for i in range(input_data.shape[0]):
+
+            anchor = input_data[indexes_per_labels[offset_class][numpy.random.randint(len(indexes_per_labels[offset_class]))], ...]
+
+            positive = input_data[indexes_per_labels[offset_class][numpy.random.randint(len(indexes_per_labels[offset_class]))], ...]
+
+            # Changing the class
+            offset_class += 1
+
+            if offset_class == len(self.possible_labels):
+                offset_class = 0
+
+            negative = input_data[indexes_per_labels[offset_class][numpy.random.randint(len(indexes_per_labels[offset_class]))], ...]
+
+            yield anchor, positive, negative
+
         # Getting a pair of clients
-        index = numpy.random.choice(len(self.possible_labels), 2, replace=False)
-        index[0] = self.possible_labels[index[0]]
-        index[1] = self.possible_labels[index[1]]
+        #index = numpy.random.choice(len(self.possible_labels), 2, replace=False)
+        #index[0] = self.possible_labels[index[0]]
+        #index[1] = self.possible_labels[index[1]]
 
         # Getting the indexes of the data from a particular client
-        indexes = numpy.where(input_labels == index[0])[0]
-        numpy.random.shuffle(indexes)
+        #indexes = numpy.where(input_labels == index[0])[0]
+        #numpy.random.shuffle(indexes)
 
         # Picking a positive pair
-        data_anchor = input_data[indexes[0], ...]
-        data_positive = input_data[indexes[1], ...]
+        #data_anchor = input_data[indexes[0], ...]
+        #data_positive = input_data[indexes[1], ...]
 
         # Picking a negative sample
-        indexes = numpy.where(input_labels == index[1])[0]
-        numpy.random.shuffle(indexes)
-        data_negative = input_data[indexes[0], ...]
+        #indexes = numpy.where(input_labels == index[1])[0]
+        #numpy.random.shuffle(indexes)
+        #data_negative = input_data[indexes[0], ...]
 
-        return data_anchor, data_positive, data_negative
+        #return data_anchor, data_positive, data_negative
