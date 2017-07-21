@@ -88,10 +88,13 @@ class Siamese(Base):
                 class_index.append(left_possible_indexes[i])
 
                 # Finding the right pair
-                for j in range(i, input_data.shape[0]):
+                j = i
+                while True:
                     if left_possible_indexes[i] != right_possible_indexes[j]:
                         class_index.append(right_possible_indexes[j])
                         break
+                    j += 1
+
                 # Now selecting the samples for the pair
                 left = input_data[indexes_per_labels[class_index[0]][numpy.random.randint(len(indexes_per_labels[class_index[0]]))]]
                 right = input_data[indexes_per_labels[class_index[1]][numpy.random.randint(len(indexes_per_labels[class_index[1]]))]]
