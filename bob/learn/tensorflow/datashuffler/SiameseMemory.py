@@ -83,7 +83,6 @@ class SiameseMemory(Siamese, Memory):
         **Return**
         """
 
-        #genuine = True
         pairs_generator = self.get_genuine_or_not(self.data, self.labels)
         for i in range(self.data.shape[0]):
 
@@ -101,5 +100,3 @@ class SiameseMemory(Siamese, Memory):
             right = self.normalize_sample(right)
 
             yield left.astype(self.input_dtype), right.astype(self.input_dtype), label
-
-            #return [sample_l.astype(self.input_dtype), sample_r.astype(self.input_dtype), labels_siamese]

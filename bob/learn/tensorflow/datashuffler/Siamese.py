@@ -89,6 +89,7 @@ class Siamese(Base):
 
                 # Finding the right pair
                 j = i
+                # TODO: Lame solution. Fix this
                 while True:
                     if left_possible_indexes[i] != right_possible_indexes[j]:
                         class_index.append(right_possible_indexes[j])
