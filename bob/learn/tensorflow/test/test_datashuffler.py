@@ -66,6 +66,7 @@ def test_siamesememory_shuffler():
                                   batch_size=16)
 
     batch = data_shuffler.get_batch()
+
     assert len(batch) == 3
     assert batch[0].shape == (16, 28, 28, 1)
     assert batch[1].shape == (16, 28, 28, 1)

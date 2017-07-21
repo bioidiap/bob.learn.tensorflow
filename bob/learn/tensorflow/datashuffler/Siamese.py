@@ -55,35 +55,38 @@ class Siamese(Base):
                 self.data_ph_from_queue['right'] = self.data_ph['right']
                 self.label_ph_from_queue = self.label_ph
 
-    def get_genuine_or_not(self, input_data, input_labels, genuine=True):
+    def get_genuine_or_not(self, input_data, input_labels):
+        """
+        Creates a generator with pairs of genuines and and impostors pairs         
+        """
 
-        if genuine:
-            # Getting a client
-            index = numpy.random.randint(len(self.possible_labels))
-            index = int(self.possible_labels[index])
+        # Shuffling all the indexes
+        indexes_per_labels = dict()
+        for l in self.possible_labels:
+            indexes_per_labels[l] = numpy.where(input_labels == l)[0]
+            numpy.random.shuffle(indexes_per_labels[l])
 
-            # Getting the indexes of the data from a particular client
-            indexes = numpy.where(input_labels == index)[0]
-            numpy.random.shuffle(indexes)
+        genuine = True
+        for i in range(input_data.shape[0]):
 
-            # Picking a pair
-            sample_l = input_data[indexes[0], ...]
-            sample_r = input_data[indexes[1], ...]
+            if genuine:
+                # Selecting the class
+                class_index = numpy.random.randint(len(self.possible_labels))
 
-        else:
-            # Picking a pair of labels from different clients
-            index = numpy.random.choice(len(self.possible_labels), 2, replace=False)
-            index[0] = self.possible_labels[int(index[0])]
-            index[1] = self.possible_labels[int(index[1])]
+                # Now selecting the samples for the pair
+                left = input_data[indexes_per_labels[class_index][numpy.random.randint(len(indexes_per_labels[class_index]))]]
+                right = input_data[indexes_per_labels[class_index][numpy.random.randint(len(indexes_per_labels[class_index]))]]
 
-            # Getting the indexes of the two clients
-            indexes_l = numpy.where(input_labels == index[0])[0]
-            indexes_r = numpy.where(input_labels == index[1])[0]
-            numpy.random.shuffle(indexes_l)
-            numpy.random.shuffle(indexes_r)
+                yield left, right, 0
 
-            # Picking a pair
-            sample_l = input_data[indexes_l[0], ...]
-            sample_r = input_data[indexes_r[0], ...]
+            else:
+                # Selecting the 2 classes
+                class_index = numpy.random.choice(len(self.possible_labels), 2, replace=False)
 
-        return sample_l, sample_r
+                # Now selecting the samples for the pair
+                left = input_data[indexes_per_labels[class_index[0]][numpy.random.randint(len(indexes_per_labels[class_index[0]]))]]
+                right = input_data[indexes_per_labels[class_index[1]][numpy.random.randint(len(indexes_per_labels[class_index[1]]))]]
+
+                yield left, right, 1
+
+            genuine = not genuine

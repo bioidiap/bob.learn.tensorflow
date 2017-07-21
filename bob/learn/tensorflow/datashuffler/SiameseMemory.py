@@ -83,29 +83,25 @@ class SiameseMemory(Siamese, Memory):
         **Return**
         """
 
-        #shape = [self.batch_size] + list(self.input_shape[1:])
-
-        #sample_l = numpy.zeros(shape=shape, dtype=self.input_dtype)
-        #sample_r = numpy.zeros(shape=shape, dtype=self.input_dtype)
-        #labels_siamese = numpy.zeros(shape=shape[0], dtype=self.input_dtype)
-
-        genuine = True
+        #genuine = True
+        pairs_generator = self.get_genuine_or_not(self.data, self.labels)
         for i in range(self.data.shape[0]):
-            left, right = self.get_genuine_or_not(self.data, self.labels, genuine=genuine)
-            if zero_one_labels:
-                label = not genuine
-            else:
-                label = -1 if genuine else +1
-            genuine = not genuine
+            #left, right = self.get_genuine_or_not(self.data, self.labels, genuine=genuine)
+            #if zero_one_labels:
+            #    label = not genuine
+            #else:
+            #    label = -1 if genuine else +1
+            #genuine = not genuine
+
+            left, right, label = pairs_generator.next()
 
             # Applying the data augmentation
             if self.data_augmentation is not None:
-                for i in range(left.shape[0]):
-                    d = self.bob2skimage(self.data_augmentation(self.skimage2bob(left)))
-                    left = d
+                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(left)))
+                left = d
 
-                    d = self.bob2skimage(self.data_augmentation(self.skimage2bob(right)))
-                    right = d
+                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(right)))
+                right = d
 
             left = self.normalize_sample(left)
             right = self.normalize_sample(right)
