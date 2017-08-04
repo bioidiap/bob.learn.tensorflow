@@ -264,6 +264,7 @@ class Base(object):
         try:
             for i in range(self.batch_size):
                 data = self.batch_generator.next()
+                
                 holder.append(data)
                 if len(holder) == self.batch_size:
                     return self._aggregate_batch(holder, False)
@@ -271,4 +272,13 @@ class Base(object):
         except StopIteration:
             self.batch_generator = None
             self.epoch += 1
-            return self._aggregate_batch(holder, False)
+            
+            # If we have left data in the epoch, return
+            if len(holder) > 0:
+                return self._aggregate_batch(holder, False)
+            else:
+                self.batch_generator = self._fetch_batch()
+                data = self.batch_generator.next()
+                holder.append(data)
+                return self._aggregate_batch(holder, False)
+
