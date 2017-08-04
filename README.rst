@@ -4,9 +4,9 @@
 
 
 .. image:: http://img.shields.io/badge/docs-stable-yellow.png
-   :target: http://pythonhosted.org/bob.learn.tensorflow/index.html
+   :target: http://beatubulatest.lab.idiap.ch/private/docs/bob/bob.learn.tensorflow/stable/index.html
 .. image:: http://img.shields.io/badge/docs-latest-orange.png
-   :target: https://www.idiap.ch/software/bob/docs/latest/bob/bob.learn.tensorflow/master/index.html
+   :target: http://beatubulatest.lab.idiap.ch/private/docs/bob/bob.learn.tensorflow/master/index.html
 .. image:: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/badges/master/build.svg
    :target: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/commits/master
 .. image:: https://img.shields.io/badge/gitlab-project-0000c0.svg
