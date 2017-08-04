@@ -144,12 +144,12 @@ class LightCNN9(object):
                                          reuse=reuse)
             graph = maxout(graph,
                            num_units=256,
-                           scope='Maxoutfc1')
+                           name='Maxoutfc1')
 
             graph = slim.fully_connected(graph, self.n_classes,
                                          weights_initializer=initializer,
                                          activation_fn=None,
-                                         scope='fc1',
+                                         scope='fc2',
                                          reuse=reuse)
 
         return graph

@@ -94,6 +94,11 @@ class MaxOut(base.Layer):
         for i in range(len(shape)):
             if shape[i] is None:
                 shape[i] = gen_array_ops.shape(inputs)[i]
+
         outputs = math_ops.reduce_max(gen_array_ops.reshape(inputs, shape), -1, keep_dims=False)
+        shape = outputs.get_shape().as_list()
+        shape[self.axis] = self.num_units
+        outputs.set_shape(shape)
+
 
         return outputs

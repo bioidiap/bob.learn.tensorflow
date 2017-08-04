@@ -123,7 +123,7 @@ def test_cnn_trainer():
     del trainer
     del graph
 
-"""
+
 def test_lightcnn_trainer():
 
     # generating fake data
@@ -158,7 +158,7 @@ def test_lightcnn_trainer():
 
     # One graph trainer
     trainer = Trainer(train_data_shuffler,
-                      iterations=50,
+                      iterations=5,
                       analizer=None,
                       temp_dir=directory
                       )
@@ -178,7 +178,7 @@ def test_lightcnn_trainer():
     shutil.rmtree(directory)
     del trainer
     del graph
-"""
+
 
 
 
