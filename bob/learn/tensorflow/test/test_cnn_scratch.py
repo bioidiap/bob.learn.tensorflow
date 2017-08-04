@@ -4,7 +4,7 @@
 # @date: Thu 13 Oct 2016 13:35 CEST
 
 import numpy
-from bob.learn.tensorflow.datashuffler import Memory, ImageAugmentation, ScaleFactor
+from bob.learn.tensorflow.datashuffler import Memory, ImageAugmentation, ScaleFactor, Linear
 from bob.learn.tensorflow.network import Embedding
 from bob.learn.tensorflow.loss import BaseLoss
 from bob.learn.tensorflow.trainers import Trainer, constant
@@ -41,12 +41,12 @@ def scratch_network(train_data_shuffler, reuse=False):
     return graph
 
 
-def validate_network(embedding, validation_data, validation_labels):
+def validate_network(embedding, validation_data, validation_labels, input_shape=[None, 28, 28, 1], normalizer=ScaleFactor()):
     # Testing
     validation_data_shuffler = Memory(validation_data, validation_labels,
-                                      input_shape=[None, 28, 28, 1],
+                                      input_shape=input_shape,
                                       batch_size=validation_batch_size,
-                                      normalizer=ScaleFactor())
+                                      normalizer=normalizer)
 
     [data, labels] = validation_data_shuffler.get_batch()
     predictions = embedding(data)

@@ -4,7 +4,7 @@
 # @date: Wed 11 May 2016 09:39:36 CEST 
 
 import tensorflow as tf
-
+from bob.learn.tensorflow.layers import maxout
 
 class LightCNN9(object):
     """Creates the graph for the Light CNN-9 in 
@@ -28,16 +28,16 @@ class LightCNN9(object):
         with tf.device(self.device):
 
             initializer = tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=self.seed)
-
+                        
             graph = slim.conv2d(inputs, 96, [5, 5], activation_fn=tf.nn.relu,
                                 stride=1,
                                 weights_initializer=initializer,
                                 scope='Conv1',
                                 reuse=reuse)
 
-            graph = slim.maxout(graph,
-                                num_units=48,
-                                scope='Maxout1')
+            graph = maxout(graph,
+                           num_units=48,
+                           name='Maxout1')
 
             graph = slim.max_pool2d(graph, [2, 2], stride=2, padding="SAME", scope='Pool1')
 
@@ -49,9 +49,9 @@ class LightCNN9(object):
                                 scope='Conv2a',
                                 reuse=reuse)
 
-            graph = slim.maxout(graph,
-                                num_units=48,
-                                scope='Maxout2a')
+            graph = maxout(graph,
+                           num_units=48,
+                           name='Maxout2a')
 
             graph = slim.conv2d(graph, 192, [3, 3], activation_fn=tf.nn.relu,
                                 stride=1,
@@ -59,9 +59,9 @@ class LightCNN9(object):
                                 scope='Conv2',
                                 reuse=reuse)
 
-            graph = slim.maxout(graph,
-                                num_units=96,
-                                scope='Maxout2')
+            graph = maxout(graph,
+                           num_units=96,
+                           name='Maxout2')
 
             graph = slim.max_pool2d(graph, [2, 2], stride=2, padding="SAME", scope='Pool2')
 
@@ -73,9 +73,9 @@ class LightCNN9(object):
                                 scope='Conv3a',
                                 reuse=reuse)
 
-            graph = slim.maxout(graph,
-                                num_units=96,
-                                scope='Maxout3a')
+            graph = maxout(graph,
+                           num_units=96,
+                           name='Maxout3a')
 
             graph = slim.conv2d(graph, 384, [3, 3], activation_fn=tf.nn.relu,
                                 stride=1,
@@ -83,9 +83,9 @@ class LightCNN9(object):
                                 scope='Conv3',
                                 reuse=reuse)
 
-            graph = slim.maxout(graph,
-                                num_units=192,
-                                scope='Maxout3')
+            graph = maxout(graph,
+                           num_units=192,
+                           name='Maxout3')
 
             graph = slim.max_pool2d(graph, [2, 2], stride=2, padding="SAME", scope='Pool3')
 
@@ -97,9 +97,9 @@ class LightCNN9(object):
                                 scope='Conv4a',
                                 reuse=reuse)
 
-            graph = slim.maxout(graph,
-                                num_units=192,
-                                scope='Maxout4a')
+            graph = maxout(graph,
+                           num_units=192,
+                           name='Maxout4a')
 
             graph = slim.conv2d(graph, 256, [3, 3], activation_fn=tf.nn.relu,
                                 stride=1,
@@ -107,9 +107,9 @@ class LightCNN9(object):
                                 scope='Conv4',
                                 reuse=reuse)
 
-            graph = slim.maxout(graph,
-                                num_units=128,
-                                scope='Maxout4')
+            graph = maxout(graph,
+                           num_units=128,
+                           name='Maxout4')
 
             #####
 
@@ -119,9 +119,9 @@ class LightCNN9(object):
                                 scope='Conv5a',
                                 reuse=reuse)
 
-            graph = slim.maxout(graph,
-                                num_units=128,
-                                scope='Maxout5a')
+            graph = maxout(graph,
+                           num_units=128,
+                           name='Maxout5a')
 
             graph = slim.conv2d(graph, 256, [3, 3], activation_fn=tf.nn.relu,
                                 stride=1,
@@ -129,9 +129,9 @@ class LightCNN9(object):
                                 scope='Conv5',
                                 reuse=reuse)
 
-            graph = slim.maxout(graph,
-                                num_units=128,
-                                scope='Maxout5')
+            graph = maxout(graph,
+                           num_units=128,
+                           name='Maxout5')
 
             graph = slim.max_pool2d(graph, [2, 2], stride=2, padding="SAME", scope='Pool4')
 
@@ -142,9 +142,9 @@ class LightCNN9(object):
                                          activation_fn=tf.nn.relu,
                                          scope='fc1',
                                          reuse=reuse)
-            graph = slim.maxout(graph,
-                                num_units=256,
-                                scope='Maxoutfc1')
+            graph = maxout(graph,
+                           num_units=256,
+                           scope='Maxoutfc1')
 
             graph = slim.fully_connected(graph, self.n_classes,
                                          weights_initializer=initializer,

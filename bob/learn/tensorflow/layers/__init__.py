@@ -1,5 +1,6 @@
 from .Layer import Layer
 from .Conv1D import Conv1D
+from .Maxout import maxout
 
 
 # gets sphinx autodoc done right - don't remove it

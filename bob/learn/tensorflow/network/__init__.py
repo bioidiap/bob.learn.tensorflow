@@ -1,4 +1,5 @@
 from .Chopra import Chopra
+from .LightCNN9 import LightCNN9
 from .Dummy import Dummy
 from .MLP import MLP
 from .Embedding import Embedding
@@ -21,6 +22,7 @@ __appropriate__(
     Chopra,
     Dummy,
     MLP,
+    LightCNN9,
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]
 
