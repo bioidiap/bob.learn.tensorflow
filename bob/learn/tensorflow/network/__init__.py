@@ -1,5 +1,5 @@
 from .Chopra import Chopra
-from .LightCNN9 import LightCNN9
+#from .LightCNN9 import LightCNN9
 from .Dummy import Dummy
 from .MLP import MLP
 from .Embedding import Embedding
