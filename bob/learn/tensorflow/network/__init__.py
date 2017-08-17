@@ -22,7 +22,6 @@ __appropriate__(
     Chopra,
     Dummy,
     MLP,
-    LightCNN9,
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]
 
