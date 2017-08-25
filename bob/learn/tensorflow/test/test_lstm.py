@@ -8,4 +8,10 @@ from bob.learn.tensorflow.trainers import Trainer, constant
 from bob.learn.tensorflow.utils import load_mnist
 import tensorflow as tf
 
+import bob.core
+logger = bob.core.log.setup("LSTM") # bob.learn.tensorflow does not work
+bob.core.log.set_verbosity_level(logger, 3)
+
+# Data
+logger.debug("Loading MNIST")
 train_data, train_labels, validation_data, validation_labels = load_mnist(data_dir="mnist")

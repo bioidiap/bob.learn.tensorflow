@@ -32,7 +32,6 @@ def validate_network(embedding, validation_data, validation_labels):
     [data, labels] = validation_data_shuffler.get_batch()
     predictions = embedding(data)
     accuracy = 100. * numpy.sum(numpy.argmax(predictions, axis=1) == labels) / predictions.shape[0]
-
     return accuracy
 
 
@@ -75,7 +74,7 @@ def test_dnn_trainer():
 
     # At least 50% of accuracy for the DNN
     assert accuracy > 50.
-    shutil.rmtree(directory)
+    #shutil.rmtree(directory)
 
     del architecture
     del trainer  # Just to clean the variables
