@@ -18,10 +18,10 @@ logger = logging.getLogger("bob.learn")
 class SiameseTrainer(Trainer):
     """
     Trainer for siamese networks:
-     
+
     Chopra, Sumit, Raia Hadsell, and Yann LeCun. "Learning a similarity metric discriminatively, with application to
     face verification." 2005 IEEE Computer Society Conference on Computer Vision and Pattern Recognition (CVPR'05). Vol. 1. IEEE, 2005.
-    
+
 
     **Parameters**
 
@@ -30,10 +30,10 @@ class SiameseTrainer(Trainer):
 
     iterations:
       Maximum number of iterations
-      
+
     snapshot:
       Will take a snapshot of the network at every `n` iterations
-      
+
     validation_snapshot:
       Test with validation each `n` iterations
 
@@ -127,8 +127,7 @@ class SiameseTrainer(Trainer):
         self.optimizer_class = optimizer
         self.learning_rate = learning_rate
 
-        # TODO: find an elegant way to provide this as a parameter of the trainer
-        self.global_step = tf.Variable(0, trainable=False, name="global_step")
+        self.global_step = tf.contrib.framework.get_or_create_global_step()
 
         # Saving all the variables
         self.saver = tf.train.Saver(var_list=tf.global_variables())

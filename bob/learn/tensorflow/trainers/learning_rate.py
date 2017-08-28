@@ -18,8 +18,8 @@ def exponential_decay(base_learning_rate=0.05,
     staircase: Boolean. It True decay the learning rate at discrete intervals
     """
 
-    global_step = tf.Variable(0, trainable=False)
-    return tf.train.exponential_decay(base_learning_rate=base_learning_rate,
+    global_step = tf.contrib.framework.get_or_create_global_step()
+    return tf.train.exponential_decay(learning_rate=base_learning_rate,
                                       global_step=global_step,
                                       decay_steps=decay_steps,
                                       decay_rate=weight_decay,

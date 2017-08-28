@@ -19,8 +19,8 @@ logger = logging.getLogger("bob.learn")
 class TripletTrainer(Trainer):
     """
     Trainer for Triple networks:
-    
-    Schroff, Florian, Dmitry Kalenichenko, and James Philbin. 
+
+    Schroff, Florian, Dmitry Kalenichenko, and James Philbin.
     "Facenet: A unified embedding for face recognition and clustering." Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition. 2015.
 
     **Parameters**
@@ -30,10 +30,10 @@ class TripletTrainer(Trainer):
 
     iterations:
       Maximum number of iterations
-      
+
     snapshot:
       Will take a snapshot of the network at every `n` iterations
-      
+
     validation_snapshot:
       Test with validation each `n` iterations
 
@@ -143,8 +143,7 @@ class TripletTrainer(Trainer):
         self.optimizer_class = optimizer
         self.learning_rate = learning_rate
 
-        # TODO: find an elegant way to provide this as a parameter of the trainer
-        self.global_step = tf.Variable(0, trainable=False, name="global_step")
+        self.global_step = tf.contrib.framework.get_or_create_global_step()
 
         # Saving all the variables
         self.saver = tf.train.Saver(var_list=tf.global_variables())
