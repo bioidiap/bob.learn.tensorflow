@@ -25,7 +25,7 @@ logger = logging.getLogger("bob.learn")
 class Trainer(object):
     """
     One graph trainer.
-    
+
     Use this trainer when your CNN is composed by one graph
 
     **Parameters**
@@ -35,10 +35,10 @@ class Trainer(object):
 
     iterations:
       Maximum number of iterations
-      
+
     snapshot:
       Will take a snapshot of the network at every `n` iterations
-      
+
     validation_snapshot:
       Test with validation each `n` iterations
 
@@ -118,15 +118,15 @@ class Trainer(object):
 
         """
         Prepare all the tensorflow variables before training.
-        
+
         **Parameters**
-        
+
             graph: Input graph for training
-            
+
             optimizer: Solver
-            
+
             loss: Loss function
-            
+
             learning_rate: Learning rate
         """
 
@@ -139,8 +139,7 @@ class Trainer(object):
         self.optimizer_class = optimizer
         self.learning_rate = learning_rate
 
-        # TODO: find an elegant way to provide this as a parameter of the trainer
-        self.global_step = tf.Variable(0, trainable=False, name="global_step")
+        self.global_step = tf.contrib.framework.get_or_create_global_step()
 
         # Saving all the variables
         self.saver = tf.train.Saver(var_list=tf.global_variables())
@@ -202,8 +201,8 @@ class Trainer(object):
         Given a data shuffler prepared the dictionary to be injected in the graph
 
         ** Parameters **
-            
-            data_shuffler: Data shuffler :py:class:`bob.learn.tensorflow.datashuffler.Base` 
+
+            data_shuffler: Data shuffler :py:class:`bob.learn.tensorflow.datashuffler.Base`
 
         """
         [data, labels] = data_shuffler.get_batch()

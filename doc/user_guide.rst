@@ -56,9 +56,9 @@ The example consists in training a very simple **CNN** with `MNIST` dataset in 4
     >>>
     >>> loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
     >>>
-    >>> optimizer = tf.train.GradientDescentOptimizer(0.001)
-    >>>
     >>> learning_rate = constant(base_learning_rate=0.001)
+    >>>
+    >>> optimizer = tf.train.GradientDescentOptimizer(learning_rate)
     >>>
     >>> trainer = Trainer
 
