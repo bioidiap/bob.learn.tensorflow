@@ -9,7 +9,7 @@ from bob.learn.tensorflow.network import Chopra
 from bob.learn.tensorflow.loss import BaseLoss, ContrastiveLoss, TripletLoss
 from bob.learn.tensorflow.trainers import Trainer, SiameseTrainer, TripletTrainer, constant
 from .test_cnn_scratch import validate_network
-from bob.learn.tensorflow.network import Embedding
+from bob.learn.tensorflow.network import Embedding, LightCNN9
 
 from bob.learn.tensorflow.utils import load_mnist
 import tensorflow as tf
@@ -123,7 +123,7 @@ def test_cnn_trainer():
     del trainer
     del graph
 
-"""
+
 def test_lightcnn_trainer():
 
     # generating fake data
@@ -171,7 +171,6 @@ def test_lightcnn_trainer():
     #trainer.train(validation_data_shuffler)
 
     # Using embedding to compute the accuracy
-    import ipdb; ipdb.set_trace();
     accuracy = validate_network(embedding, validation_data, validation_labels, input_shape=[None, 128, 128, 1], normalizer=Linear())
     # At least 80% of accuracy
     assert accuracy > 80.
@@ -276,4 +275,4 @@ def test_tripletcnn_trainer():
 
     del architecture
     del trainer  # Just to clean tf.variables
-"""
+

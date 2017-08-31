@@ -11,7 +11,7 @@ import bob.core
 from ..analyzers import SoftmaxAnalizer
 from tensorflow.core.framework import summary_pb2
 import time
-from bob.learn.tensorflow.datashuffler import OnlineSampling
+from bob.learn.tensorflow.datashuffler import OnlineSampling, TFRecord
 from bob.learn.tensorflow.utils.session import Session
 from .learning_rate import constant
 import time
@@ -221,7 +221,7 @@ class Trainer(object):
 
         """
 
-        if self.train_data_shuffler.prefetch:
+        if self.train_data_shuffler.prefetch or isinstance(self.train_data_shuffler, TFRecord):
             _, l, lr, summary = self.session.run([self.optimizer, self.predictor,
                                                   self.learning_rate, self.summaries_train])
         else:
@@ -325,7 +325,17 @@ class Trainer(object):
             self.thread_pool = tf.train.Coordinator()
             tf.train.start_queue_runners(coord=self.thread_pool, sess=self.session)
             threads = self.start_thread()
-            time.sleep(20) # As suggested in https://stackoverflow.com/questions/39840323/benchmark-of-howto-reading-data/39842628#39842628
+            #time.sleep(20) # As suggested in https://stackoverflow.com/questions/39840323/benchmark-of-howto-reading-data/39842628#39842628
+            
+            
+        # TODO: JUST FOR TESTING THE INTEGRATION
+        import ipdb; ipdb.set_trace();
+        if isinstance(self.train_data_shuffler, TFRecord):
+            self.session.run(tf.local_variables_initializer())
+            self.thread_pool = tf.train.Coordinator()
+            threads = tf.train.start_queue_runners(coord=self.thread_pool, sess=self.session)
+ 
+        
 
         # TENSOR BOARD SUMMARY
         self.train_summary_writter = tf.summary.FileWriter(os.path.join(self.temp_dir, 'train'), self.session.graph)
@@ -366,7 +376,7 @@ class Trainer(object):
         path = os.path.join(self.temp_dir, 'model.ckp')
         self.saver.save(self.session, path)
 
-        if self.train_data_shuffler.prefetch:
+        if self.train_data_shuffler.prefetch or isinstance(self.train_data_shuffler, TFRecord):
             # now they should definetely stop
             self.thread_pool.request_stop()
-            #self.thread_pool.join(threads)
+            self.thread_pool.join(threads)

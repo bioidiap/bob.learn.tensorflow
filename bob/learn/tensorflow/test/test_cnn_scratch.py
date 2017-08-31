@@ -4,7 +4,7 @@
 # @date: Thu 13 Oct 2016 13:35 CEST
 
 import numpy
-from bob.learn.tensorflow.datashuffler import Memory, ImageAugmentation, ScaleFactor, Linear
+from bob.learn.tensorflow.datashuffler import Memory, ImageAugmentation, ScaleFactor, Linear, TFRecord
 from bob.learn.tensorflow.network import Embedding
 from bob.learn.tensorflow.loss import BaseLoss
 from bob.learn.tensorflow.trainers import Trainer, constant
@@ -96,3 +96,43 @@ def test_cnn_trainer_scratch():
     assert accuracy > 70
     shutil.rmtree(directory)
     del trainer
+    
+    
+    
+    
+def test_cnn_trainer_scratch_tfrecord():
+    tf.reset_default_graph()
+
+    #train_data, train_labels, validation_data, validation_labels = load_mnist()
+    #train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
+
+    tfrecords_filename = "/idiap/user/tpereira/gitlab/workspace_HTFace/mnist_train.tfrecords"
+    filename_queue = tf.train.string_input_producer([tfrecords_filename], num_epochs=1)
+    train_data_shuffler  = TFRecord(filename_queue=filename_queue,
+                                    batch_size=batch_size)
+
+    # Creating datashufflers
+    # Create scratch network
+    graph = scratch_network(train_data_shuffler)
+
+    # Setting the placeholders
+    # Loss for the softmax
+    loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
+
+    # One graph trainer
+    trainer = Trainer(train_data_shuffler,
+                      iterations=iterations,
+                      analizer=None,
+                      temp_dir=directory)
+
+    trainer.create_network_from_scratch(graph=graph,
+                                        loss=loss,
+                                        learning_rate=constant(0.01, name="regular_lr"),
+                                        optimizer=tf.train.GradientDescentOptimizer(0.01),
+                                        )
+
+    trainer.train()
+    #accuracy = validate_network(embedding, validation_data, validation_labels)
+    #assert accuracy > 70
+    #shutil.rmtree(directory)
+    #del trainer    
