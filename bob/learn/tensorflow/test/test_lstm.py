@@ -7,7 +7,7 @@ from bob.learn.tensorflow.loss import BaseLoss
 from bob.learn.tensorflow.trainers import Trainer, constant
 from bob.learn.tensorflow.utils import load_real_mnist, load_mnist
 from bob.learn.tensorflow.utils.session import Session
-from bob.learn.tensorflow.layers import lstm
+from bob.learn.tensorflow.layers import rnn
 
 import tensorflow as tf
 import shutil
@@ -95,7 +95,7 @@ def test_dnn_trainer():
         graph = input_pl[:, n_input:]
         graph = tf.reshape(graph, (-1, n_steps, n_input))
         graph = tf.unstack(graph, n_steps, 1)
-        graph = lstm(graph, n_hidden)
+        graph = rnn(graph, n_hidden)
         graph = slim.fully_connected(graph, n_classes, activation_fn=None)
 
     # Loss for the softmax
