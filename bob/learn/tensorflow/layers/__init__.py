@@ -1,7 +1,7 @@
 from .Layer import Layer
 from .Conv1D import Conv1D
 #from .Maxout import maxout
-from .LSTM import lstm
+from .RNN import rnn
 
 
 # gets sphinx autodoc done right - don't remove it
@@ -21,6 +21,6 @@ def __appropriate__(*args):
 __appropriate__(
     Layer,
     Conv1D,
-    LSTM
+    RNN
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]
