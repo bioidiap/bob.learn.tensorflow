@@ -119,5 +119,6 @@ def test_dnn_trainer():
     embedding = Embedding(train_data_shuffler("data", from_queue=False), graph)
     accuracy = test_network(embedding, test_data, test_labels)
     logger.info("Accuracy {}".format(accuracy))
+    assert accuracy > 0.8
 
 test_dnn_trainer()
