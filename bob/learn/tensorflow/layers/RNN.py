@@ -1,18 +1,15 @@
 #!/usr/bin/env python
 
 import tensorflow as tf
-
 from tensorflow.python.layers import base
 
-# def lstm(inputs, n_hidden, name=None):
-#     """
-#     """
-#     return LSTM(n_hidden=n_hidden, name=name)(inputs)
-
-def rnn(inputs, n_hidden, cell_fn, cell_args, name=None):
+def rnn(inputs, n_hidden,
+        cell_fn = tf.nn.rnn_cell.BasicLSTMCell,
+        cell_args = { "forget_bias": 1.0, },
+        name = None):
     """
     """
-    return RNN(n_hidden=n_hidden,
+    return RNN(n_hidden = n_hidden,
                cell_fn = cell_fn,
                cell_args = cell_args,
                name=name)(inputs)
