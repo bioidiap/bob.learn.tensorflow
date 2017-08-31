@@ -22,7 +22,6 @@ def __appropriate__(*args):
 __appropriate__(
     Layer,
     Conv1D,
-    LSTM,
     RNN,
     Maxout
     )
