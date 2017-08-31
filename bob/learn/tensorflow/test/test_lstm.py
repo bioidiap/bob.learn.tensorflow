@@ -7,6 +7,8 @@ from bob.learn.tensorflow.loss import BaseLoss
 from bob.learn.tensorflow.trainers import Trainer, constant
 from bob.learn.tensorflow.utils import load_real_mnist, load_mnist
 from bob.learn.tensorflow.utils.session import Session
+from bob.learn.tensorflow.layers import lstm
+
 import tensorflow as tf
 import shutil
 
@@ -68,7 +70,7 @@ def test_dnn_trainer():
     # Preparing the architecture
     input_pl = train_data_shuffler("data", from_queue=False)
 
-    version = "lstm"
+    version = "bob"
 
     # Original code using MLP
     if version == "mlp":
@@ -88,6 +90,13 @@ def test_dnn_trainer():
         graph = outputs[-1]
         graph = slim.fully_connected(graph, n_classes, activation_fn=None)
 
+    elif version == "bob":
+        slim = tf.contrib.slim
+        graph = input_pl[:, n_input:]
+        graph = tf.reshape(graph, (-1, n_steps, n_input))
+        graph = tf.unstack(graph, n_steps, 1)
+        graph = lstm(graph, n_hidden)
+        graph = slim.fully_connected(graph, n_classes, activation_fn=None)
 
     # Loss for the softmax
     loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
