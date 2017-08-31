@@ -165,6 +165,7 @@ class Trainer(object):
         self.summaries_validation = tf.add_to_collection("summaries_validation", self.summaries_validation)
 
         # Creating the variables
+        self.session.run(tf.local_variables_initializer())
         tf.global_variables_initializer().run(session=self.session)
 
     def create_network_from_file(self, file_name, clear_devices=True):
@@ -329,9 +330,8 @@ class Trainer(object):
             
             
         # TODO: JUST FOR TESTING THE INTEGRATION
-        import ipdb; ipdb.set_trace();
+        #import ipdb; ipdb.set_trace();
         if isinstance(self.train_data_shuffler, TFRecord):
-            self.session.run(tf.local_variables_initializer())
             self.thread_pool = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=self.thread_pool, sess=self.session)
  
