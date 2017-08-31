@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import sys
 import numpy
 from bob.learn.tensorflow.datashuffler import Memory, ScaleFactor
 from bob.learn.tensorflow.network import MLP, Embedding
@@ -7,7 +8,7 @@ from bob.learn.tensorflow.loss import BaseLoss
 from bob.learn.tensorflow.trainers import Trainer, constant
 from bob.learn.tensorflow.utils import load_real_mnist, load_mnist
 from bob.learn.tensorflow.utils.session import Session
-from bob.learn.tensorflow.layers import rnn
+from bob.learn.tensorflow.layers import rnn, rnn3d
 
 import tensorflow as tf
 import shutil
@@ -17,14 +18,14 @@ logger = logging.getLogger("bob.learn.tf")
 
 ######################################################################
 
-batch_size = 128
+batch_size = 64
 iterations = 200
 seed = 10
 learning_rate = 0.001
 
 n_input = 28 # MNIST data input (img shape: 28*28)
 n_steps = 27 # timesteps
-n_hidden = 128 # hidden layer num of features
+n_hidden = 144 # hidden layer num of features
 n_classes = 10 # MNIST total classes (0-9 digits)
 
 directory = "./temp/lstm"
@@ -70,7 +71,7 @@ def test_dnn_trainer():
     # Preparing the architecture
     input_pl = train_data_shuffler("data", from_queue=False)
 
-    version = "bob"
+    version = "bob3d"
 
     # Original code using MLP
     if version == "mlp":
@@ -96,6 +97,13 @@ def test_dnn_trainer():
         graph = tf.reshape(graph, (-1, n_steps, n_input))
         graph = tf.unstack(graph, n_steps, 1)
         graph = rnn(graph, n_hidden)
+        graph = slim.fully_connected(graph, n_classes, activation_fn=None)
+
+    elif version == "bob3d":
+        slim = tf.contrib.slim
+        graph = input_pl[:, n_input:]
+        graph = tf.reshape(graph, (-1, n_steps, n_input))
+        graph = rnn3d(graph, n_hidden)
         graph = slim.fully_connected(graph, n_classes, activation_fn=None)
 
     # Loss for the softmax
