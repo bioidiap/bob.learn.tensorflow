@@ -2,6 +2,8 @@
 
 import sys
 import numpy
+import random
+
 from bob.learn.tensorflow.datashuffler import Memory, ScaleFactor
 from bob.learn.tensorflow.network import MLP, Embedding
 from bob.learn.tensorflow.loss import BaseLoss
@@ -32,6 +34,7 @@ directory = "./temp/lstm"
 
 ######################################################################
 
+
 def test_network(embedding, test_data, test_labels):
     # Testing
     test_data_shuffler = Memory(test_data, test_labels,
@@ -57,7 +60,7 @@ def test_network(embedding, test_data, test_labels):
     return acc
 
 
-def test_dnn_trainer():
+def test_lstm_trainer_on_mnist():
     """
     """
     train_data, train_labels, test_data, test_labels = load_real_mnist(data_dir="mnist")
@@ -129,4 +132,67 @@ def test_dnn_trainer():
     logger.info("Accuracy {}".format(accuracy))
     assert accuracy > 0.8
 
-test_dnn_trainer()
+def generate_data_at_time(t, n_steps, dt):
+    """
+    Generate a sequence for time t with n_steps previous times
+    """
+    dim = 3
+
+    # The sequence t-n_steps*dt, ..., t-3*dt, t-2*dt, t-dt
+    x = dt*(np.arange(n_steps, dtype=np.float64) + 1) + t
+    x = -np.fliplr(x.reshape(1,-1))
+
+    # The values of the function before time t
+    sequence_before = np.zeros((n_steps, dim))
+    sequence_before[:,0] = np.sin(x)
+    sequence_before[:,1] = np.cos(x)
+    sequence_before[:,2] = np.cos(2*x) + np.sin(x)
+
+    # The value to be predicted at time t
+    target = np.zeros((1,dim))
+    target[0,0] = np.sin(t)
+    target[0,1] = np.cos(t)
+    target[:,2] = np.cos(2*t) + np.sin(t)
+
+    return t, x, sequence_before, target
+
+
+def generate_training_data(n_train, dt):
+    """
+    """
+    t0, x0, s0, t0 = generate_data_at_time(0)
+    n_steps = s0.shape[0]
+    dim = s0.shape[1]
+
+    times     = np.zeros((n_train,1))
+    sequences = np.zeros((n_train, n_steps, dim))
+    targets   = np.zeros((n_train, dim))
+
+    for n in range(batch_size):
+        t = 4*np.pi*(random.random() - 0.5)
+        t0, x0, ty0, sy0 = generate_data_at_time(t, n_steps, dt)
+        t[n,0] = t0
+        ty[n] = ty0
+        sy[n] = sy0
+
+    return t, ty, sy
+
+
+
+def test_lstm_trainer_on_real_functions():
+    """
+    """
+    dt = 0.01
+    # Generate train data in 3D matrix to use Memory class
+    train_data, train_targets = generate_training_data(n_train, n_steps)
+
+
+    # # Creating datashufflers
+    # train_data_shuffler = Memory(train_data, train_targets,
+    #                              input_shape=[None, 784],
+    #                              batch_size=batch_size,
+    #                              normalizer=ScaleFactor())
+
+test_lstm_trainer_on_mnist()
+
+# test_lstm_trainer_on_real_functions()
