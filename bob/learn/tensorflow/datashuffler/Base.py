@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 11 May 2016 09:39:36 CEST 
+# @date: Wed 11 May 2016 09:39:36 CEST
 
 import numpy
 import tensorflow as tf
@@ -39,18 +39,20 @@ class Base(object):
 
      normalizer:
        The algorithm used for feature scaling. Look :py:class:`bob.learn.tensorflow.datashuffler.ScaleFactor`, :py:class:`bob.learn.tensorflow.datashuffler.Linear` and :py:class:`bob.learn.tensorflow.datashuffler.MeanOffset`
-       
+
      prefetch:
         Do prefetch?
-        
+
      prefetch_capacity:
-        
+
 
     """
 
     def __init__(self, data, labels,
                  input_shape=[None, 28, 28, 1],
                  input_dtype="float32",
+                 input_lshape=[None],
+                 input_ltype=tf.int64,
                  batch_size=32,
                  seed=10,
                  data_augmentation=None,
@@ -65,6 +67,7 @@ class Base(object):
 
         self.normalizer = normalizer
         self.input_dtype = input_dtype
+        self.input_ltype = input_ltype
 
         # TODO: Check if the bacth size is higher than the input data
         self.batch_size = batch_size
@@ -74,6 +77,8 @@ class Base(object):
         self.input_shape = tuple(input_shape)
         self.labels = labels
         self.possible_labels = list(set(self.labels))
+        self.input_lshape = tuple(input_lshape)
+
 
         # Computing the data samples fro train and validation
         self.n_samples = len(self.labels)
@@ -101,13 +106,17 @@ class Base(object):
     def create_placeholders(self):
         """
         Create place holder instances
-        
-        :return: 
+
+        :return:
         """
         with tf.name_scope("Input"):
 
-            self.data_ph = tf.placeholder(tf.float32, shape=self.input_shape, name="data")
-            self.label_ph = tf.placeholder(tf.int64, shape=[None], name="label")
+            self.data_ph = tf.placeholder(self.input_dtype,
+                                          shape=self.input_shape,
+                                          name="data")
+            self.label_ph = tf.placeholder(self.input_ltype,
+                                           shape=self.input_lshape,
+                                           name="label")
 
             # If prefetch, setup the queue to feed data
             if self.prefetch:
@@ -126,7 +135,7 @@ class Base(object):
     def __call__(self, element, from_queue=False):
         """
         Return the necessary placeholder
-        
+
         """
 
         if not element in ["data", "label"]:
@@ -264,7 +273,7 @@ class Base(object):
         try:
             for i in range(self.batch_size):
                 data = self.batch_generator.next()
-                
+
                 holder.append(data)
                 if len(holder) == self.batch_size:
                     return self._aggregate_batch(holder, False)
@@ -272,7 +281,7 @@ class Base(object):
         except StopIteration:
             self.batch_generator = None
             self.epoch += 1
-            
+
             # If we have left data in the epoch, return
             if len(holder) > 0:
                 return self._aggregate_batch(holder, False)
@@ -281,4 +290,3 @@ class Base(object):
                 data = self.batch_generator.next()
                 holder.append(data)
                 return self._aggregate_batch(holder, False)
-
