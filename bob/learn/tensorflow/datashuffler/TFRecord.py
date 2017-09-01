@@ -91,7 +91,7 @@ class TFRecord(object):
 
         # Define a reader and read the next record
         reader = tf.TFRecordReader()
-        _, serialized_example = reader.read(self.filename_queue)        
+        _, serialized_example = reader.read(self.filename_queue)
         
         # Decode the record read by the reader
         features = tf.parse_single_example(serialized_example, features=feature)
@@ -103,15 +103,14 @@ class TFRecord(object):
         label = tf.cast(features['train/label'], tf.int64)
         
         # Reshape image data into the original shape
-        image = tf.reshape(image, self.input_shape[1:])
+        image = tf.reshape(image, list(self.input_shape[1:]))
                 
-        images, labels = tf.train.shuffle_batch([image, label], batch_size=32, capacity=1000, num_threads=1, min_after_dequeue=1)
+        images, labels = tf.train.shuffle_batch([image, label], batch_size=32, capacity=1000, num_threads=1, min_after_dequeue=1, name="XUXA1")
         self.data_ph = images
         self.label_ph = labels
 
         self.data_ph_from_queue = self.data_ph
         self.label_ph_from_queue = self.label_ph
-
 
 
     def __call__(self, element, from_queue=False):

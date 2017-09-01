@@ -134,7 +134,14 @@ class Trainer(object):
         self.label_ph = self.train_data_shuffler("label", from_queue=True)
         self.graph = graph
         self.loss = loss
-        self.predictor = self.loss(self.graph, self.label_ph)
+        
+        #TODO: DEBUG
+        #self.predictor = self.loss(self.graph, self.label_ph)
+        
+        self.predictor = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.graph,
+                                                                        labels=self.label_ph)
+        self.loss = tf.reduce_mean(self.predictor)
+
 
         self.optimizer_class = optimizer
         self.learning_rate = learning_rate
@@ -142,7 +149,7 @@ class Trainer(object):
         self.global_step = tf.contrib.framework.get_or_create_global_step()
 
         # Saving all the variables
-        self.saver = tf.train.Saver(var_list=tf.global_variables())
+        self.saver = tf.train.Saver(var_list=tf.global_variables() + tf.local_variables())
 
         tf.add_to_collection("global_step", self.global_step)
 
@@ -165,7 +172,7 @@ class Trainer(object):
         self.summaries_validation = tf.add_to_collection("summaries_validation", self.summaries_validation)
 
         # Creating the variables
-        self.session.run(tf.local_variables_initializer())
+        #tf.local_variables_initializer().run(session=self.session)
         tf.global_variables_initializer().run(session=self.session)
 
     def create_network_from_file(self, file_name, clear_devices=True):
@@ -321,7 +328,7 @@ class Trainer(object):
         #if isinstance(train_data_shuffler, OnlineSampling):
         #    train_data_shuffler.set_feature_extractor(self.architecture, session=self.session)
 
-        # Start a thread to enqueue data asynchronously, and hide I/O latency.
+        # Start a thread to enqueue data asynchronously, and hide I/O latency.        
         if self.train_data_shuffler.prefetch:
             self.thread_pool = tf.train.Coordinator()
             tf.train.start_queue_runners(coord=self.thread_pool, sess=self.session)
@@ -332,9 +339,9 @@ class Trainer(object):
         # TODO: JUST FOR TESTING THE INTEGRATION
         #import ipdb; ipdb.set_trace();
         if isinstance(self.train_data_shuffler, TFRecord):
+            tf.local_variables_initializer().run(session=self.session)
             self.thread_pool = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=self.thread_pool, sess=self.session)
- 
         
 
         # TENSOR BOARD SUMMARY
