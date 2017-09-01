@@ -13,7 +13,6 @@ from bob.learn.tensorflow.utils.session import Session
 from bob.learn.tensorflow.layers import rnn, rnn3d
 
 import tensorflow as tf
-import shutil
 
 import logging
 logger = logging.getLogger("bob.learn.tf")
@@ -139,8 +138,9 @@ def generate_data_at_time(t, n_steps, dt):
     dim = 3
 
     # The sequence t-n_steps*dt, ..., t-3*dt, t-2*dt, t-dt
-    x = dt*(np.arange(n_steps, dtype=np.float64) + 1) + t
+    x = dt*(np.arange(n_steps, dtype=np.float64) + 1)
     x = -np.fliplr(x.reshape(1,-1))
+    x += t
 
     # The values of the function before time t
     sequence_before = np.zeros((n_steps, dim))
@@ -153,6 +153,13 @@ def generate_data_at_time(t, n_steps, dt):
     target[0,0] = np.sin(t)
     target[0,1] = np.cos(t)
     target[:,2] = np.cos(2*t) + np.sin(t)
+
+    print("="*70)
+    print(t)
+    print(x)
+    print(sequence_before)
+    print(target)
+    print("="*70)
 
     return t, x, sequence_before, target
 
@@ -187,6 +194,7 @@ def test_lstm_trainer_on_real_functions():
     # Generate train data in 3D matrix to use Memory class
     times, train_data, train_targets = generate_training_data(n_train, n_steps, dt)
 
+    print(times)
     print(train_data)
 
     # # Creating datashufflers
