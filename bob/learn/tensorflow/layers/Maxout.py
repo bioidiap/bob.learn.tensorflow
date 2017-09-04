@@ -16,54 +16,32 @@ from tensorflow.python.layers import base
 
 
 def maxout(inputs, num_units, axis=-1, name=None):
-    """Adds a maxout op from https://arxiv.org/abs/1302.4389
-
-      "Maxout Networks"
-
-      Ian J. Goodfellow, David Warde-Farley, Mehdi Mirza, Aaron Courville, Yoshua
-      Bengio
-
-    Usually the operation is performed in the filter/channel dimension. This can also be
-    used after fully-connected layers to reduce number of features.
-
-    Args:
-      inputs: Tensor input
-      num_units: Specifies how many features will remain after maxout in the `axis` dimension (usually channel).
-      This must be multiple of number of `axis`.
-      axis: The dimension where max pooling will be performed. Default is the
-        last dimension.
-      name: Optional scope for name_scope.
-    Returns:
-      A `Tensor` representing the results of the pooling operation.
-    Raises:
-      ValueError: if num_units is not multiple of number of features.
-    """
-
     return MaxOut(num_units=num_units, axis=axis, name=name)(inputs)
 
 
 class MaxOut(base.Layer):
-    """Adds a maxout op from https://arxiv.org/abs/1302.4389
 
-      "Maxout Networks"
+    """
+     Adds a maxout op from 
 
-      Ian J. Goodfellow, David Warde-Farley, Mehdi Mirza, Aaron Courville, Yoshua
-      Bengio
+    "Maxout Networks"
+
+    Ian J. Goodfellow, David Warde-Farley, Mehdi Mirza, Aaron Courville, Yoshua
+    Bengio
 
     Usually the operation is performed in the filter/channel dimension. This can also be
     used after fully-connected layers to reduce number of features.
 
-    Args:
-      inputs: Tensor input
-      num_units: Specifies how many features will remain after maxout in the `axis` dimension (usually channel).
-      This must be multiple of number of `axis`.
-      axis: The dimension where max pooling will be performed. Default is the
-        last dimension.
-      name: Optional scope for name_scope.
-    Returns:
-      A `Tensor` representing the results of the pooling operation.
-    Raises:
-      ValueError: if num_units is not multiple of number of features.
+    **Parameters**
+    inputs: Tensor input
+
+    num_units: Specifies how many features will remain after maxout in the `axis` dimension (usually channel).
+    This must be multiple of number of `axis`.
+
+    axis: The dimension where max pooling will be performed. Default is the
+      last dimension.
+
+    name: Optional scope for name_scope.
     """
 
     def __init__(self,
@@ -100,5 +78,5 @@ class MaxOut(base.Layer):
         shape[self.axis] = self.num_units
         outputs.set_shape(shape)
 
-
         return outputs
+
