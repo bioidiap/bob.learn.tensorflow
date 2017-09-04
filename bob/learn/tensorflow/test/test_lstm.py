@@ -19,20 +19,6 @@ logger = logging.getLogger("bob.learn.tf")
 
 ######################################################################
 
-batch_size = 64
-iterations = 200
-seed = 10
-learning_rate = 0.001
-
-n_input = 28 # MNIST data input (img shape: 28*28)
-n_steps = 27 # timesteps
-n_hidden = 144 # hidden layer num of features
-n_classes = 10 # MNIST total classes (0-9 digits)
-
-directory = "./temp/lstm"
-
-######################################################################
-
 
 def test_network(embedding, test_data, test_labels):
     # Testing
@@ -62,6 +48,18 @@ def test_network(embedding, test_data, test_labels):
 def test_lstm_trainer_on_mnist():
     """
     """
+    batch_size = 64
+    iterations = 300
+    seed = 10
+    learning_rate = 0.01
+
+    n_input = 28 # MNIST data input (img shape: 28*28)
+    n_steps = 27 # timesteps; 27 to avoid square images, easier to debug
+    n_hidden = 128 # hidden layer num of features
+    n_classes = 10 # MNIST total classes (0-9 digits)
+
+    directory = "./temp/lstm"
+
     train_data, train_labels, test_data, test_labels = load_real_mnist(data_dir="mnist")
 
     # Creating datashufflers
@@ -190,12 +188,26 @@ def test_lstm_trainer_on_real_functions():
     dt = 0.01
     n_train = 7
     n_steps = 3
+    batch_size = 10
 
     # Generate train data in 3D matrix to use Memory class
     times, train_data, train_targets = generate_training_data(n_train, n_steps, dt)
+    dim = train_data.shape[1]
+
+    # Creating datashufflers
+    train_data_shuffler = Memory(train_data, train_targets,
+                                 input_shape=[None, train_data[1], train_data[2]],
+                                 batch_size=batch_size,
+                                 normalizer=ScaleFactor())
 
     print(times)
     print(train_data)
+
+    # Preparing the architecture
+    input_pl = train_data_shuffler("data", from_queue=False)
+    graph = rnn3d(graph, n_hidden)
+    graph = slim.fully_connected(graph, dim, activation_fn=None)
+
 
     # # Creating datashufflers
     # train_data_shuffler = Memory(train_data, train_targets,
@@ -203,6 +215,6 @@ def test_lstm_trainer_on_real_functions():
     #                              batch_size=batch_size,
     #                              normalizer=ScaleFactor())
 
-# test_lstm_trainer_on_mnist()
+test_lstm_trainer_on_mnist()
 
-test_lstm_trainer_on_real_functions()
+# test_lstm_trainer_on_real_functions()
