@@ -142,7 +142,6 @@ class Trainer(object):
                                                                         labels=self.label_ph)
         self.loss = tf.reduce_mean(self.predictor)
 
-
         self.optimizer_class = optimizer
         self.learning_rate = learning_rate
 
@@ -172,7 +171,7 @@ class Trainer(object):
         self.summaries_validation = tf.add_to_collection("summaries_validation", self.summaries_validation)
 
         # Creating the variables
-        #tf.local_variables_initializer().run(session=self.session)
+        tf.local_variables_initializer().run(session=self.session)
         tf.global_variables_initializer().run(session=self.session)
 
     def create_network_from_file(self, file_name, clear_devices=True):
@@ -230,11 +229,11 @@ class Trainer(object):
         """
 
         if self.train_data_shuffler.prefetch or isinstance(self.train_data_shuffler, TFRecord):
-            _, l, lr, summary = self.session.run([self.optimizer, self.predictor,
+            _, l, lr, summary = self.session.run([self.optimizer, self.loss,
                                                   self.learning_rate, self.summaries_train])
         else:
             feed_dict = self.get_feed_dict(self.train_data_shuffler)
-            _, l, lr, summary = self.session.run([self.optimizer, self.predictor,
+            _, l, lr, summary = self.session.run([self.optimizer, self.loss,
                                                   self.learning_rate, self.summaries_train], feed_dict=feed_dict)
 
         logger.info("Loss training set step={0} = {1}".format(step, l))
@@ -267,8 +266,8 @@ class Trainer(object):
         """
 
         # Train summary
-        tf.summary.scalar('loss', self.predictor)
-        tf.summary.scalar('lr', self.learning_rate)
+        tf.summary.scalar('loss', self.loss)
+        tf.summary.scalar('lr', self.learning_rate)        
         return tf.summary.merge_all()
 
     def start_thread(self):
@@ -337,9 +336,7 @@ class Trainer(object):
             
             
         # TODO: JUST FOR TESTING THE INTEGRATION
-        #import ipdb; ipdb.set_trace();
         if isinstance(self.train_data_shuffler, TFRecord):
-            tf.local_variables_initializer().run(session=self.session)
             self.thread_pool = tf.train.Coordinator()
             threads = tf.train.start_queue_runners(coord=self.thread_pool, sess=self.session)
         

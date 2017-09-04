@@ -11,6 +11,7 @@ from bob.learn.tensorflow.trainers import Trainer, constant
 from bob.learn.tensorflow.utils import load_mnist
 import tensorflow as tf
 import shutil
+import os
 
 """
 Some unit tests that create networks on the fly
@@ -101,20 +102,41 @@ def test_cnn_trainer_scratch():
     
     
 def test_cnn_trainer_scratch_tfrecord():
+    train_data, train_labels, validation_data, validation_labels = load_mnist()
+    train_data = train_data.astype("float32") *  0.00390625
+
+    def _bytes_feature(value):
+        return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+
+    def _int64_feature(value):
+        return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+
+
+    def create_tf_record(tfrecords_filename):
+        writer = tf.python_io.TFRecordWriter(tfrecords_filename)
+
+        for i in range(train_data.shape[0]):
+            img = train_data[i]
+            img_raw = img.tostring()
+            
+            feature = {'train/image': _bytes_feature(img_raw),
+                       'train/label': _int64_feature(train_labels[i])
+                      }
+            
+            example = tf.train.Example(features=tf.train.Features(feature=feature))
+            writer.write(example.SerializeToString())
+        writer.close()
+
     tf.reset_default_graph()
+    
+    # Creating the tf record
+    tfrecords_filename = "mnist_train.tfrecords"
+    create_tf_record(tfrecords_filename)   
+    filename_queue = tf.train.string_input_producer([tfrecords_filename], num_epochs=1, name="input")
 
-    #import ipdb; ipdb.set_trace();
-
-    #train_data, train_labels, validation_data, validation_labels = load_mnist()
-    #train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
-
-    tfrecords_filename = "/idiap/user/tpereira/gitlab/workspace_HTFace/mnist_train.tfrecords"
-    filename_queue = tf.train.string_input_producer([tfrecords_filename], num_epochs=1, name="XUXA")
+    # Creating the CNN using the TFRecord as input
     train_data_shuffler  = TFRecord(filename_queue=filename_queue,
                                     batch_size=batch_size)
-
-    # Creating datashufflers
-    # Create scratch network
     graph = scratch_network(train_data_shuffler)
 
     # Setting the placeholders
@@ -135,145 +157,7 @@ def test_cnn_trainer_scratch_tfrecord():
                                         )
 
     trainer.train()
-    #accuracy = validate_network(embedding, validation_data, validation_labels)
-    #assert accuracy > 70
-    #shutil.rmtree(directory)
-    #del trainer    
-    
-    
-    
-def test_xuxa():
-    tfrecords_filename = '/idiap/user/tpereira/gitlab/workspace_HTFace/mnist_train.tfrecords'
-    def read_and_decode(filename_queue):
-
-        feature = {'train/image': tf.FixedLenFeature([], tf.string),
-                   'train/label': tf.FixedLenFeature([], tf.int64)}
-
-        # Define a reader and read the next record
-        reader = tf.TFRecordReader()
-        
-        _, serialized_example = reader.read(filename_queue)
-        
-        
-        # Decode the record read by the reader
-        features = tf.parse_single_example(serialized_example, features=feature)
-        
-        # Convert the image data from string back to the numbers
-        image = tf.decode_raw(features['train/image'], tf.float32)
-        
-        # Cast label data into int32
-        label = tf.cast(features['train/label'], tf.int64)
-        
-        # Reshape image data into the original shape
-        image = tf.reshape(image, [28, 28, 1])
-        
-        
-        images, labels = tf.train.shuffle_batch([image, label], batch_size=32, capacity=1000, num_threads=1, min_after_dequeue=1, name="XUXA1")
-
-        return images, labels
-
-
-
-    slim = tf.contrib.slim
-
-
-    def scratch_network(inputs, reuse=False):
-
-        # Creating a random network
-        initializer = tf.contrib.layers.xavier_initializer(seed=10)
-        graph = slim.conv2d(inputs, 10, [3, 3], activation_fn=tf.nn.relu, stride=1, scope='conv1',
-                            weights_initializer=initializer, reuse=reuse)
-        graph = slim.max_pool2d(graph, [4, 4], scope='pool1')
-        graph = slim.flatten(graph, scope='flatten1')
-        graph = slim.fully_connected(graph, 10, activation_fn=None, scope='fc1',
-                                     weights_initializer=initializer, reuse=reuse)
-
-        return graph
-
-    def create_general_summary(predictor):
-        """
-        Creates a simple tensorboard summary with the value of the loss and learning rate
-        """
-
-        # Train summary
-        tf.summary.scalar('loss', predictor)
-        return tf.summary.merge_all()
-
-
-    #create_tf_record()
-
-
-    # Create a list of filenames and pass it to a queue
-    filename_queue = tf.train.string_input_producer([tfrecords_filename], num_epochs=5, name="XUXA")
-
-    images, labels = read_and_decode(filename_queue)
-    graph = scratch_network(images)
-    predictor = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=graph, labels=labels)
-    loss = tf.reduce_mean(predictor)
-
-    global_step = tf.contrib.framework.get_or_create_global_step()
-    optimizer = tf.train.GradientDescentOptimizer(0.1).minimize(loss, global_step=global_step)
-
-
-
-    print("Batching")
-    #import ipdb; ipdb.set_trace()
-    sess = tf.Session()
-    #with tf.Session() as sess:
-
-    sess.run(tf.local_variables_initializer())
-    sess.run(tf.global_variables_initializer())
-
-
-    saver = tf.train.Saver(var_list=tf.global_variables() + tf.local_variables())
-
-    train_summary_writter = tf.summary.FileWriter('./tf-record/train', sess.graph)
-    summary_op = create_general_summary(loss)
-
-        
-    #tf.global_variables_initializer().run(session=self.session)
-
-    # Any preprocessing here ...
-
-    ############# Batching ############
-
-    # Creates batches by randomly shuffling tensors
-    #images, labels = tf.train.shuffle_batch([image, label], batch_size=10, capacity=30, num_threads=1, min_after_dequeue=10)
-    #images, labels = tf.train.batch([image, label], batch_size=10)
-
-
-    #import ipdb; ipdb.set_trace();
-    #init_op = tf.group(tf.global_variables_initializer(), tf.local_variables_initializer())
-    #sess.run(init_op)
-    #sess.run(tf.initialize_all_variables())
-
-    coord = tf.train.Coordinator()
-    threads = tf.train.start_queue_runners(coord=coord, sess=sess)
-
-    #import ipdb; ipdb.set_trace();
-
-    #import ipdb; ipdb.set_trace()
-    for i in range(10):
-        _, l, summary = sess.run([optimizer, loss, summary_op])
-        print l
-
-        #img, lbl = sess.run([images, labels])        
-        #print img.shape
-        #print lbl
-        train_summary_writter.add_summary(summary, i)
-
-
-    # Stop the threads
-    coord.request_stop()
-
-    # Wait for threads to stop
-    coord.join(threads)    
-    x = 0
-    train_summary_writter.close()
-    saver.save(sess, "xuxa.ckp")
-
-
-
-
+    os.remove(tfrecords_filename)
+    assert True
 
 
