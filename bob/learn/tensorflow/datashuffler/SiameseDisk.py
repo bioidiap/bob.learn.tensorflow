@@ -5,6 +5,7 @@
 
 import numpy
 import bob.core
+import six
 logger = bob.core.log.setup("bob.learn.tensorflow")
 
 from .Disk import Disk
@@ -95,7 +96,7 @@ class SiameseDisk(Siamese, Disk):
         pairs_generator = self.get_genuine_or_not(self.data, self.labels)
         for i in range(self.data.shape[0]):
 
-            left_filename, right_filename, label = pairs_generator.next()
+            left_filename, right_filename, label = six.next(pairs_generator)
             left = self.load_from_file(left_filename)
             right = self.load_from_file(right_filename)
 

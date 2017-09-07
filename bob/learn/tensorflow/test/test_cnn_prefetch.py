@@ -141,7 +141,7 @@ def test_siamesecnn_trainer():
     tf.reset_default_graph()
     assert len(tf.global_variables())==0    
     """
-    assert == True
+    assert True
 
 def test_tripletcnn_trainer():
     """
@@ -200,4 +200,4 @@ def test_tripletcnn_trainer():
     tf.reset_default_graph()
     assert len(tf.global_variables())==0    
     """
-    assert == True
+    assert True

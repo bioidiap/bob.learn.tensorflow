@@ -4,7 +4,7 @@
 # @date: Wed 11 May 2016 09:39:36 CEST 
 
 import numpy
-
+import six
 from .Memory import Memory
 from .Siamese import Siamese
 import tensorflow as tf
@@ -86,7 +86,7 @@ class SiameseMemory(Siamese, Memory):
         pairs_generator = self.get_genuine_or_not(self.data, self.labels)
         for i in range(self.data.shape[0]):
 
-            left, right, label = pairs_generator.next()
+            left, right, label = six.next(pairs_generator)
 
             # Applying the data augmentation
             if self.data_augmentation is not None:
