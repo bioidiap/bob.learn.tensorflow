@@ -25,6 +25,7 @@ def process_images(base_path, extension, shape):
 
     files = os.listdir(base_path)
     sum_data = numpy.zeros(shape=shape)
+    print("Processing {0}".format(base_path))
     count = 0
     for f in files:
         path = os.path.join(base_path, f)
@@ -46,7 +47,7 @@ def main():
 
     BASE_PATH = args['<base_path>']
     EXTENSION = args['--extension']
-    SHAPE = [1, 224, 224]
+    SHAPE = [3, 224, 224]
 
     count, sum_data = process_images(BASE_PATH, EXTENSION, SHAPE)
 

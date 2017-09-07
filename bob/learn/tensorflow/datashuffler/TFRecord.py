@@ -34,7 +34,7 @@ class TFRecord(object):
         self.input_shape = tuple(input_shape)
 
         # Prefetch variables
-        self.prefetch = False
+        self.prefetch = True
         self.prefetch_capacity = prefetch_capacity
         self.prefetch_threads = prefetch_threads
         

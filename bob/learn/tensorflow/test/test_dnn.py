@@ -37,6 +37,8 @@ def validate_network(embedding, validation_data, validation_labels):
 
 
 def test_dnn_trainer():
+    tf.reset_default_graph()
+
     train_data, train_labels, validation_data, validation_labels = load_mnist()
 
     # Creating datashufflers
@@ -79,3 +81,5 @@ def test_dnn_trainer():
 
     del architecture
     del trainer  # Just to clean the variables
+    tf.reset_default_graph()
+    assert len(tf.global_variables())==0    

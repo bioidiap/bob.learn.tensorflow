@@ -22,3 +22,16 @@ class BaseLoss(object):
 
     def __call__(self, graph, label):
         return self.operation(self.loss(logits=graph, labels=label), name=self.name)
+        
+        
+class MeanSoftMaxLoss(object):
+    """
+    Mean softmax loss
+    """
+
+    def __init__(self, name="loss"):
+        self.name = name
+
+    def __call__(self, graph, label):
+        return tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(
+                              logits=graph, labels=label), name=self.name)

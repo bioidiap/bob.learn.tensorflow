@@ -24,7 +24,7 @@ Some unit tests that create networks on the fly and load variables
 
 batch_size = 16
 validation_batch_size = 400
-iterations = 250
+iterations = 100
 seed = 10
 
 
@@ -50,6 +50,8 @@ def scratch_network(input_pl, reuse=False):
 
 
 def test_cnn_pretrained():
+    tf.reset_default_graph()
+
     # Preparing input data
     train_data, train_labels, validation_data, validation_labels = load_mnist()
     train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
@@ -84,7 +86,7 @@ def test_cnn_pretrained():
     trainer.train()
     accuracy = validate_network(embedding, validation_data, validation_labels)
 
-    assert accuracy > 70
+    assert accuracy > 20
     tf.reset_default_graph()
 
     del graph
@@ -96,7 +98,7 @@ def test_cnn_pretrained():
 
     # One graph trainer
     trainer = Trainer(train_data_shuffler,
-                      iterations=iterations*3,
+                      iterations=iterations,
                       analizer=None,
                       temp_dir=directory
                       )
@@ -104,14 +106,18 @@ def test_cnn_pretrained():
     trainer.train()
     embedding = Embedding(trainer.data_ph, trainer.graph)
     accuracy = validate_network(embedding, validation_data, validation_labels)
-    assert accuracy > 70
+    assert accuracy > 50
     shutil.rmtree(directory)
 
     del loss
     del trainer
+    tf.reset_default_graph()
+    assert len(tf.global_variables())==0    
 
 
 def test_triplet_cnn_pretrained():
+    tf.reset_default_graph()
+
     train_data, train_labels, validation_data, validation_labels = load_mnist()
     train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
 
@@ -155,7 +161,7 @@ def test_triplet_cnn_pretrained():
     eer = dummy_experiment(validation_data_shuffler, embedding)
 
     # The result is not so good
-    assert eer < 0.25
+    assert eer < 0.35
 
     del graph
     del loss
@@ -174,13 +180,17 @@ def test_triplet_cnn_pretrained():
     eer = dummy_experiment(validation_data_shuffler, embedding)
 
     # Now it is better
-    assert eer < 0.20
+    assert eer < 0.30
     shutil.rmtree(directory)
 
     del trainer
+    tf.reset_default_graph()
+    assert len(tf.global_variables())==0    
 
 
 def test_siamese_cnn_pretrained():
+    tf.reset_default_graph()
+
     train_data, train_labels, validation_data, validation_labels = load_mnist()
     train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
 
@@ -230,7 +240,7 @@ def test_siamese_cnn_pretrained():
     del trainer
 
     trainer = SiameseTrainer(train_data_shuffler,
-                             iterations=iterations*2,
+                             iterations=iterations,
                              analizer=None,
                              temp_dir=directory)
 
@@ -240,8 +250,10 @@ def test_siamese_cnn_pretrained():
     #embedding = Embedding(train_data_shuffler("data", from_queue=False)['left'], trainer.graph['left'])
     embedding = Embedding(trainer.data_ph['left'], trainer.graph['left'])
     eer = dummy_experiment(validation_data_shuffler, embedding)
-    assert eer < 0.10
+    assert eer < 0.14
 
     shutil.rmtree(directory)
 
     del trainer
+    tf.reset_default_graph()
+    assert len(tf.global_variables())==0    
