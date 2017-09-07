@@ -50,51 +50,41 @@ class TripletTrainer(Trainer):
 
     def __init__(self,
                  train_data_shuffler,
+                 validation_data_shuffler=None,
 
                  ###### training options ##########
                  iterations=5000,
                  snapshot=500,
                  validation_snapshot=100,
+                 keep_checkpoint_every_n_hours=2,
 
                  ## Analizer
                  analizer=SoftmaxAnalizer(),
 
                  # Temporatu dir
-                 temp_dir="siamese_cnn",
+                 temp_dir="triplet_cnn",
 
                  verbosity_level=2
                  ):
 
-        super(TripletTrainer, self).__init__(
-            train_data_shuffler,
-
-            ###### training options ##########
-            iterations=5000,
-            snapshot=500,
-            validation_snapshot=100,
-
-            ## Analizer
-            analizer=SoftmaxAnalizer(),
-
-            # Temporatu dir
-            temp_dir="siamese_cnn",
-
-            verbosity_level=2
-        )
-
         self.train_data_shuffler = train_data_shuffler
+
         self.temp_dir = temp_dir
 
         self.iterations = iterations
         self.snapshot = snapshot
         self.validation_snapshot = validation_snapshot
+        self.keep_checkpoint_every_n_hours = keep_checkpoint_every_n_hours
 
         # Training variables used in the fit
         self.summaries_train = None
         self.train_summary_writter = None
+        self.thread_pool = None
 
         # Validation data
         self.validation_summary_writter = None
+        self.summaries_validation = None
+        self.validation_data_shuffler = validation_data_shuffler
 
         # Analizer
         self.analizer = analizer
@@ -103,14 +93,25 @@ class TripletTrainer(Trainer):
         self.session = None
 
         self.graph = None
+        self.validation_graph = None
+                
         self.loss = None
+        
         self.predictor = None
+        self.validation_predictor = None        
+        
         self.optimizer_class = None
         self.learning_rate = None
+
         # Training variables used in the fit
         self.optimizer = None
+        
         self.data_ph = None
         self.label_ph = None
+        
+        self.validation_data_ph = None
+        self.validation_label_ph = None
+        
         self.saver = None
 
         bob.core.log.set_verbosity_level(logger, verbosity_level)
@@ -119,7 +120,6 @@ class TripletTrainer(Trainer):
         self.session = Session.instance(new=True).session
         self.from_scratch = True
 
-        bob.core.log.set_verbosity_level(logger, verbosity_level)
 
     def create_network_from_scratch(self,
                                     graph,

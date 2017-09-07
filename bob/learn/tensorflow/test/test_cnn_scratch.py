@@ -4,13 +4,14 @@
 # @date: Thu 13 Oct 2016 13:35 CEST
 
 import numpy
-from bob.learn.tensorflow.datashuffler import Memory, ImageAugmentation, ScaleFactor, Linear
+from bob.learn.tensorflow.datashuffler import Memory, ImageAugmentation, ScaleFactor, Linear, TFRecord
 from bob.learn.tensorflow.network import Embedding
-from bob.learn.tensorflow.loss import BaseLoss
+from bob.learn.tensorflow.loss import BaseLoss, MeanSoftMaxLoss
 from bob.learn.tensorflow.trainers import Trainer, constant
 from bob.learn.tensorflow.utils import load_mnist
 import tensorflow as tf
 import shutil
+import os
 
 """
 Some unit tests that create networks on the fly
@@ -18,7 +19,7 @@ Some unit tests that create networks on the fly
 
 batch_size = 16
 validation_batch_size = 400
-iterations = 300
+iterations = 200
 seed = 10
 directory = "./temp/cnn_scratch"
 
@@ -77,7 +78,7 @@ def test_cnn_trainer_scratch():
     embedding = Embedding(train_data_shuffler("data", from_queue=False), graph)
 
     # Loss for the softmax
-    loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
+    loss = MeanSoftMaxLoss()
 
     # One graph trainer
     trainer = Trainer(train_data_shuffler,
@@ -93,6 +94,89 @@ def test_cnn_trainer_scratch():
 
     trainer.train()
     accuracy = validate_network(embedding, validation_data, validation_labels)
-    assert accuracy > 70
+    assert accuracy > 20
     shutil.rmtree(directory)
     del trainer
+    tf.reset_default_graph() 
+    assert len(tf.global_variables())==0
+
+
+def test_cnn_trainer_scratch_tfrecord():
+    tf.reset_default_graph()
+
+    train_data, train_labels, validation_data, validation_labels = load_mnist()
+    train_data = train_data.astype("float32") *  0.00390625
+    validation_data = validation_data.astype("float32") *  0.00390625    
+
+    def _bytes_feature(value):
+        return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+
+    def _int64_feature(value):
+        return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+
+    def create_tf_record(tfrecords_filename, data, labels):
+        writer = tf.python_io.TFRecordWriter(tfrecords_filename)
+
+        #for i in range(train_data.shape[0]):
+        for i in range(6000):
+            img = data[i]
+            img_raw = img.tostring()
+            
+            feature = {'train/image': _bytes_feature(img_raw),
+                       'train/label': _int64_feature(labels[i])
+                      }
+            
+            example = tf.train.Example(features=tf.train.Features(feature=feature))
+            writer.write(example.SerializeToString())
+        writer.close()
+
+    tf.reset_default_graph()
+    
+    # Creating the tf record
+    tfrecords_filename = "mnist_train.tfrecords"    
+    create_tf_record(tfrecords_filename, train_data, train_labels)
+    filename_queue = tf.train.string_input_producer([tfrecords_filename], num_epochs=15, name="input")
+    
+    tfrecords_filename_val = "mnist_validation.tfrecords"
+    create_tf_record(tfrecords_filename_val, validation_data, validation_labels)   
+    filename_queue_val = tf.train.string_input_producer([tfrecords_filename_val], num_epochs=15, name="input_validation")
+
+    # Creating the CNN using the TFRecord as input
+    train_data_shuffler  = TFRecord(filename_queue=filename_queue,
+                                    batch_size=batch_size)
+
+    validation_data_shuffler  = TFRecord(filename_queue=filename_queue_val,
+                                         batch_size=2000)
+                                         
+    graph = scratch_network(train_data_shuffler)
+    validation_graph = scratch_network(validation_data_shuffler, reuse=True)
+
+    # Setting the placeholders
+    # Loss for the softmax
+    loss = MeanSoftMaxLoss()
+
+    # One graph trainer
+    
+    trainer = Trainer(train_data_shuffler,
+                      validation_data_shuffler=validation_data_shuffler,
+                      iterations=iterations, #It is supper fast
+                      analizer=None,
+                      temp_dir=directory)
+
+    learning_rate = constant(0.01, name="regular_lr")
+
+    trainer.create_network_from_scratch(graph=graph,
+                                        validation_graph=validation_graph,
+                                        loss=loss,
+                                        learning_rate=learning_rate,
+                                        optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+                                        )
+    
+    trainer.train()
+    os.remove(tfrecords_filename)
+    os.remove(tfrecords_filename_val)
+    assert True
+    tf.reset_default_graph()
+    del trainer
+    assert len(tf.global_variables())==0
+

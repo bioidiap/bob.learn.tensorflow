@@ -5,6 +5,7 @@
 
 import numpy
 import bob.io.base
+import six
 import bob.io.image
 import bob.ip.base
 import bob.core
@@ -100,7 +101,7 @@ class TripletDisk(Triplet, Disk):
 
         for i in range(self.data.shape[0]):
 
-            anchor_filename, positive_filename, negative_filename = triplets.next()
+            anchor_filename, positive_filename, negative_filename = six.next(triplets)
 
             anchor = self.load_from_file(str(anchor_filename))
             positive = self.load_from_file(str(positive_filename))

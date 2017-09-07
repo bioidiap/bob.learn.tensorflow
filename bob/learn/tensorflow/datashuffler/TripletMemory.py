@@ -5,7 +5,7 @@
 
 import numpy
 import tensorflow as tf
-
+import six
 from .Memory import Memory
 from .Triplet import Triplet
 from bob.learn.tensorflow.datashuffler.Normalizer import Linear
@@ -88,7 +88,7 @@ class TripletMemory(Triplet, Memory):
 
         for i in range(self.data.shape[0]):
 
-            anchor, positive, negative = triplets.next()
+            anchor, positive, negative = six.next(triplets)
 
             # Applying the data augmentation
             if self.data_augmentation is not None:

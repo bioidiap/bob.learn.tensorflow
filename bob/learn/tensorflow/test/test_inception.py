@@ -22,6 +22,8 @@ seed = 10
 
 
 def test_inception_trainer():
+    tf.reset_default_graph()
+
     directory = "./temp/inception"
 
     # Loading data
@@ -52,9 +54,13 @@ def test_inception_trainer():
                                         )
     trainer.train()
     shutil.rmtree(directory)
+    tf.reset_default_graph()
+    assert len(tf.global_variables())==0    
 
 
 def test_inception_triplet_trainer():
+    tf.reset_default_graph()
+
     directory = "./temp/inception"
 
     # Loading data
@@ -89,3 +95,5 @@ def test_inception_triplet_trainer():
                                         )
     trainer.train()
     shutil.rmtree(directory)
+    tf.reset_default_graph()
+    assert len(tf.global_variables())==0    

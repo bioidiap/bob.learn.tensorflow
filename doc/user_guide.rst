@@ -187,7 +187,7 @@ or :py:class:`bob.learn.tensorflow.datashuffler.TripletWithSelectionDisk`.
 How the data is sampled ?
 `````````````````````````
 
-The paper [facenet_2015]_ introduced a new strategy to select triplets to train triplet networks (this is better described
+The paper [facenet2015]_ introduced a new strategy to select triplets to train triplet networks (this is better described
 here :py:class:`bob.learn.tensorflow.datashuffler.TripletWithSelectionDisk` and :py:class:`bob.learn.tensorflow.datashuffler.TripletWithFastSelectionDisk`).
 This triplet selection relies in the current state of the network and are extensions of `bob.learn.tensorflow.datashuffler.OnlineSampling`.
 

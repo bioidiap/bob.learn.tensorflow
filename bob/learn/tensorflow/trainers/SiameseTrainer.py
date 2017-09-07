@@ -49,11 +49,13 @@ class SiameseTrainer(Trainer):
 
     def __init__(self,
                  train_data_shuffler,
+                 validation_data_shuffler=None,
 
                  ###### training options ##########
                  iterations=5000,
                  snapshot=500,
                  validation_snapshot=100,
+                 keep_checkpoint_every_n_hours=2,
 
                  ## Analizer
                  analizer=SoftmaxAnalizer(),
@@ -65,19 +67,23 @@ class SiameseTrainer(Trainer):
                  ):
 
         self.train_data_shuffler = train_data_shuffler
+
         self.temp_dir = temp_dir
 
         self.iterations = iterations
         self.snapshot = snapshot
         self.validation_snapshot = validation_snapshot
+        self.keep_checkpoint_every_n_hours = keep_checkpoint_every_n_hours
 
         # Training variables used in the fit
         self.summaries_train = None
         self.train_summary_writter = None
+        self.thread_pool = None
 
         # Validation data
         self.validation_summary_writter = None
         self.summaries_validation = None
+        self.validation_data_shuffler = validation_data_shuffler
 
         # Analizer
         self.analizer = analizer
@@ -86,14 +92,25 @@ class SiameseTrainer(Trainer):
         self.session = None
 
         self.graph = None
+        self.validation_graph = None
+                
         self.loss = None
+        
         self.predictor = None
+        self.validation_predictor = None        
+        
         self.optimizer_class = None
         self.learning_rate = None
+
         # Training variables used in the fit
         self.optimizer = None
+        
         self.data_ph = None
         self.label_ph = None
+        
+        self.validation_data_ph = None
+        self.validation_label_ph = None
+        
         self.saver = None
 
         bob.core.log.set_verbosity_level(logger, verbosity_level)
@@ -101,8 +118,6 @@ class SiameseTrainer(Trainer):
         # Creating the session
         self.session = Session.instance(new=True).session
         self.from_scratch = True
-
-        bob.core.log.set_verbosity_level(logger, verbosity_level)
 
     def create_network_from_scratch(self,
                                     graph,
@@ -191,6 +206,7 @@ class SiameseTrainer(Trainer):
         self.summaries_train = tf.get_collection("summaries_train")[0]
         self.global_step = tf.get_collection("global_step")[0]
         self.from_scratch = False
+        
 
     def get_feed_dict(self, data_shuffler):
 

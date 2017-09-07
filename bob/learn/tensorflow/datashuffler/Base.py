@@ -7,6 +7,7 @@ import numpy
 import tensorflow as tf
 import bob.ip.base
 import numpy
+import six
 from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 
@@ -263,7 +264,7 @@ class Base(object):
         holder = []
         try:
             for i in range(self.batch_size):
-                data = self.batch_generator.next()
+                data = six.next(self.batch_generator)
                 
                 holder.append(data)
                 if len(holder) == self.batch_size:
@@ -278,7 +279,7 @@ class Base(object):
                 return self._aggregate_batch(holder, False)
             else:
                 self.batch_generator = self._fetch_batch()
-                data = self.batch_generator.next()
+                data = six.next(self.batch_generator)
                 holder.append(data)
                 return self._aggregate_batch(holder, False)
 
