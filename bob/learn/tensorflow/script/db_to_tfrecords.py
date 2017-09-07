@@ -52,23 +52,29 @@ The config files should have the following objects totally:
   ## Optional objects:
 
   # The groups that you want to create tfrecords for. It should be a list of
-  # 'world' ('train' in bob.pad.base), 'dev', and 'eval' values.
+  # 'world' ('train' in bob.pad.base), 'dev', and 'eval' values. [default:
+  # 'world']
   groups = ['world']
 
-  # you need a reader function that reads the preprocessed files.
+  # you need a reader function that reads the preprocessed files. [default:
+  # bob.bio.base.utils.load]
   reader = Preprocessor().read_data
   reader = Extractor().read_feature
   # or
   from bob.bio.base.utils import load as reader
 
-  # extension of the preprocessed files. Usually '.hdf5'
+  # extension of the preprocessed files. [default: '.hdf5']
   data_extension = '.hdf5'
+
+  # Shuffle the files before writing them into a tfrecords. [default: False]
+  shuffle = True
 
 """
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+import random
 
 import tensorflow as tf
 from bob.io.base import create_directories_safe
@@ -107,6 +113,7 @@ def main(argv=None):
   reader = getattr(config, 'reader', load)
   groups = getattr(config, 'groups', ['world'])
   data_extension = getattr(config, 'data_extension', '.hdf5')
+  shuffle = getattr(config, 'shuffle', False)
 
   create_directories_safe(output_dir)
   if not isinstance(groups, (list, tuple)):
@@ -115,6 +122,8 @@ def main(argv=None):
   for group in groups:
     output_file = os.path.join(output_dir, '{}.tfrecords'.format(group))
     files = database.all_files(groups=group)
+    if shuffle:
+      random.shuffle(files)
     n_files = len(files)
     with tf.python_io.TFRecordWriter(output_file) as writer:
       for i, f in enumerate(files):
