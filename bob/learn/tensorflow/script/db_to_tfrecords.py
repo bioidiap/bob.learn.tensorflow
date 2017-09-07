@@ -19,7 +19,7 @@ Options:
 The best way to use this script is to send it to the io-big queue if you are at
 Idiap:
 
-  $ jman submit -i -q q1d -- python %(prog)s <config_files>...
+  $ jman submit -i -q q1d -- bin/python %(prog)s <config_files>...
 
 The config files should have the following objects totally:
 
@@ -29,11 +29,11 @@ The config files should have the following objects totally:
   # bob.bio.base.database.BioDatabase (PAD dbs work too)
   database = Database()
 
-  # the directory pointing to where the preprocessed data is:
-  DATA_DIR = '/idiap/temp/user/database_name/sub_directory/preprocessed'
+  # the directory pointing to where the processed data is:
+  data_dir = '/idiap/temp/user/database_name/sub_directory/preprocessed'
 
   # the directory to save the tfrecords in:
-  OUTPUT_DIR = '/idiap/temp/user/database_name/sub_directory'
+  output_dir = '/idiap/temp/user/database_name/sub_directory'
 
   # A function that converts a BioFile or a PadFile to a label:
   # Example for PAD
@@ -44,24 +44,25 @@ The config files should have the following objects totally:
   # in biometric recognition experiments.)
   CLIENT_IDS = (str(f.client_id) for f in db.all_files(groups=groups))
   CLIENT_IDS = list(set(CLIENT_IDS))
-  CLIENT_IDS = dict(zip(CLIENT_IDS, range(1, len(CLIENT_IDS) + 1)))
+  CLIENT_IDS = dict(zip(CLIENT_IDS, range(len(CLIENT_IDS))))
 
   def file_to_label(f):
       return CLIENT_IDS[str(f.client_id)]
 
   ## Optional objects:
 
-  # The groups that you want to create tfrecords for.
-  # It should be a list of 'world', 'dev', and 'eval' values.
+  # The groups that you want to create tfrecords for. It should be a list of
+  # 'world' ('train' in bob.pad.base), 'dev', and 'eval' values.
   groups = ['world']
 
   # you need a reader function that reads the preprocessed files.
   reader = Preprocessor().read_data
+  reader = Extractor().read_feature
   # or
   from bob.bio.base.utils import load as reader
 
   # extension of the preprocessed files. Usually '.hdf5'
-  DATA_EXTENSION = '.hdf5'
+  data_extension = '.hdf5'
 
 """
 
@@ -72,9 +73,8 @@ from __future__ import print_function
 import tensorflow as tf
 from bob.io.base import create_directories_safe
 from bob.bio.base.utils import load, read_config_file
-from bob.db.base.utils import check_parameters_for_validity
-import bob.core
-logger = bob.core.log.setup(__name__)
+from bob.core.log import setup, set_verbosity_level
+logger = setup(__name__)
 
 
 def _bytes_feature(value):
@@ -89,26 +89,28 @@ def main(argv=None):
   from docopt import docopt
   import os
   import sys
-  prog = os.path.basename(sys.argv[0])
-  args = docopt(__doc__ % {'prog': prog}, argv=argv, version='0.0.1')
+  import pkg_resources
+  docs = __doc__ % {'prog': os.path.basename(sys.argv[0])}
+  version = pkg_resources.require('bob.learn.tensorflow')[0].version
+  args = docopt(docs, argv=argv, version=version)
   config_files = args['<config_files>']
   config = read_config_file(config_files)
 
   # Sets-up logging
   verbosity = getattr(config, 'verbose', 0)
-  bob.core.log.set_verbosity_level(logger, verbosity)
+  set_verbosity_level(logger, verbosity)
 
   database = config.database
-  data_dir, output_dir = config.DATA_DIR, config.OUTPUT_DIR
+  data_dir, output_dir = config.data_dir, config.output_dir
   file_to_label = config.file_to_label
 
   reader = getattr(config, 'reader', load)
-  groups = getattr(config, 'groups', 'world')
-  data_extension = getattr(config, 'DATA_EXTENSION', '.hdf5')
+  groups = getattr(config, 'groups', ['world'])
+  data_extension = getattr(config, 'data_extension', '.hdf5')
 
   create_directories_safe(output_dir)
-  groups = check_parameters_for_validity(
-      groups, 'groups', ('world', 'dev', 'eval'), ('world',))
+  if not isinstance(groups, (list, tuple)):
+    groups = [groups]
 
   for group in groups:
     output_file = os.path.join(output_dir, '{}.tfrecords'.format(group))
@@ -121,7 +123,7 @@ def main(argv=None):
         path = f.make_path(data_dir, data_extension)
         data = reader(path).astype('float32').tostring()
 
-        feature = {'train/image': _bytes_feature(data),
+        feature = {'train/data': _bytes_feature(data),
                    'train/label': _int64_feature(file_to_label(f))}
 
         example = tf.train.Example(features=tf.train.Features(feature=feature))
