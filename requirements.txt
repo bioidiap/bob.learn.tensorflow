@@ -16,4 +16,5 @@ bob.measure
 bob.sp
 bob.db.mnist
 gridtk
+bob.bio.base
 scipy

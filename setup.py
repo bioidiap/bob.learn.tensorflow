@@ -48,7 +48,8 @@ setup(
         # scripts should be declared using this entry:
         'console_scripts': [
             'compute_statistics.py = bob.learn.tensorflow.script.compute_statistics:main',
-            'train.py = bob.learn.tensorflow.script.train:main'
+            'train.py = bob.learn.tensorflow.script.train:main',
+            'bob_db_to_tfrecords = bob.learn.tensorflow.script.db_to_tfrecords:main',
         ],
 
     },
