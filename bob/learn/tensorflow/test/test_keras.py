@@ -2,18 +2,18 @@
 
 import pprint
 
-from tensorflow.contrib.keras.python.keras.models import Sequential
-from tensorflow.contrib.keras.python.keras.engine import InputLayer
-from tensorflow.contrib.keras.python.keras.layers import Dense
-from tensorflow.contrib.keras.python.keras.layers import LSTM
-from tensorflow.contrib.keras.python.keras.layers import Lambda
-from tensorflow.contrib.keras.python.keras.layers import Flatten
-from tensorflow.contrib.keras.python.keras.layers import Reshape
+from keras.models import Sequential
+from keras.engine import InputLayer
+from keras.layers import Dense
+from keras.layers import LSTM
+from keras.layers import Lambda
+from keras.layers import Flatten
+from keras.layers import Reshape
 
-from tensorflow.contrib.keras.python.keras.datasets import mnist
-from tensorflow.contrib.keras.python.keras.utils import np_utils
+from keras.datasets import mnist
+from keras.utils import np_utils
 
-from tensorflow.contrib.keras.python.keras.utils.layer_utils import print_summary
+from keras.utils.layer_utils import print_summary
 
 method = "drop-first" # See if/elif block below for explanation
 
