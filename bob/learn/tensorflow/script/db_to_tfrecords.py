@@ -84,59 +84,59 @@ logger = setup(__name__)
 
 
 def _bytes_feature(value):
-  return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+    return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
 
 def _int64_feature(value):
-  return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+    return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
 
 def main(argv=None):
-  from docopt import docopt
-  import os
-  import sys
-  import pkg_resources
-  docs = __doc__ % {'prog': os.path.basename(sys.argv[0])}
-  version = pkg_resources.require('bob.learn.tensorflow')[0].version
-  args = docopt(docs, argv=argv, version=version)
-  config_files = args['<config_files>']
-  config = read_config_file(config_files)
+    from docopt import docopt
+    import os
+    import sys
+    import pkg_resources
+    docs = __doc__ % {'prog': os.path.basename(sys.argv[0])}
+    version = pkg_resources.require('bob.learn.tensorflow')[0].version
+    args = docopt(docs, argv=argv, version=version)
+    config_files = args['<config_files>']
+    config = read_config_file(config_files)
 
-  # Sets-up logging
-  verbosity = getattr(config, 'verbose', 0)
-  set_verbosity_level(logger, verbosity)
+    # Sets-up logging
+    verbosity = getattr(config, 'verbose', 0)
+    set_verbosity_level(logger, verbosity)
 
-  database = config.database
-  data_dir, output_dir = config.data_dir, config.output_dir
-  file_to_label = config.file_to_label
+    database = config.database
+    data_dir, output_dir = config.data_dir, config.output_dir
+    file_to_label = config.file_to_label
 
-  reader = getattr(config, 'reader', load)
-  groups = getattr(config, 'groups', ['world'])
-  data_extension = getattr(config, 'data_extension', '.hdf5')
-  shuffle = getattr(config, 'shuffle', False)
+    reader = getattr(config, 'reader', load)
+    groups = getattr(config, 'groups', ['world'])
+    data_extension = getattr(config, 'data_extension', '.hdf5')
+    shuffle = getattr(config, 'shuffle', False)
 
-  create_directories_safe(output_dir)
-  if not isinstance(groups, (list, tuple)):
-    groups = [groups]
+    create_directories_safe(output_dir)
+    if not isinstance(groups, (list, tuple)):
+        groups = [groups]
 
-  for group in groups:
-    output_file = os.path.join(output_dir, '{}.tfrecords'.format(group))
-    files = database.all_files(groups=group)
-    if shuffle:
-      random.shuffle(files)
-    n_files = len(files)
-    with tf.python_io.TFRecordWriter(output_file) as writer:
-      for i, f in enumerate(files):
-        logger.info('Processing file %d out of %d', i + 1, n_files)
+    for group in groups:
+        output_file = os.path.join(output_dir, '{}.tfrecords'.format(group))
+        files = database.all_files(groups=group)
+        if shuffle:
+          random.shuffle(files)
+        n_files = len(files)
+        with tf.python_io.TFRecordWriter(output_file) as writer:
+            for i, f in enumerate(files):
+                logger.info('Processing file %d out of %d', i + 1, n_files)
 
-        path = f.make_path(data_dir, data_extension)
-        data = reader(path).astype('float32').tostring()
+                path = f.make_path(data_dir, data_extension)
+                data = reader(path).astype('float32').tostring()
 
-        feature = {'train/data': _bytes_feature(data),
-                   'train/label': _int64_feature(file_to_label(f))}
+                feature = {'train/data': _bytes_feature(data),
+                           'train/label': _int64_feature(file_to_label(f))}
 
-        example = tf.train.Example(features=tf.train.Features(feature=feature))
-        writer.write(example.SerializeToString())
+                example = tf.train.Example(features=tf.train.Features(feature=feature))
+                writer.write(example.SerializeToString())
 
 
 if __name__ == '__main__':
