@@ -112,6 +112,6 @@ class LSTM(base.Layer):
 
         # consider the output of the last cell
         # apply linear activation on it
-        return outputs[-1]
-        # return tf.matmul(outputs[-1], self.output_activation_weights['out']) + self.output_activation_biases['out']
+        # return outputs[-1]
+        return tf.matmul(outputs[-1], self.output_activation_weights['out']) + self.output_activation_biases['out']
 
