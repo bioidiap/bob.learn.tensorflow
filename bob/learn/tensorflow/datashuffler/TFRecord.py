@@ -11,14 +11,13 @@ from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 
 class TFRecord(object):
-
-    def __init__(self,filename_queue,
-                         input_shape=[None, 28, 28, 1],
-                         input_dtype="float32",
-                         batch_size=32,
-                         seed=10,
-                         prefetch_capacity=50,
-                         prefetch_threads=5):
+    def __init__(self, filename_queue,
+                 input_shape=[None, 28, 28, 1],
+                 input_dtype="float32",
+                 batch_size=32,
+                 seed=10,
+                 prefetch_capacity=50,
+                 prefetch_threads=5):
 
         # Setting the seed for the pseudo random number generator
         self.seed = seed
@@ -37,7 +36,7 @@ class TFRecord(object):
         self.prefetch = True
         self.prefetch_capacity = prefetch_capacity
         self.prefetch_threads = prefetch_threads
-        
+
         self.data_ph = None
         self.label_ph = None
 
@@ -59,7 +58,6 @@ class TFRecord(object):
         else:
             return self.label_ph
 
-
     def create_placeholders(self):
 
         feature = {'train/data': tf.FixedLenFeature([], tf.string),
@@ -67,31 +65,27 @@ class TFRecord(object):
 
         # Define a reader and read the next record
         reader = tf.TFRecordReader()
-        
+
         _, serialized_example = reader.read(self.filename_queue)
-        
-        
+
         # Decode the record read by the reader
         features = tf.parse_single_example(serialized_example, features=feature)
-        
+
         # Convert the image data from string back to the numbers
         image = tf.decode_raw(features['train/data'], tf.float32)
-        
+
         # Cast label data into int32
         label = tf.cast(features['train/label'], tf.int64)
-        
+
         # Reshape image data into the original shape
         image = tf.reshape(image, self.input_shape[1:])
-        
-        
+
         data_ph, label_ph = tf.train.shuffle_batch([image, label], batch_size=self.batch_size,
-                         capacity=self.prefetch_capacity, num_threads=self.prefetch_threads,
-                         min_after_dequeue=1, name="shuffle_batch")
-        
-        
+                                                   capacity=self.prefetch_capacity, num_threads=self.prefetch_threads,
+                                                   min_after_dequeue=1, name="shuffle_batch")
+
         self.data_ph = data_ph
         self.label_ph = label_ph
-
 
     def get_batch(self):
         """
@@ -107,4 +101,3 @@ class TFRecord(object):
         """
 
         pass
-

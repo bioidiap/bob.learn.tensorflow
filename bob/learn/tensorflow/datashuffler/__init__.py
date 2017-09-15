@@ -22,7 +22,7 @@ from .Normalizer import ScaleFactor, MeanOffset, Linear
 
 from .DiskAudio import DiskAudio
 from .TFRecord import TFRecord
-
+from .TFRecordSequence import TFRecordSequence
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):
   """Says object was actually declared here, an not on the import module.
@@ -55,5 +55,7 @@ __appropriate__(
     ImageAugmentation,
     ScaleFactor, MeanOffset, Linear,
     DiskAudio,
+    TFRecord,
+    TFRecordSequence,
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]
