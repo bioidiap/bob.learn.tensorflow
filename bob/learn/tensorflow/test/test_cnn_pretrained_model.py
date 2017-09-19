@@ -256,4 +256,5 @@ def test_siamese_cnn_pretrained():
 
     del trainer
     tf.reset_default_graph()
-    assert len(tf.global_variables())==0    
+    assert len(tf.global_variables())==0
+
