@@ -22,130 +22,136 @@ class LightCNN9(object):
             self.batch_norm = batch_norm
             self.n_classes = n_classes
 
-    def __call__(self, inputs, reuse=False):
+    def __call__(self, inputs, reuse=False, get_class_layer=True):
         slim = tf.contrib.slim
 
-        with tf.device(self.device):
+        #with tf.device(self.device):
 
-            initializer = tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=self.seed)
-                        
-            graph = slim.conv2d(inputs, 96, [5, 5], activation_fn=tf.nn.relu,
-                                stride=1,
-                                weights_initializer=initializer,
-                                scope='Conv1',
-                                reuse=reuse)
+        initializer = tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=self.seed)
+                    
+        graph = slim.conv2d(inputs, 96, [5, 5], activation_fn=tf.nn.relu,
+                            stride=1,
+                            weights_initializer=initializer,
+                            scope='Conv1',
+                            reuse=reuse)
 
-            graph = maxout(graph,
-                           num_units=48,
-                           name='Maxout1')
+        graph = maxout(graph,
+                       num_units=48,
+                       name='Maxout1')
 
-            graph = slim.max_pool2d(graph, [2, 2], stride=2, padding="SAME", scope='Pool1')
+        graph = slim.max_pool2d(graph, [2, 2], stride=2, padding="SAME", scope='Pool1')
 
-            ####
+        ####
 
-            graph = slim.conv2d(graph, 96, [1, 1], activation_fn=tf.nn.relu,
-                                stride=1,
-                                weights_initializer=initializer,
-                                scope='Conv2a',
-                                reuse=reuse)
+        graph = slim.conv2d(graph, 96, [1, 1], activation_fn=tf.nn.relu,
+                            stride=1,
+                            weights_initializer=initializer,
+                            scope='Conv2a',
+                            reuse=reuse)
 
-            graph = maxout(graph,
-                           num_units=48,
-                           name='Maxout2a')
+        graph = maxout(graph,
+                       num_units=48,
+                       name='Maxout2a')
 
-            graph = slim.conv2d(graph, 192, [3, 3], activation_fn=tf.nn.relu,
-                                stride=1,
-                                weights_initializer=initializer,
-                                scope='Conv2',
-                                reuse=reuse)
+        graph = slim.conv2d(graph, 192, [3, 3], activation_fn=tf.nn.relu,
+                            stride=1,
+                            weights_initializer=initializer,
+                            scope='Conv2',
+                            reuse=reuse)
 
-            graph = maxout(graph,
-                           num_units=96,
-                           name='Maxout2')
+        graph = maxout(graph,
+                       num_units=96,
+                       name='Maxout2')
 
-            graph = slim.max_pool2d(graph, [2, 2], stride=2, padding="SAME", scope='Pool2')
+        graph = slim.max_pool2d(graph, [2, 2], stride=2, padding="SAME", scope='Pool2')
 
-            #####
+        #####
 
-            graph = slim.conv2d(graph, 192, [1, 1], activation_fn=tf.nn.relu,
-                                stride=1,
-                                weights_initializer=initializer,
-                                scope='Conv3a',
-                                reuse=reuse)
+        graph = slim.conv2d(graph, 192, [1, 1], activation_fn=tf.nn.relu,
+                            stride=1,
+                            weights_initializer=initializer,
+                            scope='Conv3a',
+                            reuse=reuse)
 
-            graph = maxout(graph,
-                           num_units=96,
-                           name='Maxout3a')
+        graph = maxout(graph,
+                       num_units=96,
+                       name='Maxout3a')
 
-            graph = slim.conv2d(graph, 384, [3, 3], activation_fn=tf.nn.relu,
-                                stride=1,
-                                weights_initializer=initializer,
-                                scope='Conv3',
-                                reuse=reuse)
+        graph = slim.conv2d(graph, 384, [3, 3], activation_fn=tf.nn.relu,
+                            stride=1,
+                            weights_initializer=initializer,
+                            scope='Conv3',
+                            reuse=reuse)
 
-            graph = maxout(graph,
-                           num_units=192,
-                           name='Maxout3')
+        graph = maxout(graph,
+                       num_units=192,
+                       name='Maxout3')
 
-            graph = slim.max_pool2d(graph, [2, 2], stride=2, padding="SAME", scope='Pool3')
+        graph = slim.max_pool2d(graph, [2, 2], stride=2, padding="SAME", scope='Pool3')
 
-            #####
+        #####
 
-            graph = slim.conv2d(graph, 384, [1, 1], activation_fn=tf.nn.relu,
-                                stride=1,
-                                weights_initializer=initializer,
-                                scope='Conv4a',
-                                reuse=reuse)
+        graph = slim.conv2d(graph, 384, [1, 1], activation_fn=tf.nn.relu,
+                            stride=1,
+                            weights_initializer=initializer,
+                            scope='Conv4a',
+                            reuse=reuse)
 
-            graph = maxout(graph,
-                           num_units=192,
-                           name='Maxout4a')
+        graph = maxout(graph,
+                       num_units=192,
+                       name='Maxout4a')
 
-            graph = slim.conv2d(graph, 256, [3, 3], activation_fn=tf.nn.relu,
-                                stride=1,
-                                weights_initializer=initializer,
-                                scope='Conv4',
-                                reuse=reuse)
+        graph = slim.conv2d(graph, 256, [3, 3], activation_fn=tf.nn.relu,
+                            stride=1,
+                            weights_initializer=initializer,
+                            scope='Conv4',
+                            reuse=reuse)
 
-            graph = maxout(graph,
-                           num_units=128,
-                           name='Maxout4')
+        graph = maxout(graph,
+                       num_units=128,
+                       name='Maxout4')
 
-            #####
+        #####
 
-            graph = slim.conv2d(graph, 256, [1, 1], activation_fn=tf.nn.relu,
-                                stride=1,
-                                weights_initializer=initializer,
-                                scope='Conv5a',
-                                reuse=reuse)
+        graph = slim.conv2d(graph, 256, [1, 1], activation_fn=tf.nn.relu,
+                            stride=1,
+                            weights_initializer=initializer,
+                            scope='Conv5a',
+                            reuse=reuse)
 
-            graph = maxout(graph,
-                           num_units=128,
-                           name='Maxout5a')
+        graph = maxout(graph,
+                       num_units=128,
+                       name='Maxout5a')
 
-            graph = slim.conv2d(graph, 256, [3, 3], activation_fn=tf.nn.relu,
-                                stride=1,
-                                weights_initializer=initializer,
-                                scope='Conv5',
-                                reuse=reuse)
+        graph = slim.conv2d(graph, 256, [3, 3], activation_fn=tf.nn.relu,
+                            stride=1,
+                            weights_initializer=initializer,
+                            scope='Conv5',
+                            reuse=reuse)
 
-            graph = maxout(graph,
-                           num_units=128,
-                           name='Maxout5')
+        graph = maxout(graph,
+                       num_units=128,
+                       name='Maxout5')
 
-            graph = slim.max_pool2d(graph, [2, 2], stride=2, padding="SAME", scope='Pool4')
+        graph = slim.max_pool2d(graph, [2, 2], stride=2, padding="SAME", scope='Pool4')
 
-            graph = slim.flatten(graph, scope='flatten1')
+        graph = slim.flatten(graph, scope='flatten1')
 
-            graph = slim.fully_connected(graph, 512,
-                                         weights_initializer=initializer,
-                                         activation_fn=tf.nn.relu,
-                                         scope='fc1',
-                                         reuse=reuse)
-            graph = maxout(graph,
-                           num_units=256,
-                           name='Maxoutfc1')
+        graph = slim.dropout(graph, keep_prob=0.3, scope='dropout1')
 
+        graph = slim.fully_connected(graph, 512,
+                                     weights_initializer=initializer,
+                                     activation_fn=tf.nn.relu,
+                                     scope='fc1',
+                                     reuse=reuse)
+        #graph = maxout(graph,
+        #               num_units=256,
+        #               name='Maxoutfc1')
+        
+        graph = slim.dropout(graph, keep_prob=0.3, scope='dropout2')
+
+
+        if get_class_layer:
             graph = slim.fully_connected(graph, self.n_classes,
                                          weights_initializer=initializer,
                                          activation_fn=None,
