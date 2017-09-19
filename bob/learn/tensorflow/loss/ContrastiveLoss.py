@@ -41,6 +41,10 @@ class ContrastiveLoss(BaseLoss):
     def __call__(self, label, left_feature, right_feature):
         with tf.name_scope("contrastive_loss"):
             label = tf.to_float(label)
+            
+            left_feature = tf.nn.l2_normalize(left_feature, 1)
+            right_feature  = tf.nn.l2_normalize(right_feature, 1)
+
             one = tf.constant(1.0)
 
             d = compute_euclidean_distance(left_feature, right_feature)
