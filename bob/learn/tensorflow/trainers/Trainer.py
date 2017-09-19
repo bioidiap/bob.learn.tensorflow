@@ -295,8 +295,9 @@ class Trainer(object):
 
            file_name: Name of of the checkpoing
         """
-        self.saver = tf.train.import_meta_graph(file_name + ".meta", clear_devices=clear_devices)
-        self.saver.restore(self.session, file_name)
+        #self.saver = tf.train.import_meta_graph(file_name + ".meta", clear_devices=clear_devices)
+        self.saver = tf.train.import_meta_graph(file_name, clear_devices=clear_devices)        
+        self.saver.restore(self.session, tf.train.latest_checkpoint(os.path.dirname(file_name)))
 
         # Loading training graph
         self.data_ph = tf.get_collection("data_ph")[0]
