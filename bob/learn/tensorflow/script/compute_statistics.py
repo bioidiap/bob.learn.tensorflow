@@ -8,7 +8,7 @@
 Script that computes statistics for image
 
 Usage:
-  compute_statistics.py <base_path> --extension=<arg>
+  compute_statistics.py <base_path> <output_file> --extension=<arg>
   compute_statistics.py -h | --help
 Options:
   -h --help     Show this screen.
@@ -47,7 +47,9 @@ def main():
 
     BASE_PATH = args['<base_path>']
     EXTENSION = args['--extension']
-    SHAPE = [3, 224, 224]
+    OUTPUT_FILE = args['<output_file>']
+    #SHAPE = [3, 224, 224]
+    SHAPE = [1, 64, 64]
 
     count, sum_data = process_images(BASE_PATH, EXTENSION, SHAPE)
 
@@ -55,5 +57,5 @@ def main():
     for s in range(SHAPE[0]):
         means[s, ...] = sum_data[s, ...] / float(count)
 
-    bob.io.base.save(means, "means_casia.hdf5")
-    bob.io.base.save(means[0, :, :].astype("uint8"), "means_casia.png")
+    bob.io.base.save(means, OUTPUT_FILE)
+    bob.io.base.save(means[0, :, :].astype("uint8"), "xuxa.png")

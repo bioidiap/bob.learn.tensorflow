@@ -4,6 +4,7 @@
 # @date: Wed 11 May 2016 09:39:36 CEST 
 
 import tensorflow as tf
+from .utils import append_logits
 
 
 class Chopra(object):
@@ -47,6 +48,8 @@ class Chopra(object):
         pooling2_size
 
         fc1_output:
+        
+        n_classes: If None, no Fully COnnected layer with class output will be created
 
         seed:
     """
@@ -63,9 +66,8 @@ class Chopra(object):
                  pooling2_size=[4, 3],
 
                  fc1_output=250,
-                 seed=10,
-                 device="/cpu:0",
-                 batch_norm=False):
+                 n_classes=None,
+                 seed=10):
 
             self.conv1_kernel_size = conv1_kernel_size
             self.conv1_output = conv1_output
@@ -78,34 +80,48 @@ class Chopra(object):
             self.fc1_output = fc1_output
 
             self.seed = seed
-            self.device = device
-            self.batch_norm = batch_norm
+            self.n_classes = n_classes
 
-    def __call__(self, inputs, reuse=False):
+
+    def __call__(self, inputs, reuse=False, end_point='logits'):
         slim = tf.contrib.slim
 
-        with tf.device(self.device):
+        end_points = dict()
+        
+        initializer = tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=self.seed)
 
-            initializer = tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=self.seed)
+        graph = slim.conv2d(inputs, self.conv1_output, self.conv1_kernel_size, activation_fn=tf.nn.relu,
+                            stride=1,
+                            weights_initializer=initializer,
+                            scope='conv1',
+                            reuse=reuse)
+        end_points['conv1'] = graph
+        
+        graph = slim.max_pool2d(graph, self.pooling1_size, scope='pool1')
+        end_points['pool1'] = graph
 
-            graph = slim.conv2d(inputs, self.conv1_output, self.conv1_kernel_size, activation_fn=tf.nn.relu,
-                                stride=1,
-                                weights_initializer=initializer,
-                                scope='conv1',
-                                reuse=reuse)
-            graph = slim.max_pool2d(graph, self.pooling1_size, scope='pool1')
+        graph = slim.conv2d(graph, self.conv2_output, self.conv2_kernel_size, activation_fn=tf.nn.relu,
+                            stride=1,
+                            weights_initializer=initializer,
+                            scope='conv2', reuse=reuse)
+        end_points['conv2'] = graph
+        graph = slim.max_pool2d(graph, self.pooling2_size, scope='pool2')
+        end_points['pool2'] = graph        
 
-            graph = slim.conv2d(graph, self.conv2_output, self.conv2_kernel_size, activation_fn=tf.nn.relu,
-                                stride=1,
-                                weights_initializer=initializer,
-                                scope='conv2', reuse=reuse)
-            graph = slim.max_pool2d(graph, self.pooling2_size, scope='pool2')
+        graph = slim.flatten(graph, scope='flatten1')
+        end_points['flatten1'] = graph        
 
-            graph = slim.flatten(graph, scope='flatten1')
+        graph = slim.fully_connected(graph, self.fc1_output,
+                                     weights_initializer=initializer,
+                                     activation_fn=None,
+                                     scope='fc1',
+                                     reuse=reuse)
+        end_points['fc1'] = graph                                     
+                                     
+        if self.n_classes is not None:
+            # Appending the logits layer
+            graph = append_logits(graph, self.n_classes, reuse)
+            end_points['logits'] = graph
+        
+        return end_points[end_point]
 
-            graph = slim.fully_connected(graph, self.fc1_output,
-                                         weights_initializer=initializer,
-                                         activation_fn=None,
-                                         scope='fc1',
-                                         reuse=reuse)
-        return graph

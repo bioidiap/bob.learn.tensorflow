@@ -115,15 +115,24 @@ def inception_resnet_v2(inputs, is_training=True,
                         reuse=None,
                         scope='InceptionResnetV2'):
     """Creates the Inception Resnet V2 model.
-    Args:
+   
+    **Parameters**:
+    
       inputs: a 4-D tensor of size [batch_size, height, width, 3].
+      
       num_classes: number of predicted classes.
+      
       is_training: whether is training or not.
+      
       dropout_keep_prob: float, the fraction to keep before final layer.
+      
       reuse: whether or not the network and its variables should be reused. To be
         able to reuse 'scope' must be given.
+        
       scope: Optional variable_scope.
-    Returns:
+      
+    **Returns**:
+    
       logits: the logits outputs of the model.
       end_points: the set of end_points from the inception model.
     """

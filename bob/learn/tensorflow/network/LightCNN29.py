@@ -5,6 +5,7 @@
 
 import tensorflow as tf
 from bob.learn.tensorflow.layers import maxout
+from .utils import append_logits
 
 class LightCNN29(object):
     """Creates the graph for the Light CNN-9 in 
@@ -13,20 +14,15 @@ class LightCNN29(object):
     """
     def __init__(self,
                  seed=10,
-                 n_classes=10,
-                 device="/cpu:0",
-                 batch_norm=False):
+                 n_classes=10):
 
             self.seed = seed
-            self.device = device
-            self.batch_norm = batch_norm
             self.n_classes = n_classes
 
-    def __call__(self, inputs, reuse=False):
+    def __call__(self, inputs, reuse=False, end_point="logits"):
         slim = tf.contrib.slim
 
-        #with tf.device(self.device):
-
+        end_points = dict()
         initializer = tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=self.seed)
                     
         graph = slim.conv2d(inputs, 96, [5, 5], activation_fn=tf.nn.relu,
@@ -34,7 +30,8 @@ class LightCNN29(object):
                             weights_initializer=initializer,
                             scope='Conv1',
                             reuse=reuse)
-
+        end_points['conv1'] = graph
+        
         graph = maxout(graph,
                        num_units=48,
                        name='Maxout1')
@@ -58,7 +55,8 @@ class LightCNN29(object):
                             weights_initializer=initializer,
                             scope='Conv2',
                             reuse=reuse)
-
+        end_points['conv2'] = graph
+        
         graph = maxout(graph,
                        num_units=96,
                        name='Maxout2')
@@ -82,7 +80,8 @@ class LightCNN29(object):
                             weights_initializer=initializer,
                             scope='Conv3',
                             reuse=reuse)
-
+        end_points['conv3'] = graph
+        
         graph = maxout(graph,
                        num_units=192,
                        name='Maxout3')
@@ -106,7 +105,8 @@ class LightCNN29(object):
                             weights_initializer=initializer,
                             scope='Conv4',
                             reuse=reuse)
-
+        end_points['conv4'] = graph
+        
         graph = maxout(graph,
                        num_units=128,
                        name='Maxout4')
@@ -128,6 +128,7 @@ class LightCNN29(object):
                             weights_initializer=initializer,
                             scope='Conv5',
                             reuse=reuse)
+        end_points['conv5'] = graph
 
         graph = maxout(graph,
                        num_units=128,
@@ -144,16 +145,18 @@ class LightCNN29(object):
                                      activation_fn=tf.nn.relu,
                                      scope='fc1',
                                      reuse=reuse)
+        end_points['fc1'] = graph                                     
+        
         graph = maxout(graph,
                        num_units=256,
                        name='Maxoutfc1')
         
         graph = slim.dropout(graph, keep_prob=0.3, scope='dropout1')
 
-        graph = slim.fully_connected(graph, self.n_classes,
-                                     weights_initializer=initializer,
-                                     activation_fn=None,
-                                     scope='fc2',
-                                     reuse=reuse)
+        if self.n_classes is not None:
+            # Appending the logits layer
+            graph = append_logits(graph, self.n_classes, reuse)
+            end_points['logits'] = graph
 
-        return graph
+
+        return end_points[end_point]

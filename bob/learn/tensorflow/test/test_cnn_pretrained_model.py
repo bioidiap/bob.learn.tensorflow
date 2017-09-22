@@ -233,7 +233,7 @@ def test_siamese_cnn_pretrained():
     #embedding = Embedding(train_data_shuffler("data", from_queue=False)['left'], graph['left'])
     embedding = Embedding(trainer.data_ph['left'], trainer.graph['left'])
     eer = dummy_experiment(validation_data_shuffler, embedding)
-    assert eer < 0.15
+    assert eer < 0.18
 
     del graph
     del loss
@@ -250,7 +250,7 @@ def test_siamese_cnn_pretrained():
     #embedding = Embedding(train_data_shuffler("data", from_queue=False)['left'], trainer.graph['left'])
     embedding = Embedding(trainer.data_ph['left'], trainer.graph['left'])
     eer = dummy_experiment(validation_data_shuffler, embedding)
-    assert eer < 0.14
+    assert eer < 0.18
 
     shutil.rmtree(directory)
 

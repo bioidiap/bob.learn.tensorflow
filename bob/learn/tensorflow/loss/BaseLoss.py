@@ -7,6 +7,8 @@ import logging
 import tensorflow as tf
 logger = logging.getLogger("bob.learn.tensorflow")
 
+slim = tf.contrib.slim
+
 
 class BaseLoss(object):
     """
@@ -26,12 +28,23 @@ class BaseLoss(object):
         
 class MeanSoftMaxLoss(object):
     """
-    Mean softmax loss
+    Mean softmax loss. Basically it wrapps the function tf.nn.sparse_softmax_cross_entropy_with_logits.
     """
 
     def __init__(self, name="loss"):
+        """
+        Constructor
+        
+        **Parameters**
+
+          name:
+             Scope name
+        
+        """
+    
         self.name = name
 
     def __call__(self, graph, label):
+    
         return tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(
                               logits=graph, labels=label), name=self.name)
