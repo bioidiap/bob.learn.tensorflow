@@ -102,7 +102,7 @@ def test_cnn_pretrained():
                       analizer=None,
                       temp_dir=directory
                       )
-    trainer.create_network_from_file(os.path.join(directory, "model.ckp"))
+    trainer.create_network_from_file(os.path.join(directory, "model.ckp.meta"))
     trainer.train()
     embedding = Embedding(trainer.data_ph, trainer.graph)
     accuracy = validate_network(embedding, validation_data, validation_labels)
