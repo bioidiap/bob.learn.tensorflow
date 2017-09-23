@@ -7,7 +7,7 @@
 Train a Neural network using bob.learn.tensorflow
 
 Usage:
-  train.py [--iterations=<arg> --validation-interval=<arg> --output-dir=<arg> ] <configuration> [grid <jobs> <job-name>]
+  train.py [--iterations=<arg> --validation-interval=<arg> --output-dir=<arg> ] <configuration> [grid <jobs> <job-name> <queue>]
   train.py -h | --help
 
 Options:
@@ -45,6 +45,7 @@ def main():
     if grid:
         jobs = int(args['<jobs>'])
         job_name = args['<job-name>']
+        queue = args['<queue>']
         import gridtk
 
         job_manager = gridtk.sge.JobManagerSGE()
@@ -52,7 +53,7 @@ def main():
         dependencies = []
         total_jobs = []
         for i in range(jobs):
-            job_id = job_manager.submit(command, dependencies=dependencies,
+            job_id = job_manager.submit(command, queue=queue, dependencies=dependencies,
                                         name=job_name)
             dependencies = [job_id]
             total_jobs.append(job_id)
