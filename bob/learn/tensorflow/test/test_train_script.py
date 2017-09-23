@@ -5,6 +5,7 @@
 
 import pkg_resources
 import shutil
+import tensorflow as tf
 
 
 def test_train_script_softmax():
@@ -18,7 +19,9 @@ def test_train_script_softmax():
     # Continuing from the last checkpoint
     call(["./bin/train.py", "--iterations", "5", "--output-dir", directory, train_script])
     shutil.rmtree(directory)
-    assert True
+
+    tf.reset_default_graph()
+    assert len(tf.global_variables()) == 0
 
 
 def test_train_script_triplet():
@@ -34,7 +37,8 @@ def test_train_script_triplet():
 
     shutil.rmtree(directory)
 
-    assert True
+    tf.reset_default_graph()
+    assert len(tf.global_variables()) == 0
 
 
 def test_train_script_siamese():
@@ -50,4 +54,5 @@ def test_train_script_siamese():
 
     shutil.rmtree(directory)
 
-    assert True
+    tf.reset_default_graph()
+    assert len(tf.global_variables()) == 0
