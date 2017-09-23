@@ -1,8 +1,11 @@
 from .Chopra import Chopra
 from .LightCNN9 import LightCNN9
+from .LightCNN29 import LightCNN29
 from .Dummy import Dummy
 from .MLP import MLP
 from .Embedding import Embedding
+from .InceptionResnetV2 import inception_resnet_v2
+
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):

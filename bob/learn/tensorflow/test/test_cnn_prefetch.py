@@ -54,7 +54,7 @@ def test_cnn_trainer():
 
     # Preparing the architecture
     architecture = Chopra(seed=seed,
-                          fc1_output=10)
+                          n_classes=10)
     input_pl = train_data_shuffler("data", from_queue=True)
     graph = architecture(input_pl)
     embedding = Embedding(train_data_shuffler("data", from_queue=False), architecture(train_data_shuffler("data", from_queue=False), reuse=True))

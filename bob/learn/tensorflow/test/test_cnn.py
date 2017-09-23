@@ -6,7 +6,7 @@
 import numpy
 from bob.learn.tensorflow.datashuffler import Memory, SiameseMemory, TripletMemory, ImageAugmentation, ScaleFactor, Linear
 from bob.learn.tensorflow.network import Chopra
-from bob.learn.tensorflow.loss import BaseLoss, ContrastiveLoss, TripletLoss
+from bob.learn.tensorflow.loss import MeanSoftMaxLoss, ContrastiveLoss, TripletLoss
 from bob.learn.tensorflow.trainers import Trainer, SiameseTrainer, TripletTrainer, constant
 from .test_cnn_scratch import validate_network
 from bob.learn.tensorflow.network import Embedding, LightCNN9
@@ -93,12 +93,12 @@ def test_cnn_trainer():
     directory = "./temp/cnn"
 
     # Loss for the softmax
-    loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
+    loss = MeanSoftMaxLoss()
 
     # Preparing the architecture
-    architecture = Chopra(seed=seed,
-                          fc1_output=10)
+    architecture = Chopra(seed=seed, n_classes=10)
     input_pl = train_data_shuffler("data", from_queue=True)
+    
     graph = architecture(input_pl)
     embedding = Embedding(train_data_shuffler("data", from_queue=False), graph)
 
@@ -151,13 +151,13 @@ def test_lightcnn_trainer():
     directory = "./temp/cnn"
 
     # Loss for the softmax
-    loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
+    loss = MeanSoftMaxLoss()
 
     # Preparing the architecture
     architecture = LightCNN9(seed=seed,
                              n_classes=2)
     input_pl = train_data_shuffler("data", from_queue=True)
-    graph = architecture(input_pl)
+    graph = architecture(input_pl, end_point="logits")
     embedding = Embedding(train_data_shuffler("data", from_queue=False), graph)
 
     # One graph trainer
@@ -203,15 +203,15 @@ def test_siamesecnn_trainer():
     directory = "./temp/siamesecnn"
 
     # Preparing the architecture
-    architecture = Chopra(seed=seed, fc1_output=10)
+    architecture = Chopra(seed=seed)
 
     # Loss for the Siamese
     loss = ContrastiveLoss(contrastive_margin=4.)
 
     input_pl = train_data_shuffler("data")
     graph = dict()
-    graph['left'] = architecture(input_pl['left'])
-    graph['right'] = architecture(input_pl['right'], reuse=True)
+    graph['left'] = architecture(input_pl['left'], end_point="fc1")
+    graph['right'] = architecture(input_pl['right'], reuse=True, end_point="fc1")
 
     trainer = SiameseTrainer(train_data_shuffler,
                              iterations=iterations,
@@ -261,9 +261,9 @@ def test_tripletcnn_trainer():
 
     input_pl = train_data_shuffler("data")
     graph = dict()
-    graph['anchor'] = architecture(input_pl['anchor'])
-    graph['positive'] = architecture(input_pl['positive'], reuse=True)
-    graph['negative'] = architecture(input_pl['negative'], reuse=True)
+    graph['anchor'] = architecture(input_pl['anchor'], end_point="fc1")
+    graph['positive'] = architecture(input_pl['positive'], reuse=True, end_point="fc1")
+    graph['negative'] = architecture(input_pl['negative'], reuse=True, end_point="fc1")
 
     # One graph trainer
     trainer = TripletTrainer(train_data_shuffler,
