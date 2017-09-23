@@ -27,11 +27,11 @@ import sys
 
 def dump_commandline():
 
-    command_line = ""
+    command_line = []
     for command in sys.argv:
         if command == "grid":
             break
-        command_line += "{0} ".format(command)
+        command_line.append(command)
     return command_line
 
 
