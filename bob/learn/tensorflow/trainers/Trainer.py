@@ -122,7 +122,6 @@ class Trainer(object):
         self.session = Session.instance(new=True).session
         self.from_scratch = True
         
-        
     def train(self):
         """
         Train the network        
@@ -197,7 +196,6 @@ class Trainer(object):
             #if not isinstance(self.train_data_shuffler, TFRecord):
             #    self.thread_pool.join(threads)        
 
-
     def create_network_from_scratch(self,
                                     graph,
                                     validation_graph=None,
@@ -222,9 +220,6 @@ class Trainer(object):
             learning_rate: Learning rate
         """
 
-       # Putting together the training data + graph  + loss
-
-
         # Getting the pointer to the placeholders
         self.data_ph = self.train_data_shuffler("data", from_queue=True)
         self.label_ph = self.train_data_shuffler("label", from_queue=True)
@@ -242,7 +237,6 @@ class Trainer(object):
         # Preparing the optimizer
         self.optimizer_class._learning_rate = self.learning_rate
         self.optimizer = self.optimizer_class.minimize(self.predictor, global_step=self.global_step)
-
 
         # Saving all the variables
         self.saver = tf.train.Saver(var_list=tf.global_variables() + tf.local_variables(), 
@@ -264,7 +258,7 @@ class Trainer(object):
         tf.add_to_collection("summaries_train", self.summaries_train)
 
         # Same business with the validation
-        if(self.validation_data_shuffler is not None):
+        if self.validation_data_shuffler is not None:
             self.validation_data_ph = self.validation_data_shuffler("data", from_queue=True)
             self.validation_label_ph = self.validation_data_shuffler("label", from_queue=True)
 
@@ -286,6 +280,24 @@ class Trainer(object):
         tf.local_variables_initializer().run(session=self.session)
         tf.global_variables_initializer().run(session=self.session)
 
+    def load_checkpoint(self, file_name, clear_devices=True):
+        """
+        Load a checkpoint
+
+        ** Parameters **
+
+           file_name:
+                Name of the metafile to be loaded.
+                If a directory is passed, the last checkpoint will be loaded
+
+        """
+        if os.path.isdir(file_name):
+            checkpoint_path = tf.train.get_checkpoint_state(file_name).model_checkpoint_path
+            self.saver = tf.train.import_meta_graph(checkpoint_path + ".meta", clear_devices=clear_devices)
+            self.saver.restore(self.session, tf.train.latest_checkpoint(file_name))
+        else:
+            self.saver = tf.train.import_meta_graph(file_name, clear_devices=clear_devices)
+            self.saver.restore(self.session, tf.train.latest_checkpoint(os.path.dirname(file_name)))
 
     def create_network_from_file(self, file_name, clear_devices=True):
         """
@@ -295,9 +307,9 @@ class Trainer(object):
 
            file_name: Name of of the checkpoing
         """
-        #self.saver = tf.train.import_meta_graph(file_name + ".meta", clear_devices=clear_devices)
-        self.saver = tf.train.import_meta_graph(file_name, clear_devices=clear_devices)        
-        self.saver.restore(self.session, tf.train.latest_checkpoint(os.path.dirname(file_name)))
+
+        logger.info("Loading last checkpoint !!")
+        self.load_checkpoint(file_name, clear_devices=True)
 
         # Loading training graph
         self.data_ph = tf.get_collection("data_ph")[0]
@@ -314,9 +326,8 @@ class Trainer(object):
         self.from_scratch = False
         
         # Loading the validation bits
-        if(self.validation_data_shuffler is not None):
+        if self.validation_data_shuffler is not None:
             self.summaries_validation = tf.get_collection("summaries_validation")[0]
-
 
             self.validation_graph = tf.get_collection("validation_graph")[0]
             self.validation_data_ph = tf.get_collection("validation_data_ph")[0]
@@ -324,7 +335,6 @@ class Trainer(object):
 
             self.validation_predictor = tf.get_collection("validation_predictor")[0]
             self.summaries_validation = tf.get_collection("summaries_validation")[0]
-
 
     def __del__(self):
         tf.reset_default_graph()

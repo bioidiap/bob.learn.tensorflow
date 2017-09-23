@@ -179,9 +179,7 @@ class SiameseTrainer(Trainer):
 
     def create_network_from_file(self, model_from_file, clear_devices=True):
 
-        #saver = self.architecture.load(self.model_from_file, clear_devices=False)
-        self.saver = tf.train.import_meta_graph(model_from_file + ".meta", clear_devices=clear_devices)
-        self.saver.restore(self.session, model_from_file)
+        self.load_checkpoint(model_from_file, clear_devices=clear_devices)
 
         # Loading the graph from the graph pointers
         self.graph = dict()
@@ -206,7 +204,6 @@ class SiameseTrainer(Trainer):
         self.summaries_train = tf.get_collection("summaries_train")[0]
         self.global_step = tf.get_collection("global_step")[0]
         self.from_scratch = False
-        
 
     def get_feed_dict(self, data_shuffler):
 

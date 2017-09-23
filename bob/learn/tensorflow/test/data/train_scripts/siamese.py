@@ -22,16 +22,16 @@ train_data_shuffler = SiameseMemory(train_data, train_labels,
                                     normalizer=ScaleFactor())
 
 ### ARCHITECTURE ###
-architecture = Chopra(seed=SEED, fc1_output=10, batch_norm=False)
+architecture = Chopra(seed=SEED, n_classes=10)
 
 ### LOSS ###
 loss = ContrastiveLoss(contrastive_margin=4.)
 
-### SOLVER ###
-optimizer = tf.train.GradientDescentOptimizer(0.001)
-
 ### LEARNING RATE ###
-learning_rate = constant(base_learning_rate=0.001)
+learning_rate = constant(base_learning_rate=0.01)
+
+### SOLVER ###
+optimizer = tf.train.GradientDescentOptimizer(learning_rate)
 
 ### Trainer ###
 trainer = Trainer
