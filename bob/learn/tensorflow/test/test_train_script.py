@@ -10,10 +10,10 @@ import shutil
 def test_train_script_softmax():
     directory = "./temp/train-script"
     train_script = pkg_resources.resource_filename(__name__, './data/train_scripts/softmax.py')
-    #train_script = './data/train_scripts/softmax.py'
+    train_script = './data/train_scripts/softmax.py'
 
-    #from subprocess import call
-    #call(["./bin/train.py", "--iterations", "5", "--output-dir", directory, train_script])
+    from subprocess import call
+    call(["./bin/train.py", "--iterations", "5", "--output-dir", directory, train_script])
     #shutil.rmtree(directory)
     assert True
 
