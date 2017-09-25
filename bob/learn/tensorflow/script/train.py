@@ -7,7 +7,7 @@
 Train a Neural network using bob.learn.tensorflow
 
 Usage:
-  train.py [--iterations=<arg> --validation-interval=<arg> --output-dir=<arg> ] <configuration> [grid <jobs> <job-name> <queue>]
+  train.py [--iterations=<arg> --validation-interval=<arg> --output-dir=<arg> ] <configuration> [grid --n-jobs=<arg> --job-name=<job-name> --queue=<arg>]
   train.py -h | --help
 
 Options:
@@ -15,6 +15,9 @@ Options:
   --iterations=<arg>            Number of iteratiosn [default: 1000]
   --validation-interval=<arg>   Validata every n iteratiosn [default: 500]
   --output-dir=<arg>            If the directory exists, will try to get the last checkpoint [default: ./logs/]
+  --n-jobs=<arg>                Number of jobs submitted to the grid [default: 3]
+  --job-name=<arg>              Job name  [default: TF]
+  --queue=<arg>                 SGE queue name  [default: q_gpu]
 """
 
 from docopt import docopt
@@ -23,6 +26,9 @@ import bob.learn.tensorflow
 import tensorflow as tf
 import os
 import sys
+
+import logging
+logger = logging.getLogger("bob.learn")
 
 
 def dump_commandline():
@@ -37,28 +43,33 @@ def dump_commandline():
 
 def main():
     args = docopt(__doc__, version='Train Neural Net')
-
+    
     output_dir = str(args['--output-dir'])
     iterations = int(args['--iterations'])
 
     grid = int(args['grid'])
     if grid:
-        jobs = int(args['<jobs>'])
-        job_name = args['<job-name>']
-        queue = args['<queue>']
+        # Submitting jobs to SGE
+        jobs = int(args['--n-jobs'])
+        job_name = args['--job-name']
+        queue = args['--queue']
         import gridtk
 
         job_manager = gridtk.sge.JobManagerSGE()
         command = dump_commandline()
         dependencies = []
         total_jobs = []
+        
+        kwargs = {"env": ["LD_LIBRARY_PATH=/idiap/user/tpereira/cuda/cuda-8.0/lib64:/idiap/user/tpereira/cuda/cudnn-8.0-linux-x64-v5.1/lib64:/idiap/user/tpereira/cuda/cuda-8.0/bin"]}
+        
         for i in range(jobs):
             job_id = job_manager.submit(command, queue=queue, dependencies=dependencies,
-                                        name=job_name)
+                                        name=job_name + "{0}".format(i), **kwargs)
+                                        
             dependencies = [job_id]
             total_jobs.append(job_id)
 
-        print("Submitted the jobs {0}".format(total_jobs))
+        logger.info("Submitted the jobs {0}".format(total_jobs))
         return True
 
     config = imp.load_source('config', args['<configuration>'])
@@ -72,7 +83,7 @@ def main():
                              analizer=None,
                              temp_dir=output_dir)
     if os.path.exists(output_dir):
-        print("Directory already exists, trying to get the last checkpoint")
+        logger.info("Directory already exists, trying to get the last checkpoint")
         trainer.create_network_from_file(output_dir)
     else:
 

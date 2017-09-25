@@ -9,6 +9,8 @@ import tensorflow as tf
 
 
 def test_train_script_softmax():
+    tf.reset_default_graph()
+
     directory = "./temp/train-script"
     train_script = pkg_resources.resource_filename(__name__, './data/train_scripts/softmax.py')
 
@@ -25,6 +27,8 @@ def test_train_script_softmax():
 
 
 def test_train_script_triplet():
+    tf.reset_default_graph()
+
     directory = "./temp/train-script"
     train_script = pkg_resources.resource_filename(__name__, './data/train_scripts/triplet.py')
 
@@ -42,6 +46,8 @@ def test_train_script_triplet():
 
 
 def test_train_script_siamese():
+    tf.reset_default_graph()
+
     directory = "./temp/train-script"
     train_script = pkg_resources.resource_filename(__name__, './data/train_scripts/siamese.py')
 
