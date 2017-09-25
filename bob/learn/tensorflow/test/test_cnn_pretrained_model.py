@@ -173,7 +173,7 @@ def test_triplet_cnn_pretrained():
                              analizer=None,
                              temp_dir=directory)
 
-    trainer.create_network_from_file(os.path.join(directory, "model.ckp"))
+    trainer.create_network_from_file(os.path.join(directory, "model.ckp.meta"))
     trainer.train()
 
     embedding = Embedding(trainer.data_ph['anchor'], trainer.graph['anchor'])
@@ -189,6 +189,7 @@ def test_triplet_cnn_pretrained():
 
 
 def test_siamese_cnn_pretrained():
+
     tf.reset_default_graph()
 
     train_data, train_labels, validation_data, validation_labels = load_mnist()
@@ -244,7 +245,7 @@ def test_siamese_cnn_pretrained():
                              analizer=None,
                              temp_dir=directory)
 
-    trainer.create_network_from_file(os.path.join(directory, "model.ckp"))
+    trainer.create_network_from_file(os.path.join(directory, "model.ckp.meta"))
     trainer.train()
 
     #embedding = Embedding(train_data_shuffler("data", from_queue=False)['left'], trainer.graph['left'])

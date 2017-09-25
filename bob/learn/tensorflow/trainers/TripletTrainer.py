@@ -120,7 +120,6 @@ class TripletTrainer(Trainer):
         self.session = Session.instance(new=True).session
         self.from_scratch = True
 
-
     def create_network_from_scratch(self,
                                     graph,
                                     optimizer=tf.train.AdamOptimizer(),
@@ -177,11 +176,9 @@ class TripletTrainer(Trainer):
         # Creating the variables
         tf.global_variables_initializer().run(session=self.session)
 
-    def create_network_from_file(self, model_from_file, clear_devices=True):
+    def create_network_from_file(self, file_name, clear_devices=True):
 
-        #saver = self.architecture.load(self.model_from_file, clear_devices=False)
-        self.saver = tf.train.import_meta_graph(model_from_file + ".meta", clear_devices=clear_devices)
-        self.saver.restore(self.session, model_from_file)
+        self.load_checkpoint(file_name, clear_devices=clear_devices)
 
         # Loading the graph from the graph pointers
         self.graph = dict()
