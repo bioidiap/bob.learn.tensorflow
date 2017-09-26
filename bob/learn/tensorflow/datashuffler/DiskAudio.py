@@ -136,12 +136,12 @@ class DiskAudio(Base):
 
         return final_frames, final_labels
 
-    def split_features_in_windows(self, features, label, wind_size):
+    def split_features_in_windows(self, features, label, win_size):
         m_total_length = len(features)
-        m_num_win = int(m_total_length / wind_size)  # discard the tail of the signal
+        m_num_win = int(m_total_length / win_size)  # discard the tail of the signal
 
         # make sure the array is divided into equal chunks
-        windows = numpy.split(features[:int(self.m_win_length) * int(m_num_win)], int(m_num_win))
+        windows = numpy.split(features[:int(win_size) * int(m_num_win)], int(m_num_win))
 
         windows_labels = [label] * m_num_win
         return windows, windows_labels
