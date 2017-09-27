@@ -136,12 +136,29 @@ class DiskAudio(Base):
 
         return final_frames, final_labels
 
-    def split_features_in_windows(self, features, label, win_size):
+    def split_features_in_windows(self, features, label, win_size, sliding_step=1):
         m_total_length = len(features)
-        m_num_win = int(m_total_length / win_size)  # discard the tail of the signal
+        features_size = features.shape[1]
+
+        # compute the number of sliding windows
+        m_num_win = int((m_total_length - win_size) / sliding_step) + 1
+
+        # discard the tail of the features
+        tail_size = (m_total_length - win_size) % sliding_step
+        trimmed_length = m_total_length - tail_size
+        features = features[:trimmed_length]
+
+        # create strides
+        from numpy.lib import stride_tricks
+        # the resulted shape is
+        # (number of windows, window size, size of each feature vector)
+        # we assume each value of features is 4 bytes
+        windows = stride_tricks.as_strided(features,
+                                                   shape=(m_num_win, win_size, features_size),
+                                                   strides=(features_size * 4, features_size * 4, 4))
 
         # make sure the array is divided into equal chunks
-        windows = numpy.split(features[:int(win_size) * int(m_num_win)], int(m_num_win))
+        #windows = numpy.split(features[:int(win_size) * int(m_num_win)], int(m_num_win))
 
         windows_labels = [label] * m_num_win
-        return windows, windows_labels
+        return windows.copy(), windows_labels
