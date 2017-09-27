@@ -140,6 +140,9 @@ class DiskAudio(Base):
         m_total_length = len(features)
         features_size = features.shape[1]
 
+        if m_total_length < win_size:
+            return None, None
+
         # compute the number of sliding windows
         m_num_win = int((m_total_length - win_size) / sliding_step) + 1
 
@@ -153,9 +156,10 @@ class DiskAudio(Base):
         # the resulted shape is
         # (number of windows, window size, size of each feature vector)
         # we assume each value of features is 4 bytes
+
         windows = stride_tricks.as_strided(features,
-                                                   shape=(m_num_win, win_size, features_size),
-                                                   strides=(features_size * 4, features_size * 4, 4))
+                                           shape=(m_num_win, win_size, features_size),
+                                           strides=(features_size * 4, features_size * 4, 4))
 
         # make sure the array is divided into equal chunks
         #windows = numpy.split(features[:int(win_size) * int(m_num_win)], int(m_num_win))
