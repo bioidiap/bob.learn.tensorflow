@@ -62,3 +62,4 @@ def test_train_script_siamese():
 
     tf.reset_default_graph()
     assert len(tf.global_variables()) == 0
+

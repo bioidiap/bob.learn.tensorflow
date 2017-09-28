@@ -208,4 +208,28 @@ def debug_embbeding(image, architecture, embbeding_dim=2, feature_layer="fc3"):
         embeddings[i] = embedding
 
     return embeddings
+    
+    
+def compute_embedding_accuracy(embedding, labels):
+    """
+    Compute the accuracy through exhaustive comparisons between the embeddings 
+    """
+
+    from scipy.spatial.distance import cdist
+    
+    distances = cdist(embedding, embedding)
+    
+    n_samples = embedding.shape[0]
+
+    # Computing the argmin excluding comparisons with the same samples
+    # Basically, we are excluding the main diagonal
+    valid_indexes = distances[distances>0].reshape(n_samples, n_samples-1).argmin(axis=1)
+
+    # Getting the original positions of the indexes in the 1-axis
+    corrected_indexes = [ i if i<j else i+1 for i, j in zip(valid_indexes, range(n_samples))]
+
+    matching = [ labels[i]==labels[j] for i,j in zip(range(n_samples), corrected_indexes)]    
+    accuracy = sum(matching)/float(n_samples)
+    
+    return accuracy
 
