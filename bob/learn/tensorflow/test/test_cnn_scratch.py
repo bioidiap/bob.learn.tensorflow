@@ -152,7 +152,7 @@ def test_cnn_tfrecord():
             img = data[i]
             img_raw = img.tostring()
             
-            feature = {'train/image': _bytes_feature(img_raw),
+            feature = {'train/data': _bytes_feature(img_raw),
                        'train/label': _int64_feature(labels[i])
                       }
             
