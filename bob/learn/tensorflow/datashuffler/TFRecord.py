@@ -62,7 +62,7 @@ class TFRecord(object):
 
     def create_placeholders(self):
 
-        feature = {'train/image': tf.FixedLenFeature([], tf.string),
+        feature = {'train/data': tf.FixedLenFeature([], tf.string),
                    'train/label': tf.FixedLenFeature([], tf.int64)}
 
         # Define a reader and read the next record
@@ -75,7 +75,7 @@ class TFRecord(object):
         features = tf.parse_single_example(serialized_example, features=feature)
         
         # Convert the image data from string back to the numbers
-        image = tf.decode_raw(features['train/image'], tf.float32)
+        image = tf.decode_raw(features['train/data'], tf.float32)
         
         # Cast label data into int32
         label = tf.cast(features['train/label'], tf.int64)
