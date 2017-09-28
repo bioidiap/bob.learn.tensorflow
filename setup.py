@@ -50,6 +50,7 @@ setup(
             'compute_statistics.py = bob.learn.tensorflow.script.compute_statistics:main',
             'train.py = bob.learn.tensorflow.script.train:main',
             'bob_db_to_tfrecords = bob.learn.tensorflow.script.db_to_tfrecords:main',
+            'load_and_debug.py = bob.learn.tensorflow.script.load_and_debug:main'
         ],
 
     },
