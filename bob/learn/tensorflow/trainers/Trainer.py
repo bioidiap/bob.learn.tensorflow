@@ -59,8 +59,8 @@ class Trainer(object):
 
                  ###### training options ##########
                  iterations=5000,
-                 snapshot=500,
-                 validation_snapshot=100,
+                 snapshot=1000,
+                 validation_snapshot=2000,
                  keep_checkpoint_every_n_hours=2,
 
                  ## Analizer
