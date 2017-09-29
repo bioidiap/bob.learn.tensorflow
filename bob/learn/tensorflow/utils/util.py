@@ -221,14 +221,20 @@ def compute_embedding_accuracy(embedding, labels):
     
     n_samples = embedding.shape[0]
 
+    # Fitting the main diagonal with infs (removing comparisons with the same sample)
+    numpy.fill_diagonal(distances, numpy.inf)
+    
+    indexes = distances.argmin(axis=1)    
+
     # Computing the argmin excluding comparisons with the same samples
     # Basically, we are excluding the main diagonal
-    valid_indexes = distances[distances>0].reshape(n_samples, n_samples-1).argmin(axis=1)
+
+    #valid_indexes = distances[distances>0].reshape(n_samples, n_samples-1).argmin(axis=1)
 
     # Getting the original positions of the indexes in the 1-axis
-    corrected_indexes = [ i if i<j else i+1 for i, j in zip(valid_indexes, range(n_samples))]
+    #corrected_indexes = [ i if i<j else i+1 for i, j in zip(valid_indexes, range(n_samples))]
 
-    matching = [ labels[i]==labels[j] for i,j in zip(range(n_samples), corrected_indexes)]    
+    matching = [ labels[i]==labels[j] for i,j in zip(range(n_samples), indexes)]    
     accuracy = sum(matching)/float(n_samples)
     
     return accuracy
