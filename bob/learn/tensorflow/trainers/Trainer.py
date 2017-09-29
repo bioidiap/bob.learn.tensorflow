@@ -60,7 +60,7 @@ class Trainer(object):
                  ###### training options ##########
                  iterations=5000,
                  snapshot=1000,
-                 validation_snapshot=2000,
+                 validation_snapshot=2000,#2000,
                  keep_checkpoint_every_n_hours=2,
 
                  ## Analizer
@@ -421,6 +421,7 @@ class Trainer(object):
             step: Iteration number
 
         """
+        
         if self.validation_data_shuffler.prefetch:
             embedding, labels = self.session.run([self.validation_predictor, self.validation_label_ph])
         else:
