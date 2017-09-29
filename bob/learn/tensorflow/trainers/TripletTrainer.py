@@ -122,6 +122,7 @@ class TripletTrainer(Trainer):
 
     def create_network_from_scratch(self,
                                     graph,
+                                    validation_graph=None,
                                     optimizer=tf.train.AdamOptimizer(),
                                     loss=None,
 

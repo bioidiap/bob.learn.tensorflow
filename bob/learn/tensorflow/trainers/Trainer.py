@@ -13,6 +13,7 @@ from tensorflow.core.framework import summary_pb2
 import time
 from bob.learn.tensorflow.datashuffler import OnlineSampling, TFRecord
 from bob.learn.tensorflow.utils.session import Session
+from bob.learn.tensorflow.utils import compute_embedding_accuracy
 from .learning_rate import constant
 import time
 
@@ -54,11 +55,12 @@ class Trainer(object):
     def __init__(self,
                  train_data_shuffler,
                  validation_data_shuffler=None,
+                 validate_with_embeddings=False,
 
                  ###### training options ##########
                  iterations=5000,
-                 snapshot=500,
-                 validation_snapshot=100,
+                 snapshot=1000,
+                 validation_snapshot=2000,
                  keep_checkpoint_every_n_hours=2,
 
                  ## Analizer
@@ -100,7 +102,8 @@ class Trainer(object):
         self.loss = None
         
         self.predictor = None
-        self.validation_predictor = None        
+        self.validation_predictor = None  
+        self.validate_with_embeddings = validate_with_embeddings      
         
         self.optimizer_class = None
         self.learning_rate = None
@@ -168,7 +171,10 @@ class Trainer(object):
 
             # Running validation
             if self.validation_data_shuffler is not None and step % self.validation_snapshot == 0:
-                self.compute_validation(step)
+                if self.validate_with_embeddings:
+                    self.compute_validation_embeddings(step)
+                else:
+                    self.compute_validation(step)
 
             # Taking snapshot
             if step % self.snapshot == 0:
@@ -178,7 +184,11 @@ class Trainer(object):
 
         # Running validation for the last time
         if self.validation_data_shuffler is not None:
-            self.compute_validation(step)
+            if self.validate_with_embeddings:
+                self.compute_validation_embeddings(step)
+            else:
+                self.compute_validation(step)
+            
             
         logger.info("Training finally finished")
 
@@ -264,7 +274,10 @@ class Trainer(object):
 
             self.validation_graph = validation_graph
 
-            self.validation_predictor = self.loss(self.validation_graph, self.validation_label_ph)
+            if self.validate_with_embeddings:
+                self.validation_predictor = self.validation_graph
+            else:
+                self.validation_predictor = self.loss(self.validation_graph, self.validation_label_ph)
 
             self.summaries_validation = self.create_general_summary(self.validation_predictor, self.validation_graph, self.validation_label_ph)
             tf.add_to_collection("summaries_validation", self.summaries_validation)
@@ -397,6 +410,30 @@ class Trainer(object):
 
         logger.info("Loss VALIDATION set step={0} = {1}".format(step, l))
         self.validation_summary_writter.add_summary(summary, step)               
+
+    def compute_validation_embeddings(self, step):
+        """
+        Computes the loss in the validation set with embeddings
+
+        ** Parameters **
+            session: Tensorflow session
+            data_shuffler: The data shuffler to be used
+            step: Iteration number
+
+        """
+        if self.validation_data_shuffler.prefetch:
+            embedding, labels = self.session.run([self.validation_predictor, self.validation_label_ph])
+        else:
+            feed_dict = self.get_feed_dict(self.validation_data_shuffler)
+            embedding, labels = self.session.run([self.validation_predictor, self.validation_label_ph],
+                                               feed_dict=feed_dict)
+                                               
+        accuracy = compute_embedding_accuracy(embedding, labels)
+        
+        summary = summary_pb2.Summary.Value(tag="accuracy", simple_value=accuracy)
+        logger.info("VALIDATION Accuracy set step={0} = {1}".format(step, accuracy))
+        self.validation_summary_writter.add_summary(summary_pb2.Summary(value=[summary]), step)               
+
 
     def create_general_summary(self, average_loss, output, label):
         """
