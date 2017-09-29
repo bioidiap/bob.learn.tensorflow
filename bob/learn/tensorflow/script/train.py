@@ -77,8 +77,18 @@ def main():
     # Cleaning all variables in case you are loading the checkpoint
     tf.reset_default_graph() if os.path.exists(output_dir) else None
 
-    # One graph trainer
+    # Run validation with embeddings
+    if hasattr(config, 'validate_with_embeddings'):
+        validate_with_embeddings = config.validate_with_embeddings
+        
+    # Run validation with embeddings
+    validation_data_shuffler = None
+    if hasattr(config, 'validation_data_shuffler'):
+        validation_data_shuffler = config.validation_data_shuffler
+
     trainer = config.Trainer(config.train_data_shuffler,
+                             validation_data_shuffler=validation_data_shuffler,
+                             validate_with_embeddings=validate_with_embeddings,
                              iterations=iterations,
                              analizer=None,
                              temp_dir=output_dir)
@@ -90,6 +100,7 @@ def main():
         # Either bootstrap from scratch or take the pointer directly from the config script
         train_graph = None
         validation_graph = None
+        validate_with_embeddings = False
         
         if hasattr(config, 'train_graph'):
             train_graph = config.train_graph
