@@ -171,6 +171,16 @@ def test_trainable_variables():
 
     trainer.train()
     
+    conv1_after_train = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='conv1')[0].eval(session=trainer.session)[0]
+    
+    print(conv1_trained - conv1_before_load)
+    print(conv1_trained - conv1_restored)
+    print(conv1_trained - conv1_after_train)    
+    
+    import ipdb; ipdb.set_trace();
+    
+    x = 0
+    
     
 
     #var_list = tf.get_collection(tf.GraphKeys.VARIABLES, scope='fc1') + tf.get_collection(tf.GraphKeys.VARIABLES, scope='logits')
