@@ -73,6 +73,7 @@ class Memory(Base):
     def _fetch_batch(self):
         # Shuffling samples
         indexes = numpy.array(range(self.data.shape[0]))
+
         numpy.random.shuffle(indexes)
 
         for i in range(len(indexes)):

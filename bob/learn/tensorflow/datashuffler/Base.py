@@ -273,13 +273,20 @@ class Base(object):
         except StopIteration:
             self.batch_generator = None
             self.epoch += 1
-            
-            # If we have left data in the epoch, return
-            if len(holder) > 0:
-                return self._aggregate_batch(holder, False)
+
+            # restart batch fetching, if we have less than a batch size
+            # in this way, we will keep looping through the available data over
+            if len(holder) < self.batch_size:
+                return self.get_batch()
             else:
-                self.batch_generator = self._fetch_batch()
-                data = six.next(self.batch_generator)
-                holder.append(data)
                 return self._aggregate_batch(holder, False)
+
+            # # If we have left data in the epoch, return
+            # if len(holder) > 0:
+            #     return self._aggregate_batch(holder, False)
+            # else:
+            #     self.batch_generator = self._fetch_batch()
+            #     data = six.next(self.batch_generator)
+            #     holder.append(data)
+            #     return self._aggregate_batch(holder, False)
 

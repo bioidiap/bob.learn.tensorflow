@@ -1,8 +1,14 @@
 #!/usr/bin/env python
+# vim: set fileencoding=utf-8 :
+# @author: Pavel Korshunov <pavel.korshunov@idiap.ch>
+# @date: Wed 13 Sep 2017 13:22 CEST
 
 import tensorflow as tf
 from tensorflow.python.layers import base
 from tensorflow.python.framework import ops
+
+import logging
+logger = logging.getLogger("bob.learn")
 
 
 def lstm(inputs, lstm_cell_size, lstm_fn=tf.contrib.rnn.BasicLSTMCell, num_time_steps=20,
@@ -51,11 +57,11 @@ class LSTM(base.Layer):
         self.batch_size = batch_size
         self.num_time_steps = num_time_steps
         self.scope = scope
+
         hidden_state = tf.zeros([self.batch_size, self.lstm_cell_size])
         current_state = tf.zeros([self.batch_size, self.lstm_cell_size])
         self.states = hidden_state, current_state
-        # self.states = tf.zeros([self.batch_size, 2 * self.lstm_cell_size])
-        # self.states = None
+
         self.sequence_length = None
         self.output_activation_size = output_activation_size
 
@@ -74,14 +80,14 @@ class LSTM(base.Layer):
         # shape inputs correctly
         inputs = ops.convert_to_tensor(inputs)
         shape = inputs.get_shape().as_list()
-        print("shape of the inputs: ", shape)
+        logger.info("LSTM: the shape of the inputs: {0}".format(shape))
 
         input_time_steps = shape[1]  # second dimension must be the number of time steps in LSTM
 
         if len(shape) == 4:  # when inputs shape is 4, the last dimension must be 1
             if shape[-1] == 1:  # we accept last dimension to be 1, then we just reshape it
                 inputs = tf.reshape(inputs, shape=(-1, shape[1], shape[2]))
-                print("after reshape, shape of the inputs: ", inputs.get_shape().as_list())
+                logger.info("LSTM: after reshape, the shape of the inputs: {0}".format(inputs.get_shape().as_list()))
             else:
                 raise ValueError('The shape of input must be either (batch_size, num_time_steps, input_vector_size) or '
                                  '(batch_size, num_time_steps, input_vector_size, 1), but it is {}'.format(shape))
@@ -93,25 +99,17 @@ class LSTM(base.Layer):
 
         # convert inputs into the num_time_steps list of the inputs each of shape (batch_size, input_vector_size)
         list_inputs = tf.unstack(inputs, self.num_time_steps, 1)
-        print("type of the input list: ", type(list_inputs))
-        print("Length of the converted list of inputs: ", len(list_inputs))
-        print("Size of each input: ", list_inputs[0].get_shape().as_list())
 
-        # list of length of each input sample
-        # self.sequence_length = shape[0]*[shape[1]]
         # run LSTM training on the batch of inputs
         # return the output (a list of self.num_time_steps outputs each of size input_vector_size)
         # and remember the final states
-        # outputs, self.states = tf.nn.dynamic_rnn(self.lstm,
         outputs, self.states = tf.contrib.rnn.static_rnn(self.lstm,
                                                          inputs=list_inputs,
                                                          initial_state=self.states,
-                                                         # sequence_length=self.sequence_length,
                                                          dtype=tf.float32,
                                                          scope=self.scope)
 
         # consider the output of the last cell
-        # apply linear activation on it
-        # return outputs[-1]
-        return tf.matmul(outputs[-1], self.output_activation_weights['out']) + self.output_activation_biases['out']
+        return outputs[-1]
+        # return tf.matmul(outputs[-1], self.output_activation_weights['out']) + self.output_activation_biases['out']
 
