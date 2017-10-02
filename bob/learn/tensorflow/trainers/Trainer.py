@@ -256,7 +256,13 @@ class Trainer(object):
 
         # SAving some variables
         tf.add_to_collection("global_step", self.global_step)
-        tf.add_to_collection("graph", self.graph)
+
+        if isinstance(self.graph, dict):
+            tf.add_to_collection("graph", self.graph['logits'])
+            tf.add_to_collection("prelogits", self.graph['prelogits'])
+        else:
+            tf.add_to_collection("graph", self.graph)
+        
         tf.add_to_collection("predictor", self.predictor)
 
         tf.add_to_collection("data_ph", self.data_ph)
@@ -445,7 +451,11 @@ class Trainer(object):
         tf.summary.scalar('lr', self.learning_rate)        
 
         # Computing accuracy
-        correct_prediction = tf.equal(tf.argmax(output, 1), label)
+        if isinstance(output, dict):
+            correct_prediction = tf.equal(tf.argmax(output['logits'], 1), label)
+        else:
+            correct_prediction = tf.equal(tf.argmax(output, 1), label)
+        
         accuracy = tf.reduce_mean(tf.cast(correct_prediction, tf.float32))
         tf.summary.scalar('accuracy', accuracy)        
         return tf.summary.merge_all()

@@ -84,6 +84,7 @@ class TFRecord(object):
         
         # Convert the image data from string back to the numbers
         image = tf.decode_raw(features['train/data'], tf.float32)
+        #image = tf.decode_raw(features['train/data'], tf.uint8)
         
         # Cast label data into int32
         label = tf.cast(features['train/label'], tf.int64)

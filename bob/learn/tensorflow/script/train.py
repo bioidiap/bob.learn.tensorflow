@@ -78,6 +78,7 @@ def main():
     tf.reset_default_graph() if os.path.exists(output_dir) else None
 
     # Run validation with embeddings
+    validate_with_embeddings = False
     if hasattr(config, 'validate_with_embeddings'):
         validate_with_embeddings = config.validate_with_embeddings
         
