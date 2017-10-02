@@ -31,6 +31,7 @@ import bob.db.lfw
 import os
 import bob.io.image
 import bob.io.base
+import numpy
 
 logger = setup(__name__)
 
@@ -54,6 +55,19 @@ def get_pairs(all_pairs, match=True):
             pairs.append(p.probe_file)
 
     return pairs
+
+def bob2skimage(bob_image):
+    """
+    Convert bob color image to the skcit image
+    """
+
+    skimage = numpy.zeros(shape=(bob_image.shape[1], bob_image.shape[2], bob_image.shape[0]))
+    skimage[:, :, 2] = bob_image[0, :, :]
+    skimage[:, :, 1] = bob_image[1, :, :]    
+    skimage[:, :, 0] = bob_image[2, :, :]
+
+    return skimage
+
 
 def main(argv=None):
     from docopt import docopt
@@ -79,14 +93,17 @@ def main(argv=None):
     client_ids = dict(zip(client_ids, range(len(client_ids))))
     
     create_directories_safe(os.path.dirname(output_file))
-    
+
     n_files = len(all_pairs)
     with tf.python_io.TFRecordWriter(output_file) as writer:
       for i, f in enumerate(all_pairs):
         logger.info('Processing file %d out of %d', i + 1, n_files)
 
         path = f.make_path(data_path, extension)
-        data = reader(path).astype('float32').tostring()
+        #data = reader(path).astype('uint8').tostring()
+        img = bob2skimage(reader(path)).astype('float32')
+        data = img.tostring()
+
 
         feature = {'train/data': _bytes_feature(data),
                    'train/label': _int64_feature(file_to_label(client_ids, f))}
