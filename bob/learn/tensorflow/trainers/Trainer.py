@@ -317,6 +317,28 @@ class Trainer(object):
         else:
             self.saver = tf.train.import_meta_graph(file_name, clear_devices=clear_devices)
             self.saver.restore(self.session, tf.train.latest_checkpoint(os.path.dirname(file_name)))
+            
+    def load_variables_from_external_model(self, file_name, var_list):
+        """
+        Load a set of variables from a given model and update them in the current one
+        
+        ** Parameters **
+        
+          file_name:
+            Name of the tensorflow model to be loaded
+          var_list:
+            List of variables to be loaded. A tensorflow exception will be raised in case the variable does not exists
+        
+        """
+        
+        assert len(var_list)>0
+        
+        tf_varlist = []
+        for v in var_list:
+            tf_varlist += tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=v)
+
+        saver = tf.train.Saver(tf_varlist)
+        saver.restore(self.session, file_name)
 
     def create_network_from_file(self, file_name, clear_devices=True):
         """
