@@ -150,11 +150,8 @@ def main(argv=None):
 
         path = f.make_path(data_dir, data_extension)
         img = bob2skimage(reader(path)).astype(data_type)
-        #img = reader(path).astype('float32')
         img = img.reshape((list(img.shape) + [1]))
         data = img.tostring()
-
-        #data = reader(path).astype('float32').tostring()
 
         feature = {'train/data': _bytes_feature(data),
                    'train/label': _int64_feature(file_to_label(f))}
