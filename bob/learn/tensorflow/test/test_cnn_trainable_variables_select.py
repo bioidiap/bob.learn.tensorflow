@@ -154,8 +154,7 @@ def test_trainable_variables():
                                         )
 
     # Loading two layers from the "old" model
-    external_model = os.path.join(step1_path, "model.ckp")
-    trainer.load_variables_from_external_model(external_model, var_list=['conv1', 'fc1'])
+    trainer.load_variables_from_external_model(step1_path, var_list=['conv1', 'fc1'])
 
     conv1_restored = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope='conv1')[0].eval(session=trainer.session)[0]
   

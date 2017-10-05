@@ -43,16 +43,16 @@ def scratch_network_embeding_example(train_data_shuffler, reuse=False, get_embed
 
     if get_embedding:
         embedding = tf.nn.l2_normalize(prelogits, dim=1, name="embedding")
-        return embedding
+        return embedding, None
     else:
         logits = slim.fully_connected(prelogits, 10, activation_fn=None, scope='logits',
                                      weights_initializer=initializer, reuse=reuse)
     
-    logits_prelogits = dict()
-    logits_prelogits['logits'] = logits
-    logits_prelogits['prelogits'] = prelogits
+    #logits_prelogits = dict()
+    #logits_prelogits['logits'] = logits
+    #logits_prelogits['prelogits'] = prelogits
    
-    return logits_prelogits
+    return logits, prelogits
 
 
 def test_cnn_tfrecord_embedding_validation():
@@ -102,12 +102,12 @@ def test_cnn_tfrecord_embedding_validation():
     validation_data_shuffler  = TFRecord(filename_queue=filename_queue_val,
                                          batch_size=2000)
                                          
-    graph = scratch_network_embeding_example(train_data_shuffler)
-    validation_graph = scratch_network_embeding_example(validation_data_shuffler, reuse=True, get_embedding=True)
+    graph, prelogits = scratch_network_embeding_example(train_data_shuffler)
+    validation_graph,_ = scratch_network_embeding_example(validation_data_shuffler, reuse=True, get_embedding=True)
     
     # Setting the placeholders
     # Loss for the softmax
-    loss = MeanSoftMaxLossCenterLoss(n_classes=10, add_regularization_losses=False)    
+    loss = MeanSoftMaxLossCenterLoss(n_classes=10, factor=0.1)
 
     # One graph trainer
     trainer = Trainer(train_data_shuffler,
@@ -118,16 +118,22 @@ def test_cnn_tfrecord_embedding_validation():
                       temp_dir=directory)
 
     learning_rate = constant(0.01, name="regular_lr")
+
     trainer.create_network_from_scratch(graph=graph,
                                         validation_graph=validation_graph,
                                         loss=loss,
                                         learning_rate=learning_rate,
                                         optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+                                        prelogits=prelogits
                                         )
 
     trainer.train()
+    
+
+    
     os.remove(tfrecords_filename)
     os.remove(tfrecords_filename_val)    
+    """
     assert True
     tf.reset_default_graph()
     del trainer
@@ -149,4 +155,4 @@ def test_cnn_tfrecord_embedding_validation():
     tf.reset_default_graph()
     shutil.rmtree(directory)
     assert len(tf.global_variables())==0
-
+    """

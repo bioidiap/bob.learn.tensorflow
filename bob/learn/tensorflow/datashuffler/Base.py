@@ -190,17 +190,21 @@ class Base(object):
                 bob.ip.base.scale(copy, dst)
                 dst = numpy.reshape(dst, self.input_shape[1:4])
             else:
-                # dst = numpy.resize(data, self.bob_shape) # Scaling with numpy, because bob is c,w,d instead of w,h,c
-                dst = numpy.zeros(shape=self.bob_shape)
+                #dst = numpy.resize(data, self.bob_shape) # Scaling with numpy, because bob is c,w,d instead of w,h,c
+                #dst = numpy.zeros(shape=(data.shape[0], data.shape[1], 3))
+                #dst[:, :, 0] = data[:, :, 0]
+                #dst[:, :, 1] = data[:, :, 0]
+                #dst[:, :, 2] = data[:, :, 0]
 
                 # TODO: LAME SOLUTION
-                if data.shape[0] != 3:  # GRAY SCALE IMAGES IN A RGB DATABASE
-                    step_data = numpy.zeros(shape=(3, data.shape[0], data.shape[1]))
-                    step_data[0, ...] = data[:, :]
-                    step_data[1, ...] = data[:, :]
-                    step_data[2, ...] = data[:, :]
-                    data = step_data
-
+                #if data.shape[0] != 3:  # GRAY SCALE IMAGES IN A RGB DATABASE
+                #   step_data = numpy.zeros(shape=(3, data.shape[0], data.shape[1]))
+                    #step_data = numpy.zeros(shape=(3, data.shape[0], data.shape[1]))
+                    #step_data[0, ...] = data[:, :, 0]
+                    #step_data[1, ...] = data[:, :, 0]
+                    #step_data[2, ...] = data[:, :, 0]
+                    #data = step_data
+                dst = numpy.zeros(shape=(self.bob_shape))
                 bob.ip.base.scale(data, dst)
 
             return dst
