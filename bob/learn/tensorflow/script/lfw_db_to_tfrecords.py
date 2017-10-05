@@ -3,7 +3,7 @@
 """Script that converts bob.db.lfw database to TF records
 
 Usage:
-  %(prog)s <data-path> <output-file> [--extension=<arg> --protocol=<arg> --verbose]
+  %(prog)s <data-path> <output-file> [--extension=<arg> --protocol=<arg> --data-type=<arg> --verbose]
   %(prog)s --help
   %(prog)s --version
 
@@ -12,6 +12,7 @@ Options:
   <data-path>          Path that contains the features
   --extension=<arg>    Default feature extension   [default: .hdf5]
   --protocol=<arg>     One of the LFW protocols    [default: view1]
+  --data-type=<arg>    TFRecord data type [default: float32]
 
 
 The possible protocol options are the following:
@@ -77,6 +78,7 @@ def main(argv=None):
     output_file = args['<output-file>']
     extension   = args['--extension']
     protocol    = args['--protocol']
+    data_type   = args['--data-type']
     
     #Setting the reader
     reader = bob.io.base.load
@@ -101,9 +103,8 @@ def main(argv=None):
 
         path = f.make_path(data_path, extension)
         #data = reader(path).astype('uint8').tostring()
-        img = bob2skimage(reader(path)).astype('float32')
+        img = bob2skimage(reader(path)).astype(data_type)
         data = img.tostring()
-
 
         feature = {'train/data': _bytes_feature(data),
                    'train/label': _int64_feature(file_to_label(client_ids, f))}

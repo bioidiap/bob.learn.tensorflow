@@ -81,6 +81,7 @@ from bob.io.base import create_directories_safe
 from bob.bio.base.utils import load, read_config_file
 from bob.core.log import setup, set_verbosity_level
 logger = setup(__name__)
+import numpy
 
 
 def _bytes_feature(value):
@@ -90,6 +91,22 @@ def _bytes_feature(value):
 def _int64_feature(value):
   return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
+
+def bob2skimage(bob_image):
+    """
+    Convert bob color image to the skcit image
+    """
+    
+    if bob_image.ndim==2:
+        skimage = numpy.zeros(shape=(bob_image.shape[0], bob_image.shape[1], 1))
+        skimage[:, :, 0] = bob_image
+    else:
+        skimage = numpy.zeros(shape=(bob_image.shape[1], bob_image.shape[2], bob_image.shape[0]))
+        skimage[:, :, 2] = bob_image[0, :, :]
+        skimage[:, :, 1] = bob_image[1, :, :]    
+        skimage[:, :, 0] = bob_image[2, :, :]
+
+    return skimage
 
 def main(argv=None):
   from docopt import docopt
@@ -114,6 +131,8 @@ def main(argv=None):
   groups = getattr(config, 'groups', ['world'])
   data_extension = getattr(config, 'data_extension', '.hdf5')
   shuffle = getattr(config, 'shuffle', False)
+  
+  data_type = getattr(config, 'data_type', "float32")
 
   create_directories_safe(output_dir)
   if not isinstance(groups, (list, tuple)):
@@ -130,7 +149,12 @@ def main(argv=None):
         logger.info('Processing file %d out of %d', i + 1, n_files)
 
         path = f.make_path(data_dir, data_extension)
-        data = reader(path).astype('float32').tostring()
+        img = bob2skimage(reader(path)).astype(data_type)
+        #img = reader(path).astype('float32')
+        img = img.reshape((list(img.shape) + [1]))
+        data = img.tostring()
+
+        #data = reader(path).astype('float32').tostring()
 
         feature = {'train/data': _bytes_feature(data),
                    'train/label': _int64_feature(file_to_label(f))}
