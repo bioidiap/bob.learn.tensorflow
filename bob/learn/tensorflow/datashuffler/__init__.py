@@ -22,6 +22,7 @@ from .Normalizer import ScaleFactor, MeanOffset, Linear
 
 from .DiskAudio import DiskAudio
 from .TFRecord import TFRecord
+from .TFRecordImage import TFRecordImage
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):
@@ -55,5 +56,7 @@ __appropriate__(
     ImageAugmentation,
     ScaleFactor, MeanOffset, Linear,
     DiskAudio,
+    TFRecord,
+    TFRecordImage
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]

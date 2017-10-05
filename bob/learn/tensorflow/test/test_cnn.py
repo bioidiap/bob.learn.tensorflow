@@ -222,6 +222,7 @@ def test_siamesecnn_trainer():
                                         loss=loss,
                                         learning_rate=constant(0.01, name="regular_lr"),
                                         optimizer=tf.train.GradientDescentOptimizer(0.01),)
+                                        
     trainer.train()
     embedding = Embedding(train_data_shuffler("data", from_queue=False)['left'], graph['left'])
     eer = dummy_experiment(validation_data_shuffler, embedding)

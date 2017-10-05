@@ -1,4 +1,4 @@
-from .BaseLoss import BaseLoss, MeanSoftMaxLoss
+from .BaseLoss import BaseLoss, MeanSoftMaxLoss, MeanSoftMaxLossCenterLoss
 from .ContrastiveLoss import ContrastiveLoss
 from .TripletLoss import TripletLoss
 from .TripletAverageLoss import TripletAverageLoss

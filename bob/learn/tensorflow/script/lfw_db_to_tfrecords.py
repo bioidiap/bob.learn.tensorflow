@@ -3,7 +3,7 @@
 """Script that converts bob.db.lfw database to TF records
 
 Usage:
-  %(prog)s <data-path> <output-file> [--extension=<arg> --protocol=<arg> --verbose]
+  %(prog)s <data-path> <output-file> [--extension=<arg> --protocol=<arg> --data-type=<arg> --verbose]
   %(prog)s --help
   %(prog)s --version
 
@@ -12,6 +12,7 @@ Options:
   <data-path>          Path that contains the features
   --extension=<arg>    Default feature extension   [default: .hdf5]
   --protocol=<arg>     One of the LFW protocols    [default: view1]
+  --data-type=<arg>    TFRecord data type [default: float32]
 
 
 The possible protocol options are the following:
@@ -31,6 +32,7 @@ import bob.db.lfw
 import os
 import bob.io.image
 import bob.io.base
+import numpy
 
 logger = setup(__name__)
 
@@ -55,6 +57,19 @@ def get_pairs(all_pairs, match=True):
 
     return pairs
 
+def bob2skimage(bob_image):
+    """
+    Convert bob color image to the skcit image
+    """
+
+    skimage = numpy.zeros(shape=(bob_image.shape[1], bob_image.shape[2], bob_image.shape[0]))
+    skimage[:, :, 2] = bob_image[0, :, :]
+    skimage[:, :, 1] = bob_image[1, :, :]    
+    skimage[:, :, 0] = bob_image[2, :, :]
+
+    return skimage
+
+
 def main(argv=None):
     from docopt import docopt
     args = docopt(__doc__, version='')
@@ -63,6 +78,7 @@ def main(argv=None):
     output_file = args['<output-file>']
     extension   = args['--extension']
     protocol    = args['--protocol']
+    data_type   = args['--data-type']
     
     #Setting the reader
     reader = bob.io.base.load
@@ -79,14 +95,16 @@ def main(argv=None):
     client_ids = dict(zip(client_ids, range(len(client_ids))))
     
     create_directories_safe(os.path.dirname(output_file))
-    
+
     n_files = len(all_pairs)
     with tf.python_io.TFRecordWriter(output_file) as writer:
       for i, f in enumerate(all_pairs):
         logger.info('Processing file %d out of %d', i + 1, n_files)
 
         path = f.make_path(data_path, extension)
-        data = reader(path).astype('float32').tostring()
+        #data = reader(path).astype('uint8').tostring()
+        img = bob2skimage(reader(path)).astype(data_type)
+        data = img.tostring()
 
         feature = {'train/data': _bytes_feature(data),
                    'train/label': _int64_feature(file_to_label(client_ids, f))}

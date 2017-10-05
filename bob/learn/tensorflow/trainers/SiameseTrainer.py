@@ -50,6 +50,7 @@ class SiameseTrainer(Trainer):
     def __init__(self,
                  train_data_shuffler,
                  validation_data_shuffler=None,
+                 validate_with_embeddings=False,
 
                  ###### training options ##########
                  iterations=5000,
@@ -84,6 +85,7 @@ class SiameseTrainer(Trainer):
         self.validation_summary_writter = None
         self.summaries_validation = None
         self.validation_data_shuffler = validation_data_shuffler
+        self.validate_with_embeddings = validate_with_embeddings
 
         # Analizer
         self.analizer = analizer
@@ -217,7 +219,6 @@ class SiameseTrainer(Trainer):
         return feed_dict
 
     def fit(self, step):
-
         feed_dict = self.get_feed_dict(self.train_data_shuffler)
         _, l, bt_class, wt_class, lr, summary = self.session.run([
                                                 self.optimizer,

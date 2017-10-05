@@ -92,7 +92,7 @@ def test_tripletmemory_shuffler():
 
 def test_disk_shuffler():
     train_data, train_labels = get_dummy_files()
-    batch_shape = [None, 125, 125, 3]
+    batch_shape = [None, 250, 250, 3]
 
     data_shuffler = Disk(train_data, train_labels,
                          input_shape=batch_shape,
@@ -101,13 +101,13 @@ def test_disk_shuffler():
     batch = data_shuffler.get_batch()
 
     assert len(batch) == 2
-    assert batch[0].shape == (2, 125, 125, 3)
+    assert batch[0].shape == (2, 250, 250, 3)
 
 
 def test_siamesedisk_shuffler():
     train_data, train_labels = get_dummy_files()
 
-    batch_shape = [None, 125, 125, 3]
+    batch_shape = [None, 250, 250, 3]
 
     data_shuffler = SiameseDisk(train_data, train_labels,
                                 input_shape=batch_shape,
@@ -116,14 +116,14 @@ def test_siamesedisk_shuffler():
     batch = data_shuffler.get_batch()
 
     assert len(batch) == 3
-    assert batch[0].shape == (2, 125, 125, 3)
-    assert batch[1].shape == (2, 125, 125, 3)
+    assert batch[0].shape == (2, 250, 250, 3)
+    assert batch[1].shape == (2, 250, 250, 3)
 
 
 def test_tripletdisk_shuffler():
     train_data, train_labels = get_dummy_files()
 
-    batch_shape = [None, 125, 125, 3]
+    batch_shape = [None, 250, 250, 3]
 
     data_shuffler = TripletDisk(train_data, train_labels,
                                 input_shape=batch_shape,
@@ -132,9 +132,9 @@ def test_tripletdisk_shuffler():
     batch = data_shuffler.get_batch()
 
     assert len(batch) == 3
-    assert batch[0].shape == (1, 125, 125, 3)
-    assert batch[1].shape == (1, 125, 125, 3)
-    assert batch[2].shape == (1, 125, 125, 3)
+    assert batch[0].shape == (1, 250, 250, 3)
+    assert batch[1].shape == (1, 250, 250, 3)
+    assert batch[2].shape == (1, 250, 250, 3)
 
 
 def test_triplet_fast_selection_disk_shuffler():

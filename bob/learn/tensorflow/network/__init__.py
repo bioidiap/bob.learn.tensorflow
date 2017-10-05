@@ -5,6 +5,7 @@ from .Dummy import Dummy
 from .MLP import MLP
 from .Embedding import Embedding
 from .InceptionResnetV2 import inception_resnet_v2
+from .InceptionResnetV1 import inception_resnet_v1
 
 
 # gets sphinx autodoc done right - don't remove it
