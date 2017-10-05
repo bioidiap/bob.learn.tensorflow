@@ -219,7 +219,6 @@ class SiameseTrainer(Trainer):
         return feed_dict
 
     def fit(self, step):
-
         feed_dict = self.get_feed_dict(self.train_data_shuffler)
         _, l, bt_class, wt_class, lr, summary = self.session.run([
                                                 self.optimizer,
