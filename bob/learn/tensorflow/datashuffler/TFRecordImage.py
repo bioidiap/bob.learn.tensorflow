@@ -10,7 +10,6 @@ import numpy
 from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 from .TFRecord import TFRecord
 
-
 class TFRecordImage(TFRecord):
     """
     Datashuffler that wraps the batching using tfrecords.
@@ -147,20 +146,4 @@ class TFRecordImage(TFRecord):
         
         self.data_ph = data_ph
         self.label_ph = label_ph
-
-
-    def get_batch(self):
-        """
-        Shuffle the Memory dataset and get a random batch.
-
-        ** Returns **
-
-        data:
-          Selected samples
-
-        labels:
-          Correspondent labels
-        """
-
-        pass
 
