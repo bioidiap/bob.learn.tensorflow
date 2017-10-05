@@ -13,7 +13,8 @@ logger = logging.getLogger("bob.learn")
 
 def lstm(inputs, lstm_cell_size, lstm_fn=tf.contrib.rnn.BasicLSTMCell, num_time_steps=20,
          output_activation_size=10, batch_size=10, scope='rnn',
-         weights_initializer=tf.random_normal, activation=tf.nn.relu, name=None, reuse=None):
+         weights_initializer=tf.random_normal, activation=tf.nn.relu,
+         name=None, reuse=None, dropout=False, input_dropout=1.0, output_dropout=1.0):
     """
     """
     return LSTM(lstm_cell_size=lstm_cell_size,
@@ -24,6 +25,9 @@ def lstm(inputs, lstm_cell_size, lstm_fn=tf.contrib.rnn.BasicLSTMCell, num_time_
                 output_activation_size=output_activation_size,
                 weights_initializer=weights_initializer,
                 activation=activation,
+                dropout=dropout,
+                input_dropout=input_dropout,
+                output_dropout=output_dropout,
                 name=name,
                 reuse=reuse)(inputs)
 
@@ -43,6 +47,9 @@ class LSTM(base.Layer):
                  activation=tf.nn.relu,
                  name=None,
                  reuse=None,
+                 dropout=False,
+                 input_dropout=1.0,
+                 output_dropout=1.0,
                  **kwargs):
         """
         :param lstm_cell_size [int]: size of the LSTM cell, i.e., the length of the output form each cell
@@ -54,6 +61,9 @@ class LSTM(base.Layer):
 
         self.lstm_cell_size = lstm_cell_size
         self.lstm = lstm_fn(self.lstm_cell_size, activation=activation, reuse=reuse, state_is_tuple=True, **kwargs)
+        if dropout:
+            self.lstm = tf.nn.rnn_cell.DropoutWrapper(self.lstm, input_keep_prob=input_dropout,
+                                                      output_keep_prob=output_dropout)
         self.batch_size = batch_size
         self.num_time_steps = num_time_steps
         self.scope = scope
