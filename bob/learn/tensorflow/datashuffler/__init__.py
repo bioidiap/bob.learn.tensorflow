@@ -56,5 +56,7 @@ __appropriate__(
     ImageAugmentation,
     ScaleFactor, MeanOffset, Linear,
     DiskAudio,
+    TFRecord,
+    TFRecordImage
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]
