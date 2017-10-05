@@ -13,8 +13,7 @@ slim = tf.contrib.slim
 class BaseLoss(object):
     """
     Base loss function.
-
-    One exam
+    Stupid class. Don't know why I did that.
     """
 
     def __init__(self, loss, operation, name="loss"):
@@ -28,20 +27,17 @@ class BaseLoss(object):
         
 class MeanSoftMaxLoss(object):
     """
-    Mean softmax loss. Basically it wrapps the function tf.nn.sparse_softmax_cross_entropy_with_logits.
+    Simple CrossEntropy loss.
+    Basically it wrapps the function tf.nn.sparse_softmax_cross_entropy_with_logits.
+    
+    **Parameters**
+    
+      name: Scope name
+      add_regularization_losses: Regulize the loss???
+    
     """
 
     def __init__(self, name="loss", add_regularization_losses=True):
-        """
-        Constructor
-        
-        **Parameters**
-
-          name:
-             Scope name
-        
-        """
-    
         self.name = name
         self.add_regularization_losses = add_regularization_losses
 
@@ -58,20 +54,17 @@ class MeanSoftMaxLoss(object):
             
 class MeanSoftMaxLossCenterLoss(object):
     """
-    Mean softmax loss. Basically it wrapps the function tf.nn.sparse_softmax_cross_entropy_with_logits.
-    """
-
-    def __init__(self, name="loss", alpha=0.9, factor=0.01, n_classes=10):
-        """
-        Constructor
-        
-        **Parameters**
-
-          name:
-             Scope name
-        
-        """
+    Implementation of the CrossEntropy + Center Loss from the paper
+    "A Discriminative Feature Learning Approach for Deep Face Recognition"(http://ydwen.github.io/papers/WenECCV16.pdf)
     
+    **Parameters**
+
+      name: Scope name
+      alpha: Alpha factor ((1-alpha)*centers-prelogits)
+      factor: Weight factor of the center loss
+      n_classes: Number of classes of your task
+    """
+    def __init__(self, name="loss", alpha=0.9, factor=0.01, n_classes=10):
         self.name = name
 
         self.n_classes = n_classes
