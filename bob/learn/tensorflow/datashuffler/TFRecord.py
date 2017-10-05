@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 11 May 2016 09:39:36 CEST 
+# @date: Wed 11 May 2016 09:39:36 CEST
 
 import numpy
 import tensorflow as tf
@@ -43,11 +43,11 @@ class TFRecord(object):
     def __call__(self, element, from_queue=False):
         """
         Return the necessary placeholder
-        
+
         """
 
         if not element in ["data", "label"]:
-            raise ValueError("Value '{0}' invalid. Options available are {1}".format(element, self.placeholder_options))
+            raise ValueError("Value of the input '{0}' is invalid. ".format(element))
 
         # If None, create the placeholders from scratch
         if self.data_ph is None:
