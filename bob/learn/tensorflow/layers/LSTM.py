@@ -61,11 +61,14 @@ class LSTM(base.Layer):
 
         self.lstm_cell_size = lstm_cell_size
         self.lstm = lstm_fn(self.lstm_cell_size, activation=activation, reuse=reuse, state_is_tuple=True, **kwargs)
+
+        # print("self.lstm_cell_size: ", self.lstm_cell_size)
         if dropout:
             self.lstm = tf.nn.rnn_cell.DropoutWrapper(self.lstm, input_keep_prob=input_dropout,
                                                       output_keep_prob=output_dropout)
         self.batch_size = batch_size
         self.num_time_steps = num_time_steps
+        # print("self.num_time_steps:", self.num_time_steps)
         self.scope = scope
 
         hidden_state = tf.zeros([self.batch_size, self.lstm_cell_size])
@@ -76,12 +79,12 @@ class LSTM(base.Layer):
         self.output_activation_size = output_activation_size
 
         # Define weights
-        self.output_activation_weights = {
-            'out': tf.Variable(weights_initializer([lstm_cell_size, self.output_activation_size]))
-        }
-        self.output_activation_biases = {
-            'out': tf.Variable(weights_initializer([self.output_activation_size]))
-        }
+        # self.output_activation_weights = {
+        #     'out': tf.Variable(weights_initializer([self.lstm_cell_size, self.output_activation_size]))
+        # }
+        # self.output_activation_biases = {
+        #     'out': tf.Variable(weights_initializer([self.output_activation_size]))
+        # }
 
     def __call__(self, inputs):
         """
