@@ -92,20 +92,20 @@ logger = setup(__name__)
 
 
 def bytes_feature(value):
-  return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+    return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
 
 def int64_feature(value):
-  return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+    return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
 
 def write_a_sample(writer, data, label, feature=None):
-  if feature is None:
-    feature = {'train/data': bytes_feature(data.tostring()),
-               'train/label': int64_feature(label)}
+    if feature is None:
+        feature = {'train/data': bytes_feature(data.tostring()),
+                   'train/label': int64_feature(label)}
 
-  example = tf.train.Example(features=tf.train.Features(feature=feature))
-  writer.write(example.SerializeToString())
+    example = tf.train.Example(features=tf.train.Features(feature=feature))
+    writer.write(example.SerializeToString())
 
 
 def main(argv=None):
@@ -149,8 +149,7 @@ def main(argv=None):
                 logger.info('Processing file %d out of %d', i + 1, n_files)
 
                 path = f.make_path(data_dir, data_extension)
-                data = reader(path)
-                
+                data = reader(path)                
                 if data is None:
                   if allow_missing_files:
                       logger.debug("... Processing original data file '{0}' was not successful".format(path))
@@ -168,4 +167,4 @@ def main(argv=None):
 
 
 if __name__ == '__main__':
-  main()
+    main()
