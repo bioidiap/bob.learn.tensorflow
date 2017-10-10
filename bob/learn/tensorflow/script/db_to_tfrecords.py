@@ -91,20 +91,21 @@ from bob.core.log import setup, set_verbosity_level
 logger = setup(__name__)
 
 
-def _bytes_feature(value):
-    return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
+def bytes_feature(value):
+  return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
 
-def _int64_feature(value):
-    return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
+def int64_feature(value):
+  return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
 
-def write_a_sample(writer, data, label):
-    feature = {'train/data': _bytes_feature(data.tostring()),
-               'train/label': _int64_feature(label)}
+def write_a_sample(writer, data, label, feature=None):
+  if feature is None:
+    feature = {'train/data': bytes_feature(data.tostring()),
+               'train/label': int64_feature(label)}
 
-    example = tf.train.Example(features=tf.train.Features(feature=feature))
-    writer.write(example.SerializeToString())
+  example = tf.train.Example(features=tf.train.Features(feature=feature))
+  writer.write(example.SerializeToString())
 
 
 def main(argv=None):
@@ -167,4 +168,4 @@ def main(argv=None):
 
 
 if __name__ == '__main__':
-    main()
+  main()
