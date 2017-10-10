@@ -39,12 +39,12 @@ Example configuration::
 
     checkpoint_dir = 'avspoof-simple-cnn-train'
     eval_dir = 'avspoof-simple-cnn-eval'
-    tfrecord_filenames = ['/path/to/dev.tfrecod']
+    tfrecord_filenames = ['/path/to/dev.tfrecods']
     data_shape = (50, 1024, 1)
     data_type = tf.float32
     batch_size = 50
 
-    from bob.learn.tensorflow.utils.tfrecods import batch_data_and_labels
+    from bob.learn.tensorflow.utils.tfrecords import batch_data_and_labels
     def get_data_and_labels():
       return batch_data_and_labels(tfrecord_filenames, data_shape, data_type,
                                    batch_size)
