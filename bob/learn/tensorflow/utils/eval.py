@@ -31,19 +31,19 @@ def get_global_step(path):
 
 
 def _log_precision(true_count, total_sample_count, global_step, sess,
-                   summary_writer, summary_op):
+                   summary_writer):
     # Compute precision @ 1.
     precision = true_count / total_sample_count
-    print('%s: precision @ 1 = %.3f' % (datetime.now(), precision))
+    print('%s: precision @ 1 = %.3f (global_step %s)' %
+          (datetime.now(), precision, global_step))
 
     summary = tf.Summary()
-    summary.ParseFromString(sess.run(summary_op))
     summary.value.add(tag='Precision @ 1', simple_value=precision)
     summary_writer.add_summary(summary, global_step)
     return 0
 
 
-def eval_once(saver, summary_writer, prediction_op, summary_op,
+def eval_once(saver, summary_writer, prediction_op,
               model_checkpoint_path, global_step, num_examples, batch_size):
     """Run Eval once.
 
@@ -55,8 +55,6 @@ def eval_once(saver, summary_writer, prediction_op, summary_op,
         Summary writer.
     prediction_op
         Prediction operator.
-    summary_op
-        Summary operator.
     model_checkpoint_path : str
         Path to the model checkpoint.
     global_step : str
@@ -84,38 +82,25 @@ def eval_once(saver, summary_writer, prediction_op, summary_op,
             print('No checkpoint file found')
             return -1
 
-        # Start the queue runners.
-        coord = tf.train.Coordinator()
-        try:
-            threads = []
-            for qr in tf.get_collection(tf.GraphKeys.QUEUE_RUNNERS):
-                threads.extend(qr.create_threads(sess, coord=coord,
-                                                 daemon=True, start=True))
+        if num_examples is None:
+            num_iter = float("inf")
+        else:
+            num_iter = int(math.ceil(num_examples / batch_size))
+        true_count = 0  # Counts the number of correct predictions.
+        total_sample_count = 0
+        step = 0
 
-            if num_examples is None:
-                num_iter = float("inf")
-            else:
-                num_iter = int(math.ceil(num_examples / batch_size))
-            true_count = 0  # Counts the number of correct predictions.
-            total_sample_count = 0
-            step = 0
-            while step < num_iter and not coord.should_stop():
+        try:
+            while step < num_iter:
                 predictions = sess.run([prediction_op])
                 true_count += np.sum(predictions)
                 total_sample_count += np.asarray(predictions).size
                 step += 1
 
             return _log_precision(true_count, total_sample_count,
-                                  global_step, sess, summary_writer,
-                                  summary_op)
-        except tf.errors.OutOfRangeError as e:
-            coord.request_stop(e)
+                                  global_step, sess, summary_writer)
+        except tf.errors.OutOfRangeError:
             return _log_precision(true_count, total_sample_count,
-                                  global_step, sess, summary_writer,
-                                  summary_op)
-        except Exception as e:  # pylint: disable=broad-except
-            coord.request_stop(e)
+                                  global_step, sess, summary_writer)
+        except Exception:
             return -1
-        finally:
-            coord.request_stop()
-            coord.join(threads, stop_grace_period_secs=10)

@@ -1,4 +1,9 @@
+from functools import partial
 import tensorflow as tf
+
+
+DEFAULT_FEATURE = {'train/data': tf.FixedLenFeature([], tf.string),
+                   'train/label': tf.FixedLenFeature([], tf.int64)}
 
 
 def example_parser(serialized_example, feature, data_shape, data_type):
@@ -17,47 +22,39 @@ def example_parser(serialized_example, feature, data_shape, data_type):
 def read_and_decode(filename_queue, data_shape, data_type=tf.float32,
                     feature=None):
     if feature is None:
-        feature = {'train/data': tf.FixedLenFeature([], tf.string),
-                   'train/label': tf.FixedLenFeature([], tf.int64)}
+        feature = DEFAULT_FEATURE
     # Define a reader and read the next record
     reader = tf.TFRecordReader()
     _, serialized_example = reader.read(filename_queue)
     return example_parser(serialized_example, feature, data_shape, data_type)
 
 
-def _read_data_and_labesl(tfrecord_filenames, data_shape, data_type,
-                          epochs=None):
-
-    filename_queue = tf.train.string_input_producer(
-        tfrecord_filenames, num_epochs=epochs, name="tfrecord_filenames")
-
-    data, label = read_and_decode(filename_queue, data_shape, data_type)
-    return data, label
+def create_dataset_from_records(tfrecord_filenames, data_shape, data_type,
+                                feature=None):
+    if feature is None:
+        feature = DEFAULT_FEATURE
+    dataset = tf.contrib.data.TFRecordDataset(tfrecord_filenames)
+    parser = partial(example_parser, feature=feature, data_shape=data_shape,
+                     data_type=data_type)
+    dataset = dataset.map(parser)
+    return dataset
 
 
 def shuffle_data_and_labels(tfrecord_filenames, data_shape, data_type,
-                            batch_size, epochs=None, capacity=10**3,
-                            min_after_dequeue=None, num_threads=1):
-    if min_after_dequeue is None:
-        min_after_dequeue = capacity // 2
-    data, label = _read_data_and_labesl(
-        tfrecord_filenames, data_shape, data_type, epochs)
+                            batch_size, epochs=None, buffer_size=10**3):
+    dataset = create_dataset_from_records(tfrecord_filenames, data_shape,
+                                          data_type)
+    dataset = dataset.shuffle(buffer_size).batch(batch_size).repeat(epochs)
 
-    datas, labels = tf.train.shuffle_batch(
-        [data, label], batch_size=batch_size,
-        capacity=capacity,
-        min_after_dequeue=min_after_dequeue,
-        num_threads=num_threads, name="shuffle_batch")
+    datas, labels = dataset.make_one_shot_iterator().get_next()
     return datas, labels
 
 
 def batch_data_and_labels(tfrecord_filenames, data_shape, data_type,
-                          batch_size, epochs=1, capacity=10**3, num_threads=1):
-    data, label = _read_data_and_labesl(
-        tfrecord_filenames, data_shape, data_type, epochs)
+                          batch_size, epochs=1):
+    dataset = create_dataset_from_records(tfrecord_filenames, data_shape,
+                                          data_type)
+    dataset = dataset.batch(batch_size).repeat(epochs)
 
-    datas, labels = tf.train.batch(
-        [data, label], batch_size=batch_size,
-        capacity=capacity,
-        num_threads=num_threads, name="batch")
+    datas, labels = dataset.make_one_shot_iterator().get_next()
     return datas, labels

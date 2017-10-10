@@ -91,8 +91,6 @@ def main(argv=None):
         top_k_op = tf.nn.in_top_k(logits, labels, 1)
 
         saver = tf.train.Saver()
-        # Build the summary operation based on the TF collection of Summaries.
-        summary_op = tf.summary.merge_all()
         summary_writer = tf.summary.FileWriter(config.eval_dir, graph)
         evaluated_file = os.path.join(config.eval_dir, 'evaluated')
 
@@ -107,7 +105,7 @@ def main(argv=None):
                     global_step = get_global_step(path)
                     if global_step not in evaluated_steps:
                         ret_val = eval_once(saver, summary_writer, top_k_op,
-                                            summary_op, path, global_step,
+                                            path, global_step,
                                             num_examples,
                                             config.batch_size)
                         if ret_val == 0:
