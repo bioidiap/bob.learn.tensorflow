@@ -8,9 +8,9 @@ Usage:
   %(prog)s --version
 
 Arguments:
-  <config_files>  The config files. The config files are loaded in order and
-                  they need to have several objects inside totally. See below
-                  for explanation.
+  <config_files>  The configuration files. The configuration files are loaded
+                  in order and they need to have several objects inside
+                  totally. See below for explanation.
 
 Options:
   -h --help  show this help message and exit
@@ -21,7 +21,7 @@ Idiap:
 
   $ jman submit -i -q q1d -- bin/python %(prog)s <config_files>...
 
-The config files should have the following objects totally:
+The configuration files should have the following objects totally:
 
   ## Required objects:
 
@@ -83,6 +83,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import random
+# import pkg_resources so that bob imports work properly:
+import pkg_resources
 
 import tensorflow as tf
 from bob.io.base import create_directories_safe
@@ -112,7 +114,6 @@ def main(argv=None):
     from docopt import docopt
     import os
     import sys
-    import pkg_resources
     docs = __doc__ % {'prog': os.path.basename(sys.argv[0])}
     version = pkg_resources.require('bob.learn.tensorflow')[0].version
     args = docopt(docs, argv=argv, version=version)

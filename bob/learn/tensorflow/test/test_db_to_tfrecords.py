@@ -19,7 +19,7 @@ def test_verify_and_tfrecords():
   with open(dummy_config) as f, open(config_path, 'w') as f2:
     f2.write(f.read().replace('TEST_DIR', test_dir))
 
-  parameters = [os.path.join(config_path)]
+  parameters = [config_path]
   try:
     verify(parameters)
     tfrecords(parameters)

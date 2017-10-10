@@ -1,91 +1,121 @@
 #!/usr/bin/env python
 
-"""Trains the VGG-audio network on the AVspoof database.
+"""Trains networks using tf.train.MonitoredTrainingSession
 
 Usage:
-  %(prog)s [options] <train_tfrecords>...
+  %(prog)s [options] <config_files>...
+  %(prog)s --help
+  %(prog)s --version
+
+Arguments:
+  <config_files>  The configuration files. The configuration files are loaded
+                  in order and they need to have several objects inside
+                  totally. See below for explanation.
 
 Options:
-  -h --help                  Show this screen.
-  --save-dir PATH            [default: /idiap/user/amohammadi/avspoof/specgram/avspoof-simple-cnn-train]
-  --input-shape N            [default: (50, 1024, 1)]
-  --epochs N                 [default: None]
-  --batch-size N             [default: 32]
-  --capacity-samples N       The capacity of the queue [default: 10**4/2].
-  --learning-rate N          The learning rate [default: 0.00001].
-  --log-frequency N          How often to log results to the console.
-                             [default: 100]
+  -h --help  show this help message and exit
+  --version  show version and exit
+
+The configuration files should have the following objects totally:
+
+  ## Required objects:
+
+  # checkpoint_dir
+  checkpoint_dir = 'train'
+  batch_size
+  data, labels = get_data_and_labels()
+  logits = architecture(data)
+  loss = loss(logits, labels)
+  train_op = optimizer.minimize(loss, global_step=global_step)
+
+  ## Optional objects:
+
+  log_frequency
+  max_to_keep
+
+Example configuration::
+
+    import tensorflow as tf
+
+    checkpoint_dir = 'avspoof-simple-cnn-train'
+    tfrecord_filenames = ['/path/to/group.tfrecod']
+    data_shape = (50, 1024, 1)
+    data_type = tf.float32
+    batch_size = 32
+    epochs = None
+    learning_rate = 0.00001
+
+    from bob.learn.tensorflow.utils.tfrecods import shuffle_data_and_labels
+    def get_data_and_labels():
+        return shuffle_data_and_labels(tfrecord_filenames, data_shape,
+                                       data_type, batch_size, epochs=epochs)
+
+    from bob.pad.voice.architectures.simple_cnn import architecture
+
+    def loss(logits, labels):
+        predictor = tf.nn.sparse_softmax_cross_entropy_with_logits(
+            logits=logits, labels=labels)
+        return tf.reduce_mean(predictor)
+
+    optimizer = tf.train.GradientDescentOptimizer(learning_rate)
 """
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-# for bob imports to work properly:
+# import pkg_resources so that bob imports work properly:
 import pkg_resources
 # for creating reproducible nets
-from bob.dap.base.sandbox.reproducible import session_conf
+from ..utils.reproducible import session_conf
 
 import tensorflow as tf
-from docopt import docopt
-from bob.io.base import create_directories_safe
-from bob.dap.voice.architectures.simple_cnn import architecture
-from bob.dap.base.database.tfrecords import read_and_decode
-from bob.dap.base.util.hooks import LoggerHook
+from bob.bio.base.utils import read_config_file
+from ..utils.hooks import LoggerHook
 
 
 def main(argv=None):
-    arguments = docopt(__doc__, argv=argv)
-    print(arguments)
-    input_shape = eval(arguments['--input-shape'])
-    tfrecord_filenames = arguments['<train_tfrecords>']
-    save_dir = arguments['--save-dir']
-    epochs = eval(arguments['--epochs'])
-    batch_size = eval(arguments['--batch-size'])
-    capacity_samples = eval(arguments['--capacity-samples'])
-    learning_rate = eval(arguments['--learning-rate'])
-    log_frequency = eval(arguments['--log-frequency'])
+    from docopt import docopt
+    import os
+    import sys
+    docs = __doc__ % {'prog': os.path.basename(sys.argv[0])}
+    version = pkg_resources.require('bob.learn.tensorflow')[0].version
+    args = docopt(docs, argv=argv, version=version)
+    config_files = args['<config_files>']
+    config = read_config_file(config_files)
 
-    create_directories_safe(save_dir)
+    max_to_keep = getattr(config, 'max_to_keep', 10**5)
+    log_frequency = getattr(config, 'log_frequency', 100)
+
     with tf.Graph().as_default():
         global_step = tf.contrib.framework.get_or_create_global_step()
 
-        # Get images and labels
+        # Get data and labels
         with tf.name_scope('input'):
-            filename_queue = tf.train.string_input_producer(
-                tfrecord_filenames, num_epochs=epochs, name="tfrecord_filenames")
-
-            image, label = read_and_decode(filename_queue, input_shape)
-            images, labels = tf.train.shuffle_batch(
-                [image, label], batch_size=batch_size,
-                capacity=capacity_samples // batch_size,
-                min_after_dequeue=int(capacity_samples // batch_size // 2),
-                num_threads=1, name="shuffle_batch")
+            data, labels = config.get_data_and_labels()
 
         # Build a Graph that computes the logits predictions from the
         # inference model.
-        logits = architecture(images)
+        logits = config.architecture(data)
         tf.add_to_collection('logits', logits)
 
         # Calculate loss.
-        predictor = tf.nn.sparse_softmax_cross_entropy_with_logits(
-            logits=logits, labels=labels)
-        loss = tf.reduce_mean(predictor)
+        loss = config.loss(logits=logits, labels=labels)
         tf.summary.scalar('loss', loss)
 
-        # Build a Graph that trains the model with one batch of examples and
-        # updates the model parameters.
-        optimizer = tf.train.GradientDescentOptimizer(learning_rate)
-        train_op = optimizer.minimize(loss, global_step=global_step)
+        # get training operation using optimizer:
+        train_op = config.optimizer.minimize(loss, global_step=global_step)
 
-        saver = tf.train.Saver(max_to_keep=10**5)
+        saver = tf.train.Saver(max_to_keep=max_to_keep)
         scaffold = tf.train.Scaffold(saver=saver)
+
         with tf.train.MonitoredTrainingSession(
-                checkpoint_dir=save_dir,
+                checkpoint_dir=config.checkpoint_dir,
                 scaffold=scaffold,
                 hooks=[
-                    tf.train.CheckpointSaverHook(
-                        save_dir, save_secs=60 * 29, scaffold=scaffold),
+                    tf.train.CheckpointSaverHook(config.checkpoint_dir,
+                                                 save_secs=60 * 29,
+                                                 scaffold=scaffold),
                     tf.train.NanTensorHook(loss),
-                    LoggerHook(loss, batch_size, log_frequency)],
+                    LoggerHook(loss, config.batch_size, log_frequency)],
                 config=session_conf,
                 save_checkpoint_secs=None,
                 save_summaries_steps=100,

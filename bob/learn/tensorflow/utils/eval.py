@@ -30,6 +30,19 @@ def get_global_step(path):
     return global_step
 
 
+def _log_precision(true_count, total_sample_count, global_step, sess,
+                   summary_writer, summary_op):
+    # Compute precision @ 1.
+    precision = true_count / total_sample_count
+    print('%s: precision @ 1 = %.3f' % (datetime.now(), precision))
+
+    summary = tf.Summary()
+    summary.ParseFromString(sess.run(summary_op))
+    summary.value.add(tag='Precision @ 1', simple_value=precision)
+    summary_writer.add_summary(summary, global_step)
+    return 0
+
+
 def eval_once(saver, summary_writer, prediction_op, summary_op,
               model_checkpoint_path, global_step, num_examples, batch_size):
     """Run Eval once.
@@ -59,7 +72,6 @@ def eval_once(saver, summary_writer, prediction_op, summary_op,
     -------
     int
         0 for success, anything else for fail.
-
     """
     with tf.Session() as sess:
         sess.run(tf.local_variables_initializer())
@@ -77,8 +89,8 @@ def eval_once(saver, summary_writer, prediction_op, summary_op,
         try:
             threads = []
             for qr in tf.get_collection(tf.GraphKeys.QUEUE_RUNNERS):
-                threads.extend(qr.create_threads(sess, coord=coord, daemon=True,
-                                                 start=True))
+                threads.extend(qr.create_threads(sess, coord=coord,
+                                                 daemon=True, start=True))
 
             if num_examples is None:
                 num_iter = float("inf")
@@ -93,15 +105,14 @@ def eval_once(saver, summary_writer, prediction_op, summary_op,
                 total_sample_count += np.asarray(predictions).size
                 step += 1
 
-            # Compute precision @ 1.
-            precision = true_count / total_sample_count
-            print('%s: precision @ 1 = %.3f' % (datetime.now(), precision))
-
-            summary = tf.Summary()
-            summary.ParseFromString(sess.run(summary_op))
-            summary.value.add(tag='Precision @ 1', simple_value=precision)
-            summary_writer.add_summary(summary, global_step)
-            return 0
+            return _log_precision(true_count, total_sample_count,
+                                  global_step, sess, summary_writer,
+                                  summary_op)
+        except tf.errors.OutOfRangeError as e:
+            coord.request_stop(e)
+            return _log_precision(true_count, total_sample_count,
+                                  global_step, sess, summary_writer,
+                                  summary_op)
         except Exception as e:  # pylint: disable=broad-except
             coord.request_stop(e)
             return -1
