@@ -2,7 +2,7 @@ import os
 import numpy as np
 import tensorflow as tf
 import random as rn
-from tensorflow.contrib import keras
+# from tensorflow.contrib import keras
 
 # reproducible networks
 # The below is necessary in Python 3.2.3 onwards to
