@@ -1,17 +1,15 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 10 Aug 2016 16:38 CEST
 
 import logging
 logger = logging.getLogger("bob.learn.tensorflow")
 import tensorflow as tf
 
-from .BaseLoss import BaseLoss
 from bob.learn.tensorflow.utils import compute_euclidean_distance
 
 
-class ContrastiveLoss(BaseLoss):
+def contrastive_loss(left_embedding, right_embedding, labels, contrastive_margin=1.0):
     """
     Compute the contrastive loss as in
 
@@ -27,7 +25,7 @@ class ContrastiveLoss(BaseLoss):
     right_feature:
       Second element of the pair
 
-    label:
+    labels:
       Label of the pair (0 or 1)
 
     margin:
@@ -35,30 +33,25 @@ class ContrastiveLoss(BaseLoss):
 
     """
 
-    def __init__(self, contrastive_margin=1.0):
-        self.contrastive_margin = contrastive_margin
+    with tf.name_scope("contrastive_loss"):
+        labels = tf.to_float(labels)
+        
+        left_embedding = tf.nn.l2_normalize(left_embedding, 1)
+        right_embedding  = tf.nn.l2_normalize(right_embedding, 1)
 
-    def __call__(self, label, left_feature, right_feature):
-        with tf.name_scope("contrastive_loss"):
-            label = tf.to_float(label)
-            
-            left_feature = tf.nn.l2_normalize(left_feature, 1)
-            right_feature  = tf.nn.l2_normalize(right_feature, 1)
+        one = tf.constant(1.0)
 
-            one = tf.constant(1.0)
+        d = compute_euclidean_distance(left_embedding, right_embedding)
+        within_class = tf.multiply(one - labels, tf.square(d))  # (1-Y)*(d^2)
+        
+        max_part = tf.square(tf.maximum(contrastive_margin - d, 0))
+        between_class = tf.multiply(labels, max_part)  # (Y) * max((margin - d)^2, 0)
 
-            d = compute_euclidean_distance(left_feature, right_feature)
-            within_class = tf.multiply(one - label, tf.square(d))  # (1-Y)*(d^2)
-            
-            
-            max_part = tf.square(tf.maximum(self.contrastive_margin - d, 0))
-            between_class = tf.multiply(label, max_part)  # (Y) * max((margin - d)^2, 0)
+        loss =  0.5 * (within_class + between_class)
 
-            loss = 0.5 * (within_class + between_class)
+        loss_dict = dict()
+        loss_dict['loss'] = tf.reduce_mean(loss, name=tf.GraphKeys.LOSSES)
+        loss_dict['between_class'] = tf.reduce_mean(between_class, name=tf.GraphKeys.LOSSES)
+        loss_dict['within_class'] = tf.reduce_mean(within_class, name=tf.GraphKeys.LOSSES)
 
-            loss_dict = dict()
-            loss_dict['loss'] = tf.reduce_mean(loss)
-            loss_dict['between_class'] = tf.reduce_mean(between_class)
-            loss_dict['within_class'] = tf.reduce_mean(within_class)
-
-            return loss_dict
+        return loss_dict

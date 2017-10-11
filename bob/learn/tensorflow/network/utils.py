@@ -6,12 +6,9 @@ import tensorflow as tf
 slim = tf.contrib.slim
 
 
-def append_logits(graph, n_classes, reuse):
-    graph = slim.fully_connected(graph, n_classes, activation_fn=None, 
-               weights_initializer=tf.truncated_normal_initializer(stddev=0.1), 
-               weights_regularizer=slim.l2_regularizer(0.1),
+def append_logits(graph, n_classes, reuse=False, l2_regularizer=0.001, weights_std=0.1):
+    return slim.fully_connected(graph, n_classes, activation_fn=None, 
+               weights_initializer=tf.truncated_normal_initializer(stddev=weights_std), 
+               weights_regularizer=slim.l2_regularizer(l2_regularizer),
                scope='Logits', reuse=reuse)
-
-    return graph
-
 

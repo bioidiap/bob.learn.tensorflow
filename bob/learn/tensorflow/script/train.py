@@ -73,7 +73,7 @@ def main():
         return True
 
     config = imp.load_source('config', args['<configuration>'])
-
+    
     # Cleaning all variables in case you are loading the checkpoint
     tf.reset_default_graph() if os.path.exists(output_dir) else None
 
@@ -107,9 +107,9 @@ def main():
         train_graph = None
         validation_graph = None
         validate_with_embeddings = False
-        
-        if hasattr(config, 'train_graph'):
-            train_graph = config.train_graph
+
+        if hasattr(config, 'logits'):
+            train_graph = config.logits
             if hasattr(config, 'validation_graph'):
                 validation_graph = config.validation_graph
             

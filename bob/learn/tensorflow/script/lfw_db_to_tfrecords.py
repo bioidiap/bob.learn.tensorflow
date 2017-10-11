@@ -84,18 +84,14 @@ def main(argv=None):
 
     create_directories_safe(os.path.dirname(output_file))
 
-    import ipdb; ipdb.set_trace()
-
     n_files = len(enroll)
     with tf.python_io.TFRecordWriter(output_file) as writer:
       for e, p, i in zip(enroll, probe, range(len(enroll)) ):
         logger.info('Processing pair %d out of %d', i + 1, n_files)
-
-        e_path = e.make_path(data_path, extension)
-        p_path = p.make_path(data_path, extension)
         
-        if os.path.exists(p_path) and os.path.exists(e_path):        
-            for path in [e_path, p_path]:
+        if os.path.exists(e.make_path(data_path, extension)) and os.path.exists(p.make_path(data_path, extension)):
+            for f in [e, p]:
+                path = f.make_path(data_path, extension)
                 data = bob.io.image.to_matplotlib(bob.io.base.load(path)).astype(data_type)
                 data = data.tostring()
 

@@ -5,11 +5,13 @@
 
 import numpy
 from bob.learn.tensorflow.datashuffler import Memory, SiameseMemory, TripletMemory, ImageAugmentation, ScaleFactor, Linear
-from bob.learn.tensorflow.network import Chopra
-from bob.learn.tensorflow.loss import MeanSoftMaxLoss, ContrastiveLoss, TripletLoss
+from bob.learn.tensorflow.network import chopra
+from bob.learn.tensorflow.loss import mean_cross_entropy_loss, contrastive_loss, triplet_loss
 from bob.learn.tensorflow.trainers import Trainer, SiameseTrainer, TripletTrainer, constant
-from .test_cnn_scratch import validate_network
+from bob.learn.tensorflow.test.test_cnn_scratch import validate_network
 from bob.learn.tensorflow.network import Embedding, LightCNN9
+from bob.learn.tensorflow.network.utils import append_logits
+
 
 from bob.learn.tensorflow.utils import load_mnist
 import tensorflow as tf
@@ -92,15 +94,15 @@ def test_cnn_trainer():
 
     directory = "./temp/cnn"
 
-    # Loss for the softmax
-    loss = MeanSoftMaxLoss()
-
-    # Preparing the architecture
-    architecture = Chopra(seed=seed, n_classes=10)
-    input_pl = train_data_shuffler("data", from_queue=True)
+    # Preparing the graph
+    inputs = train_data_shuffler("data", from_queue=True)
+    labels = train_data_shuffler("label", from_queue=True)
+    logits = append_logits(chopra(inputs, seed=seed)[0], n_classes=10)
     
-    graph = architecture(input_pl)
-    embedding = Embedding(train_data_shuffler("data", from_queue=False), graph)
+    # Loss for the softmax
+    loss = mean_cross_entropy_loss(logits, labels)
+    
+    embedding = Embedding(train_data_shuffler("data", from_queue=False), logits)
 
     # One graph trainer
     trainer = Trainer(train_data_shuffler,
@@ -108,7 +110,7 @@ def test_cnn_trainer():
                       analizer=None,
                       temp_dir=directory
                       )
-    trainer.create_network_from_scratch(graph=graph,
+    trainer.create_network_from_scratch(graph=logits,
                                         loss=loss,
                                         learning_rate=constant(0.01, name="regular_lr"),
                                         optimizer=tf.train.GradientDescentOptimizer(0.01),
@@ -122,7 +124,7 @@ def test_cnn_trainer():
     assert accuracy > 20.
     shutil.rmtree(directory)
     del trainer
-    del graph
+    del logits
     tf.reset_default_graph()
     assert len(tf.global_variables())==0
 
@@ -139,7 +141,6 @@ def test_lightcnn_trainer():
     validation_data = numpy.vstack((validation_data, numpy.random.normal(2, 0.2, size=(100, 128, 128, 1))))
     validation_labels = numpy.hstack((numpy.zeros(100), numpy.ones(100))).astype("uint64")
 
-
     # Creating datashufflers
     data_augmentation = ImageAugmentation()
     train_data_shuffler = Memory(train_data, train_labels,
@@ -150,15 +151,17 @@ def test_lightcnn_trainer():
 
     directory = "./temp/cnn"
 
-    # Loss for the softmax
-    loss = MeanSoftMaxLoss()
-
     # Preparing the architecture
     architecture = LightCNN9(seed=seed,
                              n_classes=2)
-    input_pl = train_data_shuffler("data", from_queue=True)
-    graph = architecture(input_pl, end_point="logits")
-    embedding = Embedding(train_data_shuffler("data", from_queue=False), graph)
+    inputs = train_data_shuffler("data", from_queue=True)
+    labels = train_data_shuffler("label", from_queue=True)
+    logits = architecture(inputs, end_point="logits")
+    embedding = Embedding(train_data_shuffler("data", from_queue=False), logits)
+    
+    # Loss for the softmax
+    loss = mean_cross_entropy_loss(logits, labels)
+
 
     # One graph trainer
     trainer = Trainer(train_data_shuffler,
@@ -166,7 +169,7 @@ def test_lightcnn_trainer():
                       analizer=None,
                       temp_dir=directory
                       )
-    trainer.create_network_from_scratch(graph=graph,
+    trainer.create_network_from_scratch(graph=logits,
                                         loss=loss,
                                         learning_rate=constant(0.001, name="regular_lr"),
                                         optimizer=tf.train.GradientDescentOptimizer(0.001),
@@ -179,7 +182,7 @@ def test_lightcnn_trainer():
     assert True
     shutil.rmtree(directory)
     del trainer
-    del graph
+    del logits
     tf.reset_default_graph()
     assert len(tf.global_variables())==0    
 
@@ -202,16 +205,15 @@ def test_siamesecnn_trainer():
                                              normalizer=ScaleFactor())
     directory = "./temp/siamesecnn"
 
-    # Preparing the architecture
-    architecture = Chopra(seed=seed)
+    # Building the graph
+    inputs = train_data_shuffler("data")
+    labels = train_data_shuffler("label")
+    graph = dict()
+    graph['left'] = chopra(inputs['left'])[0]
+    graph['right'] = chopra(inputs['right'], reuse=True)[0]
 
     # Loss for the Siamese
-    loss = ContrastiveLoss(contrastive_margin=4.)
-
-    input_pl = train_data_shuffler("data")
-    graph = dict()
-    graph['left'] = architecture(input_pl['left'], end_point="fc1")
-    graph['right'] = architecture(input_pl['right'], reuse=True, end_point="fc1")
+    loss = contrastive_loss(graph['left'], graph['right'], labels, contrastive_margin=4.)
 
     trainer = SiameseTrainer(train_data_shuffler,
                              iterations=iterations,
@@ -229,7 +231,6 @@ def test_siamesecnn_trainer():
     assert eer < 0.15
     shutil.rmtree(directory)
 
-    del architecture
     del trainer  # Just to clean tf.variables
     tf.reset_default_graph()
     assert len(tf.global_variables())==0    
@@ -254,17 +255,14 @@ def test_tripletcnn_trainer():
 
     directory = "./temp/tripletcnn"
 
-    # Preparing the architecture
-    architecture = Chopra(seed=seed, fc1_output=10)
-
-    # Loss for the Siamese
-    loss = TripletLoss(margin=4.)
-
-    input_pl = train_data_shuffler("data")
+    inputs = train_data_shuffler("data")
+    labels = train_data_shuffler("label")
     graph = dict()
-    graph['anchor'] = architecture(input_pl['anchor'], end_point="fc1")
-    graph['positive'] = architecture(input_pl['positive'], reuse=True, end_point="fc1")
-    graph['negative'] = architecture(input_pl['negative'], reuse=True, end_point="fc1")
+    graph['anchor'] = chopra(inputs['anchor'])[0]
+    graph['positive'] = chopra(inputs['positive'], reuse=True)[0]
+    graph['negative'] = chopra(inputs['negative'], reuse=True)[0]
+
+    loss = triplet_loss(graph['anchor'], graph['positive'], graph['negative'])
 
     # One graph trainer
     trainer = TripletTrainer(train_data_shuffler,
@@ -283,7 +281,6 @@ def test_tripletcnn_trainer():
     assert eer < 0.15
     shutil.rmtree(directory)
 
-    del architecture
     del trainer  # Just to clean tf.variables
     tf.reset_default_graph()
     assert len(tf.global_variables())==0    

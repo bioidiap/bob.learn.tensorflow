@@ -97,8 +97,6 @@ class SiameseTrainer(Trainer):
         self.validation_graph = None
                 
         self.loss = None
-        
-        self.predictor = None
         self.validation_predictor = None        
         
         self.optimizer_class = None
@@ -139,9 +137,6 @@ class SiameseTrainer(Trainer):
             raise ValueError("`graph` should be a dictionary with two elements (`left`and `right`)")
 
         self.loss = loss
-        self.predictor = self.loss(self.label_ph,
-                                   self.graph["left"],
-                                   self.graph["right"])
         self.optimizer_class = optimizer
         self.learning_rate = learning_rate
 
@@ -156,9 +151,9 @@ class SiameseTrainer(Trainer):
         tf.add_to_collection("graph_right", self.graph['right'])
 
         # Saving pointers to the loss
-        tf.add_to_collection("predictor_loss", self.predictor['loss'])
-        tf.add_to_collection("predictor_between_class_loss", self.predictor['between_class'])
-        tf.add_to_collection("predictor_within_class_loss", self.predictor['within_class'])
+        tf.add_to_collection("loss", self.loss['loss'])
+        tf.add_to_collection("between_class_loss", self.loss['between_class'])
+        tf.add_to_collection("within_class_loss", self.loss['within_class'])
 
         # Saving the pointers to the placeholders
         tf.add_to_collection("data_ph_left", self.data_ph['left'])
@@ -167,7 +162,7 @@ class SiameseTrainer(Trainer):
 
         # Preparing the optimizer
         self.optimizer_class._learning_rate = self.learning_rate
-        self.optimizer = self.optimizer_class.minimize(self.predictor['loss'], global_step=self.global_step)
+        self.optimizer = self.optimizer_class.minimize(self.loss['loss'], global_step=self.global_step)
         tf.add_to_collection("optimizer", self.optimizer)
         tf.add_to_collection("learning_rate", self.learning_rate)
 
@@ -196,10 +191,10 @@ class SiameseTrainer(Trainer):
         self.label_ph = tf.get_collection("label_ph")[0]
 
         # Loading loss from the pointers
-        self.predictor = dict()
-        self.predictor['loss'] = tf.get_collection("predictor_loss")[0]
-        self.predictor['between_class'] = tf.get_collection("predictor_between_class_loss")[0]
-        self.predictor['within_class'] = tf.get_collection("predictor_within_class_loss")[0]
+        self.loss = dict()
+        self.loss['loss'] = tf.get_collection("loss")[0]
+        self.loss['between_class'] = tf.get_collection("between_class_loss")[0]
+        self.loss['within_class'] = tf.get_collection("within_class_loss")[0]
 
         # Loading other elements
         self.optimizer = tf.get_collection("optimizer")[0]
@@ -223,8 +218,8 @@ class SiameseTrainer(Trainer):
                 
         _, l, bt_class, wt_class, lr, summary = self.session.run([
                                                 self.optimizer,
-                                                self.predictor['loss'], self.predictor['between_class'],
-                                                self.predictor['within_class'],
+                                                self.loss['loss'], self.loss['between_class'],
+                                                self.loss['within_class'],
                                                 self.learning_rate, self.summaries_train], feed_dict=feed_dict)
 
         logger.info("Loss training set step={0} = {1}".format(step, l))
@@ -238,9 +233,9 @@ class SiameseTrainer(Trainer):
             tf.summary.histogram(var.op.name, var)
 
         # Train summary
-        tf.summary.scalar('loss', self.predictor['loss'])
-        tf.summary.scalar('between_class_loss', self.predictor['between_class'])
-        tf.summary.scalar('within_class_loss', self.predictor['within_class'])
+        tf.summary.scalar('loss', self.loss['loss'])
+        tf.summary.scalar('between_class_loss', self.loss['between_class'])
+        tf.summary.scalar('within_class_loss', self.loss['within_class'])
         tf.summary.scalar('lr', self.learning_rate)
         return tf.summary.merge_all()
 
@@ -257,7 +252,7 @@ class SiameseTrainer(Trainer):
         # Opening a new session for validation
         feed_dict = self.get_feed_dict(data_shuffler)
 
-        l, summary = self.session.run([self.predictor, self.summaries_validation], feed_dict=feed_dict)
+        l, summary = self.session.run([self.loss, self.summaries_validation], feed_dict=feed_dict)
         self.validation_summary_writter.add_summary(summary, step)
 
         #summaries = [summary_pb2.Summary.Value(tag="loss", simple_value=float(l))]

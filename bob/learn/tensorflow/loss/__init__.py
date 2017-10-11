@@ -1,9 +1,7 @@
-from .BaseLoss import BaseLoss, MeanSoftMaxLoss, MeanSoftMaxLossCenterLoss
-from .ContrastiveLoss import ContrastiveLoss
-from .TripletLoss import TripletLoss
-from .TripletAverageLoss import TripletAverageLoss
-from .TripletFisherLoss import TripletFisherLoss
-from .NegLogLoss import NegLogLoss
+from .BaseLoss import mean_cross_entropy_loss, mean_cross_entropy_center_loss
+from .ContrastiveLoss import contrastive_loss
+from .TripletLoss import triplet_loss, triplet_average_loss, triplet_fisher_loss
+#from .NegLogLoss import NegLogLoss
 
 
 # gets sphinx autodoc done right - don't remove it
@@ -21,13 +19,9 @@ def __appropriate__(*args):
   for obj in args: obj.__module__ = __name__
 
 __appropriate__(
-    BaseLoss,
-    ContrastiveLoss,
-    TripletLoss,
-    TripletFisherLoss,
-    TripletAverageLoss,
-    NegLogLoss,
-    MeanSoftMaxLoss
+    mean_cross_entropy_loss, mean_cross_entropy_center_loss,
+    contrastive_loss,
+    triplet_loss, triplet_average_loss, triplet_fisher_loss
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]
 

@@ -1,4 +1,4 @@
-from .Chopra import Chopra
+from .Chopra import chopra
 from .LightCNN9 import LightCNN9
 from .LightCNN29 import LightCNN29
 from .Dummy import Dummy
