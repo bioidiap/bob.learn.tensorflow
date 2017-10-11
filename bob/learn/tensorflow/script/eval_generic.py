@@ -20,6 +20,7 @@ The configuration files should have the following objects totally:
 
   ## Required objects:
 
+  model_dir
   model_fn
   eval_input_fn
 
@@ -27,7 +28,6 @@ The configuration files should have the following objects totally:
 
   eval_interval_secs
   run_once
-  model_dir
   run_config
   model_params
   steps
@@ -114,12 +114,12 @@ def main(argv=None):
     config_files = args['<config_files>']
     config = read_config_file(config_files)
 
+    model_dir = config.model_dir
     model_fn = config.model_fn
     eval_input_fn = config.eval_input_fn
 
     eval_interval_secs = getattr(config, 'eval_interval_secs', 300)
     run_once = getattr(config, 'run_once', False)
-    model_dir = getattr(config, 'model_dir', None)
     run_config = getattr(config, 'run_config', None)
     model_params = getattr(config, 'model_params', None)
     steps = getattr(config, 'steps', None)
