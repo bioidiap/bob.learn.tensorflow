@@ -37,8 +37,8 @@ Example configuration::
     import tensorflow as tf
     from bob.learn.tensorflow.utils.tfrecords import shuffle_data_and_labels
 
-    model_dir = "%(model_dir)s"
-    tfrecord_filenames = ['%(tfrecord_filenames)s']
+    model_dir = 'model_dir'
+    tfrecord_filenames = ['tfrecord_filenames']
     data_shape = (1, 112, 92)  # size of atnt images
     data_type = tf.uint8
     batch_size = 2
