@@ -28,7 +28,7 @@ class TFRecord(object):
                          input_dtype=tf.float32,
                          batch_size=32,
                          seed=10,
-                         prefetch_capacity=50,
+                         prefetch_capacity=1000,
                          prefetch_threads=5):
 
         # Setting the seed for the pseudo random number generator

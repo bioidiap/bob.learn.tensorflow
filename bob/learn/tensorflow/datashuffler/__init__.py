@@ -18,11 +18,12 @@ from .TripletWithSelectionDisk import TripletWithSelectionDisk
 from .DataAugmentation import DataAugmentation
 from .ImageAugmentation import ImageAugmentation
 
-from .Normalizer import ScaleFactor, MeanOffset, Linear
+from .Normalizer import ScaleFactor, MeanOffset, Linear, PerImageStandarization
 
 from .DiskAudio import DiskAudio
 from .TFRecord import TFRecord
 from .TFRecordImage import TFRecordImage
+
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):

@@ -220,6 +220,7 @@ class SiameseTrainer(Trainer):
 
     def fit(self, step):
         feed_dict = self.get_feed_dict(self.train_data_shuffler)
+                
         _, l, bt_class, wt_class, lr, summary = self.session.run([
                                                 self.optimizer,
                                                 self.predictor['loss'], self.predictor['between_class'],
@@ -230,6 +231,11 @@ class SiameseTrainer(Trainer):
         self.train_summary_writter.add_summary(summary, step)
 
     def create_general_summary(self):
+
+        # Appending histograms for each trainable variables
+        #for var in tf.trainable_variables():
+        for var in tf.global_variables():
+            tf.summary.histogram(var.op.name, var)
 
         # Train summary
         tf.summary.scalar('loss', self.predictor['loss'])

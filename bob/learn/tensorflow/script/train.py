@@ -87,6 +87,11 @@ def main():
     if hasattr(config, 'validation_data_shuffler'):
         validation_data_shuffler = config.validation_data_shuffler
 
+    prelogits = None
+    if hasattr(config, 'prelogits'):
+        prelogits = config.prelogits
+
+
     trainer = config.Trainer(config.train_data_shuffler,
                              validation_data_shuffler=validation_data_shuffler,
                              validate_with_embeddings=validate_with_embeddings,
@@ -128,6 +133,7 @@ def main():
                                             validation_graph=validation_graph,
                                             loss=config.loss,
                                             learning_rate=config.learning_rate,
-                                            optimizer=config.optimizer)
+                                            optimizer=config.optimizer,
+                                            prelogits=prelogits)
     trainer.train()
 

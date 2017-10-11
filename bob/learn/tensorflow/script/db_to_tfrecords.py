@@ -3,7 +3,7 @@
 """Converts Bio and PAD datasets to TFRecords file formats.
 
 Usage:
-  %(prog)s <config_files>...
+  %(prog)s <config_files>... [--allow-missing-files]
   %(prog)s --help
   %(prog)s --version
 
@@ -117,6 +117,7 @@ def main(argv=None):
     args = docopt(docs, argv=argv, version=version)
     config_files = args['<config_files>']
     config = read_config_file(config_files)
+    allow_missing_files = args['--allow-missing-files']
 
     # Sets-up logging
     verbosity = getattr(config, 'verbose', 0)
@@ -148,6 +149,14 @@ def main(argv=None):
 
                 path = f.make_path(data_dir, data_extension)
                 data = reader(path)
+                
+                if data is None:
+                  if allow_missing_files:
+                      logger.debug("... Processing original data file '{0}' was not successful".format(path))
+                      continue
+                  else:
+                      raise RuntimeError("Preprocessing of file '{0}' was not successful".format(path))
+                
                 label = file_to_label(f)
 
                 if one_file_one_sample:

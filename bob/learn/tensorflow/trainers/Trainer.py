@@ -84,6 +84,7 @@ class Trainer(object):
         self.summaries_train = None
         self.train_summary_writter = None
         self.thread_pool = None
+        self.centers = None
 
         # Validation data
         self.validation_summary_writter = None
@@ -98,6 +99,7 @@ class Trainer(object):
 
         self.graph = None
         self.validation_graph = None
+        self.prelogits = None
                 
         self.loss = None
         
@@ -240,8 +242,10 @@ class Trainer(object):
         # TODO: SPECIFIC HACK FOR THE CENTER LOSS. I NEED TO FIND A CLEAN SOLUTION FOR THAT
         self.centers = None
         if prelogits is not None:
-            tf.add_to_collection("prelogits", prelogits)
             self.predictor, self.centers = self.loss(self.graph, prelogits, self.label_ph)
+            tf.add_to_collection("centers", self.centers)
+            tf.add_to_collection("prelogits", prelogits)
+            self.prelogits = prelogits
         else:
             self.predictor = self.loss(self.graph, self.label_ph)
         
@@ -274,10 +278,6 @@ class Trainer(object):
         tf.add_to_collection("learning_rate", self.learning_rate)
 
         tf.add_to_collection("summaries_train", self.summaries_train)
-
-        # Appending histograms for each trainable variables
-        for var in tf.trainable_variables():
-            tf.summary.histogram(var.op.name, var)
 
         # Same business with the validation
         if self.validation_data_shuffler is not None:
@@ -371,6 +371,10 @@ class Trainer(object):
         self.summaries_train = tf.get_collection("summaries_train")[0]        
         self.global_step = tf.get_collection("global_step")[0]
         self.from_scratch = False
+
+        if len(tf.get_collection("centers")) > 0:
+            self.centers = tf.get_collection("centers")[0]
+            self.prelogits = tf.get_collection("prelogits")[0]
         
         # Loading the validation bits
         if self.validation_data_shuffler is not None:
@@ -378,7 +382,7 @@ class Trainer(object):
 
             self.validation_graph = tf.get_collection("validation_graph")[0]
             self.validation_data_ph = tf.get_collection("validation_data_ph")[0]
-            self.validation_label = tf.get_collection("validation_label_ph")[0]
+            self.validation_label_ph = tf.get_collection("validation_label_ph")[0]
 
             self.validation_predictor = tf.get_collection("validation_predictor")[0]
             self.summaries_validation = tf.get_collection("summaries_validation")[0]
@@ -480,6 +484,12 @@ class Trainer(object):
         """
         Creates a simple tensorboard summary with the value of the loss and learning rate
         """
+
+        # Appending histograms for each trainable variables
+        #for var in tf.trainable_variables():
+        for var in tf.global_variables():
+            tf.summary.histogram(var.op.name, var)
+        
         # Train summary
         tf.summary.scalar('loss', average_loss)
         tf.summary.scalar('lr', self.learning_rate)        

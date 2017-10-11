@@ -55,7 +55,7 @@ def scratch_network_embeding_example(train_data_shuffler, reuse=False, get_embed
     return logits, prelogits
 
 
-def test_cnn_tfrecord_embedding_validation():
+def test_center_loss_tfrecord_embedding_validation():
     tf.reset_default_graph()
 
     train_data, train_labels, validation_data, validation_labels = load_mnist()
@@ -128,31 +128,58 @@ def test_cnn_tfrecord_embedding_validation():
                                         )
 
     trainer.train()
-    
 
-    
-    os.remove(tfrecords_filename)
-    os.remove(tfrecords_filename_val)    
-    """
     assert True
     tf.reset_default_graph()
     del trainer
     assert len(tf.global_variables())==0
+
+    del train_data_shuffler
+    del validation_data_shuffler
+
+    ##### 2 Continuing the training
+    
+    # Creating the CNN using the TFRecord as input
+    train_data_shuffler  = TFRecord(filename_queue=filename_queue,
+                                    batch_size=batch_size)
+
+    validation_data_shuffler  = TFRecord(filename_queue=filename_queue_val,
+                                         batch_size=2000)
+    
+    # One graph trainer
+    trainer = Trainer(train_data_shuffler,
+                      validation_data_shuffler=validation_data_shuffler,
+                      validate_with_embeddings=True,
+                      iterations=2, #It is supper fast
+                      analizer=None,
+                      temp_dir=directory)
+
+    trainer.create_network_from_file(directory)
+    
+    import ipdb; ipdb.set_trace();
+
+    trainer.train()
+    
+    """
     
     # Inference. TODO: Wrap this in a package
     file_name = os.path.join(directory, "model.ckp.meta")
     images = tf.placeholder(tf.float32, shape=(None, 28, 28, 1))
-    graph = scratch_network_embeding_example(images, reuse=False)
+    graph ,_ = scratch_network_embeding_example(images, reuse=False)
 
     session = tf.Session()
     session.run(tf.global_variables_initializer())
     saver = tf.train.import_meta_graph(file_name, clear_devices=True)
     saver.restore(session, tf.train.latest_checkpoint(os.path.dirname("./temp/cnn_scratch/")))
     data = numpy.random.rand(2, 28, 28, 1).astype("float32")
+    assert session.run(graph, feed_dict={images: data}).shape == (2, 10)
+    """
 
-    assert session.run(graph['logits'], feed_dict={images: data}).shape == (2, 10)
+    os.remove(tfrecords_filename)
+    os.remove(tfrecords_filename_val)    
 
     tf.reset_default_graph()
     shutil.rmtree(directory)
     assert len(tf.global_variables())==0
-    """
+
+

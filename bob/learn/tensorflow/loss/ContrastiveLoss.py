@@ -48,10 +48,11 @@ class ContrastiveLoss(BaseLoss):
             one = tf.constant(1.0)
 
             d = compute_euclidean_distance(left_feature, right_feature)
-            between_class = tf.multiply(one - label, tf.square(d))  # (1-Y)*(d^2)
+            within_class = tf.multiply(one - label, tf.square(d))  # (1-Y)*(d^2)
+            
+            
             max_part = tf.square(tf.maximum(self.contrastive_margin - d, 0))
-
-            within_class = tf.multiply(label, max_part)  # (Y) * max((margin - d)^2, 0)
+            between_class = tf.multiply(label, max_part)  # (Y) * max((margin - d)^2, 0)
 
             loss = 0.5 * (within_class + between_class)
 

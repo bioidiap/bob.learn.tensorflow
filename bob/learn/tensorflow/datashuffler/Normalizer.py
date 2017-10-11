@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Mon 07 Nov 2016 09:39:36 CET
 
+import numpy
 
 class ScaleFactor(object):
     """
@@ -39,4 +39,17 @@ class Linear(object):
     def __call__(self, x):
         return x
 
+
+
+class PerImageStandarization(object):
+
+    def __init__(self):
+        pass
+
+    def __call__(self, x):
+    
+        mean = numpy.mean(x)
+        std = numpy.std(x)
+
+        return (x-mean)/max(std, 1/numpy.sqrt(numpy.prod(x.shape)))
 
