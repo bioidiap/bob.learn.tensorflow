@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+import tensorflow as tf
 
 
 def get_global_step(path):
@@ -18,7 +19,5 @@ def get_global_step(path):
     global_step : int
         The global step number.
     """
-    from tensorflow.python.estimator.estimator import \
-        _load_global_step_from_checkpoint_dir
-    global_step = _load_global_step_from_checkpoint_dir(path)
-    return global_step
+    checkpoint_reader = tf.train.NewCheckpointReader(path)
+    return checkpoint_reader.get_tensor(tf.GraphKeys.GLOBAL_STEP)
