@@ -12,7 +12,7 @@ Options:
   <data-path>          Path that contains the features
   --extension=<arg>    Default feature extension   [default: .hdf5]
   --protocol=<arg>     One of the LFW protocols    [default: view1]
-  --data-type=<arg>    TFRecord data type [default: float32]
+  --data-type=<arg>    TFRecord data type [default: uint8]
 
 
 The possible protocol options are the following:
@@ -49,25 +49,14 @@ def file_to_label(client_ids, f):
 
 def get_pairs(all_pairs, match=True):
 
-    pairs = []
+    enroll = []
+    probe = []
     for p in all_pairs:
         if p.is_match == match:
-            pairs.append(p.enroll_file)
-            pairs.append(p.probe_file)
+            enroll.append(p.enroll_file)
+            probe.append(p.probe_file)
 
-    return pairs
-
-def bob2skimage(bob_image):
-    """
-    Convert bob color image to the skcit image
-    """
-
-    skimage = numpy.zeros(shape=(bob_image.shape[1], bob_image.shape[2], bob_image.shape[0]))
-    skimage[:, :, 2] = bob_image[0, :, :]
-    skimage[:, :, 1] = bob_image[1, :, :]    
-    skimage[:, :, 0] = bob_image[2, :, :]
-
-    return skimage
+    return enroll, probe
 
 
 def main(argv=None):
@@ -80,9 +69,6 @@ def main(argv=None):
     protocol    = args['--protocol']
     data_type   = args['--data-type']
     
-    #Setting the reader
-    reader = bob.io.base.load
-
     # Sets-up logging
     if args['--verbose']:
         verbosity = 2
@@ -90,28 +76,32 @@ def main(argv=None):
 
     # Loading LFW models
     database = bob.db.lfw.Database()
-    all_pairs = get_pairs(database.pairs(protocol=protocol), match=True)
-    client_ids = list(set([f.client_id for f in all_pairs]))
-    client_ids = dict(zip(client_ids, range(len(client_ids))))
+    enroll, probe = get_pairs(database.pairs(protocol=protocol), match=True)
+    #client_ids = list(set([f.client_id for f in all_pairs]))
     
+    client_ids = list(set([f.client_id for f in enroll] + [f.client_id for f in probe]))   
+    client_ids = dict(zip(client_ids, range(len(client_ids))))
+
     create_directories_safe(os.path.dirname(output_file))
 
-    n_files = len(all_pairs)
+    n_files = len(enroll)
     with tf.python_io.TFRecordWriter(output_file) as writer:
-      for i, f in enumerate(all_pairs):
-        logger.info('Processing file %d out of %d', i + 1, n_files)
+      for e, p, i in zip(enroll, probe, range(len(enroll)) ):
+        logger.info('Processing pair %d out of %d', i + 1, n_files)
+        
+        if os.path.exists(e.make_path(data_path, extension)) and os.path.exists(p.make_path(data_path, extension)):
+            for f in [e, p]:
+                path = f.make_path(data_path, extension)
+                data = bob.io.image.to_matplotlib(bob.io.base.load(path)).astype(data_type)
+                data = data.tostring()
 
-        path = f.make_path(data_path, extension)
-        #data = reader(path).astype('uint8').tostring()
-        img = bob2skimage(reader(path)).astype(data_type)
-        data = img.tostring()
+                feature = {'train/data': _bytes_feature(data),
+                           'train/label': _int64_feature(file_to_label(client_ids, f))}
 
-        feature = {'train/data': _bytes_feature(data),
-                   'train/label': _int64_feature(file_to_label(client_ids, f))}
-
-        example = tf.train.Example(features=tf.train.Features(feature=feature))
-        writer.write(example.SerializeToString())
-
+                example = tf.train.Example(features=tf.train.Features(feature=feature))
+                writer.write(example.SerializeToString())
+        else:
+            logger.debug("... Processing original data file '{0}' was not successful".format(path))
 
 if __name__ == '__main__':
   main()

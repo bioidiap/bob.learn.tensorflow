@@ -5,7 +5,6 @@
 
 import numpy
 from .Base import Base
-from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 import tensorflow as tf
 
 
@@ -47,7 +46,7 @@ class Memory(Base):
                  batch_size=1,
                  seed=10,
                  data_augmentation=None,
-                 normalizer=Linear(),
+                 normalizer=None,
                  prefetch=False,
                  prefetch_capacity=10,
                  prefetch_threads=5

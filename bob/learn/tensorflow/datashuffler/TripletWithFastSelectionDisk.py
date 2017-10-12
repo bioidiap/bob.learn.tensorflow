@@ -13,7 +13,6 @@ from scipy.spatial.distance import euclidean, cdist
 
 import logging
 logger = logging.getLogger("bob.learn")
-from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 
 class TripletWithFastSelectionDisk(Triplet, Disk, OnlineSampling):
@@ -67,7 +66,7 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnlineSampling):
                  seed=10,
                  data_augmentation=None,
                  total_identities=10,
-                 normalizer=Linear()):
+                 normalizer=None):
 
         super(TripletWithFastSelectionDisk, self).__init__(
             data=data,

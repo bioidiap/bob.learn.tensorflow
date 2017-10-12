@@ -1,42 +1,30 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Mon 07 Nov 2016 09:39:36 CET
 
+import numpy
 
-class ScaleFactor(object):
+def scale_factor(x, scale_factor=0.00390625):
     """
     Normalize a sample by a scale factor
     """
-
-    def __init__(self, scale_factor=0.00390625):
-        self.scale_factor = scale_factor
-
-    def __call__(self, x):
-        return x * self.scale_factor
+    return x * scale_factor
 
 
-class MeanOffset(object):
+def mean_offset(x, mean_offset):
     """
     Normalize a sample by a mean offset
     """
 
-    def __init__(self, mean_offset):
-        self.mean_offset = mean_offset
+    for i in range(len(mean_offset)):
+        x[:, :, i] = x[:, :, i] - mean_offset[i]
 
-    def __call__(self, x):
-        for i in range(len(self.mean_offset)):
-            x[:, :, i] = x[:, :, i] - self.mean_offset[i]
+    return x
 
-        return x
+def per_image_standarization(x):
+    
+    mean = numpy.mean(x)
+    std = numpy.std(x)
 
-
-class Linear(object):
-
-    def __init__(self):
-        pass
-
-    def __call__(self, x):
-        return x
-
+    return (x-mean)/max(std, 1/numpy.sqrt(numpy.prod(x.shape)))
 

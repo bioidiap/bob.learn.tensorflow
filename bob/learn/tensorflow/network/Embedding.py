@@ -6,7 +6,6 @@
 
 import tensorflow as tf
 from bob.learn.tensorflow.utils.session import Session
-from bob.learn.tensorflow.datashuffler import Linear
 
 
 class Embedding(object):
@@ -20,8 +19,8 @@ class Embedding(object):
       graph: Embedding graph
     
     """
-    def __init__(self, input, graph, normalizer=Linear()):
-        self.input = input
+    def __init__(self, inputs, graph, normalizer=None):
+        self.inputs = inputs
         self.graph = graph
         self.normalizer = normalizer
 
@@ -32,6 +31,6 @@ class Embedding(object):
             for i in range(data.shape[0]):
                 data[i] = self.normalizer(data[i])
 
-        feed_dict = {self.input: data}
+        feed_dict = {self.inputs: data}
 
         return session.run([self.graph], feed_dict=feed_dict)[0]

@@ -11,8 +11,6 @@ logger = bob.core.log.setup("bob.learn.tensorflow")
 from .Disk import Disk
 from .Siamese import Siamese
 
-from bob.learn.tensorflow.datashuffler.Normalizer import Linear
-
 
 class SiameseDisk(Siamese, Disk):
     """
@@ -52,7 +50,7 @@ class SiameseDisk(Siamese, Disk):
                  batch_size=1,
                  seed=10,
                  data_augmentation=None,
-                 normalizer=Linear(),
+                 normalizer=None,
                  prefetch=False,
                  prefetch_capacity=10,
                  prefetch_threads=5

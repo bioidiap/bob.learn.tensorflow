@@ -1,5 +1,5 @@
 from bob.learn.tensorflow.datashuffler import Memory, ScaleFactor
-from bob.learn.tensorflow.network import Chopra
+from bob.learn.tensorflow.network import chopra
 from bob.learn.tensorflow.trainers import Trainer, constant
 from bob.learn.tensorflow.loss import MeanSoftMaxLoss
 from bob.learn.tensorflow.utils import load_mnist
@@ -22,7 +22,7 @@ train_data_shuffler = Memory(train_data, train_labels,
                              normalizer=ScaleFactor())
 
 ### ARCHITECTURE ###
-architecture = Chopra(seed=SEED, n_classes=10)
+architecture = chopra(seed=SEED, n_classes=10)
 
 ### LOSS ###
 loss = MeanSoftMaxLoss()

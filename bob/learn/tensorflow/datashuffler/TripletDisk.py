@@ -15,7 +15,6 @@ import tensorflow as tf
 
 from .Disk import Disk
 from .Triplet import Triplet
-from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 
 class TripletDisk(Triplet, Disk):
@@ -57,7 +56,7 @@ class TripletDisk(Triplet, Disk):
                  batch_size=1,
                  seed=10,
                  data_augmentation=None,
-                 normalizer=Linear(),
+                 normalizer=None,
                  prefetch=False,
                  prefetch_capacity=50,
                  prefetch_threads=10

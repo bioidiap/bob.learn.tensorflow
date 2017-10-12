@@ -73,7 +73,7 @@ def main():
         return True
 
     config = imp.load_source('config', args['<configuration>'])
-
+    
     # Cleaning all variables in case you are loading the checkpoint
     tf.reset_default_graph() if os.path.exists(output_dir) else None
 
@@ -86,6 +86,11 @@ def main():
     validation_data_shuffler = None
     if hasattr(config, 'validation_data_shuffler'):
         validation_data_shuffler = config.validation_data_shuffler
+
+    prelogits = None
+    if hasattr(config, 'prelogits'):
+        prelogits = config.prelogits
+
 
     trainer = config.Trainer(config.train_data_shuffler,
                              validation_data_shuffler=validation_data_shuffler,
@@ -102,9 +107,9 @@ def main():
         train_graph = None
         validation_graph = None
         validate_with_embeddings = False
-        
-        if hasattr(config, 'train_graph'):
-            train_graph = config.train_graph
+
+        if hasattr(config, 'logits'):
+            train_graph = config.logits
             if hasattr(config, 'validation_graph'):
                 validation_graph = config.validation_graph
             
@@ -128,6 +133,7 @@ def main():
                                             validation_graph=validation_graph,
                                             loss=config.loss,
                                             learning_rate=config.learning_rate,
-                                            optimizer=config.optimizer)
+                                            optimizer=config.optimizer,
+                                            prelogits=prelogits)
     trainer.train()
 

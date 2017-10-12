@@ -10,11 +10,9 @@ from .Disk import Disk
 from .Triplet import Triplet
 from .OnlineSampling import OnlineSampling
 from scipy.spatial.distance import euclidean
-from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 import logging
 logger = logging.getLogger("bob.learn.tensorflow")
-from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 
 class TripletWithSelectionDisk(Triplet, Disk, OnlineSampling):
@@ -57,7 +55,7 @@ class TripletWithSelectionDisk(Triplet, Disk, OnlineSampling):
                  seed=10,
                  data_augmentation=None,
                  total_identities=10,
-                 normalizer=Linear()):
+                 normalizer=None):
 
         super(TripletWithSelectionDisk, self).__init__(
             data=data,

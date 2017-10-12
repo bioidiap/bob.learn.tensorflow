@@ -8,7 +8,6 @@ import six
 from .Memory import Memory
 from .Siamese import Siamese
 import tensorflow as tf
-from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 
 class SiameseMemory(Siamese, Memory):
@@ -50,7 +49,7 @@ class SiameseMemory(Siamese, Memory):
                  batch_size=32,
                  seed=10,
                  data_augmentation=None,
-                 normalizer=Linear(),
+                 normalizer=None,
                  prefetch=False,
                  prefetch_capacity=50,
                  prefetch_threads=10

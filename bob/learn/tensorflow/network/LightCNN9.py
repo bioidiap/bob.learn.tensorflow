@@ -1,30 +1,21 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 11 May 2016 09:39:36 CEST 
 
 import tensorflow as tf
 from bob.learn.tensorflow.layers import maxout
 from .utils import append_logits
 
-class LightCNN9(object):
+def light_cnn9(inputs, seed=10, reuse=False):
     """Creates the graph for the Light CNN-9 in 
 
        Wu, Xiang, et al. "A light CNN for deep face representation with noisy labels." arXiv preprint arXiv:1511.02683 (2015).
     """
-    def __init__(self,
-                 seed=10,
-                 n_classes=10):
+    slim = tf.contrib.slim
 
-            self.seed = seed
-            self.n_classes = n_classes
+    with tf.variable_scope('LightCNN9', reuse=reuse):
 
-    def __call__(self, inputs, reuse=False, get_class_layer=True, end_point="logits"):
-        slim = tf.contrib.slim
-
-        #with tf.device(self.device):
-
-        initializer = tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=self.seed)
+        initializer = tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=seed)
         end_points = dict()
                     
         graph = slim.conv2d(inputs, 96, [5, 5], activation_fn=tf.nn.relu,
@@ -141,24 +132,14 @@ class LightCNN9(object):
         graph = slim.flatten(graph, scope='flatten1')
         end_points['flatten1'] = graph        
 
-        graph = slim.dropout(graph, keep_prob=0.3, scope='dropout1')
+        graph = slim.dropout(graph, keep_prob=0.5, scope='dropout1')
 
-        graph = slim.fully_connected(graph, 512,
+        prelogits = slim.fully_connected(graph, 512,
                                      weights_initializer=initializer,
                                      activation_fn=tf.nn.relu,
                                      scope='fc1',
                                      reuse=reuse)
-        end_points['fc1'] = graph                                     
-        #graph = maxout(graph,
-        #               num_units=256,
-        #               name='Maxoutfc1')
-        
-        graph = slim.dropout(graph, keep_prob=0.3, scope='dropout2')
+        end_points['fc1'] = prelogits
 
-        if self.n_classes is not None:
-            # Appending the logits layer
-            graph = append_logits(graph, self.n_classes, reuse)
-            end_points['logits'] = graph
-
-        return end_points[end_point]
+    return prelogits, end_points
 

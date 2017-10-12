@@ -4,9 +4,9 @@
 # @date: Thu 13 Oct 2016 13:35 CEST
 
 import numpy
-from bob.learn.tensorflow.datashuffler import Memory, ImageAugmentation, ScaleFactor, Linear, TFRecord
+from bob.learn.tensorflow.datashuffler import Memory, scale_factor, TFRecord
 from bob.learn.tensorflow.network import Embedding
-from bob.learn.tensorflow.loss import BaseLoss, MeanSoftMaxLoss
+from bob.learn.tensorflow.loss import mean_cross_entropy_loss, contrastive_loss, triplet_loss
 from bob.learn.tensorflow.trainers import Trainer, constant
 from bob.learn.tensorflow.utils import load_mnist
 import tensorflow as tf
@@ -72,7 +72,7 @@ def scratch_network_embeding_example(train_data_shuffler, reuse=False, get_embed
 
 
 
-def validate_network(embedding, validation_data, validation_labels, input_shape=[None, 28, 28, 1], normalizer=ScaleFactor()):
+def validate_network(embedding, validation_data, validation_labels, input_shape=[None, 28, 28, 1], normalizer=scale_factor):
     # Testing
     validation_data_shuffler = Memory(validation_data, validation_labels,
                                       input_shape=input_shape,
@@ -93,22 +93,20 @@ def test_cnn_trainer_scratch():
     train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
 
     # Creating datashufflers
-    data_augmentation = ImageAugmentation()
     train_data_shuffler = Memory(train_data, train_labels,
                                  input_shape=[None, 28, 28, 1],
                                  batch_size=batch_size,
-                                 data_augmentation=data_augmentation,
-                                 normalizer=ScaleFactor())
+                                 normalizer=scale_factor)
 
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
+
     # Create scratch network
-    graph = scratch_network(train_data_shuffler)
+    logits = scratch_network(train_data_shuffler)
+    labels = train_data_shuffler("label", from_queue=False)
+    loss = mean_cross_entropy_loss(logits, labels)
 
     # Setting the placeholders
-    embedding = Embedding(train_data_shuffler("data", from_queue=False), graph)
-
-    # Loss for the softmax
-    loss = MeanSoftMaxLoss()
+    embedding = Embedding(train_data_shuffler("data", from_queue=False), logits)
 
     # One graph trainer
     trainer = Trainer(train_data_shuffler,
@@ -116,7 +114,7 @@ def test_cnn_trainer_scratch():
                       analizer=None,
                       temp_dir=directory)
 
-    trainer.create_network_from_scratch(graph=graph,
+    trainer.create_network_from_scratch(graph=logits,
                                         loss=loss,
                                         learning_rate=constant(0.01, name="regular_lr"),
                                         optimizer=tf.train.GradientDescentOptimizer(0.01),
@@ -178,12 +176,16 @@ def test_cnn_tfrecord():
     validation_data_shuffler  = TFRecord(filename_queue=filename_queue_val,
                                          batch_size=2000)
                                          
-    graph = scratch_network(train_data_shuffler)
-    validation_graph = scratch_network(validation_data_shuffler, reuse=True)
+    logits = scratch_network(train_data_shuffler)
+    labels = train_data_shuffler("label", from_queue=False)
+
+    validation_logits = scratch_network(validation_data_shuffler, reuse=True)
+    validation_labels = validation_data_shuffler("label", from_queue=False)
     
     # Setting the placeholders
     # Loss for the softmax
-    loss = MeanSoftMaxLoss()
+    loss = mean_cross_entropy_loss(logits, labels)
+    validation_loss = mean_cross_entropy_loss(validation_logits, validation_labels)
 
     # One graph trainer
     
@@ -195,9 +197,10 @@ def test_cnn_tfrecord():
 
     learning_rate = constant(0.01, name="regular_lr")
 
-    trainer.create_network_from_scratch(graph=graph,
-                                        validation_graph=validation_graph,
+    trainer.create_network_from_scratch(graph=logits,
+                                        validation_graph=validation_logits,
                                         loss=loss,
+                                        validation_loss=validation_loss,
                                         learning_rate=learning_rate,
                                         optimizer=tf.train.GradientDescentOptimizer(learning_rate),
                                         )
@@ -276,12 +279,13 @@ def test_cnn_tfrecord_embedding_validation():
     validation_data_shuffler  = TFRecord(filename_queue=filename_queue_val,
                                          batch_size=2000)
                                          
-    graph = scratch_network_embeding_example(train_data_shuffler)
-    validation_graph = scratch_network_embeding_example(validation_data_shuffler, reuse=True, get_embedding=True)
+    logits = scratch_network_embeding_example(train_data_shuffler)
+    labels = train_data_shuffler("label", from_queue=False)
+    validation_logits = scratch_network_embeding_example(validation_data_shuffler, reuse=True, get_embedding=True)
     
     # Setting the placeholders
     # Loss for the softmax
-    loss = MeanSoftMaxLoss()
+    loss = mean_cross_entropy_loss(logits, labels)
 
     # One graph trainer
     
@@ -294,8 +298,8 @@ def test_cnn_tfrecord_embedding_validation():
 
     learning_rate = constant(0.01, name="regular_lr")
 
-    trainer.create_network_from_scratch(graph=graph,
-                                        validation_graph=validation_graph,
+    trainer.create_network_from_scratch(graph=logits,
+                                        validation_graph=validation_logits,
                                         loss=loss,
                                         learning_rate=learning_rate,
                                         optimizer=tf.train.GradientDescentOptimizer(learning_rate),

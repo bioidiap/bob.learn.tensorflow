@@ -84,6 +84,7 @@ class Trainer(object):
         self.summaries_train = None
         self.train_summary_writter = None
         self.thread_pool = None
+        self.centers = None
 
         # Validation data
         self.validation_summary_writter = None
@@ -98,11 +99,11 @@ class Trainer(object):
 
         self.graph = None
         self.validation_graph = None
+        self.prelogits = None
                 
         self.loss = None
+        self.validation_loss = None  
         
-        self.predictor = None
-        self.validation_predictor = None  
         self.validate_with_embeddings = validate_with_embeddings      
         
         self.optimizer_class = None
@@ -211,6 +212,7 @@ class Trainer(object):
                                     validation_graph=None,
                                     optimizer=tf.train.AdamOptimizer(),
                                     loss=None,
+                                    validation_loss=None,
 
                                     # Learning rate
                                     learning_rate=None,
@@ -240,33 +242,32 @@ class Trainer(object):
         # TODO: SPECIFIC HACK FOR THE CENTER LOSS. I NEED TO FIND A CLEAN SOLUTION FOR THAT
         self.centers = None
         if prelogits is not None:
+            self.loss = loss['loss']
+            self.centers = loss['centers']
+            tf.add_to_collection("centers", self.centers)
+            tf.add_to_collection("loss", self.loss)
             tf.add_to_collection("prelogits", prelogits)
-            self.predictor, self.centers = self.loss(self.graph, prelogits, self.label_ph)
-        else:
-            self.predictor = self.loss(self.graph, self.label_ph)
-        
+            self.prelogits = prelogits
+
         self.optimizer_class = optimizer
         self.learning_rate = learning_rate
         self.global_step = tf.contrib.framework.get_or_create_global_step()
 
         # Preparing the optimizer
         self.optimizer_class._learning_rate = self.learning_rate
-        self.optimizer = self.optimizer_class.minimize(self.predictor, global_step=self.global_step)
+        self.optimizer = self.optimizer_class.minimize(self.loss, global_step=self.global_step)
 
         # Saving all the variables
         self.saver = tf.train.Saver(var_list=tf.global_variables() + tf.local_variables(), 
                                     keep_checkpoint_every_n_hours=self.keep_checkpoint_every_n_hours)
 
-        self.summaries_train = self.create_general_summary(self.predictor, self.graph, self.label_ph)
+        self.summaries_train = self.create_general_summary(self.loss, self.graph, self.label_ph)
 
         # SAving some variables
         tf.add_to_collection("global_step", self.global_step)
 
-            
+        tf.add_to_collection("loss", self.loss)
         tf.add_to_collection("graph", self.graph)
-        
-        tf.add_to_collection("predictor", self.predictor)
-
         tf.add_to_collection("data_ph", self.data_ph)
         tf.add_to_collection("label_ph", self.label_ph)
 
@@ -274,10 +275,6 @@ class Trainer(object):
         tf.add_to_collection("learning_rate", self.learning_rate)
 
         tf.add_to_collection("summaries_train", self.summaries_train)
-
-        # Appending histograms for each trainable variables
-        for var in tf.trainable_variables():
-            tf.summary.histogram(var.op.name, var)
 
         # Same business with the validation
         if self.validation_data_shuffler is not None:
@@ -287,18 +284,19 @@ class Trainer(object):
             self.validation_graph = validation_graph
 
             if self.validate_with_embeddings:            
-                self.validation_predictor = self.validation_graph
+                self.validation_loss = self.validation_graph
             else:            
-                self.validation_predictor = self.loss(self.validation_graph, self.validation_label_ph)
+                #self.validation_predictor = self.loss(self.validation_graph, self.validation_label_ph)
+                self.validation_loss = validation_loss
 
-            self.summaries_validation = self.create_general_summary(self.validation_predictor, self.validation_graph, self.validation_label_ph)
+            self.summaries_validation = self.create_general_summary(self.validation_loss, self.validation_graph, self.validation_label_ph)
             tf.add_to_collection("summaries_validation", self.summaries_validation)
             
             tf.add_to_collection("validation_graph", self.validation_graph)
             tf.add_to_collection("validation_data_ph", self.validation_data_ph)
             tf.add_to_collection("validation_label_ph", self.validation_label_ph)
 
-            tf.add_to_collection("validation_predictor", self.validation_predictor)
+            tf.add_to_collection("validation_loss", self.validation_loss)
             tf.add_to_collection("summaries_validation", self.summaries_validation)
 
         # Creating the variables
@@ -363,7 +361,7 @@ class Trainer(object):
         self.label_ph = tf.get_collection("label_ph")[0]
 
         self.graph = tf.get_collection("graph")[0]
-        self.predictor = tf.get_collection("predictor")[0]
+        self.loss = tf.get_collection("loss")[0]
 
         # Loding other elements
         self.optimizer = tf.get_collection("optimizer")[0]
@@ -371,6 +369,10 @@ class Trainer(object):
         self.summaries_train = tf.get_collection("summaries_train")[0]        
         self.global_step = tf.get_collection("global_step")[0]
         self.from_scratch = False
+
+        if len(tf.get_collection("centers")) > 0:
+            self.centers = tf.get_collection("centers")[0]
+            self.prelogits = tf.get_collection("prelogits")[0]
         
         # Loading the validation bits
         if self.validation_data_shuffler is not None:
@@ -378,9 +380,9 @@ class Trainer(object):
 
             self.validation_graph = tf.get_collection("validation_graph")[0]
             self.validation_data_ph = tf.get_collection("validation_data_ph")[0]
-            self.validation_label = tf.get_collection("validation_label_ph")[0]
+            self.validation_label_ph = tf.get_collection("validation_label_ph")[0]
 
-            self.validation_predictor = tf.get_collection("validation_predictor")[0]
+            self.validation_loss = tf.get_collection("validation_loss")[0]
             self.summaries_validation = tf.get_collection("summaries_validation")[0]
 
     def __del__(self):
@@ -414,15 +416,15 @@ class Trainer(object):
         if self.train_data_shuffler.prefetch:
             # TODO: SPECIFIC HACK FOR THE CENTER LOSS. I NEED TO FIND A CLEAN SOLUTION FOR THAT        
             if self.centers is None:            
-                _, l, lr, summary = self.session.run([self.optimizer, self.predictor,
+                _, l, lr, summary = self.session.run([self.optimizer, self.loss,
                                                       self.learning_rate, self.summaries_train])
             else:
-                _, l, lr, summary, _ = self.session.run([self.optimizer, self.predictor,
+                _, l, lr, summary, _ = self.session.run([self.optimizer, self.loss,
                                                       self.learning_rate, self.summaries_train, self.centers])
             
         else:
             feed_dict = self.get_feed_dict(self.train_data_shuffler)
-            _, l, lr, summary = self.session.run([self.optimizer, self.predictor,
+            _, l, lr, summary = self.session.run([self.optimizer, self.loss,
                                                   self.learning_rate, self.summaries_train], feed_dict=feed_dict)
 
         logger.info("Loss training set step={0} = {1}".format(step, l))
@@ -440,11 +442,11 @@ class Trainer(object):
         """
 
         if self.validation_data_shuffler.prefetch:
-            l, lr, summary = self.session.run([self.validation_predictor,
+            l, lr, summary = self.session.run([self.validation_loss,
                                                self.learning_rate, self.summaries_validation])
         else:
             feed_dict = self.get_feed_dict(self.validation_data_shuffler)
-            l, lr, summary = self.session.run([self.validation_predictor,
+            l, lr, summary = self.session.run([self.validation_loss,
                                                self.learning_rate, self.summaries_validation],
                                                feed_dict=feed_dict)
 
@@ -463,10 +465,10 @@ class Trainer(object):
         """
         
         if self.validation_data_shuffler.prefetch:
-            embedding, labels = self.session.run([self.validation_predictor, self.validation_label_ph])
+            embedding, labels = self.session.run([self.validation_loss, self.validation_label_ph])
         else:
             feed_dict = self.get_feed_dict(self.validation_data_shuffler)
-            embedding, labels = self.session.run([self.validation_predictor, self.validation_label_ph],
+            embedding, labels = self.session.run([self.validation_loss, self.validation_label_ph],
                                                feed_dict=feed_dict)
                                                
         accuracy = compute_embedding_accuracy(embedding, labels)
@@ -480,6 +482,12 @@ class Trainer(object):
         """
         Creates a simple tensorboard summary with the value of the loss and learning rate
         """
+
+        # Appending histograms for each trainable variables
+        #for var in tf.trainable_variables():
+        #for var in tf.global_variables():
+        #    tf.summary.histogram(var.op.name, var)
+        
         # Train summary
         tf.summary.scalar('loss', average_loss)
         tf.summary.scalar('lr', self.learning_rate)        
