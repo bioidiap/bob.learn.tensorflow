@@ -102,8 +102,8 @@ class Trainer(object):
         self.prelogits = None
                 
         self.loss = None
+        self.validation_loss = None  
         
-        self.validation_predictor = None  
         self.validate_with_embeddings = validate_with_embeddings      
         
         self.optimizer_class = None
@@ -212,6 +212,7 @@ class Trainer(object):
                                     validation_graph=None,
                                     optimizer=tf.train.AdamOptimizer(),
                                     loss=None,
+                                    validation_loss=None,
 
                                     # Learning rate
                                     learning_rate=None,
@@ -283,18 +284,19 @@ class Trainer(object):
             self.validation_graph = validation_graph
 
             if self.validate_with_embeddings:            
-                self.validation_predictor = self.validation_graph
+                self.validation_loss = self.validation_graph
             else:            
-                self.validation_predictor = self.loss(self.validation_graph, self.validation_label_ph)
+                #self.validation_predictor = self.loss(self.validation_graph, self.validation_label_ph)
+                self.validation_loss = validation_loss
 
-            self.summaries_validation = self.create_general_summary(self.validation_predictor, self.validation_graph, self.validation_label_ph)
+            self.summaries_validation = self.create_general_summary(self.validation_loss, self.validation_graph, self.validation_label_ph)
             tf.add_to_collection("summaries_validation", self.summaries_validation)
             
             tf.add_to_collection("validation_graph", self.validation_graph)
             tf.add_to_collection("validation_data_ph", self.validation_data_ph)
             tf.add_to_collection("validation_label_ph", self.validation_label_ph)
 
-            tf.add_to_collection("validation_predictor", self.validation_predictor)
+            tf.add_to_collection("validation_loss", self.validation_loss)
             tf.add_to_collection("summaries_validation", self.summaries_validation)
 
         # Creating the variables
@@ -380,7 +382,7 @@ class Trainer(object):
             self.validation_data_ph = tf.get_collection("validation_data_ph")[0]
             self.validation_label_ph = tf.get_collection("validation_label_ph")[0]
 
-            self.validation_predictor = tf.get_collection("validation_predictor")[0]
+            self.validation_loss = tf.get_collection("validation_loss")[0]
             self.summaries_validation = tf.get_collection("summaries_validation")[0]
 
     def __del__(self):
@@ -440,11 +442,11 @@ class Trainer(object):
         """
 
         if self.validation_data_shuffler.prefetch:
-            l, lr, summary = self.session.run([self.validation_predictor,
+            l, lr, summary = self.session.run([self.validation_loss,
                                                self.learning_rate, self.summaries_validation])
         else:
             feed_dict = self.get_feed_dict(self.validation_data_shuffler)
-            l, lr, summary = self.session.run([self.validation_predictor,
+            l, lr, summary = self.session.run([self.validation_loss,
                                                self.learning_rate, self.summaries_validation],
                                                feed_dict=feed_dict)
 
@@ -463,10 +465,10 @@ class Trainer(object):
         """
         
         if self.validation_data_shuffler.prefetch:
-            embedding, labels = self.session.run([self.validation_predictor, self.validation_label_ph])
+            embedding, labels = self.session.run([self.validation_loss, self.validation_label_ph])
         else:
             feed_dict = self.get_feed_dict(self.validation_data_shuffler)
-            embedding, labels = self.session.run([self.validation_predictor, self.validation_label_ph],
+            embedding, labels = self.session.run([self.validation_loss, self.validation_label_ph],
                                                feed_dict=feed_dict)
                                                
         accuracy = compute_embedding_accuracy(embedding, labels)

@@ -9,7 +9,6 @@ import tensorflow as tf
 from .OnlineSampling import OnlineSampling
 from .Memory import Memory
 from .Triplet import Triplet
-from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 from scipy.spatial.distance import euclidean, cdist
 
 import logging
@@ -68,7 +67,7 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
                  seed=10,
                  data_augmentation=None,
                  total_identities=10,
-                 normalizer=Linear()):
+                 normalizer=None):
 
         super(TripletWithSelectionMemory, self).__init__(
             data=data,

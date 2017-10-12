@@ -4,12 +4,12 @@
 # @date: Thu 13 Oct 2016 13:35 CEST
 
 import numpy
-from bob.learn.tensorflow.datashuffler import Memory, SiameseMemory, TripletMemory, ImageAugmentation, ScaleFactor, Linear
+from bob.learn.tensorflow.datashuffler import Memory, SiameseMemory, TripletMemory, scale_factor
 from bob.learn.tensorflow.network import chopra
 from bob.learn.tensorflow.loss import mean_cross_entropy_loss, contrastive_loss, triplet_loss
 from bob.learn.tensorflow.trainers import Trainer, SiameseTrainer, TripletTrainer, constant
 from bob.learn.tensorflow.test.test_cnn_scratch import validate_network
-from bob.learn.tensorflow.network import Embedding, LightCNN9
+from bob.learn.tensorflow.network import Embedding, light_cnn9
 from bob.learn.tensorflow.network.utils import append_logits
 
 
@@ -85,12 +85,10 @@ def test_cnn_trainer():
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
 
     # Creating datashufflers
-    data_augmentation = ImageAugmentation()
     train_data_shuffler = Memory(train_data, train_labels,
                                  input_shape=[None, 28, 28, 1],
                                  batch_size=batch_size,
-                                 data_augmentation=data_augmentation,
-                                 normalizer=ScaleFactor())
+                                 normalizer=scale_factor)
 
     directory = "./temp/cnn"
 
@@ -102,7 +100,7 @@ def test_cnn_trainer():
     # Loss for the softmax
     loss = mean_cross_entropy_loss(logits, labels)
     
-    embedding = Embedding(train_data_shuffler("data", from_queue=False), logits)
+    embedding = Embedding(inputs, logits)
 
     # One graph trainer
     trainer = Trainer(train_data_shuffler,
@@ -142,21 +140,19 @@ def test_lightcnn_trainer():
     validation_labels = numpy.hstack((numpy.zeros(100), numpy.ones(100))).astype("uint64")
 
     # Creating datashufflers
-    data_augmentation = ImageAugmentation()
     train_data_shuffler = Memory(train_data, train_labels,
                                  input_shape=[None, 128, 128, 1],
                                  batch_size=batch_size,
-                                 data_augmentation=data_augmentation,
-                                 normalizer=Linear())
+                                 normalizer=scale_factor)
 
     directory = "./temp/cnn"
 
     # Preparing the architecture
-    architecture = LightCNN9(seed=seed,
-                             n_classes=2)
     inputs = train_data_shuffler("data", from_queue=True)
     labels = train_data_shuffler("label", from_queue=True)
-    logits = architecture(inputs, end_point="logits")
+    prelogits = light_cnn9(inputs)[0]
+    logits = append_logits(prelogits, n_classes=10)
+    
     embedding = Embedding(train_data_shuffler("data", from_queue=False), logits)
     
     # Loss for the softmax
@@ -178,7 +174,7 @@ def test_lightcnn_trainer():
     #trainer.train(validation_data_shuffler)
 
     # Using embedding to compute the accuracy
-    accuracy = validate_network(embedding, validation_data, validation_labels, input_shape=[None, 128, 128, 1], normalizer=Linear())
+    accuracy = validate_network(embedding, validation_data, validation_labels, input_shape=[None, 128, 128, 1], normalizer=scale_factor)
     assert True
     shutil.rmtree(directory)
     del trainer
@@ -198,11 +194,11 @@ def test_siamesecnn_trainer():
     train_data_shuffler = SiameseMemory(train_data, train_labels,
                                         input_shape=[None, 28, 28, 1],
                                         batch_size=batch_size,
-                                        normalizer=ScaleFactor())
+                                        normalizer=scale_factor)
     validation_data_shuffler = SiameseMemory(validation_data, validation_labels,
                                              input_shape=[None, 28, 28, 1],
                                              batch_size=validation_batch_size,
-                                             normalizer=ScaleFactor())
+                                             normalizer=scale_factor)
     directory = "./temp/siamesecnn"
 
     # Building the graph
@@ -247,11 +243,11 @@ def test_tripletcnn_trainer():
     train_data_shuffler = TripletMemory(train_data, train_labels,
                                         input_shape=[None, 28, 28, 1],
                                         batch_size=batch_size,
-                                        normalizer=ScaleFactor())
+                                        normalizer=scale_factor)
     validation_data_shuffler = TripletMemory(validation_data, validation_labels,
                                              input_shape=[None, 28, 28, 1],
                                              batch_size=validation_batch_size,
-                                             normalizer=ScaleFactor())
+                                             normalizer=scale_factor)
 
     directory = "./temp/tripletcnn"
 

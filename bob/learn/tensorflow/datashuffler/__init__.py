@@ -15,10 +15,7 @@ from .SiameseDisk import SiameseDisk
 from .TripletDisk import TripletDisk
 from .TripletWithSelectionDisk import TripletWithSelectionDisk
 
-from .DataAugmentation import DataAugmentation
-from .ImageAugmentation import ImageAugmentation
-
-from .Normalizer import ScaleFactor, MeanOffset, Linear, PerImageStandarization
+from .Normalizer import scale_factor, mean_offset, per_image_standarization
 
 from .DiskAudio import DiskAudio
 from .TFRecord import TFRecord
@@ -53,9 +50,7 @@ __appropriate__(
     SiameseDisk,
     TripletDisk,
     TripletWithSelectionDisk,
-    DataAugmentation,
-    ImageAugmentation,
-    ScaleFactor, MeanOffset, Linear,
+    scale_factor, mean_offset, per_image_standarization,
     DiskAudio,
     TFRecord,
     TFRecordImage

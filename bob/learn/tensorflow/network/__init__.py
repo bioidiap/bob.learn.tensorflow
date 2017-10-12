@@ -1,8 +1,7 @@
 from .Chopra import chopra
 from .LightCNN9 import light_cnn9
-from .LightCNN29 import LightCNN29
-from .Dummy import Dummy
-from .MLP import MLP
+from .Dummy import dummy
+from .MLP import mlp
 from .Embedding import Embedding
 from .InceptionResnetV2 import inception_resnet_v2
 from .InceptionResnetV1 import inception_resnet_v1
@@ -23,10 +22,11 @@ def __appropriate__(*args):
   for obj in args: obj.__module__ = __name__
 
 __appropriate__(
-    Chopra,
+    chopra,
     light_cnn9,
-    Dummy,
-    MLP,
+    dummy,
+    Embedding,
+    mlp,
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]
 

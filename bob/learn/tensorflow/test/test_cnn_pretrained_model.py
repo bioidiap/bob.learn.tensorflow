@@ -6,8 +6,8 @@
 import numpy
 import bob.io.base
 import os
-from bob.learn.tensorflow.datashuffler import Memory, ImageAugmentation, TripletMemory, SiameseMemory, ScaleFactor
-from bob.learn.tensorflow.loss import BaseLoss, TripletLoss, ContrastiveLoss
+from bob.learn.tensorflow.datashuffler import Memory, TripletMemory, SiameseMemory, scale_factor
+from bob.learn.tensorflow.loss import mean_cross_entropy_loss, contrastive_loss, triplet_loss
 from bob.learn.tensorflow.trainers import Trainer, constant, TripletTrainer, SiameseTrainer
 from bob.learn.tensorflow.utils import load_mnist
 from bob.learn.tensorflow.network import Embedding
@@ -56,45 +56,43 @@ def test_cnn_pretrained():
     train_data, train_labels, validation_data, validation_labels = load_mnist()
     train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
 
-    # Creating datashufflers
-    data_augmentation = ImageAugmentation()
+    # Creating datashufflers    
     train_data_shuffler = Memory(train_data, train_labels,
                                  input_shape=[None, 28, 28, 1],
                                  batch_size=batch_size,
-                                 data_augmentation=data_augmentation,
-                                 normalizer=ScaleFactor())
+                                 normalizer=scale_factor)
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
     directory = "./temp/cnn"
 
     # Creating a random network
-    input_pl = train_data_shuffler("data", from_queue=True)
-    graph = scratch_network(input_pl)
-    embedding = Embedding(train_data_shuffler("data", from_queue=False), graph)
+    inputs = train_data_shuffler("data", from_queue=True)
+    labels = train_data_shuffler("label", from_queue=True)
+    logits = scratch_network(inputs)
+    embedding = Embedding(train_data_shuffler("data", from_queue=False), logits)
 
     # Loss for the softmax
-    loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean)
+    loss = mean_cross_entropy_loss(logits, labels)
 
     # One graph trainer
     trainer = Trainer(train_data_shuffler,
                       iterations=iterations,
                       analizer=None,
                       temp_dir=directory)
-    trainer.create_network_from_scratch(graph=graph,
+    trainer.create_network_from_scratch(graph=logits,
                                         loss=loss,
                                         learning_rate=constant(0.1, name="regular_lr"),
                                         optimizer=tf.train.GradientDescentOptimizer(0.1))
     trainer.train()
     accuracy = validate_network(embedding, validation_data, validation_labels)
 
+
     assert accuracy > 20
     tf.reset_default_graph()
 
-    del graph
+    del logits
     del loss
     del trainer
     del embedding
-    # Training the network using a pre trained model
-    loss = BaseLoss(tf.nn.sparse_softmax_cross_entropy_with_logits, tf.reduce_mean, name="loss")
 
     # One graph trainer
     trainer = Trainer(train_data_shuffler,
@@ -109,7 +107,6 @@ def test_cnn_pretrained():
     assert accuracy > 50
     shutil.rmtree(directory)
 
-    del loss
     del trainer
     tf.reset_default_graph()
     assert len(tf.global_variables())==0    
@@ -122,11 +119,9 @@ def test_triplet_cnn_pretrained():
     train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
 
     # Creating datashufflers
-    data_augmentation = ImageAugmentation()
     train_data_shuffler = TripletMemory(train_data, train_labels,
                                         input_shape=[None, 28, 28, 1],
-                                        batch_size=batch_size,
-                                        data_augmentation=data_augmentation)
+                                        batch_size=batch_size)
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
 
     validation_data_shuffler = TripletMemory(validation_data, validation_labels,
@@ -136,14 +131,14 @@ def test_triplet_cnn_pretrained():
     directory = "./temp/cnn"
 
     # Creating a random network
-    input_pl = train_data_shuffler("data", from_queue=False)
+    inputs = train_data_shuffler("data", from_queue=False)
     graph = dict()
-    graph['anchor'] = scratch_network(input_pl['anchor'])
-    graph['positive'] = scratch_network(input_pl['positive'], reuse=True)
-    graph['negative'] = scratch_network(input_pl['negative'], reuse=True)
+    graph['anchor'] = scratch_network(inputs['anchor'])
+    graph['positive'] = scratch_network(inputs['positive'], reuse=True)
+    graph['negative'] = scratch_network(inputs['negative'], reuse=True)
 
     # Loss for the softmax
-    loss = TripletLoss(margin=4.)
+    loss = triplet_loss(graph['anchor'], graph['positive'], graph['negative'], margin=4.)
 
     # One graph trainer
     trainer = TripletTrainer(train_data_shuffler,
@@ -196,28 +191,27 @@ def test_siamese_cnn_pretrained():
     train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
 
     # Creating datashufflers
-    data_augmentation = ImageAugmentation()
     train_data_shuffler = SiameseMemory(train_data, train_labels,
                                         input_shape=[None, 28, 28, 1],
                                         batch_size=batch_size,
-                                        data_augmentation=data_augmentation,
-                                        normalizer=ScaleFactor())
+                                        normalizer=scale_factor)
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
 
     validation_data_shuffler = SiameseMemory(validation_data, validation_labels,
                                              input_shape=[None, 28, 28, 1],
                                              batch_size=validation_batch_size,
-                                             normalizer=ScaleFactor())
+                                             normalizer=scale_factor)
     directory = "./temp/cnn"
 
     # Creating graph
-    input_pl = train_data_shuffler("data")
+    inputs = train_data_shuffler("data")
+    labels = train_data_shuffler("label")
     graph = dict()
-    graph['left'] = scratch_network(input_pl['left'])
-    graph['right'] = scratch_network(input_pl['right'], reuse=True)
+    graph['left'] = scratch_network(inputs['left'])
+    graph['right'] = scratch_network(inputs['right'], reuse=True)
 
     # Loss for the softmax
-    loss = ContrastiveLoss(contrastive_margin=4.)
+    loss = contrastive_loss(graph['left'], graph['right'], labels, contrastive_margin=4.)
     # One graph trainer
     trainer = SiameseTrainer(train_data_shuffler,
                              iterations=iterations,

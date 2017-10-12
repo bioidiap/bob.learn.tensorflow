@@ -6,7 +6,7 @@ import numpy
 from bob.learn.tensorflow.utils import load_mnist
 import tensorflow as tf
 import os
-from bob.learn.tensorflow.loss import MeanSoftMaxLoss
+from bob.learn.tensorflow.loss import mean_cross_entropy_loss
 from bob.learn.tensorflow.datashuffler import TFRecord
 from bob.learn.tensorflow.trainers import Trainer, constant
 
@@ -106,8 +106,9 @@ def test_trainable_variables():
     train_data_shuffler  = TFRecord(filename_queue=filename_queue,
                                     batch_size=batch_size)
     
-    graph = base_network(train_data_shuffler)
-    loss = MeanSoftMaxLoss(add_regularization_losses=False)
+    logits = base_network(train_data_shuffler)
+    labels = train_data_shuffler("label", from_queue=True)
+    loss = mean_cross_entropy_loss(logits, labels)
 
     trainer = Trainer(train_data_shuffler,
                   iterations=iterations, #It is supper fast
@@ -115,7 +116,7 @@ def test_trainable_variables():
                   temp_dir=step1_path)
 
     learning_rate = constant(0.01, name="regular_lr")
-    trainer.create_network_from_scratch(graph=graph,
+    trainer.create_network_from_scratch(graph=logits,
                                         loss=loss,
                                         learning_rate=learning_rate,
                                         optimizer=tf.train.GradientDescentOptimizer(learning_rate),
@@ -137,9 +138,10 @@ def test_trainable_variables():
                                     batch_size=batch_size)
     
     # Here I'm creating the base network not trainable
-    graph = base_network(train_data_shuffler, get_embedding=True, trainable=False)
-    graph = amendment_network(graph)
-    loss = MeanSoftMaxLoss(add_regularization_losses=False)
+    embedding = base_network(train_data_shuffler, get_embedding=True, trainable=False)
+    embedding = amendment_network(embedding)
+    labels = train_data_shuffler("label", from_queue=True)
+    loss = mean_cross_entropy_loss(embedding, labels)
 
     trainer = Trainer(train_data_shuffler,
                   iterations=iterations, #It is supper fast
@@ -147,7 +149,7 @@ def test_trainable_variables():
                   temp_dir=step2_path)
 
     learning_rate = constant(0.01, name="regular_lr")
-    trainer.create_network_from_scratch(graph=graph,
+    trainer.create_network_from_scratch(graph=embedding,
                                         loss=loss,
                                         learning_rate=learning_rate,
                                         optimizer=tf.train.GradientDescentOptimizer(learning_rate),

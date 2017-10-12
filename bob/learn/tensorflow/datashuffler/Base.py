@@ -8,7 +8,6 @@ import tensorflow as tf
 import bob.ip.base
 import numpy
 import six
-from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 
 
 class Base(object):
@@ -55,7 +54,7 @@ class Base(object):
                  batch_size=32,
                  seed=10,
                  data_augmentation=None,
-                 normalizer=Linear(),
+                 normalizer=None,
                  prefetch=False,
                  prefetch_capacity=50,
                  prefetch_threads=5):
@@ -218,7 +217,10 @@ class Base(object):
         For the time being I'm only scaling from 0-1
         """
 
-        return self.normalizer(x)
+        if self.normalizer is None:
+            return x
+        else:
+            return self.normalizer(x)
 
     def _aggregate_batch(self, data_holder, use_list=False):
         size = len(data_holder[0])

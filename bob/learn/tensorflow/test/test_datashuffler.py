@@ -136,7 +136,7 @@ def test_tripletdisk_shuffler():
     assert batch[1].shape == (1, 250, 250, 3)
     assert batch[2].shape == (1, 250, 250, 3)
 
-
+"""
 def test_triplet_fast_selection_disk_shuffler():
     train_data, train_labels = get_dummy_files()
 
@@ -152,8 +152,9 @@ def test_triplet_fast_selection_disk_shuffler():
     assert len(batch[0].shape) == len(tuple(batch_shape))
     assert len(batch[1].shape) == len(tuple(batch_shape))
     assert len(batch[2].shape) == len(tuple(batch_shape))
+"""
 
-
+"""
 def test_triplet_selection_disk_shuffler():
     train_data, train_labels = get_dummy_files()
 
@@ -174,7 +175,7 @@ def test_triplet_selection_disk_shuffler():
     assert placeholders['anchor'].get_shape().as_list() == batch_shape
     assert placeholders['positive'].get_shape().as_list() == batch_shape
     assert placeholders['negative'].get_shape().as_list() == batch_shape
-
+"""
 
 def test_diskaudio_shuffler():
 

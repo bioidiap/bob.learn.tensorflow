@@ -7,7 +7,6 @@ import numpy
 import tensorflow as tf
 import bob.ip.base
 import numpy
-from bob.learn.tensorflow.datashuffler.Normalizer import Linear
 from .TFRecord import TFRecord
 
 class TFRecordImage(TFRecord):
