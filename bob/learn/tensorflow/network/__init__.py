@@ -1,5 +1,5 @@
 from .Chopra import chopra
-from .LightCNN9 import LightCNN9
+from .LightCNN9 import light_cnn9
 from .LightCNN29 import LightCNN29
 from .Dummy import Dummy
 from .MLP import MLP
@@ -24,7 +24,7 @@ def __appropriate__(*args):
 
 __appropriate__(
     Chopra,
-    LightCNN9,
+    light_cnn9,
     Dummy,
     MLP,
     )

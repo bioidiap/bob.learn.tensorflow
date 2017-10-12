@@ -120,7 +120,7 @@ def test_center_loss_tfrecord_embedding_validation():
                                         prelogits=prelogits
                                         )
     trainer.train()
-
+    
     assert True
     tf.reset_default_graph()
     del trainer

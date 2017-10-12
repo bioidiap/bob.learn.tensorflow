@@ -483,8 +483,8 @@ class Trainer(object):
 
         # Appending histograms for each trainable variables
         #for var in tf.trainable_variables():
-        for var in tf.global_variables():
-            tf.summary.histogram(var.op.name, var)
+        #for var in tf.global_variables():
+        #    tf.summary.histogram(var.op.name, var)
         
         # Train summary
         tf.summary.scalar('loss', average_loss)
