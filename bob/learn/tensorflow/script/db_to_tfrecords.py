@@ -8,9 +8,9 @@ Usage:
   %(prog)s --version
 
 Arguments:
-  <config_files>  The config files. The config files are loaded in order and
-                  they need to have several objects inside totally. See below
-                  for explanation.
+  <config_files>  The configuration files. The configuration files are loaded
+                  in order and they need to have several objects inside
+                  totally. See below for explanation.
 
 Options:
   -h --help  show this help message and exit
@@ -21,7 +21,7 @@ Idiap:
 
   $ jman submit -i -q q1d -- bin/python %(prog)s <config_files>...
 
-The config files should have the following objects totally:
+The configuration files should have the following objects totally:
 
   ## Required objects:
 
@@ -83,6 +83,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 import random
+# import pkg_resources so that bob imports work properly:
+import pkg_resources
 
 import tensorflow as tf
 from bob.io.base import create_directories_safe
@@ -91,17 +93,18 @@ from bob.core.log import setup, set_verbosity_level
 logger = setup(__name__)
 
 
-def _bytes_feature(value):
+def bytes_feature(value):
     return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
 
-def _int64_feature(value):
+def int64_feature(value):
     return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
 
-def write_a_sample(writer, data, label):
-    feature = {'train/data': _bytes_feature(data.tostring()),
-               'train/label': _int64_feature(label)}
+def write_a_sample(writer, data, label, feature=None):
+    if feature is None:
+        feature = {'train/data': bytes_feature(data.tostring()),
+                   'train/label': int64_feature(label)}
 
     example = tf.train.Example(features=tf.train.Features(feature=feature))
     writer.write(example.SerializeToString())
@@ -111,7 +114,6 @@ def main(argv=None):
     from docopt import docopt
     import os
     import sys
-    import pkg_resources
     docs = __doc__ % {'prog': os.path.basename(sys.argv[0])}
     version = pkg_resources.require('bob.learn.tensorflow')[0].version
     args = docopt(docs, argv=argv, version=version)
@@ -148,8 +150,7 @@ def main(argv=None):
                 logger.info('Processing file %d out of %d', i + 1, n_files)
 
                 path = f.make_path(data_dir, data_extension)
-                data = reader(path)
-                
+                data = reader(path)                
                 if data is None:
                   if allow_missing_files:
                       logger.debug("... Processing original data file '{0}' was not successful".format(path))
