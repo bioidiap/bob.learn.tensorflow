@@ -17,16 +17,14 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from bob.learn.tensorflow.utils.reproducible import session_conf
+# create reproducible nets:
+from bob.learn.tensorflow.utils.reproducible import run_config
 import tensorflow as tf
 
 model_dir = '/tmp/mnist_model'
 train_tfrecords = ['/tmp/mnist_data/train.tfrecords']
 eval_tfrecords = ['/tmp/mnist_data/test.tfrecords']
 
-# by default create reproducible nets:
-run_config = tf.estimator.RunConfig()
-run_config = run_config.replace(session_config=session_conf)
 run_config = run_config.replace(keep_checkpoint_max=10**3)
 run_config = run_config.replace(save_checkpoints_secs=60)
 

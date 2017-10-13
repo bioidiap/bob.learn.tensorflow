@@ -35,3 +35,6 @@ session_conf = tf.ConfigProto(intra_op_parallelism_threads=1,
 tf.set_random_seed(1234)
 # sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
 # keras.backend.set_session(sess)
+
+run_config = tf.estimator.RunConfig()
+run_config = run_config.replace(session_config=session_conf)
