@@ -96,6 +96,7 @@ def main(argv=None):
             except Exception:
                 print('Failed to find global_step for checkpoint_path {}, '
                       'skipping ...'.format(checkpoint_path))
+                continue
             if global_step in evaluated_steps:
                 continue
 
