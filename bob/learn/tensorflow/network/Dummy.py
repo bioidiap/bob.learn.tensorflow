@@ -4,33 +4,34 @@
 
 import tensorflow as tf
 
-def dummy(conv1_kernel_size=3, conv1_output=1, fc1_output=2, seed=10):
+
+def dummy(inputs, reuse=False):
     """
     Create all the necessary variables for this CNN
 
     **Parameters**
-        conv1_kernel_size:
-        conv1_output:
-        fc1_output:
-        seed = 10
+        inputs:
+        
+        reuse:
     """
 
     slim = tf.contrib.slim
-
     end_points = dict()
     
-    initializer = tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=seed)
-
-    graph = slim.conv2d(inputs, conv1_output, conv1_kernel_size, activation_fn=tf.nn.relu,
-                        stride=1,
-                        weights_initializer=initializer,
-                        scope='conv1')
+    
+    initializer = tf.contrib.layers.xavier_initializer()
+    
+    graph = slim.conv2d(inputs, 10, [3, 3], activation_fn=tf.nn.relu, stride=1, scope='conv1',
+                        weights_initializer=initializer, reuse=reuse)
     end_points['conv1'] = graph                            
-
+                            
+    graph = slim.max_pool2d(graph, [4, 4], scope='pool1')    
+    end_points['pool1'] = graph
+    
     graph = slim.flatten(graph, scope='flatten1')
     end_points['flatten1'] = graph        
 
-    graph = slim.fully_connected(graph, fc1_output,
+    graph = slim.fully_connected(graph, 50,
                                  weights_initializer=initializer,
                                  activation_fn=None,
                                  scope='fc1')
