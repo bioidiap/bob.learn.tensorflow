@@ -91,7 +91,11 @@ def main(argv=None):
             continue
 
         for checkpoint_path in ckpt.all_model_checkpoint_paths:
-            global_step = str(get_global_step(checkpoint_path))
+            try:
+                global_step = str(get_global_step(checkpoint_path))
+            except Exception:
+                print('Failed to find global_step for checkpoint_path {}, '
+                      'skipping ...'.format(checkpoint_path))
             if global_step in evaluated_steps:
                 continue
 
