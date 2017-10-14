@@ -63,28 +63,28 @@ def run_cnn(embedding_validation):
                                 optimizer=tf.train.GradientDescentOptimizer(learning_rate),
                                 n_classes=10,
                                 loss_op=mean_cross_entropy_loss,
-                                embedding_validation=embedding_validation)
+                                embedding_validation=embedding_validation,
+                                validation_batch_size=validation_batch_size
+                                )
 
-        data, labels = shuffle_data_and_labels([tfrecord_train], data_shape, data_type, batch_size, epochs=epochs)                            
         def input_fn():
             return shuffle_data_and_labels(tfrecord_train, data_shape, data_type,
-                                       batch_size, epochs=epochs)
+                                           batch_size, epochs=epochs)
                                        
         def input_fn_validation():
             return batch_data_and_labels(tfrecord_validation, data_shape, data_type,
                                          validation_batch_size, epochs=epochs)                                       
 
         hooks = [LoggerHookEstimator(trainer, 16, 100)]
-        trainer.train(input_fn, steps=steps, hooks = hooks)
+        trainer.train(input_fn, steps=steps, hooks=hooks)
         
-        # TODO: REMOVE THIS HACK
         if not embedding_validation:
             acc = trainer.evaluate(input_fn_validation)
-            assert acc > 0.80
+            assert acc['accuracy'] > 0.80
         else:
-            assert True
-          
-        
+            acc = trainer.evaluate(input_fn_validation)
+            assert acc['accuracy'] > 0.80
+
     finally:
         try:
             os.unlink(tfrecord_train)

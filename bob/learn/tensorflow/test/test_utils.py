@@ -3,13 +3,15 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 
 import numpy
-from bob.learn.tensorflow.utils import compute_embedding_accuracy, cdist, compute_embedding_accuracy_tensors
+from bob.learn.tensorflow.utils import compute_embedding_accuracy, cdist,\
+     compute_embedding_accuracy_tensors, predict_using_tensors
 
 import tensorflow as tf
 
 """
 Some unit tests for the datashuffler
 """
+
 
 def test_embedding_accuracy():
 
@@ -53,8 +55,7 @@ def test_embedding_accuracy_tensors():
     
     data = tf.convert_to_tensor(data.astype("float32"))
     labels = tf.convert_to_tensor(labels.astype("int64"))
-    
+
     sess = tf.Session()
     accuracy = sess.run(compute_embedding_accuracy_tensors(data, labels))
     assert accuracy == 1.
-

@@ -15,7 +15,7 @@ import time
 from bob.learn.tensorflow.network.utils import append_logits
 from tensorflow.python.estimator import estimator
 from bob.learn.tensorflow.utils import reproducible
-from bob.learn.tensorflow.utils import compute_embedding_accuracy_tensors
+from bob.learn.tensorflow.utils import predict_using_tensors
 
 
 import logging
@@ -48,6 +48,10 @@ class LogitsTrainer(estimator.Estimator):
       
       model_dir:
         Model path
+
+      validation_batch_size:
+        Size of the batch for validation. This value is used when the
+        validation with embeddings is used. This is a hack.
     """
 
     def __init__(self,
@@ -58,6 +62,7 @@ class LogitsTrainer(estimator.Estimator):
                  loss_op=None,
                  embedding_validation=False,
                  model_dir="",
+                 validation_batch_size=None,
               ):
 
         self.architecture = architecture
@@ -79,7 +84,6 @@ class LogitsTrainer(estimator.Estimator):
         if self.n_classes <=0:
             raise ValueError("Number of classes must be greated than 0")
 
-
         def _model_fn(features, labels, mode, params, config):
             
             # Building one graph
@@ -90,7 +94,7 @@ class LogitsTrainer(estimator.Estimator):
                 # Compute the embeddings
                 embeddings = tf.nn.l2_normalize(prelogits, 1)
                 predictions = {
-                    "embeddings":embeddings                    
+                    "embeddings": embeddings
                 }
                 
             else:
@@ -107,7 +111,6 @@ class LogitsTrainer(estimator.Estimator):
 
             # Calculate Loss (for both TRAIN and EVAL modes)
             self.loss = self.loss_op(logits, labels)
-            
 
             # Configure the Training Op (for TRAIN mode)
             if mode == tf.estimator.ModeKeys.TRAIN:
@@ -117,8 +120,8 @@ class LogitsTrainer(estimator.Estimator):
                                                   train_op=train_op)
 
             if self.embedding_validation:
-                #eval_metric_ops = {"accuracy": compute_embedding_accuracy_tensors(predictions["embeddings"], labels)}
-                eval_metric_ops = {} # TODO: I still don't know how to compute this with an unknown size
+                predictions_op = predict_using_tensors(predictions["embeddings"], labels, num=validation_batch_size)
+                eval_metric_ops = {"accuracy": tf.metrics.accuracy(labels=labels, predictions=predictions_op)}
                 return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss, eval_metric_ops=eval_metric_ops)
             
             else:

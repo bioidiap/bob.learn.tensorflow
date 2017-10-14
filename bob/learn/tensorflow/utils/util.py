@@ -46,7 +46,6 @@ def load_mnist(perc_train=0.9):
     return train_data, train_labels, validation_data, validation_labels
 
 
-
 def create_mnist_tfrecord(tfrecords_filename, data, labels, n_samples=6000):
 
     def _bytes_feature(value):
@@ -150,43 +149,59 @@ def debug_embbeding(image, architecture, embbeding_dim=2, feature_layer="fc3"):
         embeddings[i] = embedding
 
     return embeddings
-    
 
 
 def cdist(A):
+    """
+    Compute a pairwise euclidean distance in the same fashion
+    as in scipy.spation.distance.cdist
+    """
     with tf.variable_scope('Pairwisedistance'):
+        #ones_1 = tf.ones(shape=(1, A.shape.as_list()[0]))
+        ones_1 = tf.reshape(tf.cast(tf.ones_like(A), tf.float32)[:, 0], [1, -1])
         p1 = tf.matmul(
             tf.expand_dims(tf.reduce_sum(tf.square(A), 1), 1),
-            tf.ones(shape=(1, A.shape.as_list()[0]))
+            ones_1
         )
+
+        #ones_2 = tf.ones(shape=(A.shape.as_list()[0], 1))
+        ones_2 = tf.reshape(tf.cast(tf.ones_like(A), tf.float32)[:, 0], [-1, 1])
         p2 = tf.transpose(tf.matmul(
             tf.reshape(tf.reduce_sum(tf.square(A), 1), shape=[-1, 1]),
-            tf.ones(shape=(A.shape.as_list()[0], 1)),
+            ones_2,
             transpose_b=True
         ))
 
         return tf.sqrt(tf.add(p1, p2) - 2 * tf.matmul(A, A, transpose_b=True))
 
 
-def compute_embedding_accuracy_tensors(embedding, labels):
+def predict_using_tensors(embedding, labels, num=None):
     """
-    Compute the accuracy through exhaustive comparisons between the embeddings using tensors
+    Compute the predictions through exhaustive comparisons between
+    embeddings using tensors
     """
-    
-    distances = cdist(embedding)
 
     # Fitting the main diagonal with infs (removing comparisons with the same sample)
-    inf = numpy.ones(10)*numpy.inf
-    inf = inf.astype("float32")
+    inf = tf.cast(tf.ones_like(labels), tf.float32) * numpy.inf
 
     distances = cdist(embedding)
     distances = tf.matrix_set_diag(distances, inf)
     indexes = tf.argmin(distances, axis=1)
+    return [labels[i] for i in tf.unstack(indexes, num=num)]
 
-    matching = [ tf.equal(labels[i],labels[j]) for i,j in zip(range(indexes.get_shape().as_list()[0]), tf.unstack(indexes))]
-    return tf.reduce_sum(tf.cast(matching, tf.uint8))/indexes.get_shape().as_list()[0]
 
-    
+def compute_embedding_accuracy_tensors(embedding, labels, num=None):
+    """
+    Compute the accuracy through exhaustive comparisons between the embeddings using tensors
+    """
+
+    # Fitting the main diagonal with infs (removing comparisons with the same sample)
+    predictions = predict_using_tensors(embedding, labels, num=num)
+    matching = [tf.equal(p, l) for p, l in zip(tf.unstack(predictions, num=num), tf.unstack(labels, num=num))]
+
+    return tf.reduce_sum(tf.cast(matching, tf.uint8))/len(predictions)
+
+
 def compute_embedding_accuracy(embedding, labels):
     """
     Compute the accuracy through exhaustive comparisons between the embeddings 
