@@ -32,9 +32,11 @@ session_conf = tf.ConfigProto(intra_op_parallelism_threads=1,
 # in the TensorFlow backend have a well-defined initial state.
 # For further details, see:
 # https://www.tensorflow.org/api_docs/python/tf/set_random_seed
-tf.set_random_seed(1234)
+tf_random_seed = 1234
+tf.set_random_seed(tf_random_seed)
 # sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
 # keras.backend.set_session(sess)
 
 run_config = tf.estimator.RunConfig()
 run_config = run_config.replace(session_config=session_conf)
+run_config = run_config.replace(tf_random_seed=tf_random_seed)

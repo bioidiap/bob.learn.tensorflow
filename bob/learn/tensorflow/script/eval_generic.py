@@ -63,7 +63,7 @@ def main(argv=None):
     model_fn = config.model_fn
     eval_input_fn = config.eval_input_fn
 
-    eval_interval_secs = getattr(config, 'eval_interval_secs', 300)
+    eval_interval_secs = getattr(config, 'eval_interval_secs', 60)
     run_once = getattr(config, 'run_once', False)
     run_config = getattr(config, 'run_config', None)
     model_params = getattr(config, 'model_params', None)
@@ -75,7 +75,7 @@ def main(argv=None):
     nn = tf.estimator.Estimator(model_fn=model_fn, model_dir=model_dir,
                                 params=model_params, config=run_config)
     if name:
-        real_name = name + '_eval'
+        real_name = 'eval_' + name
     else:
         real_name = 'eval'
     evaluated_file = os.path.join(nn.model_dir, real_name, 'evaluated')

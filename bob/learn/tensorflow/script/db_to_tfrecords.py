@@ -150,14 +150,14 @@ def main(argv=None):
                 logger.info('Processing file %d out of %d', i + 1, n_files)
 
                 path = f.make_path(data_dir, data_extension)
-                data = reader(path)                
+                data = reader(path)
                 if data is None:
                   if allow_missing_files:
                       logger.debug("... Processing original data file '{0}' was not successful".format(path))
                       continue
                   else:
                       raise RuntimeError("Preprocessing of file '{0}' was not successful".format(path))
-                
+
                 label = file_to_label(f)
 
                 if one_file_one_sample:
