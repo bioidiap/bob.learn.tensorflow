@@ -14,7 +14,7 @@ from bob.learn.tensorflow.script.eval_generic import main as eval_generic
 dummy_tfrecord_config = datafile('dummy_verify_config.py', __name__)
 CONFIG = '''
 import tensorflow as tf
-from bob.learn.tensorflow.utils.tfrecords import shuffle_data_and_labels, \
+from bob.learn.tensorflow.dataset.tfrecords import shuffle_data_and_labels, \
     batch_data_and_labels
 
 model_dir = "%(model_dir)s"
