@@ -3,80 +3,86 @@
 """Converts Bio and PAD datasets to TFRecords file formats.
 
 Usage:
-  %(prog)s <config_files>... [--allow-missing-files]
-  %(prog)s --help
-  %(prog)s --version
+    %(prog)s [-v...] [options] <config_files>...
+    %(prog)s --help
+    %(prog)s --version
 
 Arguments:
-  <config_files>  The configuration files. The configuration files are loaded
-                  in order and they need to have several objects inside
-                  totally. See below for explanation.
+    <config_files>              The configuration files. The configuration
+                                files are loaded in order and they need to have
+                                several objects inside totally. See below for
+                                explanation.
 
 Options:
-  -h --help  show this help message and exit
-  --version  show version and exit
+    -h --help                   Show this help message and exit
+    --version                   Show version and exit
+    -o PATH, --output PATH      Name of the output file.
+    --shuffle                   If provided, it will shuffle the samples.
+    --allow-failures            If provided, the samples which fail to load are
+                                ignored.
+    --multiple-samples          If provided, it means that the data provided by
+                                reader contains multiple samples with same
+                                label and path.
+    -v, --verbose               Increases the output verbosity level
 
 The best way to use this script is to send it to the io-big queue if you are at
 Idiap:
 
-  $ jman submit -i -q q1d -- bin/python %(prog)s <config_files>...
+    $ jman submit -i -q q1d -- %(prog)s <config_files>...
 
-The configuration files should have the following objects totally:
+The configuration files should have the following objects totally::
 
-  ## Required objects:
+    # Required objects:
+    samples : a list of all samples that you want to write in the tfrecords
+              file. Whatever is inside this list is passed to the reader.
+    reader  : a function with the signature of
+              `data, label, key = reader(sample)` which takes a sample and
+              returns the loaded data, the label of the data, and a key which
+              is unique for every sample.
 
-  # you need a database object that inherits from
-  # bob.bio.base.database.BioDatabase (PAD dbs work too)
-  database = Database()
+You can also provide the command line options in the configuration file too.
+It is needed to replace "-" with "_" when they are in the configuration file.
+The ones provided by command line overwrite the values of the config file.
 
-  # the directory pointing to where the processed data is:
-  data_dir = '/idiap/temp/user/database_name/sub_directory/preprocessed'
+An example for mnist would be::
 
-  # the directory to save the tfrecords in:
-  output_dir = '/idiap/temp/user/database_name/sub_directory'
+    from bob.db.mnist import Database
+    db = Database()
+    data, labels = db.data(groups='train')
 
-  # A function that converts a BioFile or a PadFile to a label:
-  # Example for PAD
-  def file_to_label(f):
-      return f.attack_type is None
+    samples = zip(data, labels, (str(i) for i in range(len(data))))
 
-  # Example for Bio (You may want to run this script for groups=['world'] only
-  # in biometric recognition experiments.)
-  CLIENT_IDS = (str(f.client_id) for f in db.all_files(groups=groups))
-  CLIENT_IDS = list(set(CLIENT_IDS))
-  CLIENT_IDS = dict(zip(CLIENT_IDS, range(len(CLIENT_IDS))))
+    def reader(sample):
+        return sample
 
-  def file_to_label(f):
-      return CLIENT_IDS[str(f.client_id)]
+    allow_failures = True
+    output = '/tmp/mnist_train.tfrecords'
+    shuffle = True
 
-  ## Optional objects:
+An example for bob.bio.base would be::
 
-  # The groups that you want to create tfrecords for. It should be a list of
-  # 'world' ('train' in bob.pad.base), 'dev', and 'eval' values. [default:
-  # 'world']
-  groups = ['world']
+    from bob.bio.base.test.dummy.database import database
+    from bob.bio.base.test.dummy.preprocessor import preprocessor
 
-  # you need a reader function that reads the preprocessed files. [default:
-  # bob.bio.base.utils.load]
-  reader = Preprocessor().read_data
-  reader = Extractor().read_feature
-  # or
-  from bob.bio.base.utils import load as reader
-  # or a reader that casts images to uint8:
-  def reader(path):
-    data = bob.bio.base.utils.load(path)
-    return data.astype("uint8")
+    groups = 'dev'
 
-  # extension of the preprocessed files. [default: '.hdf5']
-  data_extension = '.hdf5'
+    samples = database.all_files(groups=groups)
 
-  # Shuffle the files before writing them into a tfrecords. [default: False]
-  shuffle = True
+    CLIENT_IDS = (str(f.client_id) for f in database.all_files(groups=groups))
+    CLIENT_IDS = list(set(CLIENT_IDS))
+    CLIENT_IDS = dict(zip(CLIENT_IDS, range(len(CLIENT_IDS))))
 
-  # Whether the each file contains one sample or more. [default: True] If
-  # this is False, the loaded samples from a file are iterated over and each
-  # of them is saved as an independent feature.
-  one_file_one_sample = True
+
+    def file_to_label(f):
+        return CLIENT_IDS[str(f.client_id)]
+
+
+    def reader(biofile):
+        data = preprocessor.read_original_data(
+            biofile, database.original_directory, database.original_extension)
+        label = file_to_label(biofile)
+        key = biofile.path
+        return (data, label, key)
 """
 
 from __future__ import absolute_import
@@ -85,10 +91,12 @@ from __future__ import print_function
 import random
 # import pkg_resources so that bob imports work properly:
 import pkg_resources
-
+import six
 import tensorflow as tf
 from bob.io.base import create_directories_safe
-from bob.bio.base.utils import load, read_config_file
+from bob.bio.base.utils import read_config_file
+from bob.learn.tensorflow.utils.commandline import \
+    get_from_config_or_commandline
 from bob.core.log import setup, set_verbosity_level
 logger = setup(__name__)
 
@@ -101,10 +109,11 @@ def int64_feature(value):
     return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
 
-def write_a_sample(writer, data, label, feature=None):
+def write_a_sample(writer, data, label, key, feature=None):
     if feature is None:
-        feature = {'train/data': bytes_feature(data.tostring()),
-                   'train/label': int64_feature(label)}
+        feature = {'data': bytes_feature(data.tostring()),
+                   'label': int64_feature(label),
+                   'key': bytes_feature(key)}
 
     example = tf.train.Example(features=tf.train.Features(feature=feature))
     writer.write(example.SerializeToString())
@@ -116,55 +125,62 @@ def main(argv=None):
     import sys
     docs = __doc__ % {'prog': os.path.basename(sys.argv[0])}
     version = pkg_resources.require('bob.learn.tensorflow')[0].version
+    defaults = docopt(docs, argv=[""])
     args = docopt(docs, argv=argv, version=version)
     config_files = args['<config_files>']
     config = read_config_file(config_files)
-    allow_missing_files = args['--allow-missing-files']
+
+    # optional arguments
+    verbosity = get_from_config_or_commandline(
+        config, 'verbose', args, defaults)
+    allow_failures = get_from_config_or_commandline(
+        config, 'allow_failures', args, defaults)
+    multiple_samples = get_from_config_or_commandline(
+        config, 'multiple_samples', args, defaults)
+    shuffle = get_from_config_or_commandline(
+        config, 'shuffle', args, defaults)
 
     # Sets-up logging
-    verbosity = getattr(config, 'verbose', 0)
     set_verbosity_level(logger, verbosity)
 
-    database = config.database
-    data_dir, output_dir = config.data_dir, config.output_dir
-    file_to_label = config.file_to_label
+    # required arguments
+    samples = config.samples
+    reader = config.reader
+    output = get_from_config_or_commandline(
+        config, 'output', args, defaults, False)
 
-    reader = getattr(config, 'reader', load)
-    groups = getattr(config, 'groups', ['world'])
-    data_extension = getattr(config, 'data_extension', '.hdf5')
-    shuffle = getattr(config, 'shuffle', False)
-    one_file_one_sample = getattr(config, 'one_file_one_sample', True)
+    if not output.endswith(".tfrecords"):
+        output += ".tfrecords"
 
-    create_directories_safe(output_dir)
-    if not isinstance(groups, (list, tuple)):
-        groups = [groups]
+    create_directories_safe(os.path.dirname(output))
 
-    for group in groups:
-        output_file = os.path.join(output_dir, '{}.tfrecords'.format(group))
-        files = database.all_files(groups=group)
+    n_samples = len(samples)
+    sample_counter = 0
+    with tf.python_io.TFRecordWriter(output) as writer:
         if shuffle:
-            random.shuffle(files)
-        n_files = len(files)
-        with tf.python_io.TFRecordWriter(output_file) as writer:
-            for i, f in enumerate(files):
-                logger.info('Processing file %d out of %d', i + 1, n_files)
+            random.shuffle(samples)
+        for i, sample in enumerate(samples):
+            logger.info('Processing file %d out of %d', i + 1, n_samples)
 
-                path = f.make_path(data_dir, data_extension)
-                data = reader(path)                
-                if data is None:
-                  if allow_missing_files:
-                      logger.debug("... Processing original data file '{0}' was not successful".format(path))
-                      continue
-                  else:
-                      raise RuntimeError("Preprocessing of file '{0}' was not successful".format(path))
-                
-                label = file_to_label(f)
+            data, label, key = reader(sample)
 
-                if one_file_one_sample:
-                    write_a_sample(writer, data, label)
+            if data is None:
+                if allow_failures:
+                    logger.debug("... Skipping `{0}`.".format(sample))
+                    continue
                 else:
-                    for sample in data:
-                        write_a_sample(writer, sample, label)
+                    raise RuntimeError(
+                        "Reading failed for `{0}`".format(sample))
+
+            if multiple_samples:
+                for sample in data:
+                    write_a_sample(writer, sample, label, key)
+                    sample_counter += 1
+            else:
+                write_a_sample(writer, data, label, key)
+                sample_counter += 1
+
+    print("Wrote {} samples into the tfrecords file.".format(sample_counter))
 
 
 if __name__ == '__main__':
