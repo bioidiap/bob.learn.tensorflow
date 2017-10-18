@@ -66,9 +66,7 @@ def main(argv=None):
 
     if run_config is None:
         # by default create reproducible nets:
-        from bob.learn.tensorflow.utils.reproducible import session_conf
-        run_config = tf.estimator.RunConfig()
-        run_config.replace(session_config=session_conf)
+        from bob.learn.tensorflow.utils.reproducible import run_config
 
     # Instantiate Estimator
     nn = tf.estimator.Estimator(model_fn=model_fn, model_dir=model_dir,

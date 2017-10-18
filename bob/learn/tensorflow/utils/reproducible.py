@@ -25,13 +25,18 @@ rn.seed(12345)
 # non-reproducible results.
 # For further details, see:
 # https://stackoverflow.com/questions/42022950/which-seeds-have-to-be-set-where-to-realize-100-reproducibility-of-training-res
-session_conf = tf.ConfigProto(intra_op_parallelism_threads=1,
-                              inter_op_parallelism_threads=1)
+session_config = tf.ConfigProto(intra_op_parallelism_threads=1,
+                                inter_op_parallelism_threads=1)
 
 # The below tf.set_random_seed() will make random number generation
 # in the TensorFlow backend have a well-defined initial state.
 # For further details, see:
 # https://www.tensorflow.org/api_docs/python/tf/set_random_seed
-tf.set_random_seed(1234)
-# sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+tf_random_seed = 1234
+tf.set_random_seed(tf_random_seed)
+# sess = tf.Session(graph=tf.get_default_graph(), config=session_config)
 # keras.backend.set_session(sess)
+
+run_config = tf.estimator.RunConfig()
+run_config = run_config.replace(session_config=session_config)
+run_config = run_config.replace(tf_random_seed=tf_random_seed)
