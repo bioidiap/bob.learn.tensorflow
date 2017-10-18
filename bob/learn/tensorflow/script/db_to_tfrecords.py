@@ -62,7 +62,7 @@ An example for mnist would be::
 An example for bob.bio.base would be::
 
     from bob.bio.base.test.dummy.database import database
-    from bob.bio.base.test.dummy.preprocessor import preprocessor
+    from bob.bio.base.utils import read_original_data
 
     groups = 'dev'
 
@@ -78,7 +78,7 @@ An example for bob.bio.base would be::
 
 
     def reader(biofile):
-        data = preprocessor.read_original_data(
+        data = read_original_data(
             biofile, database.original_directory, database.original_extension)
         label = file_to_label(biofile)
         key = biofile.path
