@@ -17,9 +17,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-# by default create reproducible nets:
+# create reproducible nets:
 from bob.learn.tensorflow.utils.reproducible import run_config
-# utils.reproducible import run_config
 import tensorflow as tf
 from bob.db.mnist import Database
 
