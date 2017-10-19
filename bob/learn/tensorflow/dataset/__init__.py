@@ -1,12 +1,12 @@
 import tensorflow as tf
 import numpy
 
-DEFAULT_FEATURE = {'train/data': tf.FixedLenFeature([], tf.string),
-                   'train/label': tf.FixedLenFeature([], tf.int64)}
+DEFAULT_FEATURE = {'data': tf.FixedLenFeature([], tf.string),
+                   'label': tf.FixedLenFeature([], tf.int64),
+                   'key': tf.FixedLenFeature([], tf.string)}
 
 
-
-def append_image_augmentation(image, gray_scale=False, 
+def append_image_augmentation(image, gray_scale=False,
                               output_shape=None,
                               random_flip=False,
                               random_brightness=False,
@@ -15,11 +15,11 @@ def append_image_augmentation(image, gray_scale=False,
                               per_image_normalization=True):
     """
     Append to the current tensor some random image augmentation operation
-    
+
     **Parameters**
        gray_scale:
           Convert to gray scale?
-          
+
        output_shape:
           If set, will randomly crop the image given the output shape
 
@@ -37,16 +37,16 @@ def append_image_augmentation(image, gray_scale=False,
 
        per_image_normalization:
            Linearly scales image to have zero mean and unit norm.
-       
+
     """
 
     # Casting to float32
     image = tf.cast(image, tf.float32)
 
     if output_shape is not None:
-        assert len(output_shape) == 2        
+        assert len(output_shape) == 2
         image = tf.image.resize_image_with_crop_or_pad(image, output_shape[0], output_shape[1])
-        
+
     if random_flip:
         image = tf.image.random_flip_left_right(image)
 
@@ -68,17 +68,17 @@ def append_image_augmentation(image, gray_scale=False,
         image = tf.image.per_image_standardization(image)
 
     return image
-    
-    
+
+
 def siamease_pairs_generator(input_data, input_labels):
     """
     Giving a list of samples and a list of labels, it dumps a series of
     pairs for siamese nets.
-    
+
     **Parameters**
 
       input_data: List of whatever representing the data samples
-      
+
       input_labels: List of the labels (needs to be in EXACT same order as input_data)
     """
 
@@ -86,7 +86,7 @@ def siamease_pairs_generator(input_data, input_labels):
     left_data = []
     right_data = []
     labels = []
-    
+
     def append(left, right, label):
         """
         Just appending one element in each list
@@ -97,8 +97,8 @@ def siamease_pairs_generator(input_data, input_labels):
 
     possible_labels = list(set(input_labels))
     input_data = numpy.array(input_data)
-    input_labels = numpy.array(input_labels)    
-    total_samples = input_data.shape[0] 
+    input_labels = numpy.array(input_labels)
+    total_samples = input_data.shape[0]
 
     # Filtering the samples by label and shuffling all the indexes
     indexes_per_labels = dict()
@@ -107,7 +107,7 @@ def siamease_pairs_generator(input_data, input_labels):
         numpy.random.shuffle(indexes_per_labels[l])
 
     left_possible_indexes = numpy.random.choice(possible_labels, total_samples, replace=True)
-    right_possible_indexes = numpy.random.choice(possible_labels, total_samples, replace=True)       
+    right_possible_indexes = numpy.random.choice(possible_labels, total_samples, replace=True)
 
     genuine = True
     for i in range(total_samples):
@@ -142,6 +142,67 @@ def siamease_pairs_generator(input_data, input_labels):
                 append(left, right, 1)
 
 
-        genuine = not genuine    
+        genuine = not genuine
     return left_data, right_data, labels
 
+
+def blocks_tensorflow(images, block_size):
+    """Return all non-overlapping blocks of an image using tensorflow
+    operations.
+
+    Parameters
+    ----------
+    images : :any:`tf.Tensor`
+        The input color images. It is assumed that the image has a shape of
+        [?, H, W, C].
+    block_size : (int, int)
+        A tuple of two integers indicating the block size.
+
+    Returns
+    -------
+    blocks : :any:`tf.Tensor`
+        All the blocks in the batch dimension. The output will be of
+        size [?, block_size[0], block_size[1], C].
+    n_blocks : int
+        The number of blocks that was obtained per image.
+    """
+    # normalize block_size
+    block_size = [1] + list(block_size) + [1]
+    output_size = list(block_size)
+    output_size[0] = -1
+    # extract image patches for each color space:
+    output = []
+    for i in range(3):
+        blocks = tf.extract_image_patches(
+            images[:, :, :, i:i + 1], block_size, block_size, [1, 1, 1, 1],
+            "VALID")
+        if i == 0:
+            n_blocks = int(numpy.prod(blocks.shape[1:3]))
+        blocks = tf.reshape(blocks, output_size)
+        output.append(blocks)
+    # concatenate the colors back
+    output = tf.concat(output, axis=3)
+    return output, n_blocks
+
+
+def tf_repeat(tensor, repeats):
+    """
+    Parameters
+    ----------
+    tensor
+        A Tensor. 1-D or higher.
+    repeats
+        A list. Number of repeat for each dimension, length must be the same as
+        the number of dimensions in input
+
+    Returns
+    -------
+    A Tensor. Has the same type as input. Has the shape of tensor.shape *
+    repeats
+    """
+    with tf.variable_scope("repeat"):
+        expanded_tensor = tf.expand_dims(tensor, -1)
+        multiples = [1] + repeats
+        tiled_tensor = tf.tile(expanded_tensor, multiples=multiples)
+        repeated_tesnor = tf.reshape(tiled_tensor, tf.shape(tensor) * repeats)
+    return repeated_tesnor
