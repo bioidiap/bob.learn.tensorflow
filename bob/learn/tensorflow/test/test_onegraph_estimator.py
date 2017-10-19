@@ -5,7 +5,7 @@
 import tensorflow as tf
 
 from bob.learn.tensorflow.network import dummy
-from bob.learn.tensorflow.trainers import LogitsTrainer, LogitsCenterLossTrainer
+from bob.learn.tensorflow.estimators import Logits, LogitsCenterLoss
 
 from bob.learn.tensorflow.dataset.tfrecords import shuffle_data_and_labels, batch_data_and_labels, shuffle_data_and_labels_image_augmentation
 
@@ -39,7 +39,7 @@ def test_logitstrainer():
     # Trainer logits
     try:
         embedding_validation = False
-        trainer = LogitsTrainer(model_dir=model_dir,
+        trainer = Logits(model_dir=model_dir,
                                 architecture=dummy,
                                 optimizer=tf.train.GradientDescentOptimizer(learning_rate),
                                 n_classes=10,
@@ -59,7 +59,7 @@ def test_logitstrainer():
 def test_logitstrainer_embedding():
     try:
         embedding_validation = True
-        trainer = LogitsTrainer(model_dir=model_dir,
+        trainer = Logits(model_dir=model_dir,
                                 architecture=dummy,
                                 optimizer=tf.train.GradientDescentOptimizer(learning_rate),
                                 n_classes=10,
@@ -82,7 +82,7 @@ def test_logitstrainer_centerloss():
         embedding_validation = False
         run_config = tf.estimator.RunConfig()
         run_config = run_config.replace(save_checkpoints_steps=1000)
-        trainer = LogitsCenterLossTrainer(
+        trainer = LogitsCenterLoss(
                                 model_dir=model_dir,
                                 architecture=dummy,
                                 optimizer=tf.train.GradientDescentOptimizer(learning_rate),
@@ -115,7 +115,7 @@ def test_logitstrainer_centerloss():
 def test_logitstrainer_centerloss_embedding():
     try:
         embedding_validation = True
-        trainer = LogitsCenterLossTrainer(
+        trainer = LogitsCenterLoss(
                                 model_dir=model_dir,
                                 architecture=dummy,
                                 optimizer=tf.train.GradientDescentOptimizer(learning_rate),

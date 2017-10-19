@@ -22,7 +22,7 @@ import logging
 logger = logging.getLogger("bob.learn")
 
 
-class LogitsTrainer(estimator.Estimator):
+class Logits(estimator.Estimator):
     """
     NN Trainer whose with logits as last layer
 
@@ -149,12 +149,12 @@ class LogitsTrainer(estimator.Estimator):
                 return tf.estimator.EstimatorSpec(
                     mode=mode, loss=self.loss, eval_metric_ops=eval_metric_ops)
 
-        super(LogitsTrainer, self).__init__(model_fn=_model_fn,
-                                            model_dir=model_dir,
-                                            config=config)
+        super(Logits, self).__init__(model_fn=_model_fn,
+                                     model_dir=model_dir,
+                                     config=config)
 
 
-class LogitsCenterLossTrainer(estimator.Estimator):
+class LogitsCenterLoss(estimator.Estimator):
     """
     NN Trainer whose with logits as last layer
 
@@ -281,6 +281,6 @@ class LogitsCenterLossTrainer(estimator.Estimator):
                 return tf.estimator.EstimatorSpec(
                     mode=mode, loss=self.loss, eval_metric_ops=eval_metric_ops)
 
-        super(LogitsCenterLossTrainer, self).__init__(model_fn=_model_fn,
-                                                      model_dir=model_dir,
-                                                      config=config)
+        super(LogitsCenterLoss, self).__init__(model_fn=_model_fn,
+                                               model_dir=model_dir,
+                                               config=config)

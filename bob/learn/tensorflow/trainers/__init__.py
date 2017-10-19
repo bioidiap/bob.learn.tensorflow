@@ -3,7 +3,6 @@ from .Trainer import Trainer
 from .SiameseTrainer import SiameseTrainer
 from .TripletTrainer import TripletTrainer
 from .learning_rate import exponential_decay, constant
-from .LogitsTrainer import LogitsTrainer, LogitsCenterLossTrainer
 import numpy
 
 

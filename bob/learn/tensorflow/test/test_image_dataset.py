@@ -52,6 +52,7 @@ def test_logitstrainer_images():
             shutil.rmtree(model_dir, ignore_errors=True)
         except Exception:
             pass        
+    
 
 def run_logitstrainer_images(trainer):
     # Cleaning up
@@ -92,5 +93,4 @@ def run_logitstrainer_images(trainer):
     # Cleaning up
     tf.reset_default_graph()
     assert len(tf.global_variables()) == 0
-
 
