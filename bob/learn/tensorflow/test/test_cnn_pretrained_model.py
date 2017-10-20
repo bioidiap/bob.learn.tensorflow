@@ -7,7 +7,7 @@ import numpy
 import bob.io.base
 import os
 from bob.learn.tensorflow.datashuffler import Memory, TripletMemory, SiameseMemory, scale_factor
-from bob.learn.tensorflow.loss import mean_cross_entropy_loss, contrastive_loss, triplet_loss
+from bob.learn.tensorflow.loss import mean_cross_entropy_loss, contrastive_loss_deprecated, triplet_loss
 from bob.learn.tensorflow.trainers import Trainer, constant, TripletTrainer, SiameseTrainer
 from bob.learn.tensorflow.utils import load_mnist
 from bob.learn.tensorflow.network import Embedding
@@ -59,8 +59,7 @@ def test_cnn_pretrained():
     # Creating datashufflers    
     train_data_shuffler = Memory(train_data, train_labels,
                                  input_shape=[None, 28, 28, 1],
-                                 batch_size=batch_size,
-                                 normalizer=scale_factor)
+                                 batch_size=batch_size)
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
     directory = "./temp/cnn"
 
@@ -83,7 +82,7 @@ def test_cnn_pretrained():
                                         learning_rate=constant(0.1, name="regular_lr"),
                                         optimizer=tf.train.GradientDescentOptimizer(0.1))
     trainer.train()
-    accuracy = validate_network(embedding, validation_data, validation_labels)
+    accuracy = validate_network(embedding, validation_data, validation_labels, normalizer=None)
 
 
     assert accuracy > 20
@@ -103,7 +102,7 @@ def test_cnn_pretrained():
     trainer.create_network_from_file(os.path.join(directory, "model.ckp.meta"))
     trainer.train()
     embedding = Embedding(trainer.data_ph, trainer.graph)
-    accuracy = validate_network(embedding, validation_data, validation_labels)
+    accuracy = validate_network(embedding, validation_data, validation_labels, normalizer=None)
     assert accuracy > 50
     shutil.rmtree(directory)
 
@@ -193,14 +192,12 @@ def test_siamese_cnn_pretrained():
     # Creating datashufflers
     train_data_shuffler = SiameseMemory(train_data, train_labels,
                                         input_shape=[None, 28, 28, 1],
-                                        batch_size=batch_size,
-                                        normalizer=scale_factor)
+                                        batch_size=batch_size)
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
 
     validation_data_shuffler = SiameseMemory(validation_data, validation_labels,
                                              input_shape=[None, 28, 28, 1],
-                                             batch_size=validation_batch_size,
-                                             normalizer=scale_factor)
+                                             batch_size=validation_batch_size)
     directory = "./temp/cnn"
 
     # Creating graph
@@ -211,7 +208,7 @@ def test_siamese_cnn_pretrained():
     graph['right'] = scratch_network(inputs['right'], reuse=True)
 
     # Loss for the softmax
-    loss = contrastive_loss(graph['left'], graph['right'], labels, contrastive_margin=4.)
+    loss = contrastive_loss_deprecated(graph['left'], graph['right'], labels, contrastive_margin=4.)
     # One graph trainer
     trainer = SiameseTrainer(train_data_shuffler,
                              iterations=iterations,

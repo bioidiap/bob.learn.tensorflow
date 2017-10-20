@@ -42,7 +42,6 @@ def test_cnn_trainer():
     train_data_shuffler = Memory(train_data, train_labels,
                                  input_shape=[None, 28, 28, 1],
                                  batch_size=batch_size,
-                                 normalizer=scale_factor,
                                  prefetch=True,
                                  prefetch_threads=1)
     directory = "./temp/cnn"
