@@ -6,7 +6,7 @@
 import numpy
 from bob.learn.tensorflow.datashuffler import Memory, scale_factor, TFRecord
 from bob.learn.tensorflow.network import Embedding
-from bob.learn.tensorflow.loss import mean_cross_entropy_loss, contrastive_loss, triplet_loss
+from bob.learn.tensorflow.loss import mean_cross_entropy_loss, contrastive_loss_deprecated, triplet_loss
 from bob.learn.tensorflow.trainers import Trainer, constant
 from bob.learn.tensorflow.utils import load_mnist
 import tensorflow as tf
@@ -95,8 +95,7 @@ def test_cnn_trainer_scratch():
     # Creating datashufflers
     train_data_shuffler = Memory(train_data, train_labels,
                                  input_shape=[None, 28, 28, 1],
-                                 batch_size=batch_size,
-                                 normalizer=scale_factor)
+                                 batch_size=batch_size)
 
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
 
@@ -121,7 +120,7 @@ def test_cnn_trainer_scratch():
                                         )
 
     trainer.train()
-    accuracy = validate_network(embedding, validation_data, validation_labels)
+    accuracy = validate_network(embedding, validation_data, validation_labels, normalizer=None)
     assert accuracy > 20
     shutil.rmtree(directory)
     del trainer
@@ -133,8 +132,8 @@ def test_cnn_tfrecord():
     tf.reset_default_graph()
 
     train_data, train_labels, validation_data, validation_labels = load_mnist()
-    train_data = train_data.astype("float32") *  0.00390625
-    validation_data = validation_data.astype("float32") *  0.00390625    
+    train_data = train_data.astype("float32")
+    validation_data = validation_data.astype("float32")
 
     def _bytes_feature(value):
         return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
@@ -236,8 +235,8 @@ def test_cnn_tfrecord_embedding_validation():
     tf.reset_default_graph()
 
     train_data, train_labels, validation_data, validation_labels = load_mnist()
-    train_data = train_data.astype("float32") *  0.00390625
-    validation_data = validation_data.astype("float32") *  0.00390625    
+    train_data = train_data.astype("float32")
+    validation_data = validation_data.astype("float32")
 
     def _bytes_feature(value):
         return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))

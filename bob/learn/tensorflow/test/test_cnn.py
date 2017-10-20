@@ -5,8 +5,8 @@
 
 import numpy
 from bob.learn.tensorflow.datashuffler import Memory, SiameseMemory, TripletMemory, scale_factor
-from bob.learn.tensorflow.network import chopra
-from bob.learn.tensorflow.loss import mean_cross_entropy_loss, contrastive_loss, triplet_loss
+from bob.learn.tensorflow.network import dummy
+from bob.learn.tensorflow.loss import mean_cross_entropy_loss, contrastive_loss_deprecated, triplet_loss
 from bob.learn.tensorflow.trainers import Trainer, SiameseTrainer, TripletTrainer, constant
 from bob.learn.tensorflow.test.test_cnn_scratch import validate_network
 from bob.learn.tensorflow.network import Embedding, light_cnn9
@@ -81,21 +81,21 @@ def test_cnn_trainer():
 
     # Loading data
     train_data, train_labels, validation_data, validation_labels = load_mnist()
+    # * 0.00390625
     train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
     validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
 
     # Creating datashufflers
     train_data_shuffler = Memory(train_data, train_labels,
                                  input_shape=[None, 28, 28, 1],
-                                 batch_size=batch_size,
-                                 normalizer=scale_factor)
+                                 batch_size=batch_size)
 
     directory = "./temp/cnn"
 
     # Preparing the graph
     inputs = train_data_shuffler("data", from_queue=True)
     labels = train_data_shuffler("label", from_queue=True)
-    logits = append_logits(chopra(inputs, seed=seed)[0], n_classes=10)
+    logits = append_logits(dummy(inputs)[0], n_classes=10)
     
     # Loss for the softmax
     loss = mean_cross_entropy_loss(logits, labels)
@@ -108,16 +108,18 @@ def test_cnn_trainer():
                       analizer=None,
                       temp_dir=directory
                       )
+    learning_rate=constant(0.1, name="regular_lr")
     trainer.create_network_from_scratch(graph=logits,
                                         loss=loss,
-                                        learning_rate=constant(0.01, name="regular_lr"),
-                                        optimizer=tf.train.GradientDescentOptimizer(0.01),
+                                        learning_rate=learning_rate,
+                                        optimizer=tf.train.GradientDescentOptimizer(learning_rate),
                                         )
     trainer.train()
     #trainer.train(validation_data_shuffler)
 
-    # Using embedding to compute the accuracy
-    accuracy = validate_network(embedding, validation_data, validation_labels)
+    # Using embedding to compute the accuracy    
+    accuracy = validate_network(embedding, validation_data, validation_labels, normalizer=None)
+
     # At least 20% of accuracy
     assert accuracy > 20.
     shutil.rmtree(directory)
@@ -193,23 +195,21 @@ def test_siamesecnn_trainer():
     # Creating datashufflers
     train_data_shuffler = SiameseMemory(train_data, train_labels,
                                         input_shape=[None, 28, 28, 1],
-                                        batch_size=batch_size,
-                                        normalizer=scale_factor)
+                                        batch_size=batch_size)
     validation_data_shuffler = SiameseMemory(validation_data, validation_labels,
                                              input_shape=[None, 28, 28, 1],
-                                             batch_size=validation_batch_size,
-                                             normalizer=scale_factor)
+                                             batch_size=validation_batch_size)
     directory = "./temp/siamesecnn"
 
     # Building the graph
     inputs = train_data_shuffler("data")
     labels = train_data_shuffler("label")
     graph = dict()
-    graph['left'] = chopra(inputs['left'])[0]
-    graph['right'] = chopra(inputs['right'], reuse=True)[0]
+    graph['left'] = dummy(inputs['left'])[0]
+    graph['right'] = dummy(inputs['right'], reuse=True)[0]
 
     # Loss for the Siamese
-    loss = contrastive_loss(graph['left'], graph['right'], labels, contrastive_margin=4.)
+    loss = contrastive_loss_deprecated(graph['left'], graph['right'], labels, contrastive_margin=4.)
 
     trainer = SiameseTrainer(train_data_shuffler,
                              iterations=iterations,
@@ -242,21 +242,19 @@ def test_tripletcnn_trainer():
     # Creating datashufflers
     train_data_shuffler = TripletMemory(train_data, train_labels,
                                         input_shape=[None, 28, 28, 1],
-                                        batch_size=batch_size,
-                                        normalizer=scale_factor)
+                                        batch_size=batch_size)
     validation_data_shuffler = TripletMemory(validation_data, validation_labels,
                                              input_shape=[None, 28, 28, 1],
-                                             batch_size=validation_batch_size,
-                                             normalizer=scale_factor)
+                                             batch_size=validation_batch_size)
 
     directory = "./temp/tripletcnn"
 
     inputs = train_data_shuffler("data")
     labels = train_data_shuffler("label")
     graph = dict()
-    graph['anchor'] = chopra(inputs['anchor'])[0]
-    graph['positive'] = chopra(inputs['positive'], reuse=True)[0]
-    graph['negative'] = chopra(inputs['negative'], reuse=True)[0]
+    graph['anchor'] = dummy(inputs['anchor'])[0]
+    graph['positive'] = dummy(inputs['positive'], reuse=True)[0]
+    graph['negative'] = dummy(inputs['negative'], reuse=True)[0]
 
     loss = triplet_loss(graph['anchor'], graph['positive'], graph['negative'])
 
@@ -268,13 +266,12 @@ def test_tripletcnn_trainer():
                              )
     trainer.create_network_from_scratch(graph=graph,
                                         loss=loss,
-                                        learning_rate=constant(0.01, name="regular_lr"),
-                                        optimizer=tf.train.GradientDescentOptimizer(0.01),)
+                                        learning_rate=constant(0.1, name="regular_lr"),
+                                        optimizer=tf.train.GradientDescentOptimizer(0.1),)
     trainer.train()
-
     embedding = Embedding(train_data_shuffler("data", from_queue=False)['anchor'], graph['anchor'])
     eer = dummy_experiment(validation_data_shuffler, embedding)
-    assert eer < 0.15
+    assert eer < 0.25
     shutil.rmtree(directory)
 
     del trainer  # Just to clean tf.variables

@@ -70,8 +70,8 @@ def test_trainable_variables():
     tf.reset_default_graph()
 
     train_data, train_labels, validation_data, validation_labels = load_mnist()
-    train_data = train_data.astype("float32") *  0.00390625
-    validation_data = validation_data.astype("float32") *  0.00390625    
+    train_data = train_data.astype("float32")
+    validation_data = validation_data.astype("float32")
 
     def _bytes_feature(value):
         return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))

@@ -27,8 +27,7 @@ def validate_network(embedding, validation_data, validation_labels):
     # Testing
     validation_data_shuffler = Memory(validation_data, validation_labels,
                                       input_shape=[None, 28*28],
-                                      batch_size=validation_batch_size,
-                                      normalizer=scale_factor)
+                                      batch_size=validation_batch_size)
 
     [data, labels] = validation_data_shuffler.get_batch()
     predictions = embedding(data)
@@ -45,8 +44,7 @@ def test_dnn_trainer():
     # Creating datashufflers
     train_data_shuffler = Memory(train_data, train_labels,
                                  input_shape=[None, 784],
-                                 batch_size=batch_size,
-                                 normalizer=scale_factor)
+                                 batch_size=batch_size)
 
     directory = "./temp/dnn"
 
