@@ -271,7 +271,7 @@ def test_tripletcnn_trainer():
     trainer.train()
     embedding = Embedding(train_data_shuffler("data", from_queue=False)['anchor'], graph['anchor'])
     eer = dummy_experiment(validation_data_shuffler, embedding)
-    assert eer < 0.15
+    assert eer < 0.25
     shutil.rmtree(directory)
 
     del trainer  # Just to clean tf.variables

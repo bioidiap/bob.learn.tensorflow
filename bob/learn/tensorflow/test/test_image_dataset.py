@@ -5,7 +5,7 @@
 import tensorflow as tf
 
 from bob.learn.tensorflow.network import dummy
-from bob.learn.tensorflow.trainers import LogitsTrainer, LogitsCenterLossTrainer
+from bob.learn.tensorflow.estimators import Logits, LogitsCenterLoss
 
 from bob.learn.tensorflow.dataset.image import shuffle_data_and_labels_image_augmentation
 import pkg_resources
@@ -37,7 +37,7 @@ def test_logitstrainer_images():
     # Trainer logits
     try:
         embedding_validation = False
-        trainer = LogitsTrainer(model_dir=model_dir,
+        trainer = Logits(model_dir=model_dir,
                                 architecture=dummy,
                                 optimizer=tf.train.GradientDescentOptimizer(learning_rate),
                                 n_classes=10,
