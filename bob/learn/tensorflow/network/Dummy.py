@@ -18,24 +18,24 @@ def dummy(inputs, reuse=False):
     slim = tf.contrib.slim
     end_points = dict()
     
-    
-    initializer = tf.contrib.layers.xavier_initializer()
-    
-    graph = slim.conv2d(inputs, 10, [3, 3], activation_fn=tf.nn.relu, stride=1, scope='conv1',
-                        weights_initializer=initializer, reuse=reuse)
-    end_points['conv1'] = graph                            
-                            
-    graph = slim.max_pool2d(graph, [4, 4], scope='pool1')    
-    end_points['pool1'] = graph
-    
-    graph = slim.flatten(graph, scope='flatten1')
-    end_points['flatten1'] = graph        
+    with tf.variable_scope('Dummy', reuse=reuse):
+        initializer = tf.contrib.layers.xavier_initializer()
+        
+        graph = slim.conv2d(inputs, 10, [3, 3], activation_fn=tf.nn.relu, stride=1, scope='conv1',
+                            weights_initializer=initializer)
+        end_points['conv1'] = graph                            
+                                
+        graph = slim.max_pool2d(graph, [4, 4], scope='pool1')    
+        end_points['pool1'] = graph
+        
+        graph = slim.flatten(graph, scope='flatten1')
+        end_points['flatten1'] = graph        
 
-    graph = slim.fully_connected(graph, 50,
-                                 weights_initializer=initializer,
-                                 activation_fn=None,
-                                 scope='fc1')
-    end_points['fc1'] = graph
+        graph = slim.fully_connected(graph, 50,
+                                     weights_initializer=initializer,
+                                     activation_fn=None,
+                                     scope='fc1')
+        end_points['fc1'] = graph
 
     return graph, end_points
 

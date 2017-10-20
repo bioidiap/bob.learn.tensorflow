@@ -44,20 +44,20 @@ def append_image_augmentation(image, gray_scale=False,
     image = tf.cast(image, tf.float32)
 
     if output_shape is not None:
-        assert output_shape.ndim == 2        
+        assert len(output_shape) == 2        
         image = tf.image.resize_image_with_crop_or_pad(image, output_shape[0], output_shape[1])
         
     if random_flip:
         image = tf.image.random_flip_left_right(image)
 
     if random_brightness:
-        image = tf.image.random_brightness(image)
+        image = tf.image.random_brightness(image, max_delta=0.5)
 
     if random_contrast:
-        image = tf.image.random_contrast(image)
+        image = tf.image.random_contrast(image, lower=0, upper=0.5)
 
     if random_saturation:
-        image = tf.image.random_saturation(image)
+        image = tf.image.random_saturation(image, lower=0, upper=0.5)
 
     if gray_scale:
         image = tf.image.rgb_to_grayscale(image, name="rgb_to_gray")

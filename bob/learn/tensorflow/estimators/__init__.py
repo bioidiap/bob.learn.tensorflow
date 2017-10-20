@@ -1,4 +1,5 @@
 from .Logits import Logits, LogitsCenterLoss
+from .Siamese import Siamese
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):
