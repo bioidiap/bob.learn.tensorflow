@@ -47,8 +47,8 @@ def architecture(input_layer, mode=tf.estimator.ModeKeys.TRAIN,
                                     data_format=data_format)
 
     # Flatten tensor into a batch of vectors
-    dim = tf.reduce_prod(tf.shape(pool2)[1:])
-    pool2_flat = tf.reshape(pool2, [-1, dim])
+    # TODO: use tf.layers.flatten in tensorflow 1.4 above
+    pool2_flat = tf.contrib.layers.flatten(pool2)
 
     # Dense Layer
     # Densely connected layer with 1024 neurons
