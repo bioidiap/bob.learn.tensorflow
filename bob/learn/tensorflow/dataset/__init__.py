@@ -70,6 +70,67 @@ def append_image_augmentation(image, gray_scale=False,
     return image
 
 
+def arrange_indexes_by_label(input_labels, possible_labels):
+
+    # Shuffling all the indexes
+    indexes_per_labels = dict()
+    for l in possible_labels:
+        indexes_per_labels[l] = numpy.where(input_labels == l)[0]
+        numpy.random.shuffle(indexes_per_labels[l])
+    return indexes_per_labels
+
+
+def triplets_random_generator(input_data, input_labels):
+    """
+    Giving a list of samples and a list of labels, it dumps a series of
+    triplets for triple nets.
+
+    **Parameters**
+
+      input_data: List of whatever representing the data samples
+
+      input_labels: List of the labels (needs to be in EXACT same order as input_data)
+    """
+    anchor = []
+    positive = []
+    negative = []
+
+    def append(anchor_sample, positive_sample, negative_sample):
+        """
+        Just appending one element in each list
+        """
+        anchor.append(anchor_sample)
+        positive.append(positive_sample)
+        negative.append(negative_sample)
+
+    possible_labels = list(set(input_labels))
+    input_data = numpy.array(input_data)
+    input_labels = numpy.array(input_labels)
+    total_samples = input_data.shape[0]
+
+    indexes_per_labels = arrange_indexes_by_label(input_labels, possible_labels)
+
+    # searching for random triplets
+    offset_class = 0
+    for i in range(total_samples):
+
+        anchor_sample = input_data[indexes_per_labels[possible_labels[offset_class]][numpy.random.randint(len(indexes_per_labels[possible_labels[offset_class]]))], ...]
+
+        positive_sample = input_data[indexes_per_labels[possible_labels[offset_class]][numpy.random.randint(len(indexes_per_labels[possible_labels[offset_class]]))], ...]
+
+        # Changing the class
+        offset_class += 1
+
+        if offset_class == len(possible_labels):
+            offset_class = 0
+
+        negative_sample = input_data[indexes_per_labels[possible_labels[offset_class]][numpy.random.randint(len(indexes_per_labels[possible_labels[offset_class]]))], ...]
+
+        append(str(anchor_sample), str(positive_sample), str(negative_sample))
+        #yield anchor, positive, negative
+    return anchor, positive, negative
+
+
 def siamease_pairs_generator(input_data, input_labels):
     """
     Giving a list of samples and a list of labels, it dumps a series of
@@ -101,10 +162,11 @@ def siamease_pairs_generator(input_data, input_labels):
     total_samples = input_data.shape[0]
 
     # Filtering the samples by label and shuffling all the indexes
-    indexes_per_labels = dict()
-    for l in possible_labels:
-        indexes_per_labels[l] = numpy.where(input_labels == l)[0]
-        numpy.random.shuffle(indexes_per_labels[l])
+    #indexes_per_labels = dict()
+    #for l in possible_labels:
+    #    indexes_per_labels[l] = numpy.where(input_labels == l)[0]
+    #    numpy.random.shuffle(indexes_per_labels[l])
+    indexes_per_labels = arrange_indexes_by_label(input_labels, possible_labels)
 
     left_possible_indexes = numpy.random.choice(possible_labels, total_samples, replace=True)
     right_possible_indexes = numpy.random.choice(possible_labels, total_samples, replace=True)
