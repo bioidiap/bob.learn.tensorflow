@@ -6,7 +6,7 @@
 import numpy
 from bob.learn.tensorflow.datashuffler import Memory, scale_factor, TFRecord
 from bob.learn.tensorflow.network import Embedding
-from bob.learn.tensorflow.loss import mean_cross_entropy_loss, contrastive_loss_deprecated, triplet_loss
+from bob.learn.tensorflow.loss import mean_cross_entropy_loss, contrastive_loss_deprecated
 from bob.learn.tensorflow.trainers import Trainer, constant
 from bob.learn.tensorflow.utils import load_mnist
 import tensorflow as tf

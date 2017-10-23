@@ -1,6 +1,6 @@
 from .BaseLoss import mean_cross_entropy_loss, mean_cross_entropy_center_loss
 from .ContrastiveLoss import contrastive_loss, contrastive_loss_deprecated
-from .TripletLoss import triplet_loss, triplet_average_loss, triplet_fisher_loss
+from .TripletLoss import triplet_loss, triplet_average_loss, triplet_fisher_loss, triplet_loss_deprecated
 #from .NegLogLoss import NegLogLoss
 
 
