@@ -25,8 +25,6 @@ def architecture(input_layer, mode=tf.estimator.ModeKeys.TRAIN,
 
     # Pooling Layer #1
     # First max pooling layer with a 2x2 filter and stride of 2
-    # Input Tensor Shape: [batch_size, 50, 1024, 32]
-    # Output Tensor Shape: [batch_size, 25, 512, 32]
     pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2], strides=2,
                                     data_format=data_format)
 
@@ -47,7 +45,7 @@ def architecture(input_layer, mode=tf.estimator.ModeKeys.TRAIN,
                                     data_format=data_format)
 
     # Flatten tensor into a batch of vectors
-    # TODO: use tf.layers.flatten in tensorflow 1.4 above
+    # TODO: use tf.layers.flatten in tensorflow 1.4 and above
     pool2_flat = tf.contrib.layers.flatten(pool2)
 
     # Dense Layer
