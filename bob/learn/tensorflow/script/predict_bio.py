@@ -66,8 +66,6 @@ from collections import defaultdict
 import six
 import numpy as np
 import tensorflow as tf
-# tensorflow 1.4 and above
-from tensorflow.data import Dataset
 from bob.io.base import create_directories_safe
 from bob.bio.base.utils import read_config_file, save
 from bob.bio.base.tools.grid import indices
@@ -76,6 +74,9 @@ from bob.learn.tensorflow.utils.commandline import \
     get_from_config_or_commandline
 from bob.core.log import setup, set_verbosity_level
 logger = setup(__name__)
+
+# tensorflow 1.4 and above.
+Dataset = tf.data.Dataset
 
 
 def bio_generator(database, preprocessor, groups, number_of_parallel_jobs,
