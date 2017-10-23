@@ -81,9 +81,9 @@ logger = setup(__name__)
 def bio_generator(database, preprocessor, groups, number_of_parallel_jobs,
                   biofile_to_label, multiple_samples=False):
     biofiles = list(database.all_files(groups))
-    assert number_of_parallel_jobs > 1
-    start, end = indices(biofiles, number_of_parallel_jobs)
-    biofiles = biofiles[start:end]
+    if number_of_parallel_jobs > 1:
+        start, end = indices(biofiles, number_of_parallel_jobs)
+        biofiles = biofiles[start:end]
     keys = (str(f.make_path("", "")) for f in biofiles)
     labels = (biofile_to_label(f) for f in biofiles)
 
