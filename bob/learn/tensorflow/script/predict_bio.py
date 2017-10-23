@@ -163,41 +163,44 @@ def main(argv=None):
     output_dir = get_from_config_or_commandline(
         config, 'output_dir', args, defaults, False)
 
-    generator, output_types, output_shapes = bio_generator(
-        database, preprocessor, groups, number_of_parallel_jobs,
-        biofile_to_label, multiple_samples)
+    with tf.Graph().as_default():
 
-    dataset = Dataset.from_generator(generator, output_types, output_shapes)
+        generator, output_types, output_shapes = bio_generator(
+            database, preprocessor, groups, number_of_parallel_jobs,
+            biofile_to_label, multiple_samples)
 
-    predict_input_fn = bio_predict_input_fn(dataset)
+        dataset = Dataset.from_generator(
+            generator, output_types, output_shapes)
 
-    predictions = estimator.predict(
-        predict_input_fn,
-        predict_keys=predict_keys,
-        hooks=hooks,
-        checkpoint_path=checkpoint_path,
-    )
+        predict_input_fn = bio_predict_input_fn(dataset)
 
-    pool = Pool()
-    try:
-        pred_buffer = defaultdict(list)
-        for i, pred in enumerate(predictions):
-            key = pred['keys']
-            prob = pred.get('probabilities', pred.get('embeddings'))
-            pred_buffer[key].append(prob)
-            if i == 0:
-                last_key = key
-            if last_key == key:
-                continue
+        predictions = estimator.predict(
+            predict_input_fn,
+            predict_keys=predict_keys,
+            hooks=hooks,
+            checkpoint_path=checkpoint_path,
+        )
+
+        pool = Pool()
+        try:
+            pred_buffer = defaultdict(list)
+            for i, pred in enumerate(predictions):
+                key = pred['keys']
+                prob = pred.get('probabilities', pred.get('embeddings'))
+                pred_buffer[key].append(prob)
+                if i == 0:
+                    last_key = key
+                if last_key == key:
+                    continue
+                else:
+                    save_predictions(pool, output_dir, last_key, pred_buffer)
+                    last_key = key
+            # else below is for the for loop
             else:
-                save_predictions(pool, output_dir, last_key, pred_buffer)
-                last_key = key
-        # else below is for the for loop
-        else:
-            save_predictions(pool, output_dir, key, pred_buffer)
-    finally:
-        pool.close()
-        pool.join()
+                save_predictions(pool, output_dir, key, pred_buffer)
+        finally:
+            pool.close()
+            pool.join()
 
 
 if __name__ == '__main__':
