@@ -75,9 +75,6 @@ from bob.learn.tensorflow.utils.commandline import \
 from bob.core.log import setup, set_verbosity_level
 logger = setup(__name__)
 
-# tensorflow 1.4 and above.
-Dataset = tf.data.Dataset
-
 
 def bio_generator(database, preprocessor, groups, number_of_parallel_jobs,
                   biofile_to_label, multiple_samples=False):
@@ -169,10 +166,8 @@ def main(argv=None):
             database, preprocessor, groups, number_of_parallel_jobs,
             biofile_to_label, multiple_samples)
 
-        dataset = Dataset.from_generator(
-            generator, output_types, output_shapes)
-
-        predict_input_fn = bio_predict_input_fn(dataset)
+        predict_input_fn = bio_predict_input_fn(generator,
+                                                output_types, output_shapes)
 
         predictions = estimator.predict(
             predict_input_fn,
