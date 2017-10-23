@@ -97,8 +97,8 @@ def bio_generator(database, preprocessor, groups, number_of_parallel_jobs,
         for f, label, key in six.moves.zip(biofiles, labels, keys):
             data = load_data(f, preprocessor, database)
             if multiple_samples:
-                label = tf_repeat(label, len(data))
-                key = tf_repeat(key, len(data))
+                label = tf_repeat([label], len(data))
+                key = tf_repeat([key], len(data))
             yield (data, label, key)
 
     # load one data to get its type and shape
