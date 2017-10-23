@@ -13,7 +13,7 @@ import time
 from tensorflow.python.estimator import estimator
 from bob.learn.tensorflow.utils import predict_using_tensors
 #from bob.learn.tensorflow.loss import mean_cross_entropy_center_loss
-
+from . import check_features
 
 import logging
 logger = logging.getLogger("bob.learn")
@@ -116,8 +116,11 @@ class Siamese(estimator.Estimator):
                 return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss,
                                                   train_op=train_op)
 
+            check_features(features)
+            data = features['data']
+
             # Compute the embeddings
-            prelogits = self.architecture(features)[0]
+            prelogits = self.architecture(data)[0]
             embeddings = tf.nn.l2_normalize(prelogits, 1)
             predictions = {"embeddings": embeddings}
 

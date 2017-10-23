@@ -161,6 +161,9 @@ def image_augmentation_parser(filename, label, data_shape, data_type,
                                       per_image_normalization=per_image_normalization)
                                         
     label = tf.cast(label, tf.int64)
+    features = dict()
+    features['data'] = image
+    features['key'] = filename
 
-    return image, label
+    return features, label
 

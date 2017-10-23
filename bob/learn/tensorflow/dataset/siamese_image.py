@@ -181,7 +181,6 @@ def image_augmentation_parser(filename_left, filename_right, label, data_shape, 
     image = dict()
     image['left']  = image_left
     image['right'] = image_right
-
     label = tf.cast(label, tf.int64)
 
     return image, label
