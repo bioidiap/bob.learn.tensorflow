@@ -1,9 +1,12 @@
+import os
 from bob.bio.base.test.dummy.database import database
-from bob.bio.base.test.dummy.preprocessor import preprocessor
+from bob.bio.base.utils import read_original_data
 
-groups = 'dev'
+groups = ['dev']
 
-files = database.all_files(groups=groups)
+samples = database.all_files(groups=groups)
+
+output = os.path.join('TEST_DIR', 'dev.tfrecords')
 
 CLIENT_IDS = (str(f.client_id) for f in database.all_files(groups=groups))
 CLIENT_IDS = list(set(CLIENT_IDS))
@@ -15,8 +18,8 @@ def file_to_label(f):
 
 
 def reader(biofile):
-    data = preprocessor.read_original_data(
+    data = read_original_data(
         biofile, database.original_directory, database.original_extension)
     label = file_to_label(biofile)
-    key = biofile.path
+    key = str(biofile.path)
     return (data, label, key)
