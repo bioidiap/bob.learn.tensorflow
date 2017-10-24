@@ -65,7 +65,8 @@ def test_logitstrainer_embedding():
                                 n_classes=10,
                                 loss_op=mean_cross_entropy_loss,
                                 embedding_validation=embedding_validation,
-                                validation_batch_size=validation_batch_size)    
+                                validation_batch_size=validation_batch_size)
+
         run_logitstrainer_mnist(trainer)
     finally:
         try:
@@ -153,7 +154,6 @@ def run_logitstrainer_mnist(trainer, augmentation=False):
     create_mnist_tfrecord(tfrecord_validation, validation_data, validation_labels, n_samples=validation_batch_size)
 
     def input_fn():
-    
         if augmentation:
             return shuffle_data_and_labels_image_augmentation(tfrecord_train, data_shape, data_type, batch_size, epochs=epochs)
         else:

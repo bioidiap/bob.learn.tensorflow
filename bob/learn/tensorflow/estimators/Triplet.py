@@ -12,16 +12,20 @@ import time
 #logger = bob.core.log.setup("bob.learn.tensorflow")
 from tensorflow.python.estimator import estimator
 from bob.learn.tensorflow.utils import predict_using_tensors
-#from bob.learn.tensorflow.loss import mean_cross_entropy_center_loss
+from bob.learn.tensorflow.loss import triplet_loss
 from . import check_features
+
 
 import logging
 logger = logging.getLogger("bob.learn")
 
 
-class Siamese(estimator.Estimator):
+class Triplet(estimator.Estimator):
     """
-    NN estimator for Siamese networks
+    NN estimator for Triplet networks
+
+    Schroff, Florian, Dmitry Kalenichenko, and James Philbin.
+    "Facenet: A unified embedding for face recognition and clustering." Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition. 2015.
 
     The **architecture** function should follow the following pattern:
 
@@ -73,7 +77,7 @@ class Siamese(estimator.Estimator):
                  optimizer=None,
                  config=None,
                  n_classes=0,
-                 loss_op=None,
+                 loss_op=triplet_loss,
                  model_dir="",
                  validation_batch_size=None,
               ):
@@ -97,19 +101,23 @@ class Siamese(estimator.Estimator):
             raise ValueError("Number of classes must be greated than 0")
 
         def _model_fn(features, labels, mode, params, config):
-            
+
             if mode == tf.estimator.ModeKeys.TRAIN:
 
                 # The input function needs to have dictionary pair with the `left` and `right` keys
-                if not 'left' in features.keys() or not 'right' in features.keys():
-                    raise ValueError("The input function needs to contain a dictionary with the keys `left` and `right` ")
+                if not 'anchor' in features.keys() or not \
+                                'positive' in features.keys() or not \
+                                'negative' in features.keys():
+                    raise ValueError("The input function needs to contain a dictionary with the "
+                                     "keys `anchor`, `positive` and `negative` ")
             
                 # Building one graph
-                prelogits_left = self.architecture(features['left'])[0]
-                prelogits_right = self.architecture(features['right'], reuse=True)[0]
+                prelogits_anchor = self.architecture(features['anchor'])[0]
+                prelogits_positive = self.architecture(features['positive'], reuse=True)[0]
+                prelogits_negative = self.architecture(features['negative'], reuse=True)[0]
 
                 # Compute Loss (for both TRAIN and EVAL modes)
-                self.loss = self.loss_op(prelogits_left, prelogits_right, labels)
+                self.loss = self.loss_op(prelogits_anchor, prelogits_positive, prelogits_negative)
                 # Configure the Training Op (for TRAIN mode)
                 global_step = tf.contrib.framework.get_or_create_global_step()
                 train_op = self.optimizer.minimize(self.loss, global_step=global_step)
@@ -131,9 +139,8 @@ class Siamese(estimator.Estimator):
             eval_metric_ops = {"accuracy": tf.metrics.accuracy(labels=labels, predictions=predictions_op)}
             
             return tf.estimator.EstimatorSpec(mode=mode, loss=tf.reduce_mean(1), eval_metric_ops=eval_metric_ops)
-            
 
-        super(Siamese, self).__init__(model_fn=_model_fn,
-                                     model_dir=model_dir,
-                                     config=config)
+        super(Triplet, self).__init__(model_fn=_model_fn,
+                                      model_dir=model_dir,
+                                      config=config)
 

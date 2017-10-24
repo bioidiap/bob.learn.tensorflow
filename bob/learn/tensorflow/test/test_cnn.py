@@ -6,7 +6,7 @@
 import numpy
 from bob.learn.tensorflow.datashuffler import Memory, SiameseMemory, TripletMemory, scale_factor
 from bob.learn.tensorflow.network import dummy
-from bob.learn.tensorflow.loss import mean_cross_entropy_loss, contrastive_loss_deprecated, triplet_loss
+from bob.learn.tensorflow.loss import mean_cross_entropy_loss, contrastive_loss_deprecated, triplet_loss_deprecated
 from bob.learn.tensorflow.trainers import Trainer, SiameseTrainer, TripletTrainer, constant
 from bob.learn.tensorflow.test.test_cnn_scratch import validate_network
 from bob.learn.tensorflow.network import Embedding, light_cnn9
@@ -256,7 +256,7 @@ def test_tripletcnn_trainer():
     graph['positive'] = dummy(inputs['positive'], reuse=True)[0]
     graph['negative'] = dummy(inputs['negative'], reuse=True)[0]
 
-    loss = triplet_loss(graph['anchor'], graph['positive'], graph['negative'])
+    loss = triplet_loss_deprecated(graph['anchor'], graph['positive'], graph['negative'])
 
     # One graph trainer
     trainer = TripletTrainer(train_data_shuffler,

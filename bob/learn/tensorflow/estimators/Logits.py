@@ -16,6 +16,7 @@ from bob.learn.tensorflow.network.utils import append_logits
 from tensorflow.python.estimator import estimator
 from bob.learn.tensorflow.utils import predict_using_tensors
 from bob.learn.tensorflow.loss import mean_cross_entropy_center_loss
+from . import check_features
 
 
 import logging
@@ -102,9 +103,13 @@ class Logits(estimator.Estimator):
             raise ValueError("Number of classes must be greated than 0")
 
         def _model_fn(features, labels, mode, params, config):
+
+            check_features(features)
+            data = features['data']
+            key = features['key']
             
             # Building one graph
-            prelogits = self.architecture(features)[0]
+            prelogits = self.architecture(data)[0]
             logits = append_logits(prelogits, n_classes)
 
             if self.embedding_validation:
@@ -228,8 +233,12 @@ class LogitsCenterLoss(estimator.Estimator):
 
         def _model_fn(features, labels, mode, params, config):
 
+            check_features(features)
+            data = features['data']
+            key = features['key']
+
             # Building one graph
-            prelogits = self.architecture(features)[0]
+            prelogits = self.architecture(data)[0]
             logits = append_logits(prelogits, n_classes)
 
             if self.embedding_validation:
@@ -284,3 +293,4 @@ class LogitsCenterLoss(estimator.Estimator):
         super(LogitsCenterLoss, self).__init__(model_fn=_model_fn,
                                                model_dir=model_dir,
                                                config=config)
+                                               

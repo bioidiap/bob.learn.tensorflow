@@ -35,7 +35,7 @@ def image_augmentation_parser(serialized_example, feature, data_shape, data_type
     # Decode the record read by the reader
     features = tf.parse_single_example(serialized_example, features=feature)
     # Convert the image data from string back to the numbers
-    image = tf.decode_raw(features['train/data'], data_type)
+    image = tf.decode_raw(features['data'], data_type)
 
     # Reshape image data into the original shape
     image = tf.reshape(image, data_shape)
@@ -50,8 +50,10 @@ def image_augmentation_parser(serialized_example, feature, data_shape, data_type
                                       per_image_normalization=per_image_normalization)
 
     # Cast label data into int64
-    label = tf.cast(features['train/label'], tf.int64)
-    return image, label
+    label = tf.cast(features['label'], tf.int64)
+    key = tf.cast(features['key'], tf.string)
+    
+    return image, label, key
 
 
 def read_and_decode(filename_queue, data_shape, data_type=tf.float32,
@@ -208,8 +210,13 @@ def shuffle_data_and_labels_image_augmentation(tfrecord_filenames, data_shape, d
 
     dataset = dataset.shuffle(buffer_size).batch(batch_size).repeat(epochs)
 
-    data, labels = dataset.make_one_shot_iterator().get_next()
-    return data, labels
+    data, labels, key = dataset.make_one_shot_iterator().get_next()
+    
+    features = dict()
+    features['data'] = data
+    features['key'] = key
+    
+    return features, labels
 
 
 def shuffle_data_and_labels(tfrecord_filenames, data_shape, data_type,
@@ -243,8 +250,12 @@ def shuffle_data_and_labels(tfrecord_filenames, data_shape, data_type,
                                           data_type)
     dataset = dataset.shuffle(buffer_size).batch(batch_size).repeat(epochs)
 
-    data, labels = dataset.make_one_shot_iterator().get_next()
-    return data, labels
+    data, labels, key = dataset.make_one_shot_iterator().get_next()
+    features = dict()
+    features['data'] = data
+    features['key'] = key
+    
+    return features, labels
 
 
 def batch_data_and_labels(tfrecord_filenames, data_shape, data_type,
@@ -274,5 +285,10 @@ def batch_data_and_labels(tfrecord_filenames, data_shape, data_type,
                                           data_type)
     dataset = dataset.batch(batch_size).repeat(epochs)
 
-    data, labels = dataset.make_one_shot_iterator().get_next()
-    return data, labels
+    data, labels, key = dataset.make_one_shot_iterator().get_next()
+    features = dict()
+    features['data'] = data
+    features['key'] = key
+    
+    return features, labels
+

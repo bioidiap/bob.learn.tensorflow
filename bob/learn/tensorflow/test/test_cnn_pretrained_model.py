@@ -7,7 +7,7 @@ import numpy
 import bob.io.base
 import os
 from bob.learn.tensorflow.datashuffler import Memory, TripletMemory, SiameseMemory, scale_factor
-from bob.learn.tensorflow.loss import mean_cross_entropy_loss, contrastive_loss_deprecated, triplet_loss
+from bob.learn.tensorflow.loss import mean_cross_entropy_loss, contrastive_loss_deprecated, triplet_loss_deprecated
 from bob.learn.tensorflow.trainers import Trainer, constant, TripletTrainer, SiameseTrainer
 from bob.learn.tensorflow.utils import load_mnist
 from bob.learn.tensorflow.network import Embedding
@@ -137,7 +137,7 @@ def test_triplet_cnn_pretrained():
     graph['negative'] = scratch_network(inputs['negative'], reuse=True)
 
     # Loss for the softmax
-    loss = triplet_loss(graph['anchor'], graph['positive'], graph['negative'], margin=4.)
+    loss = triplet_loss_deprecated(graph['anchor'], graph['positive'], graph['negative'], margin=4.)
 
     # One graph trainer
     trainer = TripletTrainer(train_data_shuffler,

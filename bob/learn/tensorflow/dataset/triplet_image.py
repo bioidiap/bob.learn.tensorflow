@@ -4,24 +4,27 @@
 
 import tensorflow as tf
 from functools import partial
-from . import append_image_augmentation
+from . import append_image_augmentation, triplets_random_generator
 
 
 def shuffle_data_and_labels_image_augmentation(filenames, labels, data_shape, data_type,
-                                              batch_size, epochs=None, buffer_size=10**3,
-                                              gray_scale=False, 
-                                              output_shape=None,
-                                              random_flip=False,
-                                              random_brightness=False,
-                                              random_contrast=False,
-                                              random_saturation=False,
-                                              per_image_normalization=True):
+                                               batch_size, epochs=None, buffer_size=10**3,
+                                               gray_scale=False,
+                                               output_shape=None,
+                                               random_flip=False,
+                                               random_brightness=False,
+                                               random_contrast=False,
+                                               random_saturation=False,
+                                               per_image_normalization=True):
     """
-    Dump random batches from a list of image paths and labels:
+    Dump random batches for triplee networks from a list of image paths and labels:
         
     The list of files and labels should be in the same order e.g.
     filenames = ['class_1_img1', 'class_1_img2', 'class_2_img1']
     labels = [0, 0, 1]
+    
+    The batches returned with tf.Session.run() with be in the following format:
+    **data** a dictionary containing the keys ['anchor', 'positive', 'negative'].
     
 
     **Parameters**
@@ -67,27 +70,29 @@ def shuffle_data_and_labels_image_augmentation(filenames, labels, data_shape, da
 
        per_image_normalization:
            Linearly scales image to have zero mean and unit norm.            
+
      
     """                            
 
     dataset = create_dataset_from_path_augmentation(filenames, labels, data_shape,
-                                          data_type,
-                                          gray_scale=gray_scale, 
-                                          output_shape=output_shape,
-                                          random_flip=random_flip,
-                                          random_brightness=random_brightness,
-                                          random_contrast=random_contrast,
-                                          random_saturation=random_saturation,
-                                          per_image_normalization=per_image_normalization)
-                                          
-    dataset = dataset.shuffle(buffer_size).batch(batch_size).repeat(epochs)
+                                                    data_type,
+                                                    gray_scale=gray_scale,
+                                                    output_shape=output_shape,
+                                                    random_flip=random_flip,
+                                                    random_brightness=random_brightness,
+                                                    random_contrast=random_contrast,
+                                                    random_saturation=random_saturation,
+                                                    per_image_normalization=per_image_normalization)
 
-    data, labels = dataset.make_one_shot_iterator().get_next()
-    return data, labels
+    dataset = dataset.shuffle(buffer_size).batch(batch_size).repeat(epochs)
+    #dataset = dataset.batch(buffer_size).batch(batch_size).repeat(epochs)
+
+    data = dataset.make_one_shot_iterator().get_next()
+    return data
 
 
 def create_dataset_from_path_augmentation(filenames, labels,
-                                          data_shape, data_type,
+                                          data_shape, data_type=tf.float32,
                                           gray_scale=False, 
                                           output_shape=None,
                                           random_flip=False,
@@ -127,12 +132,14 @@ def create_dataset_from_path_augmentation(filenames, labels,
                      random_saturation=random_saturation,
                      per_image_normalization=per_image_normalization) 
 
-    dataset = tf.contrib.data.Dataset.from_tensor_slices((filenames, labels))
+    anchor_data, positive_data, negative_data = triplets_random_generator(filenames, labels)
+
+    dataset = tf.contrib.data.Dataset.from_tensor_slices((anchor_data, positive_data, negative_data))
     dataset = dataset.map(parser)
     return dataset
 
 
-def image_augmentation_parser(filename, label, data_shape, data_type,
+def image_augmentation_parser(anchor, positive, negative, data_shape, data_type=tf.float32,
                               gray_scale=False, 
                               output_shape=None,
                               random_flip=False,
@@ -144,26 +151,25 @@ def image_augmentation_parser(filename, label, data_shape, data_type,
     """
     Parses a single tf.Example into image and label tensors.
     """
-        
-    # Convert the image data from string back to the numbers
-    image = tf.cast(tf.image.decode_image(tf.read_file(filename)), tf.float32)
 
-    # Reshape image data into the original shape
-    image = tf.reshape(image, data_shape)
-    
-    #Applying image augmentation
-    image = append_image_augmentation(image, gray_scale=gray_scale,
-                                      output_shape=output_shape,
-                                      random_flip=random_flip,
-                                      random_brightness=random_brightness,
-                                      random_contrast=random_contrast,
-                                      random_saturation=random_saturation,
-                                      per_image_normalization=per_image_normalization)
-                                        
-    label = tf.cast(label, tf.int64)
-    features = dict()
-    features['data'] = image
-    features['key'] = filename
+    triplet = dict()
+    for n, v in zip(['anchor', 'positive', 'negative'], [anchor, positive, negative]):
 
-    return features, label
+        # Convert the image data from string back to the numbers
+        image = tf.cast(tf.image.decode_image(tf.read_file(v)), data_type)
 
+        # Reshape image data into the original shape
+        image = tf.reshape(image, data_shape)
+
+        # Applying image augmentation
+        image = append_image_augmentation(image, gray_scale=gray_scale,
+                                          output_shape=output_shape,
+                                          random_flip=random_flip,
+                                          random_brightness=random_brightness,
+                                          random_contrast=random_contrast,
+                                          random_saturation=random_saturation,
+                                          per_image_normalization=per_image_normalization)
+
+        triplet[n] = image
+
+    return triplet

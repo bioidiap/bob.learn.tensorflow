@@ -60,9 +60,9 @@ def create_mnist_tfrecord(tfrecords_filename, data, labels, n_samples=6000):
     for i in range(n_samples):
         img = data[i]
         img_raw = img.tostring()
-
-        feature = {'train/data': _bytes_feature(img_raw),
-                   'train/label': _int64_feature(labels[i])
+        feature = {'data': _bytes_feature(img_raw),
+                   'label': _int64_feature(labels[i]),
+                   'key': _bytes_feature(b'-')
                    }
 
         example = tf.train.Example(features=tf.train.Features(feature=feature))
