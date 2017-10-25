@@ -7,7 +7,6 @@ logging.getLogger("tensorflow").setLevel(logging.WARNING)
 from bob.io.base.test_utils import datafile
 
 from bob.learn.tensorflow.script.db_to_tfrecords import main as tfrecords
-from bob.bio.base.script.verify import main as verify
 from bob.learn.tensorflow.script.train_generic import main as train_generic
 from bob.learn.tensorflow.script.eval_generic import main as eval_generic
 
@@ -44,6 +43,9 @@ def architecture(images):
 
 
 def model_fn(features, labels, mode, params, config):
+    key = features['key']
+    features = features['data']
+
     logits = architecture(features)
 
     predictions = {
@@ -51,7 +53,8 @@ def model_fn(features, labels, mode, params, config):
         "classes": tf.argmax(input=logits, axis=1),
         # Add `softmax_tensor` to the graph. It is used for PREDICT and by the
         # `logging_hook`.
-        "probabilities": tf.nn.softmax(logits, name="softmax_tensor")
+        "probabilities": tf.nn.softmax(logits, name="softmax_tensor"),
+        "key": key,
     }
     if mode == tf.estimator.ModeKeys.PREDICT:
         return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
@@ -82,9 +85,8 @@ def _create_tfrecord(test_dir):
     config_path = os.path.join(test_dir, 'tfrecordconfig.py')
     with open(dummy_tfrecord_config) as f, open(config_path, 'w') as f2:
         f2.write(f.read().replace('TEST_DIR', test_dir))
-    #verify([config_path])
     tfrecords([config_path])
-    return os.path.join(test_dir, 'sub_directory', 'dev.tfrecords')
+    return os.path.join(test_dir, 'dev.tfrecords')
 
 
 def _create_checkpoint(tmpdir, model_dir, dummy_tfrecord):
@@ -112,21 +114,21 @@ def test_eval_once():
         eval_dir = os.path.join(model_dir, 'eval')
 
         print('\nCreating a dummy tfrecord')
-        #dummy_tfrecord = _create_tfrecord(tmpdir)
+        dummy_tfrecord = _create_tfrecord(tmpdir)
 
         print('Training a dummy network')
-        #_create_checkpoint(tmpdir, model_dir, dummy_tfrecord)
+        _create_checkpoint(tmpdir, model_dir, dummy_tfrecord)
 
         print('Evaluating a dummy network')
-        #_eval(tmpdir, model_dir, dummy_tfrecord)
+        _eval(tmpdir, model_dir, dummy_tfrecord)
 
-        #evaluated_path = os.path.join(eval_dir, 'evaluated')
-        #assert os.path.exists(evaluated_path), evaluated_path
-        #with open(evaluated_path) as f:
-        #    doc = f.read()
+        evaluated_path = os.path.join(eval_dir, 'evaluated')
+        assert os.path.exists(evaluated_path), evaluated_path
+        with open(evaluated_path) as f:
+           doc = f.read()
 
-       # assert '1' in doc, doc
-       # assert '100' in doc, doc
+        assert '1' in doc, doc
+        assert '100' in doc, doc
     finally:
         try:
             shutil.rmtree(tmpdir)

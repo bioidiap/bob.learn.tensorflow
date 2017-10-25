@@ -105,7 +105,7 @@ def main(argv=None):
     try:
         pred_buffer = defaultdict(list)
         for i, pred in enumerate(predictions):
-            key = pred['keys']
+            key = pred['key']
             prob = pred.get('probabilities', pred.get('embeddings'))
             pred_buffer[key].append(prob)
             if i == 0:

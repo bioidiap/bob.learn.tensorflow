@@ -4,7 +4,6 @@ import pkg_resources
 import tempfile
 
 from bob.learn.tensorflow.script.db_to_tfrecords import main as tfrecords
-from bob.bio.base.script.verify import main as verify
 
 regenerate_reference = False
 
@@ -21,9 +20,7 @@ def test_verify_and_tfrecords():
 
   parameters = [config_path]
   try:
-    #verify(parameters)
-    #tfrecords(parameters)
-    pass
+    tfrecords(parameters)
 
     # TODO: test if tfrecords are equal
     # tfrecords_path = os.path.join(test_dir, 'sub_directory', 'dev.tfrecords')

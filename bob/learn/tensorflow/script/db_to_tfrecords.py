@@ -36,7 +36,7 @@ The configuration files should have the following objects totally::
     samples : a list of all samples that you want to write in the tfrecords
               file. Whatever is inside this list is passed to the reader.
     reader  : a function with the signature of
-              `data, label, key = reader(sample)` which takes a sample and
+              ``data, label, key = reader(sample)`` which takes a sample and
               returns the loaded data, the label of the data, and a key which
               is unique for every sample.
 
@@ -91,7 +91,6 @@ from __future__ import print_function
 import random
 # import pkg_resources so that bob imports work properly:
 import pkg_resources
-import six
 import tensorflow as tf
 from bob.io.base import create_directories_safe
 from bob.bio.base.utils import read_config_file
