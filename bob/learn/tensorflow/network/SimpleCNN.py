@@ -12,6 +12,9 @@ def architecture(input_layer, mode=tf.estimator.ModeKeys.TRAIN,
         input_layer = to_channels_first('input_layer')
         data_format = 'channels_first'
 
+    # Keep track of all the endpoints
+    endpoints = {}
+
     # Convolutional Layer #1
     # Computes 32 features using a kernerl_size filter with ReLU activation.
     # Padding is added to preserve width and height.
@@ -22,11 +25,13 @@ def architecture(input_layer, mode=tf.estimator.ModeKeys.TRAIN,
         padding="same",
         activation=tf.nn.relu,
         data_format=data_format)
+    endpoints['conv1'] = conv1
 
     # Pooling Layer #1
     # First max pooling layer with a 2x2 filter and stride of 2
     pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2], strides=2,
                                     data_format=data_format)
+    endpoints['pool1'] = pool1
 
     # Convolutional Layer #2
     # Computes 64 features using a kernerl_size filter.
@@ -38,31 +43,37 @@ def architecture(input_layer, mode=tf.estimator.ModeKeys.TRAIN,
         padding="same",
         activation=tf.nn.relu,
         data_format=data_format)
+    endpoints['conv2'] = conv2
 
     # Pooling Layer #2
     # Second max pooling layer with a 2x2 filter and stride of 2
     pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2], strides=2,
                                     data_format=data_format)
+    endpoints['pool2'] = pool2
 
     # Flatten tensor into a batch of vectors
     # TODO: use tf.layers.flatten in tensorflow 1.4 and above
     pool2_flat = tf.contrib.layers.flatten(pool2)
+    endpoints['pool2_flat'] = pool2_flat
 
     # Dense Layer
     # Densely connected layer with 1024 neurons
     dense = tf.layers.dense(
         inputs=pool2_flat, units=1024, activation=tf.nn.relu)
+    endpoints['dense'] = dense
 
     # Add dropout operation; 0.6 probability that element will be kept
     dropout = tf.layers.dropout(
         inputs=dense, rate=0.4, training=mode == tf.estimator.ModeKeys.TRAIN)
+    endpoints['dropout'] = dropout
 
     # Logits layer
     # Input Tensor Shape: [batch_size, 1024]
     # Output Tensor Shape: [batch_size, 2]
     logits = tf.layers.dense(inputs=dropout, units=n_classes)
+    endpoints['logits'] = logits
 
-    return logits
+    return logits, endpoints
 
 
 def model_fn(features, labels, mode, params=None, config=None):
@@ -74,7 +85,7 @@ def model_fn(features, labels, mode, params=None, config=None):
 
     data = features['data']
     keys = features['keys']
-    logits = architecture(
+    logits, _ = architecture(
         data, mode, kernerl_size=kernerl_size, n_classes=n_classes)
 
     predictions = {
