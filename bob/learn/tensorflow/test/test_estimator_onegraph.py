@@ -176,10 +176,10 @@ def run_logitstrainer_mnist(trainer, augmentation=False):
 
     if not trainer.embedding_validation:
         acc = trainer.evaluate(input_fn_validation)
-        assert acc['accuracy'] > 0.80
+        assert acc['accuracy'] > 0.40
     else:
         acc = trainer.evaluate(input_fn_validation)
-        assert acc['accuracy'] > 0.80
+        assert acc['accuracy'] > 0.40
 
     # Cleaning up
     tf.reset_default_graph()
