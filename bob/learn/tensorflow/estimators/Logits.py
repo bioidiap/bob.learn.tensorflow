@@ -140,20 +140,6 @@ class Logits(estimator.Estimator):
             prelogits = self.architecture(data, is_trainable=is_trainable)[0]
             logits = append_logits(prelogits, n_classes)
 
-            # Compute Loss (for both TRAIN and EVAL modes)
-            self.loss = self.loss_op(logits, labels)
-
-            # Configure the Training Op (for TRAIN mode)
-            if mode == tf.estimator.ModeKeys.TRAIN:
-                if self.extra_checkpoint is not None:
-                    tf.contrib.framework.init_from_checkpoint(self.extra_checkpoint["checkpoint_path"],
-                                                              self.extra_checkpoint["scopes"])
-
-                global_step = tf.contrib.framework.get_or_create_global_step()
-                train_op = self.optimizer.minimize(self.loss, global_step=global_step)
-                return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss,
-                                                  train_op=train_op)
-
             if self.embedding_validation:
                 # Compute the embeddings
                 embeddings = tf.nn.l2_normalize(prelogits, 1)
@@ -171,6 +157,21 @@ class Logits(estimator.Estimator):
 
             if mode == tf.estimator.ModeKeys.PREDICT:
                 return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
+
+            # Compute Loss (for both TRAIN and EVAL modes)
+            self.loss = self.loss_op(logits, labels)
+
+            # Configure the Training Op (for TRAIN mode)
+            if mode == tf.estimator.ModeKeys.TRAIN:
+                if self.extra_checkpoint is not None:
+                    tf.contrib.framework.init_from_checkpoint(self.extra_checkpoint["checkpoint_path"],
+                                                              self.extra_checkpoint["scopes"])
+
+                global_step = tf.contrib.framework.get_or_create_global_step()
+                train_op = self.optimizer.minimize(self.loss, global_step=global_step)
+                return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss,
+                                                  train_op=train_op)
+
 
             # Validation
             if self.embedding_validation:
@@ -289,23 +290,6 @@ class LogitsCenterLoss(estimator.Estimator):
             # Compute Loss (for both TRAIN and EVAL modes)
             loss_dict = mean_cross_entropy_center_loss(logits, prelogits, labels, self.n_classes,
                                                        alpha=self.alpha, factor=self.factor)
-            self.loss = loss_dict['loss']
-            centers = loss_dict['centers']
-
-            # Configure the Training Op (for TRAIN mode)
-            if mode == tf.estimator.ModeKeys.TRAIN:
-                # Loading variables from some model just in case
-                if self.extra_checkpoint is not None:
-                    tf.contrib.framework.init_from_checkpoint(self.extra_checkpoint["checkpoint_path"],
-                                                              self.extra_checkpoint["scopes"])
-
-                global_step = tf.contrib.framework.get_or_create_global_step()
-                # backprop and updating the centers
-                train_op = tf.group(self.optimizer.minimize(self.loss, global_step=global_step),
-                                    centers)
-
-                return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss,
-                                                  train_op=train_op)
 
             if self.embedding_validation:
                 # Compute the embeddings
@@ -324,6 +308,25 @@ class LogitsCenterLoss(estimator.Estimator):
 
             if mode == tf.estimator.ModeKeys.PREDICT:
                 return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
+
+
+            self.loss = loss_dict['loss']
+            centers = loss_dict['centers']
+
+            # Configure the Training Op (for TRAIN mode)
+            if mode == tf.estimator.ModeKeys.TRAIN:
+                # Loading variables from some model just in case
+                if self.extra_checkpoint is not None:
+                    tf.contrib.framework.init_from_checkpoint(self.extra_checkpoint["checkpoint_path"],
+                                                              self.extra_checkpoint["scopes"])
+
+                global_step = tf.contrib.framework.get_or_create_global_step()
+                # backprop and updating the centers
+                train_op = tf.group(self.optimizer.minimize(self.loss, global_step=global_step),
+                                    centers)
+
+                return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss,
+                                                  train_op=train_op)
 
 
             if self.embedding_validation:
