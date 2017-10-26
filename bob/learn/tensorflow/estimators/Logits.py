@@ -82,6 +82,14 @@ class Logits(estimator.Estimator):
         
       params:
         Extra params for the model function (please see https://www.tensorflow.org/extend/estimators for more info)
+
+      extra_checkpoint: dict()
+        In case you want to use other model to initialize some variables.
+        This argument should be in the following format
+        extra_checkpoint = {"checkpoint_path": <YOUR_CHECKPOINT>, 
+                            "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),
+                            "is_trainable": <IF_THOSE_LOADED_VARIABLES_ARE_TRAINABLE>
+                           }
     """
 
     def __init__(self,

@@ -27,7 +27,7 @@ tfrecord_validation = "./validation_mnist.tfrecord"
 model_dir = "./temp"
 model_dir_adapted = "./temp2"
 
-learning_rate = 0.001
+learning_rate = 0.0001
 data_shape = (250, 250, 3)  # size of atnt images
 output_shape = (50, 50)
 data_type = tf.float32
@@ -69,7 +69,6 @@ def test_siamesetrainer():
         trainer = Siamese(model_dir=model_dir,
                                 architecture=dummy,
                                 optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-                                n_classes=10,
                                 loss_op=contrastive_loss,
                                 validation_batch_size=validation_batch_size)
         run_siamesetrainer(trainer)
@@ -84,55 +83,38 @@ def test_siamesetrainer():
 def test_siamesetrainer_transfer():
 
     def logits_input_fn():
-        return single_batch(filenames, labels, data_shape, data_type, batch_size, epochs=epochs)
+        return single_batch(filenames, labels, data_shape, data_type, batch_size, epochs=epochs, output_shape=output_shape)
 
     # Trainer logits first than siamese
     try:
 
-        # LOGISTS
-        #logits_trainer = Logits(model_dir=model_dir,
-        #                        architecture=dummy,
-        #                        optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-        #                        n_classes=10,
-        #                        loss_op=mean_cross_entropy_loss,
-        #                        embedding_validation=False,
-        #                        validation_batch_size=validation_batch_size)
-        #logits_trainer.train(logits_input_fn, steps=steps)
-
-        # Checking if the centers were updated
-        sess = tf.Session()
-        checkpoint_path = tf.train.get_checkpoint_state(model_dir).model_checkpoint_path
-        saver = tf.train.import_meta_graph(checkpoint_path + ".meta", clear_devices=True)
-        saver.restore(sess, tf.train.latest_checkpoint(model_dir))
-        conv1 = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="Dummy/conv1/weights:0")[0]
-        print(conv1.eval(sess))
-        tf.reset_default_graph()
-        import ipdb; ipdb.set_trace();
-
         extra_checkpoint = {"checkpoint_path":model_dir, 
-                            "scopes": [dict({"Dummy/": "Dummy/"}),
-                                       dict({"Dummy/": "Dummy1/"})],
+                            "scopes": dict({"Dummy/": "Dummy/"}),
                             "is_trainable": False
                            }
-        #del logits_trainer                           
 
-        # Checking if the centers were updated
+        # LOGISTS
+        logits_trainer = Logits(model_dir=model_dir,
+                                architecture=dummy,
+                                optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+                                n_classes=2,
+                                loss_op=mean_cross_entropy_loss,
+                                embedding_validation=False,
+                                validation_batch_size=validation_batch_size)
+        logits_trainer.train(logits_input_fn, steps=steps)
 
         # NOW THE FUCKING SIAMESE
         trainer = Siamese(model_dir=model_dir_adapted,
                           architecture=dummy_adapted,
                           optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-                          n_classes=10,
                           loss_op=contrastive_loss,
                           validation_batch_size=validation_batch_size,
                           extra_checkpoint=extra_checkpoint)
-                          #extra_checkpoint=None
         run_siamesetrainer(trainer)
     finally:
         try:
-            #shutil.rmtree(model_dir, ignore_errors=True)
-            #shutil.rmtree(model_dir_adapted, ignore_errors=True)            
-            pass
+            shutil.rmtree(model_dir, ignore_errors=True)
+            shutil.rmtree(model_dir_adapted, ignore_errors=True)            
         except Exception:
             pass        
 
@@ -157,7 +139,7 @@ def run_siamesetrainer(trainer):
                                        scaffold=tf.train.Scaffold(),
                                        summary_writer=tf.summary.FileWriter(model_dir) )]
 
-    trainer.train(input_fn, steps=steps, hooks=hooks)
+    trainer.train(input_fn, steps=1, hooks=hooks)
 
     acc = trainer.evaluate(input_validation_fn)
     assert acc['accuracy'] > 0.5

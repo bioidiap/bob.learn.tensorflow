@@ -19,6 +19,7 @@ def dummy(inputs, reuse=False, is_trainable=True):
     end_points = dict()
     
     with tf.variable_scope('Dummy', reuse=reuse):
+    
         initializer = tf.contrib.layers.xavier_initializer()
         
         graph = slim.conv2d(inputs, 10, [3, 3], activation_fn=tf.nn.relu, stride=1, scope='conv1',
