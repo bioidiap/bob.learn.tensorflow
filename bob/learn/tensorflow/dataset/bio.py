@@ -1,32 +1,10 @@
-import os
 import six
 import tensorflow as tf
-from bob.bio.base.tools.grid import indices
-from bob.bio.base import read_original_data as _read_original_data
+from bob.bio.base import read_original_data
 
 
-def make_output_path(output_dir, key):
-    """Returns an output path used for saving keys. You need to make sure the
-    directories leading to this output path exist.
-
-    Parameters
-    ----------
-    output_dir : str
-        The root directory to save the results
-    key : str
-        The key of the sample. Usually biofile.make_path("", "")
-
-    Returns
-    -------
-    str
-        The path for the provided key.
-    """
-    return os.path.join(output_dir, key + '.hdf5')
-
-
-def bio_generator(database, groups, number_of_parallel_jobs, output_dir,
-                  read_original_data=None, biofile_to_label=None,
-                  multiple_samples=False, force=False):
+def bio_generator(database, biofiles, load_data=None, biofile_to_label=None,
+                  multiple_samples=False):
     """Returns a generator and its output types and shapes based on
     bob.bio.base databases.
 
@@ -34,16 +12,11 @@ def bio_generator(database, groups, number_of_parallel_jobs, output_dir,
     ----------
     database : :any:`bob.bio.base.database.BioDatabase`
         The database that you want to use.
-    groups : [str]
-        List of groups. Can be any permutation of ``('world', 'dev', 'eval')``
-    number_of_parallel_jobs : int
-        The number of parallel jobs that the script has ran with. This is used
-        to split the number files into array jobs.
-    output_dir : str
-        The root directory where the data will be saved.
-    read_original_data : :obj:`object`, optional
+    biofiles : [:any:`bob.bio.base.database.BioFile`]
+        The list of the bio files .
+    load_data : :obj:`object`, optional
         A callable with the signature of
-        ``data = read_original_data(biofile, directory, extension)``.
+        ``data = load_data(database, biofile)``.
         :any:`bob.bio.base.read_original_data` is used by default.
     biofile_to_label : :obj:`object`, optional
         A callable with the signature of ``label = biofile_to_label(biofile)``.
@@ -52,8 +25,6 @@ def bio_generator(database, groups, number_of_parallel_jobs, output_dir,
         If true, it assumes that the bio database's samples actually contain
         multiple samples. This is useful for when you want to treat video
         databases as image databases.
-    force : bool, optional
-        If true, all files will be overwritten.
 
     Returns
     -------
@@ -65,25 +36,22 @@ def bio_generator(database, groups, number_of_parallel_jobs, output_dir,
     output_shapes : (tf.TensorShape, tf.TensorShape, tf.TensorShape)
         The shapes of the returned samples.
     """
-    if read_original_data is None:
-        read_original_data = _read_original_data
+    if load_data is None:
+        def load_data(database, biofile):
+            data = read_original_data(
+                biofile,
+                database.original_directory,
+                database.original_extension)
+            return data
     if biofile_to_label is None:
         def biofile_to_label(biofile):
             return -1
-    biofiles = list(database.all_files(groups))
-    if number_of_parallel_jobs > 1:
-        start, end = indices(biofiles, number_of_parallel_jobs)
-        biofiles = biofiles[start:end]
     labels = (biofile_to_label(f) for f in biofiles)
     keys = (str(f.make_path("", "")) for f in biofiles)
 
     def generator():
         for f, label, key in six.moves.zip(biofiles, labels, keys):
-            outpath = make_output_path(output_dir, key)
-            if not force and os.path.isfile(outpath):
-                continue
-            data = read_original_data(f, database.original_directory,
-                                      database.original_extension)
+            data = load_data(database, f)
             # labels
             if multiple_samples:
                 for d in data:
@@ -92,8 +60,8 @@ def bio_generator(database, groups, number_of_parallel_jobs, output_dir,
                 yield (data, label, key)
 
     # load one data to get its type and shape
-    data = read_original_data(biofiles[0], database.original_directory,
-                              database.original_extension)
+    data = load_data(biofiles[0], database.original_directory,
+                     database.original_extension)
     if multiple_samples:
         try:
             data = data[0]
