@@ -20,16 +20,13 @@ The configuration files should have the following objects totally:
 
   ## Required objects:
 
-  model_dir
-  model_fn
+  estimator
   eval_input_fn
 
   ## Optional objects:
 
   eval_interval_secs
   run_once
-  run_config
-  model_params
   steps
   hooks
   name
@@ -59,33 +56,27 @@ def main(argv=None):
     config_files = args['<config_files>']
     config = read_config_file(config_files)
 
-    model_dir = config.model_dir
-    model_fn = config.model_fn
+    estimator = config.estimator
     eval_input_fn = config.eval_input_fn
 
     eval_interval_secs = getattr(config, 'eval_interval_secs', 60)
     run_once = getattr(config, 'run_once', False)
-    run_config = getattr(config, 'run_config', None)
-    model_params = getattr(config, 'model_params', None)
     steps = getattr(config, 'steps', None)
     hooks = getattr(config, 'hooks', None)
     name = getattr(config, 'eval_name', None)
 
-    # Instantiate Estimator
-    nn = tf.estimator.Estimator(model_fn=model_fn, model_dir=model_dir,
-                                params=model_params, config=run_config)
     if name:
         real_name = 'eval_' + name
     else:
         real_name = 'eval'
-    evaluated_file = os.path.join(nn.model_dir, real_name, 'evaluated')
+    evaluated_file = os.path.join(estimator.model_dir, real_name, 'evaluated')
     while True:
         evaluated_steps = []
         if os.path.exists(evaluated_file):
             with open(evaluated_file) as f:
-                evaluated_steps = f.read().split()
+                evaluated_steps = [line.split()[0] for line in f]
 
-        ckpt = tf.train.get_checkpoint_state(nn.model_dir)
+        ckpt = tf.train.get_checkpoint_state(estimator.model_dir)
         if (not ckpt) or (not ckpt.model_checkpoint_path):
             time.sleep(eval_interval_secs)
             continue
@@ -101,7 +92,7 @@ def main(argv=None):
                 continue
 
             # Evaluate
-            evaluations = nn.evaluate(
+            evaluations = estimator.evaluate(
                 input_fn=eval_input_fn,
                 steps=steps,
                 hooks=hooks,
@@ -109,11 +100,14 @@ def main(argv=None):
                 name=name,
             )
 
-            print(', '.join('%s = %s' % (k, v)
-                            for k, v in sorted(six.iteritems(evaluations))))
+            str_evaluations = ', '.join(
+                '%s = %s' % (k, v)
+                for k, v in sorted(six.iteritems(evaluations)))
+            print(str_evaluations)
             sys.stdout.flush()
             with open(evaluated_file, 'a') as f:
-                f.write('{}\n'.format(evaluations['global_step']))
+                f.write('{} {}\n'.format(
+                    evaluations['global_step'], str_evaluations))
         if run_once:
             break
         time.sleep(eval_interval_secs)
