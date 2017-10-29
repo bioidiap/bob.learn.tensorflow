@@ -4,7 +4,7 @@ from bob.bio.base import read_original_data
 
 
 def bio_generator(database, biofiles, load_data=None, biofile_to_label=None,
-                  multiple_samples=False):
+                  multiple_samples=False, repeat=False):
     """Returns a generator and its output types and shapes based on
     bob.bio.base databases.
 
@@ -25,6 +25,8 @@ def bio_generator(database, biofiles, load_data=None, biofile_to_label=None,
         If true, it assumes that the bio database's samples actually contain
         multiple samples. This is useful for when you want to treat video
         databases as image databases.
+    repeat : bool, optional
+        If True, the samples are repeated forever.
 
     Returns
     -------
@@ -50,14 +52,17 @@ def bio_generator(database, biofiles, load_data=None, biofile_to_label=None,
     keys = (str(f.make_path("", "")) for f in biofiles)
 
     def generator():
-        for f, label, key in six.moves.zip(biofiles, labels, keys):
-            data = load_data(database, f)
-            # labels
-            if multiple_samples:
-                for d in data:
-                    yield (d, label, key)
-            else:
-                yield (data, label, key)
+        while True:
+            for f, label, key in six.moves.zip(biofiles, labels, keys):
+                data = load_data(database, f)
+                # labels
+                if multiple_samples:
+                    for d in data:
+                        yield (d, label, key)
+                else:
+                    yield (data, label, key)
+            if not repeat:
+                break
 
     # load one data to get its type and shape
     data = load_data(database, biofiles[0])
