@@ -60,8 +60,7 @@ def bio_generator(database, biofiles, load_data=None, biofile_to_label=None,
                 yield (data, label, key)
 
     # load one data to get its type and shape
-    data = load_data(biofiles[0], database.original_directory,
-                     database.original_extension)
+    data = load_data(database, biofiles[0])
     if multiple_samples:
         try:
             data = data[0]
