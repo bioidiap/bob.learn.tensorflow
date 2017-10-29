@@ -110,13 +110,13 @@ def model_fn(features, labels, mode, params=None, config=None):
             learning_rate=learning_rate)
         train_op = optimizer.minimize(
             loss=loss, global_step=tf.train.get_or_create_global_step())
+        # Log accuracy and loss
+        with tf.name_scope('train_metrics'):
+            tf.summary.scalar('accuracy', accuracy[1])
+            tf.summary.scalar('loss', loss)
     else:
         train_op = None
 
-    # Log accuracy and loss
-    tf.identity(accuracy[1], name='accuracy')
-    tf.summary.scalar('accuracy', accuracy[1])
-    tf.summary.scalar('loss', loss)
 
     return tf.estimator.EstimatorSpec(
         mode=mode,
