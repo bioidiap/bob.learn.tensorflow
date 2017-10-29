@@ -100,20 +100,27 @@ def model_fn(features, labels, mode, params=None, config=None):
     # Calculate Loss (for both TRAIN and EVAL modes)
     loss = tf.losses.sparse_softmax_cross_entropy(
         logits=logits, labels=labels)
+    accuracy = tf.metrics.accuracy(
+        labels=labels, predictions=predictions["classes"])
+    metrics = {'accuracy': accuracy}
 
-    # Configure the Training Op (for TRAIN mode)
+    # Configure the training op
     if mode == tf.estimator.ModeKeys.TRAIN:
         optimizer = tf.train.GradientDescentOptimizer(
             learning_rate=learning_rate)
         train_op = optimizer.minimize(
-            loss=loss,
-            global_step=tf.train.get_global_step())
-        return tf.estimator.EstimatorSpec(
-            mode=mode, loss=loss, train_op=train_op)
+            loss=loss, global_step=tf.train.get_or_create_global_step())
+    else:
+        train_op = None
 
-    # Add evaluation metrics (for EVAL mode)
-    eval_metric_ops = {
-        "accuracy": tf.metrics.accuracy(
-            labels=labels, predictions=predictions["classes"])}
+    # Log accuracy and loss
+    tf.identity(accuracy[1], name='accuracy')
+    tf.summary.scalar('accuracy', accuracy[1])
+    tf.summary.scalar('loss', loss)
+
     return tf.estimator.EstimatorSpec(
-        mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
+        mode=mode,
+        predictions=predictions,
+        loss=loss,
+        train_op=train_op,
+        eval_metric_ops=metrics)
