@@ -101,10 +101,6 @@ def model_fn(features, labels, mode, params=None, config=None):
     loss = tf.losses.sparse_softmax_cross_entropy(
         logits=logits, labels=labels)
 
-    with tf.name_scope('train_metrics'):
-        # Create a tensor named train_loss for logging purposes
-        tf.summary.scalar('train_loss', loss)
-
     # Configure the Training Op (for TRAIN mode)
     if mode == tf.estimator.ModeKeys.TRAIN:
         optimizer = tf.train.GradientDescentOptimizer(
