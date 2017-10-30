@@ -89,7 +89,7 @@ An example configuration for a trained model and its evaluation could be::
     # output_shapes)`` line is mandatory in the function below. You have to
     # create it in your configuration file since you want it to be created in
     # the same graph as your model.
-    def bio_predict_input_fn(generator,output_types, output_shapes):
+    def bio_predict_input_fn(generator, output_types, output_shapes):
         def input_fn():
             dataset = tf.data.Dataset.from_generator(generator, output_types,
                                                      output_shapes)
@@ -116,7 +116,7 @@ from bob.bio.base.utils import read_config_file, save
 from bob.bio.base.tools.grid import indices
 from bob.learn.tensorflow.utils.commandline import \
     get_from_config_or_commandline
-from bob.learn.tensorflow.dataset.bio import bio_generator
+from bob.learn.tensorflow.dataset.bio import BioGenerator
 from bob.core.log import setup, set_verbosity_level
 logger = setup(__name__)
 
@@ -172,6 +172,9 @@ def main(argv=None):
     hooks = getattr(config, 'hooks', None)
     load_data = getattr(config, 'load_data', None)
 
+    # TODO(amir): implement force and pre-filtering
+    raise ValueError("This script is not fully implemented yet!")
+
     # Sets-up logging
     set_verbosity_level(logger, verbosity)
 
@@ -187,12 +190,12 @@ def main(argv=None):
         start, end = indices(biofiles, number_of_parallel_jobs)
         biofiles = biofiles[start:end]
 
-    generator, output_types, output_shapes = bio_generator(
+    generator = BioGenerator(
         database, biofiles, load_data=load_data,
-        biofile_to_label=None, multiple_samples=multiple_samples, force=force)
+        multiple_samples=multiple_samples)
 
-    predict_input_fn = bio_predict_input_fn(generator,
-                                            output_types, output_shapes)
+    predict_input_fn = bio_predict_input_fn(
+        generator, generator.output_types, generator.output_shapes)
 
     predictions = estimator.predict(
         predict_input_fn,
