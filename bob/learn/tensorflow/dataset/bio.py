@@ -56,8 +56,6 @@ class BioGenerator(object):
             def biofile_to_label(biofile):
                 return -1
 
-        self.labels = (biofile_to_label(f) for f in biofiles)
-        self.keys = (str(f.make_path("", "")) for f in biofiles)
         self.database = database
         self.biofiles = biofiles
         self.load_data = load_data
@@ -82,6 +80,16 @@ class BioGenerator(object):
         logger.debug("Initializing a dataset with %d files and %s types "
                      "and %s shapes", len(self.biofiles), self.output_types,
                      self.output_shapes)
+
+    @property
+    def labels(self):
+        for f in self.biofiles:
+            yield self.biofile_to_label(f)
+
+    @property
+    def keys(self):
+        for f in self.biofiles:
+            yield str(f.make_path("", "")).encode('utf-8')
 
     @property
     def output_types(self):
