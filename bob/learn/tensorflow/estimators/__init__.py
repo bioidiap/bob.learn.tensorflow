@@ -2,10 +2,20 @@
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 
+import tensorflow as tf
+
 def check_features(features):
     if not 'data' in features.keys() or not 'key' in features.keys():
         raise ValueError("The input function needs to contain a dictionary with the keys `data` and `key` ")
     return True
+
+
+def is_trainable_checkpoint(params):
+
+    if not "is_trainable" in params:
+        raise ValueError("Param `is_trainable` is missing in `load_variable_from_checkpoint` dictionary")
+
+    return params["is_trainable"]
 
 
 from .Logits import Logits, LogitsCenterLoss
