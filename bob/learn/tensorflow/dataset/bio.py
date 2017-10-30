@@ -57,7 +57,7 @@ class BioGenerator(object):
                 return -1
 
         self.database = database
-        self.biofiles = biofiles
+        self.biofiles = list(biofiles)
         self.load_data = load_data
         self.biofile_to_label = biofile_to_label
         self.multiple_samples = multiple_samples
@@ -77,9 +77,9 @@ class BioGenerator(object):
         self._output_shapes = (
             data.shape, tf.TensorShape([]), tf.TensorShape([]))
 
-        logger.debug("Initializing a dataset with %d files and %s types "
-                     "and %s shapes", len(self.biofiles), self.output_types,
-                     self.output_shapes)
+        logger.info("Initializing a dataset with %d files and %s types "
+                    "and %s shapes", len(self.biofiles), self.output_types,
+                    self.output_shapes)
 
     @property
     def labels(self):
