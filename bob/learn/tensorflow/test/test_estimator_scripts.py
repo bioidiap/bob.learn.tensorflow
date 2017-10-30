@@ -13,6 +13,7 @@ from bob.learn.tensorflow.script.eval_generic import main as eval_generic
 dummy_tfrecord_config = datafile('dummy_verify_config.py', __name__)
 CONFIG = '''
 import tensorflow as tf
+from bob.learn.tensorflow.utils.reproducible import run_config
 from bob.learn.tensorflow.dataset.tfrecords import shuffle_data_and_labels, \
     batch_data_and_labels
 
@@ -21,7 +22,7 @@ tfrecord_filenames = ['%(tfrecord_filenames)s']
 data_shape = (1, 112, 92)  # size of atnt images
 data_type = tf.uint8
 batch_size = 2
-epochs = 1
+epochs = 2
 learning_rate = 0.00001
 run_once = True
 
@@ -32,7 +33,7 @@ def train_input_fn():
 
 def eval_input_fn():
     return batch_data_and_labels(tfrecord_filenames, data_shape, data_type,
-                                   batch_size, epochs=epochs)
+                                   batch_size, epochs=1)
 
 def architecture(images):
     images = tf.cast(images, tf.float32)
@@ -60,24 +61,35 @@ def model_fn(features, labels, mode, params, config):
         return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
     # Calculate Loss (for both TRAIN and EVAL modes)
-    predictor = tf.nn.sparse_softmax_cross_entropy_with_logits(
+    loss = tf.losses.sparse_softmax_cross_entropy(
         logits=logits, labels=labels)
-    loss = tf.reduce_mean(predictor)
+    accuracy = tf.metrics.accuracy(
+        labels=labels, predictions=predictions["classes"])
+    metrics = {'accuracy': accuracy}
 
-    # Configure the Training Op (for TRAIN mode)
+    # Configure the training op
     if mode == tf.estimator.ModeKeys.TRAIN:
-        global_step = tf.contrib.framework.get_or_create_global_step()
-        optimizer = tf.train.GradientDescentOptimizer(learning_rate)
-        train_op = optimizer.minimize(loss, global_step=global_step)
-        return tf.estimator.EstimatorSpec(mode=mode, loss=loss,
-                                          train_op=train_op)
+        optimizer = tf.train.GradientDescentOptimizer(
+            learning_rate=learning_rate)
+        train_op = optimizer.minimize(
+            loss=loss, global_step=tf.train.get_or_create_global_step())
+        # Log accuracy and loss
+        with tf.name_scope('train_metrics'):
+            tf.summary.scalar('accuracy', accuracy[1])
+            tf.summary.scalar('loss', loss)
+    else:
+        train_op = None
 
-    # Add evaluation metrics (for EVAL mode)
-    eval_metric_ops = {
-        "accuracy": tf.metrics.accuracy(
-            labels=labels, predictions=predictions["classes"])}
     return tf.estimator.EstimatorSpec(
-        mode=mode, loss=loss, eval_metric_ops=eval_metric_ops)
+        mode=mode,
+        predictions=predictions,
+        loss=loss,
+        train_op=train_op,
+        eval_metric_ops=metrics)
+
+
+estimator = tf.estimator.Estimator(model_fn=model_fn, model_dir=model_dir,
+                                   config=run_config)
 '''
 
 
@@ -128,7 +140,7 @@ def test_eval_once():
            doc = f.read()
 
         assert '1' in doc, doc
-        assert '100' in doc, doc
+        assert '200' in doc, doc
     finally:
         try:
             shutil.rmtree(tmpdir)
