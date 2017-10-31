@@ -95,8 +95,10 @@ def main(argv=None):
                 data = bob.io.image.to_matplotlib(bob.io.base.load(path)).astype(data_type)
                 data = data.tostring()
 
-                feature = {'train/data': _bytes_feature(data),
-                           'train/label': _int64_feature(file_to_label(client_ids, f))}
+                feature = {'data': _bytes_feature(data),
+                           'label': _int64_feature(file_to_label(client_ids, f)),
+                           'key': _bytes_feature(str(f.path)),
+                           }
 
                 example = tf.train.Example(features=tf.train.Features(feature=feature))
                 writer.write(example.SerializeToString())
