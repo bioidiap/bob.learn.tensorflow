@@ -34,9 +34,6 @@ class BioGenerator(object):
         If true, it assumes that the bio database's samples actually contain
         multiple samples. This is useful for when you want to for example treat
         video databases as image databases.
-    repeat : :obj:`int`, optional
-        The samples are repeated ``repeat`` times. ``-1`` will make it repeat
-        forever.
     output_types : (object, object, object)
         The types of the returned samples.
     output_shapes : (tf.TensorShape, tf.TensorShape, tf.TensorShape)
@@ -44,7 +41,7 @@ class BioGenerator(object):
     """
 
     def __init__(self, database, biofiles, load_data=None,
-                 biofile_to_label=None, multiple_samples=False, repeat=1):
+                 biofile_to_label=None, multiple_samples=False):
         if load_data is None:
             def load_data(database, biofile):
                 data = read_original_data(
@@ -61,7 +58,6 @@ class BioGenerator(object):
         self.load_data = load_data
         self.biofile_to_label = biofile_to_label
         self.multiple_samples = multiple_samples
-        self.repeat = repeat
         self.epoch = 0
 
         # load one data to get its type and shape
@@ -107,17 +103,14 @@ class BioGenerator(object):
         (data, label, key) : tuple
             A tuple containing the data, label, and the key.
         """
-        while True:
-            for f, label, key in six.moves.zip(
-                    self.biofiles, self.labels, self.keys):
-                data = self.load_data(self.database, f)
-                # labels
-                if self.multiple_samples:
-                    for d in data:
-                        yield (d, label, key)
-                else:
-                    yield (data, label, key)
-            self.epoch += 1
-            logger.info("Elapsed %d epochs", self.epoch)
-            if self.repeat != -1 and self.epoch >= self.repeat:
-                break
+        for f, label, key in six.moves.zip(
+                self.biofiles, self.labels, self.keys):
+            data = self.load_data(self.database, f)
+            # labels
+            if self.multiple_samples:
+                for d in data:
+                    yield (d, label, key)
+            else:
+                yield (data, label, key)
+        self.epoch += 1
+        logger.info("Elapsed %d epochs", self.epoch)
