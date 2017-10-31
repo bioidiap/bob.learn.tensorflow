@@ -4,7 +4,7 @@
 
 import tensorflow as tf
 from functools import partial
-from . import append_image_augmentation, siamease_pairs_generator
+from . import append_image_augmentation, siamease_pairs_generator, from_filename_to_tensor
 
 
 def shuffle_data_and_labels_image_augmentation(filenames, labels, data_shape, data_type,
@@ -15,7 +15,8 @@ def shuffle_data_and_labels_image_augmentation(filenames, labels, data_shape, da
                                               random_brightness=False,
                                               random_contrast=False,
                                               random_saturation=False,
-                                              per_image_normalization=True):
+                                              per_image_normalization=True,
+                                              extension=None):
     """
     Dump random batches for siamese networks from a list of image paths and labels:
         
@@ -72,8 +73,9 @@ def shuffle_data_and_labels_image_augmentation(filenames, labels, data_shape, da
 
        per_image_normalization:
            Linearly scales image to have zero mean and unit norm.            
-
-     
+           
+       extension:
+           If None, will load files using `tf.image.decode..` if set to `hdf5`, will load with `bob.io.base.load`
     """                            
 
     dataset = create_dataset_from_path_augmentation(filenames, labels, data_shape,
@@ -84,11 +86,10 @@ def shuffle_data_and_labels_image_augmentation(filenames, labels, data_shape, da
                                           random_brightness=random_brightness,
                                           random_contrast=random_contrast,
                                           random_saturation=random_saturation,
-                                          per_image_normalization=per_image_normalization)
+                                          per_image_normalization=per_image_normalization,
+                                          extension=extension)
 
     dataset = dataset.shuffle(buffer_size).batch(batch_size).repeat(epochs)
-    #dataset = dataset.batch(buffer_size).batch(batch_size).repeat(epochs)
-
     data, labels = dataset.make_one_shot_iterator().get_next()
     return data, labels
 
@@ -101,7 +102,8 @@ def create_dataset_from_path_augmentation(filenames, labels,
                                           random_brightness=False,
                                           random_contrast=False,
                                           random_saturation=False,
-                                          per_image_normalization=True):
+                                          per_image_normalization=True,
+                                          extension=None):
     """
     Create dataset from a list of tf-record files
     
@@ -118,8 +120,39 @@ def create_dataset_from_path_augmentation(filenames, labels,
           
        data_type:
           tf data type(https://www.tensorflow.org/versions/r0.12/resources/dims_types#data_types)
+     
+       batch_size:
+          Size of the batch
           
-       feature:
+       epochs:
+           Number of epochs to be batched
+       
+       buffer_size:
+            Size of the shuffle bucket
+
+       gray_scale:
+          Convert to gray scale?
+          
+       output_shape:
+          If set, will randomly crop the image given the output shape
+
+       random_flip:
+          Randomly flip an image horizontally  (https://www.tensorflow.org/api_docs/python/tf/image/random_flip_left_right)
+
+       random_brightness:
+           Adjust the brightness of an RGB image by a random factor (https://www.tensorflow.org/api_docs/python/tf/image/random_brightness)
+
+       random_contrast:
+           Adjust the contrast of an RGB image by a random factor (https://www.tensorflow.org/api_docs/python/tf/image/random_contrast)
+
+       random_saturation:
+           Adjust the saturation of an RGB image by a random factor (https://www.tensorflow.org/api_docs/python/tf/image/random_saturation)
+
+       per_image_normalization:
+           Linearly scales image to have zero mean and unit norm.            
+           
+       extension:
+           If None, will load files using `tf.image.decode..` if set to `hdf5`, will load with `bob.io.base.load`
     
     """
  
@@ -132,7 +165,8 @@ def create_dataset_from_path_augmentation(filenames, labels,
                      random_brightness=random_brightness,
                      random_contrast=random_contrast,
                      random_saturation=random_saturation,
-                     per_image_normalization=per_image_normalization) 
+                     per_image_normalization=per_image_normalization,
+                     extension=extension) 
 
     left_data, right_data, siamese_labels = siamease_pairs_generator(filenames, labels)
     dataset = tf.contrib.data.Dataset.from_tensor_slices((left_data, right_data, siamese_labels))
@@ -147,15 +181,16 @@ def image_augmentation_parser(filename_left, filename_right, label, data_shape, 
                               random_brightness=False,
                               random_contrast=False,
                               random_saturation=False,
-                              per_image_normalization=True):
+                              per_image_normalization=True,
+                              extension=None):
 
     """
     Parses a single tf.Example into image and label tensors.
     """
-        
+    
     # Convert the image data from string back to the numbers
-    image_left = tf.cast(tf.image.decode_image(tf.read_file(filename_left)), tf.float32)
-    image_right = tf.cast(tf.image.decode_image(tf.read_file(filename_right)), tf.float32)    
+    image_left = from_filename_to_tensor(filename_left, extension=extension)
+    image_right = from_filename_to_tensor(filename_right, extension=extension)
 
     # Reshape image data into the original shape
     image_left = tf.reshape(image_left, data_shape)

@@ -1,9 +1,38 @@
 import tensorflow as tf
 import numpy
+import os
+import bob.io.base
+import bob.io.image
 
 DEFAULT_FEATURE = {'data': tf.FixedLenFeature([], tf.string),
                    'label': tf.FixedLenFeature([], tf.int64),
                    'key': tf.FixedLenFeature([], tf.string)}
+
+
+def from_hdf5file_to_tensor(filename):
+    data = bob.io.image.to_matplotlib(bob.io.base.load(filename))
+    
+    #reshaping to ndim == 3
+    if data.ndim == 2:
+        data = numpy.reshape(data, (data.shape[0], data.shape[1], 1))
+    data = data.astype("float32")
+    data = numpy.zeros((160, 160, 1), dtype="float32")
+    
+    return data
+
+
+def from_filename_to_tensor(filename, extension=None):
+    """
+    Read a file and it convert it to tensor.
+    
+    If the file extension is something that tensorflow understands (.jpg, .bmp, .tif,...),
+    it uses the `tf.image.decode_image` otherwise it uses `bob.io.base.load`
+    """
+    
+    if extension == "hdf5":
+        return tf.py_func(from_hdf5file_to_tensor, [filename], [tf.float32])
+    else:
+        return tf.cast(tf.image.decode_image(tf.read_file(filename)), tf.float32)
 
 
 def append_image_augmentation(image, gray_scale=False,
