@@ -7,7 +7,6 @@ import threading
 import os
 import bob.io.base
 import bob.core
-from ..analyzers import SoftmaxAnalizer
 from tensorflow.core.framework import summary_pb2
 import time
 
