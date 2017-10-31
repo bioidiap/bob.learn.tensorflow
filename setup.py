@@ -50,7 +50,6 @@ setup(
             'bob_tf_compute_statistics.py = bob.learn.tensorflow.script.compute_statistics:main',
             'bob_tf_db_to_tfrecords = bob.learn.tensorflow.script.db_to_tfrecords:main',
             'bob_tf_load_and_debug.py = bob.learn.tensorflow.script.load_and_debug:main',
-            'bob_tf_lfw_db_to_tfrecords.py = bob.learn.tensorflow.script.lfw_db_to_tfrecords:main',
             'bob_tf_train_generic = bob.learn.tensorflow.script.train_generic:main',
             'bob_tf_eval_generic = bob.learn.tensorflow.script.eval_generic:main',
             'bob_tf_predict_generic = bob.learn.tensorflow.script.predict_generic:main',
