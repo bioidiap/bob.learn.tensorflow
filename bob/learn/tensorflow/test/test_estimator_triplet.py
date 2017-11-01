@@ -5,14 +5,15 @@
 import tensorflow as tf
 
 from bob.learn.tensorflow.network import dummy
-from bob.learn.tensorflow.estimators import Triplet
+from bob.learn.tensorflow.estimators import Triplet, Logits
 from bob.learn.tensorflow.dataset.triplet_image import shuffle_data_and_labels_image_augmentation as triplet_batch
 from bob.learn.tensorflow.dataset.image import shuffle_data_and_labels_image_augmentation as single_batch
 
-from bob.learn.tensorflow.loss import triplet_loss
+from bob.learn.tensorflow.loss import triplet_loss, mean_cross_entropy_loss
 from bob.learn.tensorflow.utils.hooks import LoggerHookEstimator
 from bob.learn.tensorflow.utils import reproducible
 import pkg_resources
+from .test_estimator_transfer import dummy_adapted
 
 import numpy
 import shutil
@@ -22,6 +23,7 @@ import os
 tfrecord_train = "./train_mnist.tfrecord"
 tfrecord_validation = "./validation_mnist.tfrecord"    
 model_dir = "./temp"
+model_dir_adapted = "./temp2"
 
 learning_rate = 0.001
 data_shape = (250, 250, 3)  # size of atnt images
@@ -77,6 +79,45 @@ def test_triplet_estimator():
             pass        
 
 
+def test_triplettrainer_transfer():
+
+    def logits_input_fn():
+        return single_batch(filenames, labels, data_shape, data_type, batch_size, epochs=epochs, output_shape=output_shape)
+
+    # Trainer logits first than siamese
+    try:
+
+        extra_checkpoint = {"checkpoint_path":model_dir,
+                            "scopes": dict({"Dummy/": "Dummy/"}),
+                            "is_trainable": False
+                           }
+
+        # LOGISTS
+        logits_trainer = Logits(model_dir=model_dir,
+                                architecture=dummy,
+                                optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+                                n_classes=2,
+                                loss_op=mean_cross_entropy_loss,
+                                embedding_validation=False,
+                                validation_batch_size=validation_batch_size)
+        logits_trainer.train(logits_input_fn, steps=steps)
+
+        # NOW THE FUCKING SIAMESE
+        trainer = Triplet(model_dir=model_dir_adapted,
+                          architecture=dummy_adapted,
+                          optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+                          loss_op=triplet_loss,
+                          validation_batch_size=validation_batch_size,
+                          extra_checkpoint=extra_checkpoint)
+        run_triplet_estimator(trainer)
+    finally:
+        try:
+            shutil.rmtree(model_dir, ignore_errors=True)
+            shutil.rmtree(model_dir_adapted, ignore_errors=True)
+        except Exception:
+            pass
+
+
 def run_triplet_estimator(trainer):
 
     # Cleaning up
@@ -105,4 +146,3 @@ def run_triplet_estimator(trainer):
     # Cleaning up
     tf.reset_default_graph()
     assert len(tf.global_variables()) == 0
-
