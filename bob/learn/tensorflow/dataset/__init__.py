@@ -73,7 +73,8 @@ def append_image_augmentation(image, gray_scale=False,
 
     if output_shape is not None:
         assert len(output_shape) == 2
-        image = tf.image.resize_image_with_crop_or_pad(image, output_shape[0], output_shape[1])
+        image = tf.image.resize_image_with_crop_or_pad(
+            image, output_shape[0], output_shape[1])
 
     if random_flip:
         image = tf.image.random_flip_left_right(image)
@@ -136,15 +137,18 @@ def triplets_random_generator(input_data, input_labels):
     input_labels = numpy.array(input_labels)
     total_samples = input_data.shape[0]
 
-    indexes_per_labels = arrange_indexes_by_label(input_labels, possible_labels)
+    indexes_per_labels = arrange_indexes_by_label(
+        input_labels, possible_labels)
 
     # searching for random triplets
     offset_class = 0
     for i in range(total_samples):
 
-        anchor_sample = input_data[indexes_per_labels[possible_labels[offset_class]][numpy.random.randint(len(indexes_per_labels[possible_labels[offset_class]]))], ...]
+        anchor_sample = input_data[indexes_per_labels[possible_labels[offset_class]][numpy.random.randint(
+            len(indexes_per_labels[possible_labels[offset_class]]))], ...]
 
-        positive_sample = input_data[indexes_per_labels[possible_labels[offset_class]][numpy.random.randint(len(indexes_per_labels[possible_labels[offset_class]]))], ...]
+        positive_sample = input_data[indexes_per_labels[possible_labels[offset_class]][numpy.random.randint(
+            len(indexes_per_labels[possible_labels[offset_class]]))], ...]
 
         # Changing the class
         offset_class += 1
@@ -152,10 +156,11 @@ def triplets_random_generator(input_data, input_labels):
         if offset_class == len(possible_labels):
             offset_class = 0
 
-        negative_sample = input_data[indexes_per_labels[possible_labels[offset_class]][numpy.random.randint(len(indexes_per_labels[possible_labels[offset_class]]))], ...]
+        negative_sample = input_data[indexes_per_labels[possible_labels[offset_class]][numpy.random.randint(
+            len(indexes_per_labels[possible_labels[offset_class]]))], ...]
 
         append(str(anchor_sample), str(positive_sample), str(negative_sample))
-        #yield anchor, positive, negative
+        # yield anchor, positive, negative
     return anchor, positive, negative
 
 
@@ -191,13 +196,16 @@ def siamease_pairs_generator(input_data, input_labels):
 
     # Filtering the samples by label and shuffling all the indexes
     #indexes_per_labels = dict()
-    #for l in possible_labels:
+    # for l in possible_labels:
     #    indexes_per_labels[l] = numpy.where(input_labels == l)[0]
     #    numpy.random.shuffle(indexes_per_labels[l])
-    indexes_per_labels = arrange_indexes_by_label(input_labels, possible_labels)
+    indexes_per_labels = arrange_indexes_by_label(
+        input_labels, possible_labels)
 
-    left_possible_indexes = numpy.random.choice(possible_labels, total_samples, replace=True)
-    right_possible_indexes = numpy.random.choice(possible_labels, total_samples, replace=True)
+    left_possible_indexes = numpy.random.choice(
+        possible_labels, total_samples, replace=True)
+    right_possible_indexes = numpy.random.choice(
+        possible_labels, total_samples, replace=True)
 
     genuine = True
     for i in range(total_samples):
@@ -207,10 +215,12 @@ def siamease_pairs_generator(input_data, input_labels):
             class_index = left_possible_indexes[i]
 
             # Now selecting the samples for the pair
-            left = input_data[indexes_per_labels[class_index][numpy.random.randint(len(indexes_per_labels[class_index]))]]
-            right = input_data[indexes_per_labels[class_index][numpy.random.randint(len(indexes_per_labels[class_index]))]]
+            left = input_data[indexes_per_labels[class_index][numpy.random.randint(
+                len(indexes_per_labels[class_index]))]]
+            right = input_data[indexes_per_labels[class_index][numpy.random.randint(
+                len(indexes_per_labels[class_index]))]]
             append(left, right, 0)
-            #yield left, right, 0
+            # yield left, right, 0
         else:
             # Selecting the 2 classes
             class_index = list()
@@ -219,7 +229,7 @@ def siamease_pairs_generator(input_data, input_labels):
             # Finding the right pair
             j = i
             # TODO: Lame solution. Fix this
-            while j < total_samples: # Here is an unidiretinal search for the negative pair
+            while j < total_samples:  # Here is an unidiretinal search for the negative pair
                 if left_possible_indexes[i] != right_possible_indexes[j]:
                     class_index.append(right_possible_indexes[j])
                     break
@@ -227,10 +237,11 @@ def siamease_pairs_generator(input_data, input_labels):
 
             if j < total_samples:
                 # Now selecting the samples for the pair
-                left = input_data[indexes_per_labels[class_index[0]][numpy.random.randint(len(indexes_per_labels[class_index[0]]))]]
-                right = input_data[indexes_per_labels[class_index[1]][numpy.random.randint(len(indexes_per_labels[class_index[1]]))]]
+                left = input_data[indexes_per_labels[class_index[0]][numpy.random.randint(
+                    len(indexes_per_labels[class_index[0]]))]]
+                right = input_data[indexes_per_labels[class_index[1]][numpy.random.randint(
+                    len(indexes_per_labels[class_index[1]]))]]
                 append(left, right, 1)
-
 
         genuine = not genuine
     return left_data, right_data, labels
@@ -296,3 +307,30 @@ def tf_repeat(tensor, repeats):
         tiled_tensor = tf.tile(expanded_tensor, multiples=multiples)
         repeated_tesnor = tf.reshape(tiled_tensor, tf.shape(tensor) * repeats)
     return repeated_tesnor
+
+
+def all_patches(image, label, key, size):
+    """Extracts all patches of an image
+
+    Parameters
+    ----------
+    image
+        The image should be channels_last format and already batched.
+    label
+        The label for the image
+    key
+        The key for the image
+    size : (int, int)
+        The height and width of the blocks.
+
+    Returns
+    -------
+    (blocks, label, key)
+        The non-overlapping blocks of size from image and labels and keys are
+        repeated.
+    """
+    blocks, n_blocks = blocks_tensorflow(image, size)
+    # duplicate label and key as n_blocks
+    label = tf_repeat(label, [n_blocks])
+    key = tf_repeat(key, [n_blocks])
+    return blocks, label, key
