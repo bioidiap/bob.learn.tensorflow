@@ -153,6 +153,7 @@ def non_existing_files(paths, force=False):
 def save_predictions(pool, output_dir, key, pred_buffer):
     outpath = make_output_path(output_dir, key)
     create_directories_safe(os.path.dirname(outpath))
+    logger.debug("Saving predictions for %s", key)
     pool.apply_async(save, (np.mean(pred_buffer[key], axis=0), outpath))
 
 
@@ -193,6 +194,9 @@ def main(argv=None):
     output_dir = get_from_config_or_commandline(
         config, 'output_dir', args, defaults, False)
 
+    assert len(biofiles), "biofiles are empty!"
+
+    logger.info("number_of_parallel_jobs: %d", number_of_parallel_jobs)
     if number_of_parallel_jobs > 1:
         start, end = indices(biofiles, number_of_parallel_jobs)
         biofiles = biofiles[start:end]
@@ -201,7 +205,12 @@ def main(argv=None):
     paths = (make_output_path(output_dir, f.make_path("", ""))
              for f in biofiles)
     indexes = non_existing_files(paths, force)
-    biofiles = (biofiles[i] for i in indexes)
+    biofiles = [biofiles[i] for i in indexes]
+
+    if len(biofiles) == 0:
+        logger.warning(
+            "The biofiles are empty after checking for existing files.")
+        return
 
     generator = BioGenerator(
         database, biofiles, load_data=load_data,
@@ -210,12 +219,17 @@ def main(argv=None):
     predict_input_fn = bio_predict_input_fn(
         generator, generator.output_types, generator.output_shapes)
 
+    if checkpoint_path:
+        logger.info("Restoring the model from %s", checkpoint_path)
+
     predictions = estimator.predict(
         predict_input_fn,
         predict_keys=predict_keys,
         hooks=hooks,
         checkpoint_path=checkpoint_path,
     )
+
+    logger.info("Saving the predictions in %s", output_dir)
 
     pool = Pool()
     try:
