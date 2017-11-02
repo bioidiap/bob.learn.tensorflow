@@ -142,7 +142,9 @@ def make_output_path(output_dir, key):
 
 def non_existing_files(paths, force=False):
     if force:
-        return range(len(paths))
+        for i in range(len(paths)):
+            yield i
+        return
     for i, path in enumerate(paths):
         if not os.path.isfile(path):
             yield i
