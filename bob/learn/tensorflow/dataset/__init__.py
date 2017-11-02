@@ -2,7 +2,6 @@ import tensorflow as tf
 import numpy
 import os
 import bob.io.base
-import bob.io.image
 
 DEFAULT_FEATURE = {'data': tf.FixedLenFeature([], tf.string),
                    'label': tf.FixedLenFeature([], tf.int64),
@@ -10,13 +9,13 @@ DEFAULT_FEATURE = {'data': tf.FixedLenFeature([], tf.string),
 
 
 def from_hdf5file_to_tensor(filename):
+    import bob.io.image
     data = bob.io.image.to_matplotlib(bob.io.base.load(filename))
     
-    #reshaping to ndim == 3
+    #reshaping to ndim == 3    
     if data.ndim == 2:
         data = numpy.reshape(data, (data.shape[0], data.shape[1], 1))
     data = data.astype("float32")
-    data = numpy.zeros((160, 160, 1), dtype="float32")
     
     return data
 
