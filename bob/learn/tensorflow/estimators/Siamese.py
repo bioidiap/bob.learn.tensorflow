@@ -139,7 +139,7 @@ class Siamese(estimator.Estimator):
                                                               self.extra_checkpoint["scopes"])
     
                 # Compute Loss (for both TRAIN and EVAL modes)
-                self.loss = self.loss_op(prelogits_left, prelogits_left, labels)
+                self.loss = self.loss_op(prelogits_left, prelogits_right, labels)
                
                 # Configure the Training Op (for TRAIN mode)
                 global_step = tf.contrib.framework.get_or_create_global_step()
