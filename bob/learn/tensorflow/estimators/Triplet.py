@@ -13,8 +13,7 @@ import time
 from tensorflow.python.estimator import estimator
 from bob.learn.tensorflow.utils import predict_using_tensors
 from bob.learn.tensorflow.loss import triplet_loss
-from . import check_features
-
+from . import check_features, is_trainable_checkpoint
 
 import logging
 logger = logging.getLogger("bob.learn")
@@ -70,23 +69,31 @@ class Triplet(estimator.Estimator):
       validation_batch_size:
         Size of the batch for validation. This value is used when the
         validation with embeddings is used. This is a hack.
+
+      extra_checkpoint: dict()
+        In case you want to use other model to initialize some variables.
+        This argument should be in the following format
+        extra_checkpoint = {"checkpoint_path": <YOUR_CHECKPOINT>,
+                            "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),
+                            "is_trainable": <IF_THOSE_LOADED_VARIABLES_ARE_TRAINABLE>
+                           }
     """
 
     def __init__(self,
                  architecture=None,
                  optimizer=None,
                  config=None,
-                 n_classes=0,
                  loss_op=triplet_loss,
                  model_dir="",
                  validation_batch_size=None,
+                 extra_checkpoint=None
               ):
 
         self.architecture = architecture
         self.optimizer=optimizer
-        self.n_classes=n_classes
         self.loss_op=loss_op
         self.loss = None
+        self.extra_checkpoint = extra_checkpoint
 
         if self.architecture is None:
             raise ValueError("Please specify a function to build the architecture !!")
@@ -96,9 +103,6 @@ class Triplet(estimator.Estimator):
 
         if self.loss_op is None:
             raise ValueError("Please specify a function to build the loss !!")
-
-        if self.n_classes <= 0:
-            raise ValueError("Number of classes must be greated than 0")
 
         def _model_fn(features, labels, mode, params, config):
 
@@ -110,11 +114,20 @@ class Triplet(estimator.Estimator):
                                 'negative' in features.keys():
                     raise ValueError("The input function needs to contain a dictionary with the "
                                      "keys `anchor`, `positive` and `negative` ")
-            
+
+                if self.extra_checkpoint is None:
+                    is_trainable = True
+                else:
+                    is_trainable = is_trainable_checkpoint(self.extra_checkpoint)
+
                 # Building one graph
-                prelogits_anchor = self.architecture(features['anchor'])[0]
-                prelogits_positive = self.architecture(features['positive'], reuse=True)[0]
-                prelogits_negative = self.architecture(features['negative'], reuse=True)[0]
+                prelogits_anchor = self.architecture(features['anchor'], is_trainable=is_trainable)[0]
+                prelogits_positive = self.architecture(features['positive'], reuse=True, is_trainable=is_trainable)[0]
+                prelogits_negative = self.architecture(features['negative'], reuse=True, is_trainable=is_trainable)[0]
+
+                if self.extra_checkpoint is not None:
+                    tf.contrib.framework.init_from_checkpoint(self.extra_checkpoint["checkpoint_path"],
+                                                              self.extra_checkpoint["scopes"])
 
                 # Compute Loss (for both TRAIN and EVAL modes)
                 self.loss = self.loss_op(prelogits_anchor, prelogits_positive, prelogits_negative)
