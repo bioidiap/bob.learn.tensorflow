@@ -140,6 +140,14 @@ def make_output_path(output_dir, key):
     return os.path.join(output_dir, key + '.hdf5')
 
 
+def non_existing_files(paths, force=False):
+    if force:
+        return range(len(paths))
+    for i, path in enumerate(paths):
+        if not os.path.isfile(path):
+            yield i
+
+
 def save_predictions(pool, output_dir, key, pred_buffer):
     outpath = make_output_path(output_dir, key)
     create_directories_safe(os.path.dirname(outpath))
@@ -172,9 +180,6 @@ def main(argv=None):
     hooks = getattr(config, 'hooks', None)
     load_data = getattr(config, 'load_data', None)
 
-    # TODO(amir): implement force and pre-filtering
-    raise ValueError("This script is not fully implemented yet!")
-
     # Sets-up logging
     set_verbosity_level(logger, verbosity)
 
@@ -189,6 +194,12 @@ def main(argv=None):
     if number_of_parallel_jobs > 1:
         start, end = indices(biofiles, number_of_parallel_jobs)
         biofiles = biofiles[start:end]
+
+    # filter the existing files
+    paths = (make_output_path(output_dir, f.make_path("", ""))
+             for f in biofiles)
+    indexes = non_existing_files(paths, force)
+    biofiles = (biofiles[i] for i in indexes)
 
     generator = BioGenerator(
         database, biofiles, load_data=load_data,
@@ -218,9 +229,8 @@ def main(argv=None):
             else:
                 save_predictions(pool, output_dir, last_key, pred_buffer)
                 last_key = key
-        # else below is for the for loop
-        else:
-            save_predictions(pool, output_dir, key, pred_buffer)
+        # save the final returned key as well:
+        save_predictions(pool, output_dir, key, pred_buffer)
     finally:
         pool.close()
         pool.join()
