@@ -4,7 +4,7 @@
 
 import tensorflow as tf
 from functools import partial
-from . import append_image_augmentation
+from . import append_image_augmentation, from_filename_to_tensor
 
 
 def shuffle_data_and_labels_image_augmentation(filenames, labels, data_shape, data_type,
@@ -15,14 +15,14 @@ def shuffle_data_and_labels_image_augmentation(filenames, labels, data_shape, da
                                               random_brightness=False,
                                               random_contrast=False,
                                               random_saturation=False,
-                                              per_image_normalization=True):
+                                              per_image_normalization=True,
+                                              extension=None):
     """
     Dump random batches from a list of image paths and labels:
         
     The list of files and labels should be in the same order e.g.
     filenames = ['class_1_img1', 'class_1_img2', 'class_2_img1']
     labels = [0, 0, 1]
-    
 
     **Parameters**
 
@@ -66,7 +66,10 @@ def shuffle_data_and_labels_image_augmentation(filenames, labels, data_shape, da
            Adjust the saturation of an RGB image by a random factor (https://www.tensorflow.org/api_docs/python/tf/image/random_saturation)
 
        per_image_normalization:
-           Linearly scales image to have zero mean and unit norm.            
+           Linearly scales image to have zero mean and unit norm.
+
+       extension:
+           If None, will load files using `tf.image.decode..` if set to `hdf5`, will load with `bob.io.base.load`
      
     """                            
 
@@ -78,7 +81,8 @@ def shuffle_data_and_labels_image_augmentation(filenames, labels, data_shape, da
                                           random_brightness=random_brightness,
                                           random_contrast=random_contrast,
                                           random_saturation=random_saturation,
-                                          per_image_normalization=per_image_normalization)
+                                          per_image_normalization=per_image_normalization,
+                                          extension=extension)
                                           
     dataset = dataset.shuffle(buffer_size).batch(batch_size).repeat(epochs)
 
@@ -94,7 +98,8 @@ def create_dataset_from_path_augmentation(filenames, labels,
                                           random_brightness=False,
                                           random_contrast=False,
                                           random_saturation=False,
-                                          per_image_normalization=True):
+                                          per_image_normalization=True,
+                                          extension=None):
     """
     Create dataset from a list of tf-record files
     
@@ -125,7 +130,8 @@ def create_dataset_from_path_augmentation(filenames, labels,
                      random_brightness=random_brightness,
                      random_contrast=random_contrast,
                      random_saturation=random_saturation,
-                     per_image_normalization=per_image_normalization) 
+                     per_image_normalization=per_image_normalization,
+                     extension=extension) 
 
     dataset = tf.contrib.data.Dataset.from_tensor_slices((filenames, labels))
     dataset = dataset.map(parser)
@@ -139,14 +145,15 @@ def image_augmentation_parser(filename, label, data_shape, data_type,
                               random_brightness=False,
                               random_contrast=False,
                               random_saturation=False,
-                              per_image_normalization=True):
+                              per_image_normalization=True,
+                              extension=None):
 
     """
     Parses a single tf.Example into image and label tensors.
     """
         
     # Convert the image data from string back to the numbers
-    image = tf.cast(tf.image.decode_image(tf.read_file(filename)), tf.float32)
+    image = from_filename_to_tensor(filename, extension=extension)
 
     # Reshape image data into the original shape
     image = tf.reshape(image, data_shape)
