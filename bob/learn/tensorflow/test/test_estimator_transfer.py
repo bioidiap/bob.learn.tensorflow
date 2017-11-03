@@ -37,7 +37,7 @@ epochs = 2
 steps = 5000
 
 
-def dummy_adapted(inputs, reuse=False, is_trainable=False):
+def dummy_adapted(inputs, reuse=False, is_training_mode = True, trainable_variables=True):
     """
     Create all the necessary variables for this CNN
 
@@ -48,7 +48,7 @@ def dummy_adapted(inputs, reuse=False, is_trainable=False):
     """
 
     slim = tf.contrib.slim
-    graph, end_points = dummy(inputs, reuse=reuse, is_trainable=is_trainable)
+    graph, end_points = dummy(inputs, reuse=reuse, is_training_mode = is_training_mode, trainable_variables=trainable_variables)
 
     initializer = tf.contrib.layers.xavier_initializer()
     with tf.variable_scope('Adapted', reuse=reuse):

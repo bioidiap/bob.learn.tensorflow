@@ -131,8 +131,11 @@ class Siamese(estimator.Estimator):
                     raise ValueError("The input function needs to contain a dictionary with the keys `left` and `right` ")
 
                 # Building one graph
-                prelogits_left = self.architecture(features['left'], is_trainable=is_trainable)[0]
-                prelogits_right = self.architecture(features['right'], reuse=True, is_trainable=is_trainable)[0]
+                prelogits_left = self.architecture(features['left'], is_training_mode = True, trainable_variables=is_trainable)[0]
+                prelogits_right = self.architecture(features['right'], reuse=True, is_training_mode = True, trainable_variables=is_trainable)[0]
+
+                for var in tf.global_variables():
+                    tf.summary.histogram(var.op.name, var)
 
                 if self.extra_checkpoint is not None:
                     tf.contrib.framework.init_from_checkpoint(self.extra_checkpoint["checkpoint_path"],
@@ -152,7 +155,7 @@ class Siamese(estimator.Estimator):
             data = features['data']
 
             # Compute the embeddings
-            prelogits = self.architecture(data)[0]
+            prelogits = self.architecture(data, is_training_mode = False, trainable_variables=False)[0]
             embeddings = tf.nn.l2_normalize(prelogits, 1)
             predictions = {"embeddings": embeddings}
 

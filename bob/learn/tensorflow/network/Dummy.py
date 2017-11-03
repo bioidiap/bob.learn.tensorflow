@@ -5,7 +5,7 @@
 import tensorflow as tf
 
 
-def dummy(inputs, reuse=False, is_trainable=True):
+def dummy(inputs, reuse=False, is_training_mode = True, trainable_variables=True):
     """
     Create all the necessary variables for this CNN
 
@@ -24,7 +24,7 @@ def dummy(inputs, reuse=False, is_trainable=True):
         
         graph = slim.conv2d(inputs, 10, [3, 3], activation_fn=tf.nn.relu, stride=1, scope='conv1',
                             weights_initializer=initializer,
-                            trainable=is_trainable)
+                            trainable=trainable_variables)
         end_points['conv1'] = graph                            
                                 
         graph = slim.max_pool2d(graph, [4, 4], scope='pool1')    
@@ -37,7 +37,7 @@ def dummy(inputs, reuse=False, is_trainable=True):
                                      weights_initializer=initializer,
                                      activation_fn=None,
                                      scope='fc1',
-                                     trainable=is_trainable)
+                                     trainable=trainable_variables)
         end_points['fc1'] = graph
 
 
