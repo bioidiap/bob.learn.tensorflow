@@ -119,7 +119,8 @@ class Siamese(estimator.Estimator):
 
         def _model_fn(features, labels, mode, params, config):
 
-            if mode == tf.estimator.ModeKeys.TRAIN:
+            if mode == tf.estimator.ModeKeys.TRAIN:                            
+            
                 # Building one graph, by default everything is trainable
                 if  self.extra_checkpoint is None:
                     is_trainable = True
@@ -131,11 +132,8 @@ class Siamese(estimator.Estimator):
                     raise ValueError("The input function needs to contain a dictionary with the keys `left` and `right` ")
 
                 # Building one graph
-                prelogits_left = self.architecture(features['left'], is_training_mode = True, trainable_variables=is_trainable)[0]
-                prelogits_right = self.architecture(features['right'], reuse=True, is_training_mode = True, trainable_variables=is_trainable)[0]
-
-                for var in tf.global_variables():
-                    tf.summary.histogram(var.op.name, var)
+                prelogits_left, end_points_left = self.architecture(features['left'], is_training_mode = True, trainable_variables=is_trainable)
+                prelogits_right, end_points_right = self.architecture(features['right'], reuse=True, is_training_mode = True, trainable_variables=is_trainable)
 
                 if self.extra_checkpoint is not None:
                     tf.contrib.framework.init_from_checkpoint(self.extra_checkpoint["checkpoint_path"],
