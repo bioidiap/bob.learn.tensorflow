@@ -127,6 +127,7 @@ class Triplet(estimator.Estimator):
 
                 if self.extra_checkpoint is not None:
                     tf.contrib.framework.init_from_checkpoint(self.extra_checkpoint["checkpoint_path"],
+                                                              self.extra_checkpoint["scopes"])
 
                 # Compute Loss (for both TRAIN and EVAL modes)
                 self.loss = self.loss_op(prelogits_anchor, prelogits_positive, prelogits_negative)
