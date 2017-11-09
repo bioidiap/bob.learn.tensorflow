@@ -1,15 +1,13 @@
 import tensorflow as tf
 
 
-def architecture(input_layer, mode=tf.estimator.ModeKeys.TRAIN,
-                 kernerl_size=(3, 3), n_classes=2,
-                 data_format='channels_last'):
-
+def base_architecture(input_layer, mode, kernerl_size, data_format, **kwargs):
     # Keep track of all the endpoints
     endpoints = {}
 
     # Convolutional Layer #1
-    # Computes 32 features using a kernerl_size filter with ReLU activation.
+    # Computes 32 features using a kernerl_size filter with ReLU
+    # activation.
     # Padding is added to preserve width and height.
     conv1 = tf.layers.conv2d(
         inputs=input_layer,
@@ -22,8 +20,8 @@ def architecture(input_layer, mode=tf.estimator.ModeKeys.TRAIN,
 
     # Pooling Layer #1
     # First max pooling layer with a 2x2 filter and stride of 2
-    pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2], strides=2,
-                                    data_format=data_format)
+    pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2],
+                                    strides=2, data_format=data_format)
     endpoints['pool1'] = pool1
 
     # Convolutional Layer #2
@@ -40,8 +38,8 @@ def architecture(input_layer, mode=tf.estimator.ModeKeys.TRAIN,
 
     # Pooling Layer #2
     # Second max pooling layer with a 2x2 filter and stride of 2
-    pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2], strides=2,
-                                    data_format=data_format)
+    pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2],
+                                    strides=2, data_format=data_format)
     endpoints['pool2'] = pool2
 
     # Flatten tensor into a batch of vectors
@@ -57,14 +55,26 @@ def architecture(input_layer, mode=tf.estimator.ModeKeys.TRAIN,
 
     # Add dropout operation; 0.6 probability that element will be kept
     dropout = tf.layers.dropout(
-        inputs=dense, rate=0.4, training=mode == tf.estimator.ModeKeys.TRAIN)
+        inputs=dense, rate=0.4,
+        training=mode == tf.estimator.ModeKeys.TRAIN)
     endpoints['dropout'] = dropout
 
-    # Logits layer
-    # Input Tensor Shape: [batch_size, 1024]
-    # Output Tensor Shape: [batch_size, 2]
-    logits = tf.layers.dense(inputs=dropout, units=n_classes)
-    endpoints['logits'] = logits
+    return dropout, endpoints
+
+
+def architecture(input_layer, mode=tf.estimator.ModeKeys.TRAIN,
+                 kernerl_size=(3, 3), n_classes=2,
+                 data_format='channels_last', reuse=False, **kwargs):
+
+    with tf.variable_scope('SimpleCNN', reuse=reuse):
+
+        dropout, endpoints = base_architecture(
+            input_layer, mode, kernerl_size, data_format)
+        # Logits layer
+        # Input Tensor Shape: [batch_size, 1024]
+        # Output Tensor Shape: [batch_size, n_classes]
+        logits = tf.layers.dense(inputs=dropout, units=n_classes)
+        endpoints['logits'] = logits
 
     return logits, endpoints
 
@@ -72,7 +82,7 @@ def architecture(input_layer, mode=tf.estimator.ModeKeys.TRAIN,
 def model_fn(features, labels, mode, params=None, config=None):
     """Model function for CNN."""
     data = features['data']
-    keys = features['key']
+    key = features['key']
 
     params = params or {}
     learning_rate = params.get('learning_rate', 1e-5)
@@ -92,7 +102,7 @@ def model_fn(features, labels, mode, params=None, config=None):
         # Add `softmax_tensor` to the graph. It is used for PREDICT and by the
         # `logging_hook`.
         "probabilities": tf.nn.softmax(logits, name="softmax_tensor"),
-        'keys': keys,
+        'key': key,
     }
     if mode == tf.estimator.ModeKeys.PREDICT:
         return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
@@ -116,7 +126,6 @@ def model_fn(features, labels, mode, params=None, config=None):
             tf.summary.scalar('loss', loss)
     else:
         train_op = None
-
 
     return tf.estimator.EstimatorSpec(
         mode=mode,

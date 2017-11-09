@@ -3,14 +3,6 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 
 import tensorflow as tf
-import threading
-import os
-import bob.io.base
-import bob.core
-from tensorflow.core.framework import summary_pb2
-import time
-
-#logger = bob.core.log.setup("bob.learn.tensorflow")
 from bob.learn.tensorflow.network.utils import append_logits
 from tensorflow.python.estimator import estimator
 from bob.learn.tensorflow.utils import predict_using_tensors
@@ -28,101 +20,87 @@ class Logits(estimator.Estimator):
 
     The **architecture** function should follow the following pattern:
 
-      def my_beautiful_function(placeholder):
+        def my_beautiful_architecture(placeholder, **kwargs):
 
-          end_points = dict()
-          graph = convXX(placeholder)
-          end_points['conv'] = graph
-          ....
-          return graph, end_points
+            end_points = dict()
+            graph = convXX(placeholder)
+            end_points['conv'] = graph
+            ....
+            return graph, end_points
 
     The **loss** function should follow the following pattern:
 
-    def my_beautiful_loss(logits, labels):
+    def my_beautiful_loss(logits, labels, **kwargs):
        return loss_set_of_ops(logits, labels)
 
 
-    Variables, scopes... from other models can be loaded by the model_fn.
-    For that, please, wrap the the path of the OTHER checkpoint and the list
-    of variables in a dictionary with the key "load_variable_from_checkpoint" an provide them to the keyword `params`:
-        
-    {"load_variable_from_checkpoint": {"checkpoint_path":"mypath",
-                                       "scopes":{"my_scope/": my_scope/}}}
 
+    Parameters
+    ----------
 
-
-    **Parameters**
       architecture:
          Pointer to a function that builds the graph.
 
       optimizer:
-         One of the tensorflow solvers (https://www.tensorflow.org/api_guides/python/train)
+         One of the tensorflow solvers
+         (https://www.tensorflow.org/api_guides/python/train)
          - tf.train.GradientDescentOptimizer
          - tf.train.AdagradOptimizer
          - ....
-         
+
       config:
-         
+
       n_classes:
-         Number of classes of your problem. The logits will be appended in this class
-         
+         Number of classes of your problem. The logits will be appended in this
+         class
+
       loss_op:
          Pointer to a function that computes the loss.
-      
+
       embedding_validation:
          Run the validation using embeddings?? [default: False]
-      
+
       model_dir:
         Model path
 
       validation_batch_size:
         Size of the batch for validation. This value is used when the
         validation with embeddings is used. This is a hack.
-        
-      params:
-        Extra params for the model function (please see https://www.tensorflow.org/extend/estimators for more info)
 
-      extra_checkpoint: dict()
+      params:
+        Extra params for the model function (please see
+        https://www.tensorflow.org/extend/estimators for more info)
+
+      extra_checkpoint: dict
         In case you want to use other model to initialize some variables.
         This argument should be in the following format
-        extra_checkpoint = {"checkpoint_path": <YOUR_CHECKPOINT>, 
-                            "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),
-                            "is_trainable": <IF_THOSE_LOADED_VARIABLES_ARE_TRAINABLE>
-                           }
+        extra_checkpoint = {
+            "checkpoint_path": <YOUR_CHECKPOINT>,
+            "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),
+            "is_trainable": <IF_THOSE_LOADED_VARIABLES_ARE_TRAINABLE>
+        }
     """
 
     def __init__(self,
-                 architecture=None,
-                 optimizer=None,
+                 architecture,
+                 optimizer,
+                 loss_op,
+                 n_classes,
                  config=None,
-                 n_classes=0,
-                 loss_op=None,
                  embedding_validation=False,
                  model_dir="",
                  validation_batch_size=None,
                  params=None,
                  extra_checkpoint=None
-              ):
+                 ):
 
         self.architecture = architecture
-        self.optimizer=optimizer
-        self.n_classes=n_classes
-        self.loss_op=loss_op
+        self.optimizer = optimizer
+        self.n_classes = n_classes
+        self.loss_op = loss_op
         self.loss = None
         self.embedding_validation = embedding_validation
         self.extra_checkpoint = extra_checkpoint
-
-        if self.architecture is None:
-            raise ValueError("Please specify a function to build the architecture !!")
-            
-        if self.optimizer is None:
-            raise ValueError("Please specify a optimizer (https://www.tensorflow.org/api_guides/python/train) !!")
-
-        if self.loss_op is None:
-            raise ValueError("Please specify a function to build the loss !!")
-
-        if self.n_classes <= 0:
-            raise ValueError("Number of classes must be greated than 0")
 
         def _model_fn(features, labels, mode, params, config):
 
@@ -164,28 +142,36 @@ class Logits(estimator.Estimator):
                 # Compute the embeddings
                 embeddings = tf.nn.l2_normalize(prelogits, 1)
                 predictions = {
-                    "embeddings": embeddings
+                    "embeddings": embeddings,
+                    "key": key,
                 }
             else:
+                probabilities = tf.nn.softmax(logits, name="softmax_tensor")
                 predictions = {
                     # Generate predictions (for PREDICT and EVAL mode)
                     "classes": tf.argmax(input=logits, axis=1),
-                    # Add `softmax_tensor` to the graph. It is used for PREDICT and by the
-                    # `logging_hook`.
-                    "probabilities": tf.nn.softmax(logits, name="softmax_tensor")
+                    # Add `softmax_tensor` to the graph. It is used for PREDICT
+                    # and by the `logging_hook`.
+                    "probabilities": probabilities,
+                    "key": key,
                 }
 
             if mode == tf.estimator.ModeKeys.PREDICT:
-                return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
+                return tf.estimator.EstimatorSpec(mode=mode,
+                                                  predictions=predictions)
 
             # IF Validation
             self.loss = self.loss_op(logits, labels)
             
             if self.embedding_validation:
-                predictions_op = predict_using_tensors(predictions["embeddings"], labels, num=validation_batch_size)
-                eval_metric_ops = {"accuracy": tf.metrics.accuracy(labels=labels, predictions=predictions_op)}
-                return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss, eval_metric_ops=eval_metric_ops)
-            
+                predictions_op = predict_using_tensors(
+                    predictions["embeddings"], labels,
+                    num=validation_batch_size)
+                eval_metric_ops = {"accuracy": tf.metrics.accuracy(
+                    labels=labels, predictions=predictions_op)}
+                return tf.estimator.EstimatorSpec(
+                    mode=mode, loss=self.loss, eval_metric_ops=eval_metric_ops)
+
             else:
                 # Add evaluation metrics (for EVAL mode)
                 eval_metric_ops = {
@@ -219,7 +205,8 @@ class LogitsCenterLoss(estimator.Estimator):
          Pointer to a function that builds the graph.
 
       optimizer:
-         One of the tensorflow solvers (https://www.tensorflow.org/api_guides/python/train)
+         One of the tensorflow solvers
+         (https://www.tensorflow.org/api_guides/python/train)
          - tf.train.GradientDescentOptimizer
          - tf.train.AdagradOptimizer
          - ....
@@ -227,7 +214,8 @@ class LogitsCenterLoss(estimator.Estimator):
       config:
 
       n_classes:
-         Number of classes of your problem. The logits will be appended in this class
+         Number of classes of your problem. The logits will be appended in this
+         class
 
       loss_op:
          Pointer to a function that computes the loss.
@@ -241,10 +229,11 @@ class LogitsCenterLoss(estimator.Estimator):
       validation_batch_size:
         Size of the batch for validation. This value is used when the
         validation with embeddings is used. This is a hack.
-        
+
       params:
-        Extra params for the model function (please see https://www.tensorflow.org/extend/estimators for more info)
-        
+        Extra params for the model function (please see
+        https://www.tensorflow.org/extend/estimators for more info)
+
     """
 
     def __init__(self,
@@ -258,8 +247,8 @@ class LogitsCenterLoss(estimator.Estimator):
                  factor=0.01,
                  validation_batch_size=None,
                  params=None,
-                 extra_checkpoint=None,                 
-              ):
+                 extra_checkpoint=None,
+                 ):
 
         self.architecture = architecture
         self.optimizer = optimizer
@@ -271,10 +260,13 @@ class LogitsCenterLoss(estimator.Estimator):
         self.extra_checkpoint = extra_checkpoint
 
         if self.architecture is None:
-            raise ValueError("Please specify a function to build the architecture !!")
+            raise ValueError(
+                "Please specify a function to build the architecture !!")
 
         if self.optimizer is None:
-            raise ValueError("Please specify a optimizer (https://www.tensorflow.org/api_guides/python/train) !!")
+            raise ValueError(
+                "Please specify a optimizer (https://www.tensorflow.org/"
+                "api_guides/python/train) !!")
 
         if self.n_classes <= 0:
             raise ValueError("Number of classes must be greated than 0")
@@ -323,7 +315,8 @@ class LogitsCenterLoss(estimator.Estimator):
                 # Compute the embeddings
                 embeddings = tf.nn.l2_normalize(prelogits, 1)
                 predictions = {
-                    "embeddings": embeddings
+                    "embeddings": embeddings,
+                    "key": key,
                 }
             else:
                 predictions = {
@@ -331,7 +324,8 @@ class LogitsCenterLoss(estimator.Estimator):
                     "classes": tf.argmax(input=logits, axis=1),
                     # Add `softmax_tensor` to the graph. It is used for PREDICT and by the
                     # `logging_hook`.
-                    "probabilities": tf.nn.softmax(logits, name="softmax_tensor")
+                    "probabilities": tf.nn.softmax(logits, name="softmax_tensor"),
+                    "key": key,
                 }
 
             if mode == tf.estimator.ModeKeys.PREDICT:
@@ -343,8 +337,10 @@ class LogitsCenterLoss(estimator.Estimator):
             self.loss = loss_dict['loss']                                                       
             
             if self.embedding_validation:
-                predictions_op = predict_using_tensors(predictions["embeddings"], labels, num=validation_batch_size)
-                eval_metric_ops = {"accuracy": tf.metrics.accuracy(labels=labels, predictions=predictions_op)}
+                predictions_op = predict_using_tensors(
+                    predictions["embeddings"], labels, num=validation_batch_size)
+                eval_metric_ops = {"accuracy": tf.metrics.accuracy(
+                    labels=labels, predictions=predictions_op)}
                 return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss, eval_metric_ops=eval_metric_ops)
             
             else:

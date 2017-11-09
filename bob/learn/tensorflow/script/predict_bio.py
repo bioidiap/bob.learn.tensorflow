@@ -89,7 +89,7 @@ An example configuration for a trained model and its evaluation could be::
     # output_shapes)`` line is mandatory in the function below. You have to
     # create it in your configuration file since you want it to be created in
     # the same graph as your model.
-    def bio_predict_input_fn(generator,output_types, output_shapes):
+    def bio_predict_input_fn(generator, output_types, output_shapes):
         def input_fn():
             dataset = tf.data.Dataset.from_generator(generator, output_types,
                                                      output_shapes)
@@ -116,7 +116,7 @@ from bob.bio.base.utils import read_config_file, save
 from bob.bio.base.tools.grid import indices
 from bob.learn.tensorflow.utils.commandline import \
     get_from_config_or_commandline
-from bob.learn.tensorflow.dataset.bio import bio_generator
+from bob.learn.tensorflow.dataset.bio import BioGenerator
 from bob.core.log import setup, set_verbosity_level
 logger = setup(__name__)
 
@@ -140,9 +140,20 @@ def make_output_path(output_dir, key):
     return os.path.join(output_dir, key + '.hdf5')
 
 
+def non_existing_files(paths, force=False):
+    if force:
+        for i in range(len(paths)):
+            yield i
+        return
+    for i, path in enumerate(paths):
+        if not os.path.isfile(path):
+            yield i
+
+
 def save_predictions(pool, output_dir, key, pred_buffer):
     outpath = make_output_path(output_dir, key)
     create_directories_safe(os.path.dirname(outpath))
+    logger.debug("Saving predictions for %s", key)
     pool.apply_async(save, (np.mean(pred_buffer[key], axis=0), outpath))
 
 
@@ -183,16 +194,33 @@ def main(argv=None):
     output_dir = get_from_config_or_commandline(
         config, 'output_dir', args, defaults, False)
 
+    assert len(biofiles), "biofiles are empty!"
+
+    logger.info("number_of_parallel_jobs: %d", number_of_parallel_jobs)
     if number_of_parallel_jobs > 1:
         start, end = indices(biofiles, number_of_parallel_jobs)
         biofiles = biofiles[start:end]
 
-    generator, output_types, output_shapes = bio_generator(
-        database, biofiles, load_data=load_data,
-        biofile_to_label=None, multiple_samples=multiple_samples, force=force)
+    # filter the existing files
+    paths = (make_output_path(output_dir, f.make_path("", ""))
+             for f in biofiles)
+    indexes = non_existing_files(paths, force)
+    biofiles = [biofiles[i] for i in indexes]
 
-    predict_input_fn = bio_predict_input_fn(generator,
-                                            output_types, output_shapes)
+    if len(biofiles) == 0:
+        logger.warning(
+            "The biofiles are empty after checking for existing files.")
+        return
+
+    generator = BioGenerator(
+        database, biofiles, load_data=load_data,
+        multiple_samples=multiple_samples)
+
+    predict_input_fn = bio_predict_input_fn(
+        generator, generator.output_types, generator.output_shapes)
+
+    if checkpoint_path:
+        logger.info("Restoring the model from %s", checkpoint_path)
 
     predictions = estimator.predict(
         predict_input_fn,
@@ -200,6 +228,8 @@ def main(argv=None):
         hooks=hooks,
         checkpoint_path=checkpoint_path,
     )
+
+    logger.info("Saving the predictions in %s", output_dir)
 
     pool = Pool()
     try:
@@ -215,9 +245,8 @@ def main(argv=None):
             else:
                 save_predictions(pool, output_dir, last_key, pred_buffer)
                 last_key = key
-        # else below is for the for loop
-        else:
-            save_predictions(pool, output_dir, key, pred_buffer)
+        # save the final returned key as well:
+        save_predictions(pool, output_dir, key, pred_buffer)
     finally:
         pool.close()
         pool.join()
