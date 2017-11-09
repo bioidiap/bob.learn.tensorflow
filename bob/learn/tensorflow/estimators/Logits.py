@@ -130,13 +130,34 @@ class Logits(estimator.Estimator):
             data = features['data']
             key = features['key']
 
-            # Building one graph, by default everything is trainable
-            if  self.extra_checkpoint is None:
-                is_trainable = True
-            else:
-                is_trainable = is_trainable_checkpoint(self.extra_checkpoint)
+            # Configure the Training Op (for TRAIN mode)
+            if mode == tf.estimator.ModeKeys.TRAIN:
+
+                # Building one graph, by default everything is trainable
+                if  self.extra_checkpoint is None:
+                    is_trainable = True
+                else:
+                    is_trainable = is_trainable_checkpoint(self.extra_checkpoint)
+
+                # Building the training graph                
+                prelogits = self.architecture(data, mode=mode, trainable_variables=is_trainable)[0]
+                logits = append_logits(prelogits, n_classes)
+
+                # Compute Loss (for both TRAIN and EVAL modes)
+                self.loss = self.loss_op(logits, labels)
+
+                if self.extra_checkpoint is not None:
+                    tf.contrib.framework.init_from_checkpoint(self.extra_checkpoint["checkpoint_path"],
+                                                              self.extra_checkpoint["scopes"])
+
+                global_step = tf.contrib.framework.get_or_create_global_step()
+                train_op = self.optimizer.minimize(self.loss, global_step=global_step)
+                return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss,
+                                                  train_op=train_op)
             
-            prelogits = self.architecture(data, is_trainable=is_trainable)[0]
+
+            # Building the training graph for PREDICTION OR VALIDATION
+            prelogits = self.architecture(data, mode=mode, trainable_variables=False)[0]
             logits = append_logits(prelogits, n_classes)
 
             if self.embedding_validation:
@@ -157,22 +178,9 @@ class Logits(estimator.Estimator):
             if mode == tf.estimator.ModeKeys.PREDICT:
                 return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
-            # Compute Loss (for both TRAIN and EVAL modes)
+            # IF Validation
             self.loss = self.loss_op(logits, labels)
-
-            # Configure the Training Op (for TRAIN mode)
-            if mode == tf.estimator.ModeKeys.TRAIN:
-                if self.extra_checkpoint is not None:
-                    tf.contrib.framework.init_from_checkpoint(self.extra_checkpoint["checkpoint_path"],
-                                                              self.extra_checkpoint["scopes"])
-
-                global_step = tf.contrib.framework.get_or_create_global_step()
-                train_op = self.optimizer.minimize(self.loss, global_step=global_step)
-                return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss,
-                                                  train_op=train_op)
-
-
-            # Validation
+            
             if self.embedding_validation:
                 predictions_op = predict_using_tensors(predictions["embeddings"], labels, num=validation_batch_size)
                 eval_metric_ops = {"accuracy": tf.metrics.accuracy(labels=labels, predictions=predictions_op)}
@@ -277,18 +285,39 @@ class LogitsCenterLoss(estimator.Estimator):
             data = features['data']
             key = features['key']
 
-            # Building one graph, by default everything is trainable
-            if  self.extra_checkpoint is None:
-                is_trainable = True
-            else:
-                is_trainable = is_trainable_checkpoint(self.extra_checkpoint)
-            
-            prelogits = self.architecture(data)[0]
-            logits = append_logits(prelogits, n_classes)
+            # Configure the Training Op (for TRAIN mode)
+            if mode == tf.estimator.ModeKeys.TRAIN:
 
-            # Compute Loss (for both TRAIN and EVAL modes)
-            loss_dict = mean_cross_entropy_center_loss(logits, prelogits, labels, self.n_classes,
-                                                       alpha=self.alpha, factor=self.factor)
+                # Building one graph, by default everything is trainable
+                if  self.extra_checkpoint is None:
+                    is_trainable = True
+                else:
+                    is_trainable = is_trainable_checkpoint(self.extra_checkpoint)
+
+                # Building the training graph                
+                prelogits = self.architecture(data, mode=mode, trainable_variables=is_trainable)[0]
+                logits = append_logits(prelogits, n_classes)
+
+                # Compute Loss (for TRAIN mode)
+                loss_dict = mean_cross_entropy_center_loss(logits, prelogits, labels, self.n_classes,
+                                                           alpha=self.alpha, factor=self.factor)
+
+                self.loss = loss_dict['loss']
+                centers = loss_dict['centers']
+
+                if self.extra_checkpoint is not None:
+                    tf.contrib.framework.init_from_checkpoint(self.extra_checkpoint["checkpoint_path"],
+                                                              self.extra_checkpoint["scopes"])
+
+                global_step = tf.contrib.framework.get_or_create_global_step()
+                train_op = tf.group(self.optimizer.minimize(self.loss, global_step=global_step),
+                                    centers)
+                return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss,
+                                                  train_op=train_op)
+
+            # Building the training graph for PREDICTION OR VALIDATION
+            prelogits = self.architecture(data, mode=mode, trainable_variables=False)[0]
+            logits = append_logits(prelogits, n_classes)
 
             if self.embedding_validation:
                 # Compute the embeddings
@@ -308,31 +337,16 @@ class LogitsCenterLoss(estimator.Estimator):
             if mode == tf.estimator.ModeKeys.PREDICT:
                 return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
-
-            self.loss = loss_dict['loss']
-            centers = loss_dict['centers']
-
-            # Configure the Training Op (for TRAIN mode)
-            if mode == tf.estimator.ModeKeys.TRAIN:
-                # Loading variables from some model just in case
-                if self.extra_checkpoint is not None:
-                    tf.contrib.framework.init_from_checkpoint(self.extra_checkpoint["checkpoint_path"],
-                                                              self.extra_checkpoint["scopes"])
-
-                global_step = tf.contrib.framework.get_or_create_global_step()
-                # backprop and updating the centers
-                train_op = tf.group(self.optimizer.minimize(self.loss, global_step=global_step),
-                                    centers)
-
-                return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss,
-                                                  train_op=train_op)
-
-
+            # IF Validation
+            loss_dict = mean_cross_entropy_center_loss(logits, prelogits, labels, self.n_classes,
+                                                       alpha=self.alpha, factor=self.factor)
+            self.loss = loss_dict['loss']                                                       
+            
             if self.embedding_validation:
                 predictions_op = predict_using_tensors(predictions["embeddings"], labels, num=validation_batch_size)
                 eval_metric_ops = {"accuracy": tf.metrics.accuracy(labels=labels, predictions=predictions_op)}
                 return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss, eval_metric_ops=eval_metric_ops)
-
+            
             else:
                 # Add evaluation metrics (for EVAL mode)
                 eval_metric_ops = {
@@ -344,4 +358,4 @@ class LogitsCenterLoss(estimator.Estimator):
         super(LogitsCenterLoss, self).__init__(model_fn=_model_fn,
                                                model_dir=model_dir,
                                                config=config)
-                                               
+
