@@ -94,7 +94,7 @@ def main(argv=None):
             # Evaluate
             evaluations = estimator.evaluate(
                 input_fn=eval_input_fn,
-                steps=steps,
+                steps=1,
                 hooks=hooks,
                 checkpoint_path=checkpoint_path,
                 name=name,

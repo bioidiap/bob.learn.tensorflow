@@ -5,7 +5,7 @@
 import tensorflow as tf
 
 
-def dummy(inputs, reuse=False, is_training_mode = True, trainable_variables=True):
+def dummy(inputs, reuse=False, mode = tf.estimator.ModeKeys.TRAIN, trainable_variables=True):
     """
     Create all the necessary variables for this CNN
 

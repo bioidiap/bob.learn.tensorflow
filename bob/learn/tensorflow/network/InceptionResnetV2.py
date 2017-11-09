@@ -105,7 +105,7 @@ def inference(images, keep_probability, phase_train=True,
                         weights_regularizer=slim.l2_regularizer(weight_decay),
                         normalizer_fn=slim.batch_norm,
                         normalizer_params=batch_norm_params):
-        return inception_resnet_v2(images, is_training_mode=False,
+        return inception_resnet_v2(images, mode = tf.estimator.ModeKeys.PREDICT,
               dropout_keep_prob=keep_probability, bottleneck_layer_size=bottleneck_layer_size, reuse=reuse)
 
 
@@ -114,7 +114,7 @@ def inception_resnet_v2(inputs,
                         bottleneck_layer_size=128,
                         reuse=None,
                         scope='InceptionResnetV2',
-                        is_training_mode = True,
+                        mode = tf.estimator.ModeKeys.TRAIN,
                         trainable_variables=True):
     """Creates the Inception Resnet V2 model.
    
@@ -141,7 +141,7 @@ def inception_resnet_v2(inputs,
     end_points = {}
     with tf.variable_scope(scope, 'InceptionResnetV2', [inputs], reuse=reuse):
         with slim.arg_scope([slim.batch_norm, slim.dropout],
-                            is_training=is_training_mode):
+                            is_training=(mode == tf.estimator.ModeKeys.TRAIN)):
             with slim.arg_scope([slim.conv2d, slim.max_pool2d, slim.avg_pool2d],
                                 stride=1, padding='SAME'):
       

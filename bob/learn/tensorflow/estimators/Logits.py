@@ -140,7 +140,7 @@ class Logits(estimator.Estimator):
                     is_trainable = is_trainable_checkpoint(self.extra_checkpoint)
 
                 # Building the training graph                
-                prelogits = self.architecture(data, is_training_mode = True, trainable_variables=is_trainable)[0]
+                prelogits = self.architecture(data, mode=mode, trainable_variables=is_trainable)[0]
                 logits = append_logits(prelogits, n_classes)
 
                 # Compute Loss (for both TRAIN and EVAL modes)
@@ -157,7 +157,7 @@ class Logits(estimator.Estimator):
             
 
             # Building the training graph for PREDICTION OR VALIDATION
-            prelogits = self.architecture(data, is_training_mode = False, trainable_variables=False)[0]
+            prelogits = self.architecture(data, mode=mode, trainable_variables=False)[0]
             logits = append_logits(prelogits, n_classes)
 
             if self.embedding_validation:
@@ -295,7 +295,7 @@ class LogitsCenterLoss(estimator.Estimator):
                     is_trainable = is_trainable_checkpoint(self.extra_checkpoint)
 
                 # Building the training graph                
-                prelogits = self.architecture(data, is_training_mode = True, trainable_variables=is_trainable)[0]
+                prelogits = self.architecture(data, mode=mode, trainable_variables=is_trainable)[0]
                 logits = append_logits(prelogits, n_classes)
 
                 # Compute Loss (for TRAIN mode)
@@ -316,7 +316,7 @@ class LogitsCenterLoss(estimator.Estimator):
                                                   train_op=train_op)
 
             # Building the training graph for PREDICTION OR VALIDATION
-            prelogits = self.architecture(data, is_training_mode = False, trainable_variables=False)[0]
+            prelogits = self.architecture(data, mode=mode, trainable_variables=False)[0]
             logits = append_logits(prelogits, n_classes)
 
             if self.embedding_validation:

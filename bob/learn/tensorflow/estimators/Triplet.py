@@ -121,9 +121,9 @@ class Triplet(estimator.Estimator):
                     is_trainable = is_trainable_checkpoint(self.extra_checkpoint)
 
                 # Building one graph
-                prelogits_anchor = self.architecture(features['anchor'], is_training_mode = True)[0]
-                prelogits_positive = self.architecture(features['positive'], reuse=True, is_training_mode = True)[0]
-                prelogits_negative = self.architecture(features['negative'], reuse=True, is_training_mode = True)[0]
+                prelogits_anchor = self.architecture(features['anchor'], mode=mode)[0]
+                prelogits_positive = self.architecture(features['positive'], reuse=True, mode=mode)[0]
+                prelogits_negative = self.architecture(features['negative'], reuse=True, mode=mode)[0]
 
                 if self.extra_checkpoint is not None:
                     tf.contrib.framework.init_from_checkpoint(self.extra_checkpoint["checkpoint_path"],
@@ -141,7 +141,7 @@ class Triplet(estimator.Estimator):
             data = features['data']
 
             # Compute the embeddings
-            prelogits = self.architecture(data, is_training_mode = False)[0]
+            prelogits = self.architecture(data, mode=mode)[0]
             embeddings = tf.nn.l2_normalize(prelogits, 1)
             predictions = {"embeddings": embeddings}
 

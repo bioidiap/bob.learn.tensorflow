@@ -154,7 +154,7 @@ def inception_resnet_v1(inputs, is_training=True,
                         bottleneck_layer_size=128,
                         reuse=None, 
                         scope='InceptionResnetV1',
-                        is_training_mode = True,
+                        mode = tf.estimator.ModeKeys.TRAIN,
                         trainable_variables=True):
     """
     Creates the Inception Resnet V1 model.
@@ -165,7 +165,7 @@ def inception_resnet_v1(inputs, is_training=True,
          a 4-D tensor of size [batch_size, height, width, 3].
       num_classes:
          number of predicted classes.
-      is_training:
+      mode:
          whether is training or not.
       dropout_keep_prob:
          the fraction to keep before final layer.
@@ -178,7 +178,7 @@ def inception_resnet_v1(inputs, is_training=True,
   
     with tf.variable_scope(scope, 'InceptionResnetV1', [inputs], reuse=reuse):
         with slim.arg_scope([slim.batch_norm, slim.dropout],
-                            is_training=is_training_mode):
+                            is_training=(mode == tf.estimator.ModeKeys.TRAIN)):
             with slim.arg_scope([slim.conv2d, slim.max_pool2d, slim.avg_pool2d],
                                 stride=1, padding='SAME'):
       
@@ -242,7 +242,7 @@ def inception_resnet_v1(inputs, is_training=True,
                                           scope='AvgPool_1a_8x8')
                     net = slim.flatten(net)
           
-                    net = slim.dropout(net, dropout_keep_prob, is_training=is_training_mode,
+                    net = slim.dropout(net, dropout_keep_prob, is_training=(mode == tf.estimator.ModeKeys.TRAIN),
                                        scope='Dropout')
           
                     end_points['PreLogitsFlatten'] = net

@@ -67,7 +67,6 @@ def test_triplet_estimator():
         trainer = Triplet(model_dir=model_dir,
                           architecture=dummy,
                           optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-                          n_classes=10,
                           loss_op=triplet_loss,
                           validation_batch_size=validation_batch_size)
         run_triplet_estimator(trainer)
