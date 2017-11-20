@@ -119,7 +119,7 @@ def _eval(tmpdir, model_dir, dummy_tfrecord):
     eval_generic([config_path])
 
 
-def test_eval_once():
+def test_eval():
     tmpdir = mkdtemp(prefix='bob_')
     try:
         model_dir = os.path.join(tmpdir, 'model_dir')
@@ -137,7 +137,7 @@ def test_eval_once():
         evaluated_path = os.path.join(eval_dir, 'evaluated')
         assert os.path.exists(evaluated_path), evaluated_path
         with open(evaluated_path) as f:
-           doc = f.read()
+            doc = f.read()
 
         assert '1' in doc, doc
         assert '200' in doc, doc
