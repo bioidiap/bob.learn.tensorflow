@@ -196,7 +196,9 @@ def main(argv=None):
 
     assert len(biofiles), "biofiles are empty!"
 
-    logger.info("number_of_parallel_jobs: %d", number_of_parallel_jobs)
+    if number_of_parallel_jobs is not None:
+        number_of_parallel_jobs = int(number_of_parallel_jobs)
+        logger.info("number_of_parallel_jobs: %d", number_of_parallel_jobs)
     if number_of_parallel_jobs > 1:
         start, end = indices(biofiles, number_of_parallel_jobs)
         biofiles = biofiles[start:end]
