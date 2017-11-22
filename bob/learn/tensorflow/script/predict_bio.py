@@ -231,7 +231,8 @@ def main(argv=None):
         checkpoint_path=checkpoint_path,
     )
 
-    logger.info("Saving the predictions in %s", output_dir)
+    logger.info("Saving the predictions of %d files in %s", len(generator),
+                output_dir)
 
     pool = Pool()
     try:
