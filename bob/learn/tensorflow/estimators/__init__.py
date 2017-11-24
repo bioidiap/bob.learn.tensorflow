@@ -4,18 +4,39 @@
 
 import tensorflow as tf
 
+
 def check_features(features):
     if not 'data' in features.keys() or not 'key' in features.keys():
         raise ValueError("The input function needs to contain a dictionary with the keys `data` and `key` ")
     return True
 
 
-def is_trainable_checkpoint(params):
+def get_trainable_variables(extra_checkpoint):
+    """
+    Given the extra_checkpoint dictionary provided to the estimator,
+    extract the content of "trainable_variables" e.
 
-    if not "is_trainable" in params:
-        raise ValueError("Param `is_trainable` is missing in `load_variable_from_checkpoint` dictionary")
+    If trainable_variables is not provided, all end points are trainable by default.
+    If trainable_variables==[], all end points are NOT trainable.
+    If trainable_variables contains some end_points, ONLY these endpoints will be trainable.
 
-    return params["is_trainable"]
+    Parameters
+    ----------
+        extra_checkpoint: dict
+          The `extra_checkpoint dictionary provided to the estimator
+
+    Returns
+    -------
+      Returns `None` if `trainable_variables` is not in extra_checkpoint;
+      otherwise returns the content of `extra_checkpoint
+
+    """
+
+    # If you don't set anything, everything is trainable
+    if extra_checkpoint is None or "trainable_variables" not in extra_checkpoint:
+        return None
+
+    return extra_checkpoint["trainable_variables"]
 
 
 from .Logits import Logits, LogitsCenterLoss

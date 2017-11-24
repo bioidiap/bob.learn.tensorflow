@@ -5,7 +5,7 @@
 import tensorflow as tf
 
 
-def mlp(inputs, output_shape, hidden_layers=[10], hidden_activation=tf.nn.tanh, output_activation=None, seed=10):
+def mlp(inputs, output_shape, hidden_layers=[10], hidden_activation=tf.nn.tanh, output_activation=None, seed=10, **kwargs):
     """An MLP is a representation of a Multi-Layer Perceptron.
 
     This implementation is feed-forward and fully-connected.

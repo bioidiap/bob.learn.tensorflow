@@ -14,3 +14,26 @@ def append_logits(graph, n_classes, reuse=False, l2_regularizer=0.001,
             stddev=weights_std),
         weights_regularizer=slim.l2_regularizer(l2_regularizer),
         scope='Logits', reuse=reuse)
+        
+        
+def is_trainable(name, trainable_variables):
+    """
+    Check if a variable is trainable or not
+    
+    Parameters
+    ----------
+    
+    name: str
+       Layer name
+    
+    trainable_variables: list
+       List containing the variables or scopes to be trained.
+       If None, the variable/scope is trained
+    """
+
+    # If None, we train by default
+    if trainable_variables is None:
+        return True
+
+    # Here is my choice to shutdown the whole scope
+    return name in trainable_variables

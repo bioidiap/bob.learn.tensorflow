@@ -8,9 +8,10 @@ from tensorflow.python.estimator import estimator
 from bob.learn.tensorflow.utils import predict_using_tensors
 from bob.learn.tensorflow.loss import mean_cross_entropy_center_loss
 
-from . import check_features, is_trainable_checkpoint
+from . import check_features, get_trainable_variables
 
 import logging
+
 logger = logging.getLogger("bob.learn")
 
 
@@ -77,7 +78,7 @@ class Logits(estimator.Estimator):
         extra_checkpoint = {
             "checkpoint_path": <YOUR_CHECKPOINT>,
             "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),
-            "is_trainable": <IF_THOSE_LOADED_VARIABLES_ARE_TRAINABLE>
+            "trainable_variables": [<LIST OF VARIABLES OR SCOPES THAT YOU WANT TO RETRAIN>]
         }
     """
 
@@ -111,14 +112,11 @@ class Logits(estimator.Estimator):
             # Configure the Training Op (for TRAIN mode)
             if mode == tf.estimator.ModeKeys.TRAIN:
 
-                # Building one graph, by default everything is trainable
-                if  self.extra_checkpoint is None:
-                    is_trainable = True
-                else:
-                    is_trainable = is_trainable_checkpoint(self.extra_checkpoint)
+                # Building the training graph
 
-                # Building the training graph                
-                prelogits = self.architecture(data, mode=mode, trainable_variables=is_trainable)[0]
+                # Checking if we have some variables/scope that we may want to shut down
+                trainable_variables = get_trainable_variables(self.extra_checkpoint)
+                prelogits = self.architecture(data, mode=mode, trainable_variables=trainable_variables)[0]
                 logits = append_logits(prelogits, n_classes)
 
                 # Compute Loss (for both TRAIN and EVAL modes)
@@ -132,10 +130,9 @@ class Logits(estimator.Estimator):
                 train_op = self.optimizer.minimize(self.loss, global_step=global_step)
                 return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss,
                                                   train_op=train_op)
-            
 
             # Building the training graph for PREDICTION OR VALIDATION
-            prelogits = self.architecture(data, mode=mode, trainable_variables=False)[0]
+            prelogits = self.architecture(data, mode=mode)[0]
             logits = append_logits(prelogits, n_classes)
 
             if self.embedding_validation:
@@ -162,7 +159,7 @@ class Logits(estimator.Estimator):
 
             # IF Validation
             self.loss = self.loss_op(logits, labels)
-            
+
             if self.embedding_validation:
                 predictions_op = predict_using_tensors(
                     predictions["embeddings"], labels,
@@ -233,6 +230,15 @@ class LogitsCenterLoss(estimator.Estimator):
       params:
         Extra params for the model function (please see
         https://www.tensorflow.org/extend/estimators for more info)
+        
+      extra_checkpoint: dict
+        In case you want to use other model to initialize some variables.
+        This argument should be in the following format
+        extra_checkpoint = {
+            "checkpoint_path": <YOUR_CHECKPOINT>,
+            "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),
+            "trainable_variables": [<LIST OF VARIABLES OR SCOPES THAT YOU WANT TO TRAIN>]
+        }
 
     """
 
@@ -279,15 +285,11 @@ class LogitsCenterLoss(estimator.Estimator):
 
             # Configure the Training Op (for TRAIN mode)
             if mode == tf.estimator.ModeKeys.TRAIN:
+                # Building the training graph
 
-                # Building one graph, by default everything is trainable
-                if  self.extra_checkpoint is None:
-                    is_trainable = True
-                else:
-                    is_trainable = is_trainable_checkpoint(self.extra_checkpoint)
-
-                # Building the training graph                
-                prelogits = self.architecture(data, mode=mode, trainable_variables=is_trainable)[0]
+                # Checking if we have some variables/scope that we may want to shut down
+                trainable_variables = get_trainable_variables(self.extra_checkpoint)
+                prelogits = self.architecture(data, mode=mode, trainable_variables=trainable_variables)[0]
                 logits = append_logits(prelogits, n_classes)
 
                 # Compute Loss (for TRAIN mode)
@@ -308,7 +310,7 @@ class LogitsCenterLoss(estimator.Estimator):
                                                   train_op=train_op)
 
             # Building the training graph for PREDICTION OR VALIDATION
-            prelogits = self.architecture(data, mode=mode, trainable_variables=False)[0]
+            prelogits = self.architecture(data, mode=mode)[0]
             logits = append_logits(prelogits, n_classes)
 
             if self.embedding_validation:
@@ -334,15 +336,15 @@ class LogitsCenterLoss(estimator.Estimator):
             # IF Validation
             loss_dict = mean_cross_entropy_center_loss(logits, prelogits, labels, self.n_classes,
                                                        alpha=self.alpha, factor=self.factor)
-            self.loss = loss_dict['loss']                                                       
-            
+            self.loss = loss_dict['loss']
+
             if self.embedding_validation:
                 predictions_op = predict_using_tensors(
                     predictions["embeddings"], labels, num=validation_batch_size)
                 eval_metric_ops = {"accuracy": tf.metrics.accuracy(
                     labels=labels, predictions=predictions_op)}
                 return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss, eval_metric_ops=eval_metric_ops)
-            
+
             else:
                 # Add evaluation metrics (for EVAL mode)
                 eval_metric_ops = {
@@ -354,4 +356,3 @@ class LogitsCenterLoss(estimator.Estimator):
         super(LogitsCenterLoss, self).__init__(model_fn=_model_fn,
                                                model_dir=model_dir,
                                                config=config)
-
