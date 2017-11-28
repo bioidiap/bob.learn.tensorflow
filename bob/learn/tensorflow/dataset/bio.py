@@ -41,8 +41,8 @@ class BioGenerator(object):
     """
 
     def __init__(self, database, biofiles, load_data=None,
-                 biofile_to_label=None, multiple_samples=False):
-        super(self, BioGenerator).__init__()
+                 biofile_to_label=None, multiple_samples=False, **kwargs):
+        super(BioGenerator, self).__init__(**kwargs)
         if load_data is None:
             def load_data(database, biofile):
                 data = read_original_data(
