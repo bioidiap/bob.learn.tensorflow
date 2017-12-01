@@ -112,7 +112,8 @@ from multiprocessing import Pool
 from collections import defaultdict
 import numpy as np
 from bob.io.base import create_directories_safe
-from bob.bio.base.utils import read_config_file, save
+from bob.bio.base.utils import save
+from bob.extension.config import load as read_config_file
 from bob.bio.base.tools.grid import indices
 from bob.learn.tensorflow.utils.commandline import \
     get_from_config_or_commandline

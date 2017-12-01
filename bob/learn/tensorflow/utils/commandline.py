@@ -11,7 +11,7 @@ def get_from_config_or_commandline(config, keyword, args, defaults,
 
     Parameters
     ----------
-    config : object
+    config : :any:`module`
         The loaded config files.
     keyword : str
         The keyword to load from the config file or through command line.
@@ -30,7 +30,7 @@ def get_from_config_or_commandline(config, keyword, args, defaults,
 
     Example
     -------
-    >>> from bob.bio.base.utils import read_config_file
+    >>> from bob.extension.config import load as read_config_file
     >>> defaults = docopt(docs, argv=[""])
     >>> args = docopt(docs, argv=argv)
     >>> config_files = args['<config_files>']
