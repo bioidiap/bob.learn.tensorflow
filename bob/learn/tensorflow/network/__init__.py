@@ -3,6 +3,10 @@ from .LightCNN9 import LightCNN9
 from .Dummy import Dummy
 from .MLP import MLP
 from .Embedding import Embedding
+from .lstm import simple_lstm_network
+from .lstm import RegularizedLoss
+from .simplemlp import mlp_network
+from .simplecnn import simple2Dcnn_network
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):
@@ -23,6 +27,7 @@ __appropriate__(
     LightCNN9,
     Dummy,
     MLP,
+    RegularizedLoss,
     )
 __all__ = [_ for _ in dir() if not _.startswith('_')]
 
