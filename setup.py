@@ -52,6 +52,7 @@ setup(
             'bob_tf_load_and_debug.py = bob.learn.tensorflow.script.load_and_debug:main',
             'bob_tf_train_generic = bob.learn.tensorflow.script.train_generic:main',
             'bob_tf_eval_generic = bob.learn.tensorflow.script.eval_generic:main',
+            'bob_tf_train_and_evaluate = bob.learn.tensorflow.script.train_and_evaluate:main',
             'bob_tf_predict_generic = bob.learn.tensorflow.script.predict_generic:main',
             'bob_tf_predict_bio = bob.learn.tensorflow.script.predict_bio:main',
         ],
