@@ -92,8 +92,6 @@ class EarlyStopping(tf.train.SessionRunHook):
         stopped. Please use large patience values since this hook is
         implemented using steps instead of epochs compared to the equivalent
         one in Keras.
-    verbose
-        verbosity mode.
     mode
         one of {auto, min, max}. In `min` mode, training will stop when the
         quantity monitored has stopped decreasing; in `max` mode it will stop
@@ -106,13 +104,11 @@ class EarlyStopping(tf.train.SessionRunHook):
                  monitor='accuracy',
                  min_delta=0,
                  patience=0,
-                 verbose=0,
                  mode='auto'):
         super(EarlyStopping, self).__init__()
 
         self.monitor = monitor
         self.patience = patience
-        self.verbose = verbose
         self.min_delta = min_delta
         self.wait = 0
 
