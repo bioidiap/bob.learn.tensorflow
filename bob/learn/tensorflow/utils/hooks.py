@@ -101,7 +101,7 @@ class EarlyStopping(tf.train.SessionRunHook):
     """
 
     def __init__(self,
-                 monitor='accuracy',
+                 monitor='accuracy/total',
                  min_delta=0,
                  patience=0,
                  mode='auto'):
