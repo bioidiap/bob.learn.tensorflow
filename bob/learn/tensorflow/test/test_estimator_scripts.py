@@ -2,8 +2,6 @@ from __future__ import print_function
 import os
 from tempfile import mkdtemp
 import shutil
-import logging
-logging.getLogger("tensorflow").setLevel(logging.WARNING)
 from bob.io.base.test_utils import datafile
 
 from bob.learn.tensorflow.script.db_to_tfrecords import main as tfrecords
@@ -13,7 +11,6 @@ from bob.learn.tensorflow.script.eval_generic import main as eval_generic
 dummy_tfrecord_config = datafile('dummy_verify_config.py', __name__)
 CONFIG = '''
 import tensorflow as tf
-from bob.learn.tensorflow.utils.reproducible import run_config
 from bob.learn.tensorflow.dataset.tfrecords import shuffle_data_and_labels, \
     batch_data_and_labels
 
@@ -88,8 +85,7 @@ def model_fn(features, labels, mode, params, config):
         eval_metric_ops=metrics)
 
 
-estimator = tf.estimator.Estimator(model_fn=model_fn, model_dir=model_dir,
-                                   config=run_config)
+estimator = tf.estimator.Estimator(model_fn=model_fn, model_dir=model_dir)
 '''
 
 
