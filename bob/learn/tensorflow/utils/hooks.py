@@ -1,9 +1,12 @@
-import tensorflow as tf
-import time
 from datetime import datetime
+from tensorflow.python.training.basic_session_run_hooks import _as_graph_element
 import logging
 import numpy as np
-from tensorflow.python.training.basic_session_run_hooks import _as_graph_element
+import six
+import tensorflow as tf
+import time
+
+logger = logging.getLogger(__name__)
 
 
 class LoggerHook(tf.train.SessionRunHook):
@@ -71,6 +74,10 @@ class LoggerHookEstimator(tf.train.SessionRunHook):
                                 examples_per_sec, sec_per_batch))
 
 
+class EarlyStopException(Exception):
+    pass
+
+
 class EarlyStopping(tf.train.SessionRunHook):
     """Stop training when a monitored quantity has stopped improving.
     Based on Keras's EarlyStopping callback:
@@ -101,7 +108,7 @@ class EarlyStopping(tf.train.SessionRunHook):
     """
 
     def __init__(self,
-                 monitor='accuracy/total',
+                 monitor='accuracy/value',
                  min_delta=0,
                  patience=0,
                  mode='auto'):
@@ -113,8 +120,8 @@ class EarlyStopping(tf.train.SessionRunHook):
         self.wait = 0
 
         if mode not in ['auto', 'min', 'max']:
-            logging.warning('EarlyStopping mode %s is unknown, '
-                            'fallback to auto mode.' % mode)
+            logger.warn('EarlyStopping mode %s is unknown, '
+                        'fallback to auto mode.' % mode)
             mode = 'auto'
 
         if mode == 'min':
@@ -131,25 +138,37 @@ class EarlyStopping(tf.train.SessionRunHook):
             self.min_delta *= 1
         else:
             self.min_delta *= -1
-
-    def begin(self):
         # Allow instances to be re-used
         self.wait = 0
         self.best = np.Inf if self.monitor_op == np.less else -np.Inf
-        self.monitor = _as_graph_element(self.monitor)
+
+    def begin(self):
+        self.values = []
+        if isinstance(self.monitor, six.string_types):
+            self.monitor = _as_graph_element(self.monitor)
+        else:
+            self.monitor = _as_graph_element(self.monitor.name)
 
     def before_run(self, run_context):
         return tf.train.SessionRunArgs(self.monitor)
 
     def after_run(self, run_context, run_values):
-        current = run_values.results
+        self.values.append(run_values.results)
+
+    def _should_stop(self):
+        current = np.mean(self.values)
+        logger.info('%s is currently at %f and the best value was %f',
+                    self.monitor.name, current, self.best)
         if self.monitor_op(current - self.min_delta, self.best):
             self.best = current
             self.wait = 0
         else:
             if self.wait >= self.patience:
-                run_context.request_stop()
-                print('Early stopping happened with {} at best of {} and '
-                      'current of {}'.format(
-                          self.monitor, self.best, current))
+                raise EarlyStopException(
+                    'Early stopping happened with {} at best of '
+                    '{} and current of {}'.format(
+                        self.monitor, self.best, current))
             self.wait += 1
+
+    def end(self, session):
+        self._should_stop()
