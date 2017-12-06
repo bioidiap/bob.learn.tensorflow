@@ -51,18 +51,18 @@ class Triplet(estimator.Estimator):
          - tf.train.GradientDescentOptimizer
          - tf.train.AdagradOptimizer
          - ....
-         
+
       config:
-         
+
       n_classes:
          Number of classes of your problem. The logits will be appended in this class
-         
+
       loss_op:
          Pointer to a function that computes the loss.
-      
+
       embedding_validation:
          Run the validation using embeddings?? [default: False]
-      
+
       model_dir:
         Model path
 
@@ -97,7 +97,7 @@ class Triplet(estimator.Estimator):
 
         if self.architecture is None:
             raise ValueError("Please specify a function to build the architecture !!")
-            
+
         if self.optimizer is None:
             raise ValueError("Please specify a optimizer (https://www.tensorflow.org/api_guides/python/train) !!")
 
@@ -132,7 +132,7 @@ class Triplet(estimator.Estimator):
                 # Compute Loss (for both TRAIN and EVAL modes)
                 self.loss = self.loss_op(prelogits_anchor, prelogits_positive, prelogits_negative)
                 # Configure the Training Op (for TRAIN mode)
-                global_step = tf.contrib.framework.get_or_create_global_step()
+                global_step = tf.train.get_or_create_global_step()
                 train_op = self.optimizer.minimize(self.loss, global_step=global_step)
                 return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss,
                                                   train_op=train_op)
@@ -150,7 +150,7 @@ class Triplet(estimator.Estimator):
 
             predictions_op = predict_using_tensors(predictions["embeddings"], labels, num=validation_batch_size)
             eval_metric_ops = {"accuracy": tf.metrics.accuracy(labels=labels, predictions=predictions_op)}
-            
+
             return tf.estimator.EstimatorSpec(mode=mode, loss=tf.reduce_mean(1), eval_metric_ops=eval_metric_ops)
 
         super(Triplet, self).__init__(model_fn=_model_fn,
