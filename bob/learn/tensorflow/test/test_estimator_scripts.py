@@ -7,6 +7,7 @@ from bob.io.base.test_utils import datafile
 from bob.learn.tensorflow.script.db_to_tfrecords import main as tfrecords
 from bob.learn.tensorflow.script.train_generic import main as train_generic
 from bob.learn.tensorflow.script.eval_generic import main as eval_generic
+from bob.learn.tensorflow.script.train_and_evaluate import main as train_and_evaluate
 
 dummy_tfrecord_config = datafile('dummy_verify_config.py', __name__)
 CONFIG = '''
@@ -31,6 +32,10 @@ def train_input_fn():
 def eval_input_fn():
     return batch_data_and_labels(tfrecord_filenames, data_shape, data_type,
                                    batch_size, epochs=1)
+
+# config for train_and_evaluate
+train_spec = tf.estimator.TrainSpec(input_fn=train_input_fn, max_steps=200)
+eval_spec = tf.estimator.EvalSpec(input_fn=eval_input_fn)
 
 def architecture(images):
     images = tf.cast(images, tf.float32)
@@ -115,6 +120,15 @@ def _eval(tmpdir, model_dir, dummy_tfrecord):
     eval_generic([config_path])
 
 
+def _train_and_evaluate(tmpdir, model_dir, dummy_tfrecord):
+    config = CONFIG % {'model_dir': model_dir,
+                       'tfrecord_filenames': dummy_tfrecord}
+    config_path = os.path.join(tmpdir, 'train_config.py')
+    with open(config_path, 'w') as f:
+        f.write(config)
+    train_and_evaluate([config_path])
+
+
 def test_eval():
     tmpdir = mkdtemp(prefix='bob_')
     try:
@@ -137,6 +151,10 @@ def test_eval():
 
         assert '1' in doc, doc
         assert '200' in doc, doc
+
+        print('Train and evaluate a dummy network')
+        _train_and_evaluate(tmpdir, model_dir, dummy_tfrecord)
+
     finally:
         try:
             shutil.rmtree(tmpdir)
