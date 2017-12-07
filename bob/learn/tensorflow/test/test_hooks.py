@@ -5,6 +5,7 @@ from bob.learn.tensorflow.loss.BaseLoss import mean_cross_entropy_loss
 from bob.learn.tensorflow.utils.hooks import EarlyStopping, EarlyStopException
 import nose
 import tensorflow as tf
+import shutil
 
 
 @nose.tools.raises(EarlyStopException)
@@ -16,6 +17,7 @@ def test_early_stopping_linear_classifier():
     estimator = config.estimator
     train_input_fn = config.train_input_fn
     eval_input_fn = config.eval_input_fn
+
     hooks = [
         EarlyStopping('linear/head/metrics/accuracy/value',
                       min_delta=0.001, patience=1),
@@ -24,7 +26,11 @@ def test_early_stopping_linear_classifier():
     train_spec = tf.estimator.TrainSpec(input_fn=train_input_fn)
     eval_spec = tf.estimator.EvalSpec(
         input_fn=eval_input_fn, hooks=hooks, throttle_secs=2, steps=10)
-    tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
+
+    try:
+        tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
+    finally:
+        shutil.rmtree(estimator.model_dir)
 
 
 @nose.tools.raises(EarlyStopException)
@@ -34,6 +40,7 @@ def test_early_stopping_logit_trainer():
     ])
     train_input_fn = config.train_input_fn
     eval_input_fn = config.eval_input_fn
+
     hooks = [
         EarlyStopping('accuracy/value', min_delta=0.001, patience=1),
     ]
@@ -51,4 +58,7 @@ def test_early_stopping_logit_trainer():
     estimator = Logits(architecture, optimizer, loss_op,
                        n_classes=10, model_dir=None)
 
-    tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
+    try:
+        tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
+    finally:
+        shutil.rmtree(estimator.model_dir)
