@@ -43,7 +43,7 @@ class Siamese(estimator.Estimator):
        return loss_set_of_ops(logits, labels)
 
 
-        extra_checkpoint = {"checkpoint_path":model_dir, 
+        extra_checkpoint = {"checkpoint_path":model_dir,
                             "scopes": dict({"Dummy/": "Dummy/"}),
                             "is_trainable": False
                            }
@@ -60,35 +60,35 @@ class Siamese(estimator.Estimator):
          - tf.train.GradientDescentOptimizer
          - tf.train.AdagradOptimizer
          - ....
-         
+
       config:
-         
+
       loss_op:
          Pointer to a function that computes the loss.
-      
+
       embedding_validation:
          Run the validation using embeddings?? [default: False]
-      
+
       model_dir:
         Model path
 
       validation_batch_size:
         Size of the batch for validation. This value is used when the
         validation with embeddings is used. This is a hack.
-        
+
 
       params:
-        Extra params for the model function 
+        Extra params for the model function
         (please see https://www.tensorflow.org/extend/estimators for more info)
-        
+
       extra_checkpoint: dict()
         In case you want to use other model to initialize some variables.
         This argument should be in the following format
-        extra_checkpoint = {"checkpoint_path": <YOUR_CHECKPOINT>, 
+        extra_checkpoint = {"checkpoint_path": <YOUR_CHECKPOINT>,
                             "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),
                             "is_trainable": <IF_THOSE_LOADED_VARIABLES_ARE_TRAINABLE>
                            }
-        
+
     """
 
     def __init__(self,
@@ -99,18 +99,18 @@ class Siamese(estimator.Estimator):
                  model_dir="",
                  validation_batch_size=None,
                  params=None,
-                 extra_checkpoint=None                 
+                 extra_checkpoint=None
               ):
 
         self.architecture = architecture
         self.optimizer=optimizer
         self.loss_op=loss_op
         self.loss = None
-        self.extra_checkpoint = extra_checkpoint        
+        self.extra_checkpoint = extra_checkpoint
 
         if self.architecture is None:
             raise ValueError("Please specify a function to build the architecture !!")
-            
+
         if self.optimizer is None:
             raise ValueError("Please specify a optimizer (https://www.tensorflow.org/api_guides/python/train) !!")
 
@@ -119,8 +119,8 @@ class Siamese(estimator.Estimator):
 
         def _model_fn(features, labels, mode, params, config):
 
-            if mode == tf.estimator.ModeKeys.TRAIN:                            
-            
+            if mode == tf.estimator.ModeKeys.TRAIN:
+
                 # Building one graph, by default everything is trainable
                 if  self.extra_checkpoint is None:
                     is_trainable = True
@@ -138,12 +138,12 @@ class Siamese(estimator.Estimator):
                 if self.extra_checkpoint is not None:
                     tf.contrib.framework.init_from_checkpoint(self.extra_checkpoint["checkpoint_path"],
                                                               self.extra_checkpoint["scopes"])
-    
+
                 # Compute Loss (for both TRAIN and EVAL modes)
                 self.loss = self.loss_op(prelogits_left, prelogits_right, labels)
-               
+
                 # Configure the Training Op (for TRAIN mode)
-                global_step = tf.contrib.framework.get_or_create_global_step()
+                global_step = tf.train.get_or_create_global_step()
                 train_op = self.optimizer.minimize(self.loss, global_step=global_step)
 
                 return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss,
@@ -162,9 +162,9 @@ class Siamese(estimator.Estimator):
 
             predictions_op = predict_using_tensors(predictions["embeddings"], labels, num=validation_batch_size)
             eval_metric_ops = {"accuracy": tf.metrics.accuracy(labels=labels, predictions=predictions_op)}
-            
+
             return tf.estimator.EstimatorSpec(mode=mode, loss=tf.reduce_mean(1), eval_metric_ops=eval_metric_ops)
-            
+
 
         super(Siamese, self).__init__(model_fn=_model_fn,
                                      model_dir=model_dir,
