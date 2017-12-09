@@ -32,7 +32,7 @@ class Siamese(estimator.Estimator):
        return loss_set_of_ops(logits, labels)
 
 
-        extra_checkpoint = {"checkpoint_path":model_dir, 
+        extra_checkpoint = {"checkpoint_path":model_dir,
                             "scopes": dict({"Dummy/": "Dummy/"}),
                             "trainable_variables": [<LIST OF VARIABLES OR SCOPES THAT YOU WANT TO TRAIN>]
                            }
@@ -49,25 +49,25 @@ class Siamese(estimator.Estimator):
          - tf.train.GradientDescentOptimizer
          - tf.train.AdagradOptimizer
          - ....
-         
+
       config:
-         
+
       loss_op:
          Pointer to a function that computes the loss.
-      
+
       embedding_validation:
          Run the validation using embeddings?? [default: False]
-      
+
       model_dir:
         Model path
 
       validation_batch_size:
         Size of the batch for validation. This value is used when the
         validation with embeddings is used. This is a hack.
-        
+
 
       params:
-        Extra params for the model function 
+        Extra params for the model function
         (please see https://www.tensorflow.org/extend/estimators for more info)
         
       extra_checkpoint: dict
@@ -131,7 +131,7 @@ class Siamese(estimator.Estimator):
                 self.loss = self.loss_op(prelogits_left, prelogits_right, labels)
 
                 # Configure the Training Op (for TRAIN mode)
-                global_step = tf.contrib.framework.get_or_create_global_step()
+                global_step = tf.train.get_or_create_global_step()
                 train_op = self.optimizer.minimize(self.loss, global_step=global_step)
 
                 return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss,

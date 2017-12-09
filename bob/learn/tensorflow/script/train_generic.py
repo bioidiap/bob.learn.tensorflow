@@ -39,7 +39,7 @@ from __future__ import division
 from __future__ import print_function
 # import pkg_resources so that bob imports work properly:
 import pkg_resources
-from bob.bio.base.utils import read_config_file
+from bob.extension.config import load as read_config_file
 from bob.learn.tensorflow.utils.commandline import \
     get_from_config_or_commandline
 from bob.core.log import setup, set_verbosity_level

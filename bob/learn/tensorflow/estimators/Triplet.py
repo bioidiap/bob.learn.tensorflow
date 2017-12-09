@@ -45,18 +45,18 @@ class Triplet(estimator.Estimator):
          - tf.train.GradientDescentOptimizer
          - tf.train.AdagradOptimizer
          - ....
-         
+
       config:
-         
+
       n_classes:
          Number of classes of your problem. The logits will be appended in this class
-         
+
       loss_op:
          Pointer to a function that computes the loss.
-      
+
       embedding_validation:
          Run the validation using embeddings?? [default: False]
-      
+
       model_dir:
         Model path
 
@@ -126,7 +126,7 @@ class Triplet(estimator.Estimator):
                 # Compute Loss (for both TRAIN and EVAL modes)
                 self.loss = self.loss_op(prelogits_anchor, prelogits_positive, prelogits_negative)
                 # Configure the Training Op (for TRAIN mode)
-                global_step = tf.contrib.framework.get_or_create_global_step()
+                global_step = tf.train.get_or_create_global_step()
                 train_op = self.optimizer.minimize(self.loss, global_step=global_step)
                 return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss,
                                                   train_op=train_op)

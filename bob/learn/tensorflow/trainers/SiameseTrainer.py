@@ -95,22 +95,22 @@ class SiameseTrainer(Trainer):
 
         self.graph = None
         self.validation_graph = None
-                
+
         self.loss = None
-        self.validation_predictor = None        
-        
+        self.validation_predictor = None
+
         self.optimizer_class = None
         self.learning_rate = None
 
         # Training variables used in the fit
         self.optimizer = None
-        
+
         self.data_ph = None
         self.label_ph = None
-        
+
         self.validation_data_ph = None
         self.validation_label_ph = None
-        
+
         self.saver = None
 
         bob.core.log.set_verbosity_level(logger, verbosity_level)
@@ -140,7 +140,7 @@ class SiameseTrainer(Trainer):
         self.optimizer_class = optimizer
         self.learning_rate = learning_rate
 
-        self.global_step = tf.contrib.framework.get_or_create_global_step()
+        self.global_step = tf.train.get_or_create_global_step()
 
         # Saving all the variables
         self.saver = tf.train.Saver(var_list=tf.global_variables())
@@ -215,7 +215,7 @@ class SiameseTrainer(Trainer):
 
     def fit(self, step):
         feed_dict = self.get_feed_dict(self.train_data_shuffler)
-                
+
         _, l, bt_class, wt_class, lr, summary = self.session.run([
                                                 self.optimizer,
                                                 self.loss['loss'], self.loss['between_class'],

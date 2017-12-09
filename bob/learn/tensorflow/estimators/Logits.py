@@ -126,7 +126,7 @@ class Logits(estimator.Estimator):
                     tf.contrib.framework.init_from_checkpoint(self.extra_checkpoint["checkpoint_path"],
                                                               self.extra_checkpoint["scopes"])
 
-                global_step = tf.contrib.framework.get_or_create_global_step()
+                global_step = tf.train.get_or_create_global_step()
                 train_op = self.optimizer.minimize(self.loss, global_step=global_step)
                 return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss,
                                                   train_op=train_op)
@@ -303,7 +303,7 @@ class LogitsCenterLoss(estimator.Estimator):
                     tf.contrib.framework.init_from_checkpoint(self.extra_checkpoint["checkpoint_path"],
                                                               self.extra_checkpoint["scopes"])
 
-                global_step = tf.contrib.framework.get_or_create_global_step()
+                global_step = tf.train.get_or_create_global_step()
                 train_op = tf.group(self.optimizer.minimize(self.loss, global_step=global_step),
                                     centers)
                 return tf.estimator.EstimatorSpec(mode=mode, loss=self.loss,

@@ -43,7 +43,7 @@ import os
 import time
 import six
 import tensorflow as tf
-from bob.bio.base.utils import read_config_file
+from bob.extension.config import load as read_config_file
 from ..utils.eval import get_global_step
 
 

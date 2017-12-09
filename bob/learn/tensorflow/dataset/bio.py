@@ -41,7 +41,8 @@ class BioGenerator(object):
     """
 
     def __init__(self, database, biofiles, load_data=None,
-                 biofile_to_label=None, multiple_samples=False):
+                 biofile_to_label=None, multiple_samples=False, **kwargs):
+        super(BioGenerator, self).__init__(**kwargs)
         if load_data is None:
             def load_data(database, biofile):
                 data = read_original_data(
@@ -94,6 +95,9 @@ class BioGenerator(object):
     @property
     def output_shapes(self):
         return self._output_shapes
+
+    def __len__(self):
+        return len(self.biofiles)
 
     def __call__(self):
         """A generator function that when called will return the samples.
