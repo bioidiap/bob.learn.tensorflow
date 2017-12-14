@@ -26,6 +26,7 @@ from __future__ import print_function
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 
+
 # Inception-Renset-A
 def block35(net, scale=1.0, activation_fn=tf.nn.relu, scope=None, reuse=None, trainable_variables=True):
     """Builds the 35x35 resnet block."""
@@ -46,6 +47,7 @@ def block35(net, scale=1.0, activation_fn=tf.nn.relu, scope=None, reuse=None, tr
         if activation_fn:
             net = activation_fn(net)
     return net
+
 
 # Inception-Renset-B
 def block17(net, scale=1.0, activation_fn=tf.nn.relu, scope=None, reuse=None, trainable_variables=True):
@@ -87,7 +89,8 @@ def block8(net, scale=1.0, activation_fn=tf.nn.relu, scope=None, reuse=None, tra
         if activation_fn:
             net = activation_fn(net)
     return net
-  
+
+
 def reduction_a(net, k, l, m, n, trainable_variables=True, reuse=None):
     with tf.variable_scope('Branch_0', reuse=reuse):
         tower_conv = slim.conv2d(net, n, 3, stride=2, padding='VALID',
@@ -104,6 +107,7 @@ def reduction_a(net, k, l, m, n, trainable_variables=True, reuse=None):
                                      scope='MaxPool_1a_3x3')
     net = tf.concat([tower_conv, tower_conv1_2, tower_pool], 3)
     return net
+
 
 def reduction_b(net, reuse=None, trainable_variables=True):
     with tf.variable_scope('Branch_0', reuse=reuse):
@@ -124,9 +128,10 @@ def reduction_b(net, reuse=None, trainable_variables=True):
         tower_pool = slim.max_pool2d(net, 3, stride=2, padding='VALID',
                                      scope='MaxPool_1a_3x3')
     net = tf.concat([tower_conv_1, tower_conv1_1,
-                        tower_conv2_2, tower_pool], 3)
+                     tower_conv2_2, tower_pool], 3)
     return net
-  
+
+
 def inference(images, keep_probability, phase_train=True, 
               bottleneck_layer_size=128, weight_decay=0.0, reuse=None):
     batch_norm_params = {
@@ -146,16 +151,18 @@ def inference(images, keep_probability, phase_train=True,
                         normalizer_fn=slim.batch_norm,
                         normalizer_params=batch_norm_params):
         return inception_resnet_v1(images, is_training=phase_train,
-              dropout_keep_prob=keep_probability, bottleneck_layer_size=bottleneck_layer_size, reuse=reuse)
+                                   dropout_keep_prob=keep_probability,
+                                   bottleneck_layer_size=bottleneck_layer_size,
+                                   reuse=reuse)
 
 
-def inception_resnet_v1(inputs, is_training=True,
+def inception_resnet_v1(inputs,
                         dropout_keep_prob=0.8,
                         bottleneck_layer_size=128,
                         reuse=None, 
                         scope='InceptionResnetV1',
-                        mode = tf.estimator.ModeKeys.TRAIN,
-                        trainable_variables=True):
+                        mode=tf.estimator.ModeKeys.TRAIN,
+                        trainable_variables=True, **kwargs):
     """
     Creates the Inception Resnet V1 model.
 
@@ -248,6 +255,7 @@ def inception_resnet_v1(inputs, is_training=True,
                     end_points['PreLogitsFlatten'] = net
                 
                 net = slim.fully_connected(net, bottleneck_layer_size, activation_fn=None, 
-                        scope='Bottleneck', reuse=reuse, trainable=trainable_variables)
+                                           scope='Bottleneck',
+                                           reuse=reuse, trainable=trainable_variables)
   
     return net, end_points

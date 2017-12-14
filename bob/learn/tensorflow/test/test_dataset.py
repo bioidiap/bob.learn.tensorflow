@@ -14,7 +14,6 @@ batch_size = 2
 validation_batch_size = 250
 epochs = 1
 
-
 # Trainer logits
 filenames = [pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p01_i0_0.png'),
              pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p02_i0_0.png'),
@@ -34,8 +33,8 @@ labels = [0, 0, 0, 0, 0, 0,
 
 
 def test_siamese_dataset():
-
-    data, label = siamese_batch(filenames, labels, data_shape, data_type, 2, per_image_normalization=False, output_shape=output_shape)
+    data, label = siamese_batch(filenames, labels, data_shape, data_type, 2, per_image_normalization=False,
+                                output_shape=output_shape)
 
     with tf.Session() as session:
         d, l = session.run([data, label])
@@ -45,8 +44,8 @@ def test_siamese_dataset():
 
 
 def test_triplet_dataset():
-
-    data = triplet_batch(filenames, labels, data_shape, data_type, 2, per_image_normalization=False, output_shape=output_shape)
+    data = triplet_batch(filenames, labels, data_shape, data_type, 2, per_image_normalization=False,
+                         output_shape=output_shape)
     with tf.Session() as session:
         d = session.run([data])[0]
         assert len(d.keys()) == 3

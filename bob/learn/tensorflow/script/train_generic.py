@@ -55,6 +55,7 @@ def main(argv=None):
     defaults = docopt(docs, argv=[""])
     args = docopt(docs, argv=argv, version=version)
     config_files = args['<config_files>']
+    
     config = read_config_file(config_files)
 
     # optional arguments

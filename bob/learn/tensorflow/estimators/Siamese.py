@@ -3,24 +3,13 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 
 import tensorflow as tf
-import os
-import bob.io.base
-import bob.core
-from tensorflow.core.framework import summary_pb2
-import time
-
-#logger = bob.core.log.setup("bob.learn.tensorflow")
 from tensorflow.python.estimator import estimator
 from bob.learn.tensorflow.utils import predict_using_tensors
-#from bob.learn.tensorflow.loss import mean_cross_entropy_center_loss
-from . import check_features, is_trainable_checkpoint
+from . import check_features, get_trainable_variables
 
 import logging
+
 logger = logging.getLogger("bob.learn")
-
-
-from bob.learn.tensorflow.network.utils import append_logits
-from bob.learn.tensorflow.loss import mean_cross_entropy_loss
 
 
 class Siamese(estimator.Estimator):
@@ -45,7 +34,7 @@ class Siamese(estimator.Estimator):
 
         extra_checkpoint = {"checkpoint_path":model_dir,
                             "scopes": dict({"Dummy/": "Dummy/"}),
-                            "is_trainable": False
+                            "trainable_variables": [<LIST OF VARIABLES OR SCOPES THAT YOU WANT TO TRAIN>]
                            }
 
 
@@ -80,15 +69,16 @@ class Siamese(estimator.Estimator):
       params:
         Extra params for the model function
         (please see https://www.tensorflow.org/extend/estimators for more info)
-
-      extra_checkpoint: dict()
+        
+      extra_checkpoint: dict
         In case you want to use other model to initialize some variables.
         This argument should be in the following format
-        extra_checkpoint = {"checkpoint_path": <YOUR_CHECKPOINT>,
-                            "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),
-                            "is_trainable": <IF_THOSE_LOADED_VARIABLES_ARE_TRAINABLE>
-                           }
-
+        extra_checkpoint = {
+            "checkpoint_path": <YOUR_CHECKPOINT>,
+            "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),
+            "trainable_variables": [<LIST OF VARIABLES OR SCOPES THAT YOU WANT TO TRAIN>]
+        }
+        
     """
 
     def __init__(self,
@@ -100,11 +90,11 @@ class Siamese(estimator.Estimator):
                  validation_batch_size=None,
                  params=None,
                  extra_checkpoint=None
-              ):
+                 ):
 
         self.architecture = architecture
-        self.optimizer=optimizer
-        self.loss_op=loss_op
+        self.optimizer = optimizer
+        self.loss_op = loss_op
         self.loss = None
         self.extra_checkpoint = extra_checkpoint
 
@@ -118,22 +108,20 @@ class Siamese(estimator.Estimator):
             raise ValueError("Please specify a function to build the loss !!")
 
         def _model_fn(features, labels, mode, params, config):
-
             if mode == tf.estimator.ModeKeys.TRAIN:
 
                 # Building one graph, by default everything is trainable
-                if  self.extra_checkpoint is None:
-                    is_trainable = True
-                else:
-                    is_trainable = is_trainable_checkpoint(self.extra_checkpoint)
-
                 # The input function needs to have dictionary pair with the `left` and `right` keys
-                if not 'left' in features.keys() or not 'right' in features.keys():
-                    raise ValueError("The input function needs to contain a dictionary with the keys `left` and `right` ")
+                if 'left' not in features.keys() or 'right' not in features.keys():
+                    raise ValueError(
+                        "The input function needs to contain a dictionary with the keys `left` and `right` ")
 
                 # Building one graph
-                prelogits_left, end_points_left = self.architecture(features['left'], mode=mode, trainable_variables=is_trainable)
-                prelogits_right, end_points_right = self.architecture(features['right'], reuse=True, mode=mode, trainable_variables=is_trainable)
+                trainable_variables = get_trainable_variables(self.extra_checkpoint)
+                prelogits_left, end_points_left = self.architecture(features['left'], mode=mode,
+                                                                    trainable_variables=trainable_variables)
+                prelogits_right, end_points_right = self.architecture(features['right'], reuse=True, mode=mode,
+                                                                      trainable_variables=trainable_variables)
 
                 if self.extra_checkpoint is not None:
                     tf.contrib.framework.init_from_checkpoint(self.extra_checkpoint["checkpoint_path"],
@@ -153,7 +141,7 @@ class Siamese(estimator.Estimator):
             data = features['data']
 
             # Compute the embeddings
-            prelogits = self.architecture(data, mode=mode, trainable_variables=False)[0]
+            prelogits = self.architecture(data, mode=mode)[0]
             embeddings = tf.nn.l2_normalize(prelogits, 1)
             predictions = {"embeddings": embeddings}
 
@@ -165,9 +153,7 @@ class Siamese(estimator.Estimator):
 
             return tf.estimator.EstimatorSpec(mode=mode, loss=tf.reduce_mean(1), eval_metric_ops=eval_metric_ops)
 
-
         super(Siamese, self).__init__(model_fn=_model_fn,
-                                     model_dir=model_dir,
-                                     params=params,
-                                     config=config)
-
+                                      model_dir=model_dir,
+                                      params=params,
+                                      config=config)

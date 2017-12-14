@@ -15,13 +15,10 @@ from bob.learn.tensorflow.utils import reproducible
 import pkg_resources
 from .test_estimator_transfer import dummy_adapted
 
-import numpy
 import shutil
-import os
-
 
 tfrecord_train = "./train_mnist.tfrecord"
-tfrecord_validation = "./validation_mnist.tfrecord"    
+tfrecord_validation = "./validation_mnist.tfrecord"
 model_dir = "./temp"
 model_dir_adapted = "./temp2"
 
@@ -34,26 +31,24 @@ validation_batch_size = 2
 epochs = 1
 steps = 5000
 
-
 # Data
 filenames = [pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p01_i0_0.png'),
              pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p02_i0_0.png'),
              pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p01_i0_0.png'),
              pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p02_i0_0.png'),
              pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p01_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p02_i0_0.png'),                 
+             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p02_i0_0.png'),
              pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p02_i0_0.png'),
              pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p01_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p02_i0_0.png'),                 
+             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p02_i0_0.png'),
 
-                              
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_01_p01_i0_0.png'),                 
+             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_01_p01_i0_0.png'),
              pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_02_f12_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_01_p01_i0_0.png'),                 
+             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_01_p01_i0_0.png'),
              pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_02_f12_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_01_p01_i0_0.png'),                 
+             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_01_p01_i0_0.png'),
              pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_02_f12_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_01_p01_i0_0.png'),                 
+             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_01_p01_i0_0.png'),
              pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_02_f12_i0_0.png'),
              pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_02_f12_i0_0.png'),
              ]
@@ -73,23 +68,23 @@ def test_triplet_estimator():
     finally:
         try:
             shutil.rmtree(model_dir, ignore_errors=True)
-            #pass
+            # pass
         except Exception:
-            pass        
+            pass
 
 
 def test_triplettrainer_transfer():
-
     def logits_input_fn():
-        return single_batch(filenames, labels, data_shape, data_type, batch_size, epochs=epochs, output_shape=output_shape)
+        return single_batch(filenames, labels, data_shape, data_type, batch_size, epochs=epochs,
+                            output_shape=output_shape)
 
     # Trainer logits first than siamese
     try:
 
-        extra_checkpoint = {"checkpoint_path":model_dir,
+        extra_checkpoint = {"checkpoint_path": model_dir,
                             "scopes": dict({"Dummy/": "Dummy/"}),
-                            "is_trainable": False
-                           }
+                            "trainable_variables": []
+                            }
 
         # LOGISTS
         logits_trainer = Logits(model_dir=model_dir,
@@ -118,24 +113,25 @@ def test_triplettrainer_transfer():
 
 
 def run_triplet_estimator(trainer):
-
     # Cleaning up
     tf.reset_default_graph()
     assert len(tf.global_variables()) == 0
 
     def input_fn():
-        return triplet_batch(filenames, labels, data_shape, data_type, batch_size, epochs=epochs, output_shape=output_shape,
+        return triplet_batch(filenames, labels, data_shape, data_type, batch_size, epochs=epochs,
+                             output_shape=output_shape,
                              random_flip=True, random_brightness=True, random_contrast=True, random_saturation=True)
 
     def input_validation_fn():
-        return single_batch(filenames, labels, data_shape, data_type, validation_batch_size, epochs=10, output_shape=output_shape)
+        return single_batch(filenames, labels, data_shape, data_type, validation_batch_size, epochs=10,
+                            output_shape=output_shape)
 
     hooks = [LoggerHookEstimator(trainer, batch_size, 300),
 
              tf.train.SummarySaverHook(save_steps=1000,
                                        output_dir=model_dir,
                                        scaffold=tf.train.Scaffold(),
-                                       summary_writer=tf.summary.FileWriter(model_dir) )]
+                                       summary_writer=tf.summary.FileWriter(model_dir))]
 
     trainer.train(input_fn, steps=steps, hooks=hooks)
 

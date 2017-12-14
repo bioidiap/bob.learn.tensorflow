@@ -9,13 +9,16 @@ import tensorflow as tf
 from bob.learn.tensorflow.utils import compute_euclidean_distance
 
 
-def contrastive_loss(left_embedding, right_embedding, labels, contrastive_margin=1.0):
+def contrastive_loss(left_embedding, right_embedding, labels, contrastive_margin=2.0):
     """
     Compute the contrastive loss as in
 
     http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
 
-    :math:`L = 0.5 * (Y) * D^2 + 0.5 * (1-Y) * {max(0, margin - D)}^2`
+    :math:`L = 0.5 * (1-Y) * D^2 + 0.5 * (Y) * {max(0, margin - D)}^2`
+    
+    where, `0` are assign for pairs from the same class and `1` from pairs from different classes.
+    
 
     **Parameters**
 
@@ -68,7 +71,7 @@ def contrastive_loss_deprecated(left_embedding, right_embedding, labels, contras
 
     http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
 
-    :math:`L = 0.5 * (Y) * D^2 + 0.5 * (1-Y) * {max(0, margin - D)}^2`
+    :math:`L = 0.5 * (1-Y) * D^2 + 0.5 * (Y) * {max(0, margin - D)}^2`
 
     **Parameters**
 
