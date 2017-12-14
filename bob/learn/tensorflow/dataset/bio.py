@@ -40,17 +40,23 @@ class BioGenerator(object):
         The shapes of the returned samples.
     """
 
-    def __init__(self, database, biofiles, load_data=None,
-                 biofile_to_label=None, multiple_samples=False, **kwargs):
+    def __init__(self,
+                 database,
+                 biofiles,
+                 load_data=None,
+                 biofile_to_label=None,
+                 multiple_samples=False,
+                 **kwargs):
         super(BioGenerator, self).__init__(**kwargs)
         if load_data is None:
+
             def load_data(database, biofile):
-                data = read_original_data(
-                    biofile,
-                    database.original_directory,
-                    database.original_extension)
+                data = read_original_data(biofile, database.original_directory,
+                                          database.original_extension)
                 return data
+
         if biofile_to_label is None:
+
             def biofile_to_label(biofile):
                 return -1
 
@@ -71,8 +77,8 @@ class BioGenerator(object):
                 data = six.next(data)
         data = tf.convert_to_tensor(data)
         self._output_types = (data.dtype, tf.int64, tf.string)
-        self._output_shapes = (
-            data.shape, tf.TensorShape([]), tf.TensorShape([]))
+        self._output_shapes = (data.shape, tf.TensorShape([]),
+                               tf.TensorShape([]))
 
         logger.info("Initializing a dataset with %d files and %s types "
                     "and %s shapes", len(self.biofiles), self.output_types,
@@ -107,8 +113,8 @@ class BioGenerator(object):
         (data, label, key) : tuple
             A tuple containing the data, label, and the key.
         """
-        for f, label, key in six.moves.zip(
-                self.biofiles, self.labels, self.keys):
+        for f, label, key in six.moves.zip(self.biofiles, self.labels,
+                                           self.keys):
             data = self.load_data(self.database, f)
             # labels
             if self.multiple_samples:

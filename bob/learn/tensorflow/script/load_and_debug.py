@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-
-
 """
 Load and debug tensorflow models
 
@@ -36,11 +34,13 @@ def main():
 
     logger.info("Directory already exists, trying to get the last checkpoint")
 
-    trainer = config.Trainer(config.train_data_shuffler,
-                             iterations=0,
-                             analizer=None,
-                             temp_dir=output_dir)
+    trainer = config.Trainer(
+        config.train_data_shuffler,
+        iterations=0,
+        analizer=None,
+        temp_dir=output_dir)
     trainer.create_network_from_file(output_dir)
-    import ipdb; ipdb.set_trace();
-    
-    debug=True
+    import ipdb
+    ipdb.set_trace()
+
+    debug = True

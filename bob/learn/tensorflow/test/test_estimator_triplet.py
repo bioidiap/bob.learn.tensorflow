@@ -32,38 +32,56 @@ epochs = 1
 steps = 5000
 
 # Data
-filenames = [pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p01_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p02_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p01_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p02_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p01_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p02_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p02_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p01_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p02_i0_0.png'),
-
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_01_p01_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_02_f12_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_01_p01_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_02_f12_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_01_p01_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_02_f12_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_01_p01_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_02_f12_i0_0.png'),
-             pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_02_f12_i0_0.png'),
-             ]
-labels = [0, 0, 0, 0, 0, 0, 0, 0, 0,
-          1, 1, 1, 1, 1, 1, 1, 1, 1]
+filenames = [
+    pkg_resources.resource_filename(
+        __name__, 'data/dummy_image_database/m301_01_p01_i0_0.png'),
+    pkg_resources.resource_filename(
+        __name__, 'data/dummy_image_database/m301_01_p02_i0_0.png'),
+    pkg_resources.resource_filename(
+        __name__, 'data/dummy_image_database/m301_01_p01_i0_0.png'),
+    pkg_resources.resource_filename(
+        __name__, 'data/dummy_image_database/m301_01_p02_i0_0.png'),
+    pkg_resources.resource_filename(
+        __name__, 'data/dummy_image_database/m301_01_p01_i0_0.png'),
+    pkg_resources.resource_filename(
+        __name__, 'data/dummy_image_database/m301_01_p02_i0_0.png'),
+    pkg_resources.resource_filename(
+        __name__, 'data/dummy_image_database/m301_01_p02_i0_0.png'),
+    pkg_resources.resource_filename(
+        __name__, 'data/dummy_image_database/m301_01_p01_i0_0.png'),
+    pkg_resources.resource_filename(
+        __name__, 'data/dummy_image_database/m301_01_p02_i0_0.png'),
+    pkg_resources.resource_filename(
+        __name__, 'data/dummy_image_database/m304_01_p01_i0_0.png'),
+    pkg_resources.resource_filename(
+        __name__, 'data/dummy_image_database/m304_02_f12_i0_0.png'),
+    pkg_resources.resource_filename(
+        __name__, 'data/dummy_image_database/m304_01_p01_i0_0.png'),
+    pkg_resources.resource_filename(
+        __name__, 'data/dummy_image_database/m304_02_f12_i0_0.png'),
+    pkg_resources.resource_filename(
+        __name__, 'data/dummy_image_database/m304_01_p01_i0_0.png'),
+    pkg_resources.resource_filename(
+        __name__, 'data/dummy_image_database/m304_02_f12_i0_0.png'),
+    pkg_resources.resource_filename(
+        __name__, 'data/dummy_image_database/m304_01_p01_i0_0.png'),
+    pkg_resources.resource_filename(
+        __name__, 'data/dummy_image_database/m304_02_f12_i0_0.png'),
+    pkg_resources.resource_filename(
+        __name__, 'data/dummy_image_database/m304_02_f12_i0_0.png'),
+]
+labels = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
 
 def test_triplet_estimator():
     # Trainer logits
     try:
-        trainer = Triplet(model_dir=model_dir,
-                          architecture=dummy,
-                          optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-                          loss_op=triplet_loss,
-                          validation_batch_size=validation_batch_size)
+        trainer = Triplet(
+            model_dir=model_dir,
+            architecture=dummy,
+            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+            loss_op=triplet_loss,
+            validation_batch_size=validation_batch_size)
         run_triplet_estimator(trainer)
     finally:
         try:
@@ -75,34 +93,45 @@ def test_triplet_estimator():
 
 def test_triplettrainer_transfer():
     def logits_input_fn():
-        return single_batch(filenames, labels, data_shape, data_type, batch_size, epochs=epochs,
-                            output_shape=output_shape)
+        return single_batch(
+            filenames,
+            labels,
+            data_shape,
+            data_type,
+            batch_size,
+            epochs=epochs,
+            output_shape=output_shape)
 
     # Trainer logits first than siamese
     try:
 
-        extra_checkpoint = {"checkpoint_path": model_dir,
-                            "scopes": dict({"Dummy/": "Dummy/"}),
-                            "trainable_variables": []
-                            }
+        extra_checkpoint = {
+            "checkpoint_path": model_dir,
+            "scopes": dict({
+                "Dummy/": "Dummy/"
+            }),
+            "trainable_variables": []
+        }
 
         # LOGISTS
-        logits_trainer = Logits(model_dir=model_dir,
-                                architecture=dummy,
-                                optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-                                n_classes=2,
-                                loss_op=mean_cross_entropy_loss,
-                                embedding_validation=False,
-                                validation_batch_size=validation_batch_size)
+        logits_trainer = Logits(
+            model_dir=model_dir,
+            architecture=dummy,
+            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+            n_classes=2,
+            loss_op=mean_cross_entropy_loss,
+            embedding_validation=False,
+            validation_batch_size=validation_batch_size)
         logits_trainer.train(logits_input_fn, steps=steps)
 
         # NOW THE FUCKING SIAMESE
-        trainer = Triplet(model_dir=model_dir_adapted,
-                          architecture=dummy_adapted,
-                          optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-                          loss_op=triplet_loss,
-                          validation_batch_size=validation_batch_size,
-                          extra_checkpoint=extra_checkpoint)
+        trainer = Triplet(
+            model_dir=model_dir_adapted,
+            architecture=dummy_adapted,
+            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+            loss_op=triplet_loss,
+            validation_batch_size=validation_batch_size,
+            extra_checkpoint=extra_checkpoint)
         run_triplet_estimator(trainer)
     finally:
         try:
@@ -118,20 +147,37 @@ def run_triplet_estimator(trainer):
     assert len(tf.global_variables()) == 0
 
     def input_fn():
-        return triplet_batch(filenames, labels, data_shape, data_type, batch_size, epochs=epochs,
-                             output_shape=output_shape,
-                             random_flip=True, random_brightness=True, random_contrast=True, random_saturation=True)
+        return triplet_batch(
+            filenames,
+            labels,
+            data_shape,
+            data_type,
+            batch_size,
+            epochs=epochs,
+            output_shape=output_shape,
+            random_flip=True,
+            random_brightness=True,
+            random_contrast=True,
+            random_saturation=True)
 
     def input_validation_fn():
-        return single_batch(filenames, labels, data_shape, data_type, validation_batch_size, epochs=10,
-                            output_shape=output_shape)
+        return single_batch(
+            filenames,
+            labels,
+            data_shape,
+            data_type,
+            validation_batch_size,
+            epochs=10,
+            output_shape=output_shape)
 
-    hooks = [LoggerHookEstimator(trainer, batch_size, 300),
-
-             tf.train.SummarySaverHook(save_steps=1000,
-                                       output_dir=model_dir,
-                                       scaffold=tf.train.Scaffold(),
-                                       summary_writer=tf.summary.FileWriter(model_dir))]
+    hooks = [
+        LoggerHookEstimator(trainer, batch_size, 300),
+        tf.train.SummarySaverHook(
+            save_steps=1000,
+            output_dir=model_dir,
+            scaffold=tf.train.Scaffold(),
+            summary_writer=tf.summary.FileWriter(model_dir))
+    ]
 
     trainer.train(input_fn, steps=steps, hooks=hooks)
 

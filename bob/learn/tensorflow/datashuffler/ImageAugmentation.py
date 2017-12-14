@@ -18,8 +18,8 @@ def add_gaussian_blur(image, seed=10):
     sigma = possible_sigmas[numpy.random.randint(len(possible_sigmas))]
     radius = possible_radii[numpy.random.randint(len(possible_radii))]
 
-    gaussian_filter = bob.ip.base.Gaussian(sigma=(sigma, sigma),
-                                           radius=(radius, radius))
+    gaussian_filter = bob.ip.base.Gaussian(
+        sigma=(sigma, sigma), radius=(radius, radius))
 
     return gaussian_filter(image)
 
@@ -53,12 +53,11 @@ def compute_salt_and_peper(image, level):
     r = numpy.random.rand(*image.shape)
 
     # 0 noise
-    indexes_0 = r <= (level/0.5)
+    indexes_0 = r <= (level / 0.5)
     image[indexes_0] = 0.0
 
     # 255 noise
-    indexes_255 = (1 - level / 2) <= r;
+    indexes_255 = (1 - level / 2) <= r
     image[indexes_255] = 255.0
 
     return image
-

@@ -25,12 +25,16 @@ class NegLogLoss(BaseLoss):
         rank = len(shape)
         flat_params = tf.reshape(params, [-1])
         if rank > 2:
-            indices_unpacked = tf.unstack(tf.transpose(indices, [rank - 1] + range(0, rank - 1), name))
+            indices_unpacked = tf.unstack(
+                tf.transpose(indices, [rank - 1] + range(0, rank - 1), name))
         elif rank == 2:
             indices_unpacked = tf.unstack(indices)
         else:
             indices_unpacked = indices
-        flat_indices = [i * rank + indices_unpacked[i] for i in range(0, len(indices_unpacked))]
+        flat_indices = [
+            i * rank + indices_unpacked[i]
+            for i in range(0, len(indices_unpacked))
+        ]
         return tf.gather(flat_params, flat_indices, name=name)
 
     def __call__(self, graph, label):

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """Converts Bio and PAD datasets to TFRecords file formats.
 
 Usage:
@@ -110,9 +109,11 @@ def int64_feature(value):
 
 def write_a_sample(writer, data, label, key, feature=None):
     if feature is None:
-        feature = {'data': bytes_feature(data.tostring()),
-                   'label': int64_feature(label),
-                   'key': bytes_feature(key)}
+        feature = {
+            'data': bytes_feature(data.tostring()),
+            'label': int64_feature(label),
+            'key': bytes_feature(key)
+        }
 
     example = tf.train.Example(features=tf.train.Features(feature=feature))
     writer.write(example.SerializeToString())
@@ -130,14 +131,13 @@ def main(argv=None):
     config = read_config_file(config_files)
 
     # optional arguments
-    verbosity = get_from_config_or_commandline(
-        config, 'verbose', args, defaults)
-    allow_failures = get_from_config_or_commandline(
-        config, 'allow_failures', args, defaults)
+    verbosity = get_from_config_or_commandline(config, 'verbose', args,
+                                               defaults)
+    allow_failures = get_from_config_or_commandline(config, 'allow_failures',
+                                                    args, defaults)
     multiple_samples = get_from_config_or_commandline(
         config, 'multiple_samples', args, defaults)
-    shuffle = get_from_config_or_commandline(
-        config, 'shuffle', args, defaults)
+    shuffle = get_from_config_or_commandline(config, 'shuffle', args, defaults)
 
     # Sets-up logging
     set_verbosity_level(logger, verbosity)
@@ -145,8 +145,8 @@ def main(argv=None):
     # required arguments
     samples = config.samples
     reader = config.reader
-    output = get_from_config_or_commandline(
-        config, 'output', args, defaults, False)
+    output = get_from_config_or_commandline(config, 'output', args, defaults,
+                                            False)
 
     if not output.endswith(".tfrecords"):
         output += ".tfrecords"

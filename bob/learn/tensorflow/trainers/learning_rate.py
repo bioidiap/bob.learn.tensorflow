@@ -19,12 +19,12 @@ def exponential_decay(base_learning_rate=0.05,
     """
 
     global_step = tf.train.get_or_create_global_step()
-    return tf.train.exponential_decay(learning_rate=base_learning_rate,
-                                      global_step=global_step,
-                                      decay_steps=decay_steps,
-                                      decay_rate=weight_decay,
-                                      staircase=staircase
-                                      )
+    return tf.train.exponential_decay(
+        learning_rate=base_learning_rate,
+        global_step=global_step,
+        decay_steps=decay_steps,
+        decay_rate=weight_decay,
+        staircase=staircase)
 
 
 def constant(base_learning_rate=0.05, name="constant_learning_rate"):

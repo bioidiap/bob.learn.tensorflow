@@ -53,9 +53,10 @@ def set_seed(seed=0, python_hash_seed=0, log_device_placement=False):
     # non-reproducible results.
     # For further details, see:
     # https://stackoverflow.com/questions/42022950/which-seeds-have-to-be-set-where-to-realize-100-reproducibility-of-training-res
-    session_config = tf.ConfigProto(intra_op_parallelism_threads=1,
-                                    inter_op_parallelism_threads=1,
-                                    log_device_placement=log_device_placement)
+    session_config = tf.ConfigProto(
+        intra_op_parallelism_threads=1,
+        inter_op_parallelism_threads=1,
+        log_device_placement=log_device_placement)
 
     # The below tf.set_random_seed() will make random number generation
     # in the TensorFlow backend have a well-defined initial state.

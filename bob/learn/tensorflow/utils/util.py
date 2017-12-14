@@ -40,15 +40,14 @@ def load_mnist(perc_train=0.9):
     train_data = data[0:n_train, :].astype("float32") * 0.00390625
     train_labels = labels[0:n_train]
 
-    validation_data = data[n_train:n_train +
-                           n_validation, :].astype("float32") * 0.00390625
+    validation_data = data[n_train:n_train + n_validation, :].astype(
+        "float32") * 0.00390625
     validation_labels = labels[n_train:n_train + n_validation]
 
     return train_data, train_labels, validation_data, validation_labels
 
 
 def create_mnist_tfrecord(tfrecords_filename, data, labels, n_samples=6000):
-
     def _bytes_feature(value):
         return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
 
@@ -60,10 +59,11 @@ def create_mnist_tfrecord(tfrecords_filename, data, labels, n_samples=6000):
     for i in range(n_samples):
         img = data[i]
         img_raw = img.tostring()
-        feature = {'data': _bytes_feature(img_raw),
-                   'label': _int64_feature(labels[i]),
-                   'key': _bytes_feature(b'-')
-                   }
+        feature = {
+            'data': _bytes_feature(img_raw),
+            'label': _int64_feature(labels[i]),
+            'key': _bytes_feature(b'-')
+        }
 
         example = tf.train.Example(features=tf.train.Features(feature=feature))
         writer.write(example.SerializeToString())
@@ -89,15 +89,19 @@ def compute_eer(data_train, labels_train, data_validation, labels_validation,
         # Positive scoring
         indexes = labels_validation == i
         positive_data = data_validation[indexes, :]
-        p = [cosine(models[i], positive_data[j])
-             for j in range(positive_data.shape[0])]
+        p = [
+            cosine(models[i], positive_data[j])
+            for j in range(positive_data.shape[0])
+        ]
         positive_scores = numpy.hstack((positive_scores, p))
 
         # negative scoring
         indexes = labels_validation != i
         negative_data = data_validation[indexes, :]
-        n = [cosine(models[i], negative_data[j])
-             for j in range(negative_data.shape[0])]
+        n = [
+            cosine(models[i], negative_data[j])
+            for j in range(negative_data.shape[0])
+        ]
         negative_scores = numpy.hstack((negative_scores, n))
 
     # Computing performance based on EER
@@ -145,13 +149,15 @@ def debug_embbeding(image, architecture, embbeding_dim=2, feature_layer="fc3"):
 
     session = Session.instance(new=False).session
     inference_graph = architecture.compute_graph(
-        architecture.inference_placeholder, feature_layer=feature_layer,
+        architecture.inference_placeholder,
+        feature_layer=feature_layer,
         training=False)
 
     embeddings = numpy.zeros(shape=(image.shape[0], embbeding_dim))
     for i in range(image.shape[0]):
         feed_dict = {
-            architecture.inference_placeholder: image[i:i + 1, :, :, :]}
+            architecture.inference_placeholder: image[i:i + 1, :, :, :]
+        }
         embedding = session.run(
             [tf.nn.l2_normalize(inference_graph, 1, 1e-10)],
             feed_dict=feed_dict)[0]
@@ -170,17 +176,15 @@ def cdist(A):
         ones_1 = tf.reshape(
             tf.cast(tf.ones_like(A), tf.float32)[:, 0], [1, -1])
         p1 = tf.matmul(
-            tf.expand_dims(tf.reduce_sum(tf.square(A), 1), 1),
-            ones_1
-        )
+            tf.expand_dims(tf.reduce_sum(tf.square(A), 1), 1), ones_1)
 
         ones_2 = tf.reshape(
             tf.cast(tf.ones_like(A), tf.float32)[:, 0], [-1, 1])
-        p2 = tf.transpose(tf.matmul(
-            tf.reshape(tf.reduce_sum(tf.square(A), 1), shape=[-1, 1]),
-            ones_2,
-            transpose_b=True
-        ))
+        p2 = tf.transpose(
+            tf.matmul(
+                tf.reshape(tf.reduce_sum(tf.square(A), 1), shape=[-1, 1]),
+                ones_2,
+                transpose_b=True))
 
         return tf.sqrt(tf.add(p1, p2) - 2 * tf.matmul(A, A, transpose_b=True))
 
@@ -210,8 +214,11 @@ def compute_embedding_accuracy_tensors(embedding, labels, num=None):
     # Fitting the main diagonal with infs (removing comparisons with the same
     # sample)
     predictions = predict_using_tensors(embedding, labels, num=num)
-    matching = [tf.equal(p, l) for p, l in zip(tf.unstack(
-        predictions, num=num), tf.unstack(labels, num=num))]
+    matching = [
+        tf.equal(p, l)
+        for p, l in zip(
+            tf.unstack(predictions, num=num), tf.unstack(labels, num=num))
+    ]
 
     return tf.reduce_sum(tf.cast(matching, tf.uint8)) / len(predictions)
 
@@ -241,8 +248,9 @@ def compute_embedding_accuracy(embedding, labels):
     # Getting the original positions of the indexes in the 1-axis
     #corrected_indexes = [ i if i<j else i+1 for i, j in zip(valid_indexes, range(n_samples))]
 
-    matching = [labels[i] == labels[j]
-                for i, j in zip(range(n_samples), indexes)]
+    matching = [
+        labels[i] == labels[j] for i, j in zip(range(n_samples), indexes)
+    ]
     accuracy = sum(matching) / float(n_samples)
 
     return accuracy

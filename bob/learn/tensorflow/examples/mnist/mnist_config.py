@@ -126,8 +126,8 @@ def mnist_model(inputs, mode):
     # First max pooling layer with a 2x2 filter and stride of 2
     # Input Tensor Shape: [batch_size, 28, 28, 32]
     # Output Tensor Shape: [batch_size, 14, 14, 32]
-    pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2], strides=2,
-                                    data_format=data_format)
+    pool1 = tf.layers.max_pooling2d(
+        inputs=conv1, pool_size=[2, 2], strides=2, data_format=data_format)
 
     # Convolutional Layer #2
     # Computes 64 features using a 5x5 filter.
@@ -146,8 +146,8 @@ def mnist_model(inputs, mode):
     # Second max pooling layer with a 2x2 filter and stride of 2
     # Input Tensor Shape: [batch_size, 14, 14, 64]
     # Output Tensor Shape: [batch_size, 7, 7, 64]
-    pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2], strides=2,
-                                    data_format=data_format)
+    pool2 = tf.layers.max_pooling2d(
+        inputs=conv2, pool_size=[2, 2], strides=2, data_format=data_format)
 
     # Flatten tensor into a batch of vectors
     # Input Tensor Shape: [batch_size, 7, 7, 64]
@@ -158,8 +158,8 @@ def mnist_model(inputs, mode):
     # Densely connected layer with 1024 neurons
     # Input Tensor Shape: [batch_size, 7 * 7 * 64]
     # Output Tensor Shape: [batch_size, 1024]
-    dense = tf.layers.dense(inputs=pool2_flat, units=1024,
-                            activation=tf.nn.relu)
+    dense = tf.layers.dense(
+        inputs=pool2_flat, units=1024, activation=tf.nn.relu)
 
     # Add dropout operation; 0.6 probability that element will be kept
     dropout = tf.layers.dropout(
@@ -192,8 +192,8 @@ def model_fn(features, labels=None, mode=tf.estimator.ModeKeys.TRAIN):
     # Configure the training op
     if mode == tf.estimator.ModeKeys.TRAIN:
         optimizer = tf.train.AdamOptimizer(learning_rate=1e-4)
-        train_op = optimizer.minimize(
-            loss, tf.train.get_or_create_global_step())
+        train_op = optimizer.minimize(loss,
+                                      tf.train.get_or_create_global_step())
     else:
         train_op = None
 
@@ -215,9 +215,8 @@ def model_fn(features, labels=None, mode=tf.estimator.ModeKeys.TRAIN):
         eval_metric_ops=metrics)
 
 
-estimator = tf.estimator.Estimator(model_fn=model_fn, model_dir=model_dir,
-                                   params=None, config=run_config)
-
+estimator = tf.estimator.Estimator(
+    model_fn=model_fn, model_dir=model_dir, params=None, config=run_config)
 
 output = train_tfrecords[0]
 db = Database()

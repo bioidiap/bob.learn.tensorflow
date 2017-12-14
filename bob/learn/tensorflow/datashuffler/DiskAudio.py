@@ -14,7 +14,9 @@ logger.propagate = False
 
 
 class DiskAudio(Base):
-    def __init__(self, data, labels,
+    def __init__(self,
+                 data,
+                 labels,
                  input_shape,
                  input_dtype="float32",
                  batch_size=1,
@@ -23,9 +25,7 @@ class DiskAudio(Base):
                  context_size=20,
                  win_length_ms=10,
                  rate=16000,
-                 out_file=""
-                 ):
-
+                 out_file=""):
         """
          This datashuffler deals with speech databases that are stored in the disk.
          The data is loaded and preprocessed on the fly.
@@ -50,8 +50,7 @@ class DiskAudio(Base):
             input_dtype=input_dtype,
             batch_size=batch_size,
             seed=seed,
-            data_augmentation=data_augmentation
-        )
+            data_augmentation=data_augmentation)
         # Seting the seed
         numpy.random.seed(seed)
 
@@ -59,6 +58,8 @@ class DiskAudio(Base):
         self.frames_storage = []
         # a similar queue for the corresponding labels
         self.labels_storage = []
+
+
 #        if self.out_file != "":
 #            bob.io.base.create_directories_safe(os.path.dirname(self.out_file))
 #            f = open(self.out_file, "w")
@@ -85,7 +86,8 @@ class DiskAudio(Base):
         while len(self.frames_storage) < self.batch_size:
             if f is not None:
                 f.write("%s\n" % self.data[indexes[i]])
-            frames, labels = self.extract_frames_from_file(self.data[indexes[i]], self.labels[indexes[i]])
+            frames, labels = self.extract_frames_from_file(
+                self.data[indexes[i]], self.labels[indexes[i]])
             self.frames_storage.extend(frames)
             self.labels_storage.extend(labels)
             i += 1
@@ -99,7 +101,10 @@ class DiskAudio(Base):
         selected_data = numpy.reshape(selected_data, (self.batch_size, -1, 1))
         if f is not None:
             f.close()
-        return [selected_data.astype("float32"), selected_labels.astype("int64")]
+        return [
+            selected_data.astype("float32"),
+            selected_labels.astype("int64")
+        ]
 
     def extract_frames_from_file(self, filename, label):
         rate, wav_signal = self.load_from_file(filename)
@@ -108,14 +113,17 @@ class DiskAudio(Base):
     def extract_frames_from_wav(self, wav_signal, label):
 
         m_total_length = len(wav_signal)
-        m_num_win = int(m_total_length / self.m_win_length)  # discard the tail of the signal
+        m_num_win = int(m_total_length /
+                        self.m_win_length)  # discard the tail of the signal
 
         # normalize the signal first
         wav_signal -= numpy.mean(wav_signal)
         wav_signal /= numpy.std(wav_signal)
 
         # make sure the array is divided into equal chunks
-        windows = numpy.split(wav_signal[:int(self.m_win_length) * int(m_num_win)], int(m_num_win))
+        windows = numpy.split(
+            wav_signal[:int(self.m_win_length) * int(m_num_win)],
+            int(m_num_win))
 
         final_frames = []
         final_labels = [label] * m_num_win
@@ -127,11 +135,18 @@ class DiskAudio(Base):
             # copy the first frame necessary number of times
             if i < self.context_size:
                 left_context = numpy.tile(windows[0], self.context_size - i)
-                final_frames.append(numpy.append(left_context, windows[:i + self.context_size + 1]))
+                final_frames.append(
+                    numpy.append(left_context,
+                                 windows[:i + self.context_size + 1]))
             elif (i + self.context_size) > (m_num_win - 1):
-                right_context = numpy.tile(windows[-1], i + self.context_size - m_num_win + 1)
-                final_frames.append(numpy.append(windows[i - self.context_size:], right_context))
+                right_context = numpy.tile(
+                    windows[-1], i + self.context_size - m_num_win + 1)
+                final_frames.append(
+                    numpy.append(windows[i - self.context_size:],
+                                 right_context))
             else:
-                final_frames.append(numpy.ravel(windows[i - self.context_size:i + self.context_size + 1]))
+                final_frames.append(
+                    numpy.ravel(windows[i - self.context_size:
+                                        i + self.context_size + 1]))
 
         return final_frames, final_labels

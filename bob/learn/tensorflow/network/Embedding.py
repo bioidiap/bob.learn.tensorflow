@@ -1,8 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 11 May 2016 09:39:36 CEST 
-
+# @date: Wed 11 May 2016 09:39:36 CEST
 
 import tensorflow as tf
 from bob.learn.tensorflow.utils.session import Session
@@ -19,6 +18,7 @@ class Embedding(object):
       graph: Embedding graph
     
     """
+
     def __init__(self, inputs, graph, normalizer=None):
         self.inputs = inputs
         self.graph = graph

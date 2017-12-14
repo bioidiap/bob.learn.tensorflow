@@ -9,14 +9,14 @@ from bob.learn.tensorflow.datashuffler import Memory, SiameseMemory, TripletMemo
 import pkg_resources
 from bob.learn.tensorflow.utils import load_mnist
 import os
-
 """
 Some unit tests for the datashuffler
 """
 
 
 def get_dummy_files():
-    base_path = pkg_resources.resource_filename(__name__, 'data/dummy_database')
+    base_path = pkg_resources.resource_filename(__name__,
+                                                'data/dummy_database')
     files = []
     clients = []
     for f in os.listdir(base_path):
@@ -46,9 +46,8 @@ def test_memory_shuffler():
 
     shape = [None, 28, 28, 1]
 
-    data_shuffler = Memory(train_data, train_labels,
-                           input_shape=shape,
-                           batch_size=16)
+    data_shuffler = Memory(
+        train_data, train_labels, input_shape=shape, batch_size=16)
     batch = data_shuffler.get_batch()
 
     assert len(batch) == 2
@@ -61,9 +60,8 @@ def test_siamesememory_shuffler():
 
     batch_shape = [None, 28, 28, 1]
 
-    data_shuffler = SiameseMemory(train_data, train_labels,
-                                  input_shape=batch_shape,
-                                  batch_size=16)
+    data_shuffler = SiameseMemory(
+        train_data, train_labels, input_shape=batch_shape, batch_size=16)
 
     batch = data_shuffler.get_batch()
 
@@ -78,9 +76,8 @@ def test_tripletmemory_shuffler():
 
     batch_shape = [None, 28, 28, 1]
 
-    data_shuffler = TripletMemory(train_data, train_labels,
-                                  input_shape=batch_shape,
-                                  batch_size=16)
+    data_shuffler = TripletMemory(
+        train_data, train_labels, input_shape=batch_shape, batch_size=16)
 
     batch = data_shuffler.get_batch()
 
@@ -94,9 +91,8 @@ def test_disk_shuffler():
     train_data, train_labels = get_dummy_files()
     batch_shape = [None, 250, 250, 3]
 
-    data_shuffler = Disk(train_data, train_labels,
-                         input_shape=batch_shape,
-                         batch_size=2)
+    data_shuffler = Disk(
+        train_data, train_labels, input_shape=batch_shape, batch_size=2)
 
     batch = data_shuffler.get_batch()
 
@@ -109,9 +105,8 @@ def test_siamesedisk_shuffler():
 
     batch_shape = [None, 250, 250, 3]
 
-    data_shuffler = SiameseDisk(train_data, train_labels,
-                                input_shape=batch_shape,
-                                batch_size=2)
+    data_shuffler = SiameseDisk(
+        train_data, train_labels, input_shape=batch_shape, batch_size=2)
 
     batch = data_shuffler.get_batch()
 
@@ -125,9 +120,8 @@ def test_tripletdisk_shuffler():
 
     batch_shape = [None, 250, 250, 3]
 
-    data_shuffler = TripletDisk(train_data, train_labels,
-                                input_shape=batch_shape,
-                                batch_size=1)
+    data_shuffler = TripletDisk(
+        train_data, train_labels, input_shape=batch_shape, batch_size=1)
 
     batch = data_shuffler.get_batch()
 
@@ -135,6 +129,7 @@ def test_tripletdisk_shuffler():
     assert batch[0].shape == (1, 250, 250, 3)
     assert batch[1].shape == (1, 250, 250, 3)
     assert batch[2].shape == (1, 250, 250, 3)
+
 
 """
 def test_triplet_fast_selection_disk_shuffler():
@@ -153,7 +148,6 @@ def test_triplet_fast_selection_disk_shuffler():
     assert len(batch[1].shape) == len(tuple(batch_shape))
     assert len(batch[2].shape) == len(tuple(batch_shape))
 """
-
 """
 def test_triplet_selection_disk_shuffler():
     train_data, train_labels = get_dummy_files()
@@ -177,6 +171,7 @@ def test_triplet_selection_disk_shuffler():
     assert placeholders['negative'].get_shape().as_list() == batch_shape
 """
 
+
 def test_diskaudio_shuffler():
 
     train_data, train_labels = get_dummy_audiofiles()
@@ -184,7 +179,8 @@ def test_diskaudio_shuffler():
     batch_size = 582
     batch_shape = [None, 6560, 1]
 
-    data_shuffler = DiskAudio(train_data, train_labels, batch_shape, batch_size=batch_size)
+    data_shuffler = DiskAudio(
+        train_data, train_labels, batch_shape, batch_size=batch_size)
     batch = data_shuffler.get_batch()
 
     assert len(batch) == 2

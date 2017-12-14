@@ -31,13 +31,14 @@ def test_logitstrainer_images():
     # Trainer logits
     try:
         embedding_validation = False
-        trainer = Logits(model_dir=model_dir,
-                         architecture=dummy,
-                         optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-                         n_classes=10,
-                         loss_op=mean_cross_entropy_loss,
-                         embedding_validation=embedding_validation,
-                         validation_batch_size=validation_batch_size)
+        trainer = Logits(
+            model_dir=model_dir,
+            architecture=dummy,
+            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+            n_classes=10,
+            loss_op=mean_cross_entropy_loss,
+            embedding_validation=embedding_validation,
+            validation_batch_size=validation_batch_size)
         run_logitstrainer_images(trainer)
     finally:
         try:
@@ -53,27 +54,45 @@ def run_logitstrainer_images(trainer):
     tf.reset_default_graph()
     assert len(tf.global_variables()) == 0
 
-    filenames = [pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p01_i0_0.png'),
-                 pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m301_01_p02_i0_0.png'),
-                 pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_01_p01_i0_0.png'),
-                 pkg_resources.resource_filename(__name__, 'data/dummy_image_database/m304_02_f12_i0_0.png')]
+    filenames = [
+        pkg_resources.resource_filename(
+            __name__, 'data/dummy_image_database/m301_01_p01_i0_0.png'),
+        pkg_resources.resource_filename(
+            __name__, 'data/dummy_image_database/m301_01_p02_i0_0.png'),
+        pkg_resources.resource_filename(
+            __name__, 'data/dummy_image_database/m304_01_p01_i0_0.png'),
+        pkg_resources.resource_filename(
+            __name__, 'data/dummy_image_database/m304_02_f12_i0_0.png')
+    ]
     labels = [0, 0, 1, 1]
 
     def input_fn():
 
-        return shuffle_data_and_labels_image_augmentation(filenames, labels, data_shape, data_type, batch_size,
-                                                          epochs=epochs)
+        return shuffle_data_and_labels_image_augmentation(
+            filenames,
+            labels,
+            data_shape,
+            data_type,
+            batch_size,
+            epochs=epochs)
 
     def input_fn_validation():
-        return shuffle_data_and_labels_image_augmentation(filenames, labels, data_shape, data_type,
-                                                          validation_batch_size, epochs=1000)
+        return shuffle_data_and_labels_image_augmentation(
+            filenames,
+            labels,
+            data_shape,
+            data_type,
+            validation_batch_size,
+            epochs=1000)
 
-    hooks = [LoggerHookEstimator(trainer, 16, 300),
-
-             tf.train.SummarySaverHook(save_steps=1000,
-                                       output_dir=model_dir,
-                                       scaffold=tf.train.Scaffold(),
-                                       summary_writer=tf.summary.FileWriter(model_dir))]
+    hooks = [
+        LoggerHookEstimator(trainer, 16, 300),
+        tf.train.SummarySaverHook(
+            save_steps=1000,
+            output_dir=model_dir,
+            scaffold=tf.train.Scaffold(),
+            summary_writer=tf.summary.FileWriter(model_dir))
+    ]
 
     trainer.train(input_fn, steps=steps, hooks=hooks)
 

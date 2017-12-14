@@ -52,24 +52,24 @@ class Trainer(object):
 
     """
 
-    def __init__(self,
-                 train_data_shuffler,
-                 validation_data_shuffler=None,
-                 validate_with_embeddings=False,
+    def __init__(
+            self,
+            train_data_shuffler,
+            validation_data_shuffler=None,
+            validate_with_embeddings=False,
 
-                 ###### training options ##########
-                 iterations=5000,
-                 snapshot=1000,
-                 validation_snapshot=2000,#2000,
-                 keep_checkpoint_every_n_hours=2,
+            ###### training options ##########
+            iterations=5000,
+            snapshot=1000,
+            validation_snapshot=2000,  #2000,
+            keep_checkpoint_every_n_hours=2,
 
-                 ## Analizer
-                 analizer=SoftmaxAnalizer(),
+            ## Analizer
+            analizer=SoftmaxAnalizer(),
 
-                 # Temporatu dir
-                 temp_dir="cnn",
-
-                 verbosity_level=2):
+            # Temporatu dir
+            temp_dir="cnn",
+            verbosity_level=2):
 
         self.train_data_shuffler = train_data_shuffler
 
@@ -149,26 +149,30 @@ class Trainer(object):
         # Start a thread to enqueue data asynchronously, and hide I/O latency.
         if self.train_data_shuffler.prefetch:
             self.thread_pool = tf.train.Coordinator()
-            tf.train.start_queue_runners(coord=self.thread_pool, sess=self.session)
+            tf.train.start_queue_runners(
+                coord=self.thread_pool, sess=self.session)
             # In case you have your own queue
             if not isinstance(self.train_data_shuffler, TFRecord):
                 threads = self.start_thread()
 
         # Bootstrapping the summary writters
-        self.train_summary_writter = tf.summary.FileWriter(os.path.join(self.temp_dir, 'train'), self.session.graph)
+        self.train_summary_writter = tf.summary.FileWriter(
+            os.path.join(self.temp_dir, 'train'), self.session.graph)
         if self.validation_data_shuffler is not None:
-            self.validation_summary_writter = tf.summary.FileWriter(os.path.join(self.temp_dir, 'validation'),
-                                                                    self.session.graph)
+            self.validation_summary_writter = tf.summary.FileWriter(
+                os.path.join(self.temp_dir, 'validation'), self.session.graph)
 
         ######################### Loop for #################
-        for step in range(start_step, start_step+self.iterations):
+        for step in range(start_step, start_step + self.iterations):
             # Run fit in the graph
             start = time.time()
             self.fit(step)
             end = time.time()
 
-            summary = summary_pb2.Summary.Value(tag="elapsed_time", simple_value=float(end-start))
-            self.train_summary_writter.add_summary(summary_pb2.Summary(value=[summary]), step)
+            summary = summary_pb2.Summary.Value(
+                tag="elapsed_time", simple_value=float(end - start))
+            self.train_summary_writter.add_summary(
+                summary_pb2.Summary(value=[summary]), step)
 
             # Running validation
             if self.validation_data_shuffler is not None and step % self.validation_snapshot == 0:
@@ -180,7 +184,8 @@ class Trainer(object):
             # Taking snapshot
             if step % self.snapshot == 0:
                 logger.info("Taking snapshot")
-                path = os.path.join(self.temp_dir, 'model_snapshot{0}.ckp'.format(step))
+                path = os.path.join(self.temp_dir,
+                                    'model_snapshot{0}.ckp'.format(step))
                 self.saver.save(self.session, path, global_step=step)
 
         # Running validation for the last time
@@ -189,7 +194,6 @@ class Trainer(object):
                 self.compute_validation_embeddings(step)
             else:
                 self.compute_validation(step)
-
 
         logger.info("Training finally finished")
 
@@ -201,24 +205,24 @@ class Trainer(object):
         path = os.path.join(self.temp_dir, 'model.ckp')
         self.saver.save(self.session, path)
 
-        if self.train_data_shuffler.prefetch or isinstance(self.train_data_shuffler, TFRecord):
+        if self.train_data_shuffler.prefetch or isinstance(
+                self.train_data_shuffler, TFRecord):
             # now they should definetely stop
             self.thread_pool.request_stop()
             #if not isinstance(self.train_data_shuffler, TFRecord):
             #    self.thread_pool.join(threads)
 
-    def create_network_from_scratch(self,
-                                    graph,
-                                    validation_graph=None,
-                                    optimizer=tf.train.AdamOptimizer(),
-                                    loss=None,
-                                    validation_loss=None,
+    def create_network_from_scratch(
+            self,
+            graph,
+            validation_graph=None,
+            optimizer=tf.train.AdamOptimizer(),
+            loss=None,
+            validation_loss=None,
 
-                                    # Learning rate
-                                    learning_rate=None,
-                                    prelogits=None
-                                    ):
-
+            # Learning rate
+            learning_rate=None,
+            prelogits=None):
         """
         Prepare all the tensorflow variables before training.
 
@@ -255,13 +259,16 @@ class Trainer(object):
 
         # Preparing the optimizer
         self.optimizer_class._learning_rate = self.learning_rate
-        self.optimizer = self.optimizer_class.minimize(self.loss, global_step=self.global_step)
+        self.optimizer = self.optimizer_class.minimize(
+            self.loss, global_step=self.global_step)
 
         # Saving all the variables
-        self.saver = tf.train.Saver(var_list=tf.global_variables() + tf.local_variables(),
-                                    keep_checkpoint_every_n_hours=self.keep_checkpoint_every_n_hours)
+        self.saver = tf.train.Saver(
+            var_list=tf.global_variables() + tf.local_variables(),
+            keep_checkpoint_every_n_hours=self.keep_checkpoint_every_n_hours)
 
-        self.summaries_train = self.create_general_summary(self.loss, self.graph, self.label_ph)
+        self.summaries_train = self.create_general_summary(
+            self.loss, self.graph, self.label_ph)
 
         # SAving some variables
         tf.add_to_collection("global_step", self.global_step)
@@ -278,8 +285,10 @@ class Trainer(object):
 
         # Same business with the validation
         if self.validation_data_shuffler is not None:
-            self.validation_data_ph = self.validation_data_shuffler("data", from_queue=True)
-            self.validation_label_ph = self.validation_data_shuffler("label", from_queue=True)
+            self.validation_data_ph = self.validation_data_shuffler(
+                "data", from_queue=True)
+            self.validation_label_ph = self.validation_data_shuffler(
+                "label", from_queue=True)
 
             self.validation_graph = validation_graph
 
@@ -289,15 +298,20 @@ class Trainer(object):
                 #self.validation_predictor = self.loss(self.validation_graph, self.validation_label_ph)
                 self.validation_loss = validation_loss
 
-            self.summaries_validation = self.create_general_summary(self.validation_loss, self.validation_graph, self.validation_label_ph)
-            tf.add_to_collection("summaries_validation", self.summaries_validation)
+            self.summaries_validation = self.create_general_summary(
+                self.validation_loss, self.validation_graph,
+                self.validation_label_ph)
+            tf.add_to_collection("summaries_validation",
+                                 self.summaries_validation)
 
             tf.add_to_collection("validation_graph", self.validation_graph)
             tf.add_to_collection("validation_data_ph", self.validation_data_ph)
-            tf.add_to_collection("validation_label_ph", self.validation_label_ph)
+            tf.add_to_collection("validation_label_ph",
+                                 self.validation_label_ph)
 
             tf.add_to_collection("validation_loss", self.validation_loss)
-            tf.add_to_collection("summaries_validation", self.summaries_validation)
+            tf.add_to_collection("summaries_validation",
+                                 self.summaries_validation)
 
         # Creating the variables
         tf.local_variables_initializer().run(session=self.session)
@@ -315,12 +329,18 @@ class Trainer(object):
 
         """
         if os.path.isdir(file_name):
-            checkpoint_path = tf.train.get_checkpoint_state(file_name).model_checkpoint_path
-            self.saver = tf.train.import_meta_graph(checkpoint_path + ".meta", clear_devices=clear_devices)
-            self.saver.restore(self.session, tf.train.latest_checkpoint(file_name))
+            checkpoint_path = tf.train.get_checkpoint_state(
+                file_name).model_checkpoint_path
+            self.saver = tf.train.import_meta_graph(
+                checkpoint_path + ".meta", clear_devices=clear_devices)
+            self.saver.restore(self.session,
+                               tf.train.latest_checkpoint(file_name))
         else:
-            self.saver = tf.train.import_meta_graph(file_name, clear_devices=clear_devices)
-            self.saver.restore(self.session, tf.train.latest_checkpoint(os.path.dirname(file_name)))
+            self.saver = tf.train.import_meta_graph(
+                file_name, clear_devices=clear_devices)
+            self.saver.restore(self.session,
+                               tf.train.latest_checkpoint(
+                                   os.path.dirname(file_name)))
 
     def load_variables_from_external_model(self, checkpoint_path, var_list):
         """
@@ -335,14 +355,16 @@ class Trainer(object):
 
         """
 
-        assert len(var_list)>0
+        assert len(var_list) > 0
 
         tf_varlist = []
         for v in var_list:
-            tf_varlist += tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=v)
+            tf_varlist += tf.get_collection(
+                tf.GraphKeys.GLOBAL_VARIABLES, scope=v)
 
         saver = tf.train.Saver(tf_varlist)
-        saver.restore(self.session, tf.train.latest_checkpoint(checkpoint_path))
+        saver.restore(self.session,
+                      tf.train.latest_checkpoint(checkpoint_path))
 
     def create_network_from_file(self, file_name, clear_devices=True):
         """
@@ -376,14 +398,18 @@ class Trainer(object):
 
         # Loading the validation bits
         if self.validation_data_shuffler is not None:
-            self.summaries_validation = tf.get_collection("summaries_validation")[0]
+            self.summaries_validation = tf.get_collection(
+                "summaries_validation")[0]
 
             self.validation_graph = tf.get_collection("validation_graph")[0]
-            self.validation_data_ph = tf.get_collection("validation_data_ph")[0]
-            self.validation_label_ph = tf.get_collection("validation_label_ph")[0]
+            self.validation_data_ph = tf.get_collection("validation_data_ph")[
+                0]
+            self.validation_label_ph = tf.get_collection(
+                "validation_label_ph")[0]
 
             self.validation_loss = tf.get_collection("validation_loss")[0]
-            self.summaries_validation = tf.get_collection("summaries_validation")[0]
+            self.summaries_validation = tf.get_collection(
+                "summaries_validation")[0]
 
     def __del__(self):
         tf.reset_default_graph()
@@ -399,8 +425,7 @@ class Trainer(object):
         """
         [data, labels] = data_shuffler.get_batch()
 
-        feed_dict = {self.data_ph: data,
-                     self.label_ph: labels}
+        feed_dict = {self.data_ph: data, self.label_ph: labels}
         return feed_dict
 
     def fit(self, step):
@@ -416,16 +441,24 @@ class Trainer(object):
         if self.train_data_shuffler.prefetch:
             # TODO: SPECIFIC HACK FOR THE CENTER LOSS. I NEED TO FIND A CLEAN SOLUTION FOR THAT
             if self.centers is None:
-                _, l, lr, summary = self.session.run([self.optimizer, self.loss,
-                                                      self.learning_rate, self.summaries_train])
+                _, l, lr, summary = self.session.run([
+                    self.optimizer, self.loss, self.learning_rate,
+                    self.summaries_train
+                ])
             else:
-                _, l, lr, summary, _ = self.session.run([self.optimizer, self.loss,
-                                                      self.learning_rate, self.summaries_train, self.centers])
+                _, l, lr, summary, _ = self.session.run([
+                    self.optimizer, self.loss, self.learning_rate,
+                    self.summaries_train, self.centers
+                ])
 
         else:
             feed_dict = self.get_feed_dict(self.train_data_shuffler)
-            _, l, lr, summary = self.session.run([self.optimizer, self.loss,
-                                                  self.learning_rate, self.summaries_train], feed_dict=feed_dict)
+            _, l, lr, summary = self.session.run(
+                [
+                    self.optimizer, self.loss, self.learning_rate,
+                    self.summaries_train
+                ],
+                feed_dict=feed_dict)
 
         logger.info("Loss training set step={0} = {1}".format(step, l))
         self.train_summary_writter.add_summary(summary, step)
@@ -442,13 +475,18 @@ class Trainer(object):
         """
 
         if self.validation_data_shuffler.prefetch:
-            l, lr, summary = self.session.run([self.validation_loss,
-                                               self.learning_rate, self.summaries_validation])
+            l, lr, summary = self.session.run([
+                self.validation_loss, self.learning_rate,
+                self.summaries_validation
+            ])
         else:
             feed_dict = self.get_feed_dict(self.validation_data_shuffler)
-            l, lr, summary = self.session.run([self.validation_loss,
-                                               self.learning_rate, self.summaries_validation],
-                                               feed_dict=feed_dict)
+            l, lr, summary = self.session.run(
+                [
+                    self.validation_loss, self.learning_rate,
+                    self.summaries_validation
+                ],
+                feed_dict=feed_dict)
 
         logger.info("Loss VALIDATION set step={0} = {1}".format(step, l))
         self.validation_summary_writter.add_summary(summary, step)
@@ -465,18 +503,22 @@ class Trainer(object):
         """
 
         if self.validation_data_shuffler.prefetch:
-            embedding, labels = self.session.run([self.validation_loss, self.validation_label_ph])
+            embedding, labels = self.session.run(
+                [self.validation_loss, self.validation_label_ph])
         else:
             feed_dict = self.get_feed_dict(self.validation_data_shuffler)
-            embedding, labels = self.session.run([self.validation_loss, self.validation_label_ph],
-                                               feed_dict=feed_dict)
+            embedding, labels = self.session.run(
+                [self.validation_loss, self.validation_label_ph],
+                feed_dict=feed_dict)
 
         accuracy = compute_embedding_accuracy(embedding, labels)
 
-        summary = summary_pb2.Summary.Value(tag="accuracy", simple_value=accuracy)
-        logger.info("VALIDATION Accuracy set step={0} = {1}".format(step, accuracy))
-        self.validation_summary_writter.add_summary(summary_pb2.Summary(value=[summary]), step)
-
+        summary = summary_pb2.Summary.Value(
+            tag="accuracy", simple_value=accuracy)
+        logger.info("VALIDATION Accuracy set step={0} = {1}".format(
+            step, accuracy))
+        self.validation_summary_writter.add_summary(
+            summary_pb2.Summary(value=[summary]), step)
 
     def create_general_summary(self, average_loss, output, label):
         """
@@ -529,9 +571,7 @@ class Trainer(object):
             data_ph = self.train_data_shuffler("data", from_queue=False)
             label_ph = self.train_data_shuffler("label", from_queue=False)
 
-            feed_dict = {data_ph: train_data,
-                         label_ph: train_labels}
+            feed_dict = {data_ph: train_data, label_ph: train_labels}
 
-            self.session.run(self.train_data_shuffler.enqueue_op, feed_dict=feed_dict)
-
-
+            self.session.run(
+                self.train_data_shuffler.enqueue_op, feed_dict=feed_dict)

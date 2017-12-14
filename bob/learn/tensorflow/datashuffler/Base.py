@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 11 May 2016 09:39:36 CEST 
+# @date: Wed 11 May 2016 09:39:36 CEST
 
 import numpy
 import tensorflow as tf
@@ -48,7 +48,9 @@ class Base(object):
 
     """
 
-    def __init__(self, data, labels,
+    def __init__(self,
+                 data,
+                 labels,
                  input_shape=[None, 28, 28, 1],
                  input_dtype="float32",
                  batch_size=32,
@@ -106,18 +108,23 @@ class Base(object):
         """
         with tf.name_scope("Input"):
 
-            self.data_ph = tf.placeholder(tf.float32, shape=self.input_shape, name="data")
-            self.label_ph = tf.placeholder(tf.int64, shape=[None], name="label")
+            self.data_ph = tf.placeholder(
+                tf.float32, shape=self.input_shape, name="data")
+            self.label_ph = tf.placeholder(
+                tf.int64, shape=[None], name="label")
 
             # If prefetch, setup the queue to feed data
             if self.prefetch:
-                queue = tf.FIFOQueue(capacity=self.prefetch_capacity,
-                                     dtypes=[tf.float32, tf.int64],
-                                     shapes=[self.input_shape[1:], []])
+                queue = tf.FIFOQueue(
+                    capacity=self.prefetch_capacity,
+                    dtypes=[tf.float32, tf.int64],
+                    shapes=[self.input_shape[1:], []])
 
                 # Fetching the place holders from the queue
-                self.enqueue_op = queue.enqueue_many([self.data_ph, self.label_ph])
-                self.data_ph_from_queue, self.label_ph_from_queue = queue.dequeue_many(self.batch_size)
+                self.enqueue_op = queue.enqueue_many(
+                    [self.data_ph, self.label_ph])
+                self.data_ph_from_queue, self.label_ph_from_queue = queue.dequeue_many(
+                    self.batch_size)
 
             else:
                 self.data_ph_from_queue = self.data_ph
@@ -130,7 +137,9 @@ class Base(object):
         """
 
         if not element in ["data", "label"]:
-            raise ValueError("Value '{0}' invalid. Options available are {1}".format(element, self.placeholder_options))
+            raise ValueError(
+                "Value '{0}' invalid. Options available are {1}".format(
+                    element, self.placeholder_options))
 
         # If None, create the placeholders from scratch
         if self.data_ph is None:
@@ -148,13 +157,13 @@ class Base(object):
             else:
                 return self.label_ph
 
-
     def bob2skimage(self, bob_image):
         """
         Convert bob color image to the skcit image
         """
 
-        skimage = numpy.zeros(shape=(bob_image.shape[1], bob_image.shape[2], bob_image.shape[0]))
+        skimage = numpy.zeros(
+            shape=(bob_image.shape[1], bob_image.shape[2], bob_image.shape[0]))
 
         for i in range(bob_image.shape[0]):
             skimage[:, :, i] = bob_image[i, :, :]
@@ -166,7 +175,8 @@ class Base(object):
         Convert bob color image to the skcit image
         """
 
-        bob_image = numpy.zeros(shape=(sk_image.shape[2], sk_image.shape[0], sk_image.shape[1]))
+        bob_image = numpy.zeros(
+            shape=(sk_image.shape[2], sk_image.shape[0], sk_image.shape[1]))
 
         for i in range(bob_image.shape[0]):
             bob_image[i, :, :] = sk_image[:, :, i]  # Copying red
@@ -198,11 +208,11 @@ class Base(object):
                 # TODO: LAME SOLUTION
                 #if data.shape[0] != 3:  # GRAY SCALE IMAGES IN A RGB DATABASE
                 #   step_data = numpy.zeros(shape=(3, data.shape[0], data.shape[1]))
-                    #step_data = numpy.zeros(shape=(3, data.shape[0], data.shape[1]))
-                    #step_data[0, ...] = data[:, :, 0]
-                    #step_data[1, ...] = data[:, :, 0]
-                    #step_data[2, ...] = data[:, :, 0]
-                    #data = step_data
+                #step_data = numpy.zeros(shape=(3, data.shape[0], data.shape[1]))
+                #step_data[0, ...] = data[:, :, 0]
+                #step_data[1, ...] = data[:, :, 0]
+                #step_data[2, ...] = data[:, :, 0]
+                #data = step_data
                 #dst = numpy.zeros(shape=(self.bob_shape))
                 #bob.ip.base.scale(data, dst)
 
@@ -227,8 +237,7 @@ class Base(object):
         result = []
         for k in range(size):
             if use_list:
-                result.append(
-                    [x[k] for x in data_holder])
+                result.append([x[k] for x in data_holder])
             else:
                 dt = data_holder[0][k]
                 if type(dt) in [int, bool]:
@@ -239,7 +248,8 @@ class Base(object):
                     try:
                         tp = dt.dtype
                     except:
-                        raise TypeError("Unsupported type to batch: {}".format(type(dt)))
+                        raise TypeError("Unsupported type to batch: {}".format(
+                            type(dt)))
                 try:
                     result.append(
                         numpy.asarray([x[k] for x in data_holder], dtype=tp))
@@ -271,7 +281,7 @@ class Base(object):
         try:
             for i in range(self.batch_size):
                 data = six.next(self.batch_generator)
-                
+
                 holder.append(data)
                 if len(holder) == self.batch_size:
                     return self._aggregate_batch(holder, False)
@@ -279,7 +289,7 @@ class Base(object):
         except StopIteration:
             self.batch_generator = None
             self.epoch += 1
-            
+
             # If we have left data in the epoch, return
             if len(holder) > 0:
                 return self._aggregate_batch(holder, False)
@@ -288,4 +298,3 @@ class Base(object):
                 data = six.next(self.batch_generator)
                 holder.append(data)
                 return self._aggregate_batch(holder, False)
-

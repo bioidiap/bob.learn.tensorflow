@@ -2,7 +2,6 @@
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 # @date: Wed 04 Jan 2017 18:00:36 CET
-
 """
 Train a Neural network using bob.learn.tensorflow
 
@@ -43,7 +42,7 @@ def dump_commandline():
 
 def main():
     args = docopt(__doc__, version='Train Neural Net')
-    
+
     output_dir = str(args['--output-dir'])
     iterations = int(args['--iterations'])
 
@@ -59,13 +58,21 @@ def main():
         command = dump_commandline()
         dependencies = []
         total_jobs = []
-        
-        kwargs = {"env": ["LD_LIBRARY_PATH=/idiap/user/tpereira/cuda/cuda-8.0/lib64:/idiap/user/tpereira/cuda/cudnn-8.0-linux-x64-v5.1/lib64:/idiap/user/tpereira/cuda/cuda-8.0/bin"]}
-        
+
+        kwargs = {
+            "env": [
+                "LD_LIBRARY_PATH=/idiap/user/tpereira/cuda/cuda-8.0/lib64:/idiap/user/tpereira/cuda/cudnn-8.0-linux-x64-v5.1/lib64:/idiap/user/tpereira/cuda/cuda-8.0/bin"
+            ]
+        }
+
         for i in range(jobs):
-            job_id = job_manager.submit(command, queue=queue, dependencies=dependencies,
-                                        name=job_name + "{0}".format(i), **kwargs)
-                                        
+            job_id = job_manager.submit(
+                command,
+                queue=queue,
+                dependencies=dependencies,
+                name=job_name + "{0}".format(i),
+                **kwargs)
+
             dependencies = [job_id]
             total_jobs.append(job_id)
 
@@ -73,7 +80,7 @@ def main():
         return True
 
     config = imp.load_source('config', args['<configuration>'])
-    
+
     # Cleaning all variables in case you are loading the checkpoint
     tf.reset_default_graph() if os.path.exists(output_dir) else None
 
@@ -81,7 +88,7 @@ def main():
     validate_with_embeddings = False
     if hasattr(config, 'validate_with_embeddings'):
         validate_with_embeddings = config.validate_with_embeddings
-        
+
     # Run validation with embeddings
     validation_data_shuffler = None
     if hasattr(config, 'validation_data_shuffler'):
@@ -91,15 +98,16 @@ def main():
     if hasattr(config, 'prelogits'):
         prelogits = config.prelogits
 
-
-    trainer = config.Trainer(config.train_data_shuffler,
-                             validation_data_shuffler=validation_data_shuffler,
-                             validate_with_embeddings=validate_with_embeddings,
-                             iterations=iterations,
-                             analizer=None,
-                             temp_dir=output_dir)
+    trainer = config.Trainer(
+        config.train_data_shuffler,
+        validation_data_shuffler=validation_data_shuffler,
+        validate_with_embeddings=validate_with_embeddings,
+        iterations=iterations,
+        analizer=None,
+        temp_dir=output_dir)
     if os.path.exists(output_dir):
-        logger.info("Directory already exists, trying to get the last checkpoint")
+        logger.info(
+            "Directory already exists, trying to get the last checkpoint")
         trainer.create_network_from_file(output_dir)
     else:
 
@@ -112,28 +120,33 @@ def main():
             train_graph = config.logits
             if hasattr(config, 'validation_graph'):
                 validation_graph = config.validation_graph
-            
+
         else:
             # Preparing the architecture
             input_pl = config.train_data_shuffler("data", from_queue=False)
-            if isinstance(trainer, bob.learn.tensorflow.trainers.SiameseTrainer):
+            if isinstance(trainer,
+                          bob.learn.tensorflow.trainers.SiameseTrainer):
                 train_graph = dict()
                 train_graph['left'] = config.architecture(input_pl['left'])
-                train_graph['right'] = config.architecture(input_pl['right'], reuse=True)
+                train_graph['right'] = config.architecture(
+                    input_pl['right'], reuse=True)
 
-            elif isinstance(trainer, bob.learn.tensorflow.trainers.TripletTrainer):
+            elif isinstance(trainer,
+                            bob.learn.tensorflow.trainers.TripletTrainer):
                 train_graph = dict()
                 train_graph['anchor'] = config.architecture(input_pl['anchor'])
-                train_graph['positive'] = config.architecture(input_pl['positive'], reuse=True)
-                train_graph['negative'] = config.architecture(input_pl['negative'], reuse=True)
+                train_graph['positive'] = config.architecture(
+                    input_pl['positive'], reuse=True)
+                train_graph['negative'] = config.architecture(
+                    input_pl['negative'], reuse=True)
             else:
                 train_graph = config.architecture(input_pl)
 
-        trainer.create_network_from_scratch(train_graph,
-                                            validation_graph=validation_graph,
-                                            loss=config.loss,
-                                            learning_rate=config.learning_rate,
-                                            optimizer=config.optimizer,
-                                            prelogits=prelogits)
+        trainer.create_network_from_scratch(
+            train_graph,
+            validation_graph=validation_graph,
+            loss=config.loss,
+            learning_rate=config.learning_rate,
+            optimizer=config.optimizer,
+            prelogits=prelogits)
     trainer.train()
-

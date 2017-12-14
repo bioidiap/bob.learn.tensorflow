@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 11 May 2016 09:39:36 CEST 
+# @date: Wed 11 May 2016 09:39:36 CEST
 
 import numpy
 from .Base import Base
@@ -32,22 +32,30 @@ class Siamese(Base):
         """
         with tf.name_scope("Input"):
             self.data_ph = dict()
-            self.data_ph['left'] = tf.placeholder(tf.float32, shape=self.input_shape, name="left")
-            self.data_ph['right'] = tf.placeholder(tf.float32, shape=self.input_shape, name="right")
-            self.label_ph = tf.placeholder(tf.int64, shape=[None], name="label")
+            self.data_ph['left'] = tf.placeholder(
+                tf.float32, shape=self.input_shape, name="left")
+            self.data_ph['right'] = tf.placeholder(
+                tf.float32, shape=self.input_shape, name="right")
+            self.label_ph = tf.placeholder(
+                tf.int64, shape=[None], name="label")
 
             if self.prefetch:
-                queue = tf.FIFOQueue(capacity=self.prefetch_capacity,
-                                     dtypes=[tf.float32, tf.float32, tf.int64],
-                                     shapes=[self.input_shape[1:], self.input_shape[1:], []])
+                queue = tf.FIFOQueue(
+                    capacity=self.prefetch_capacity,
+                    dtypes=[tf.float32, tf.float32, tf.int64],
+                    shapes=[self.input_shape[1:], self.input_shape[1:], []])
 
                 self.data_ph_from_queue = dict()
                 self.data_ph_from_queue['left'] = None
                 self.data_ph_from_queue['right'] = None
 
                 # Fetching the place holders from the queue
-                self.enqueue_op = queue.enqueue_many([self.data_ph['left'], self.data_ph['right'], self.label_ph])
-                self.data_ph_from_queue['left'], self.data_ph_from_queue['right'], self.label_ph_from_queue = queue.dequeue_many(self.batch_size)
+                self.enqueue_op = queue.enqueue_many([
+                    self.data_ph['left'], self.data_ph['right'], self.label_ph
+                ])
+                self.data_ph_from_queue['left'], self.data_ph_from_queue[
+                    'right'], self.label_ph_from_queue = queue.dequeue_many(
+                        self.batch_size)
 
             else:
                 self.data_ph_from_queue = dict()
@@ -66,8 +74,10 @@ class Siamese(Base):
             indexes_per_labels[l] = numpy.where(input_labels == l)[0]
             numpy.random.shuffle(indexes_per_labels[l])
 
-        left_possible_indexes = numpy.random.choice(self.possible_labels, input_data.shape[0], replace=True)
-        right_possible_indexes = numpy.random.choice(self.possible_labels, input_data.shape[0], replace=True)
+        left_possible_indexes = numpy.random.choice(
+            self.possible_labels, input_data.shape[0], replace=True)
+        right_possible_indexes = numpy.random.choice(
+            self.possible_labels, input_data.shape[0], replace=True)
 
         genuine = True
 
@@ -78,8 +88,12 @@ class Siamese(Base):
                 class_index = left_possible_indexes[i]
 
                 # Now selecting the samples for the pair
-                left = input_data[indexes_per_labels[class_index][numpy.random.randint(len(indexes_per_labels[class_index]))]]
-                right = input_data[indexes_per_labels[class_index][numpy.random.randint(len(indexes_per_labels[class_index]))]]
+                left = input_data[indexes_per_labels[class_index]
+                                  [numpy.random.randint(
+                                      len(indexes_per_labels[class_index]))]]
+                right = input_data[indexes_per_labels[class_index]
+                                   [numpy.random.randint(
+                                       len(indexes_per_labels[class_index]))]]
 
                 yield left, right, 0
 
@@ -98,8 +112,12 @@ class Siamese(Base):
                     j += 1
 
                 # Now selecting the samples for the pair
-                left = input_data[indexes_per_labels[class_index[0]][numpy.random.randint(len(indexes_per_labels[class_index[0]]))]]
-                right = input_data[indexes_per_labels[class_index[1]][numpy.random.randint(len(indexes_per_labels[class_index[1]]))]]
+                left = input_data[indexes_per_labels[class_index[0]][
+                    numpy.random.randint(
+                        len(indexes_per_labels[class_index[0]]))]]
+                right = input_data[indexes_per_labels[class_index[1]][
+                    numpy.random.randint(
+                        len(indexes_per_labels[class_index[1]]))]]
 
                 yield left, right, 1
 

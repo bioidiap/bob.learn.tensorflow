@@ -22,13 +22,15 @@ class TFRecord(object):
       prefetch_capacity: Capacity of the bucket for prefetching
       prefetch_threads: Number of threads in the prefetching
     """
-    def __init__(self,filename_queue,
-                         input_shape=[None, 28, 28, 1],
-                         input_dtype=tf.float32,
-                         batch_size=32,
-                         seed=10,
-                         prefetch_capacity=1000,
-                         prefetch_threads=5):
+
+    def __init__(self,
+                 filename_queue,
+                 input_shape=[None, 28, 28, 1],
+                 input_dtype=tf.float32,
+                 batch_size=32,
+                 seed=10,
+                 prefetch_capacity=1000,
+                 prefetch_threads=5):
 
         # Setting the seed for the pseudo random number generator
         self.seed = seed
@@ -51,14 +53,15 @@ class TFRecord(object):
         self.data_ph = None
         self.label_ph = None
 
-
     def __call__(self, element, from_queue=False):
         """
         Return the necessary placeholder
         """
 
         if not element in ["data", "label"]:
-            raise ValueError("Value '{0}' invalid. Options available are {1}".format(element, self.placeholder_options))
+            raise ValueError(
+                "Value '{0}' invalid. Options available are {1}".format(
+                    element, self.placeholder_options))
 
         # If None, create the placeholders from scratch
         if self.data_ph is None:
@@ -69,23 +72,24 @@ class TFRecord(object):
         else:
             return self.label_ph
 
-
     def __load_features(self):
         """
         Load features from queue
         """
 
-        feature = {'train/data': tf.FixedLenFeature([], tf.string),
-                   'train/label': tf.FixedLenFeature([], tf.int64)}
+        feature = {
+            'train/data': tf.FixedLenFeature([], tf.string),
+            'train/label': tf.FixedLenFeature([], tf.int64)
+        }
 
         # Define a reader and read the next record
         reader = tf.TFRecordReader()
 
         _, serialized_example = reader.read(self.filename_queue)
 
-
         # Decode the record read by the reader
-        features = tf.parse_single_example(serialized_example, features=feature)
+        features = tf.parse_single_example(
+            serialized_example, features=feature)
 
         # Convert the image data from string back to the numbers
         image = tf.decode_raw(features['train/data'], self.input_dtype)
@@ -98,23 +102,22 @@ class TFRecord(object):
 
         return image, label
 
-
     def create_placeholders(self):
         """
         Create placeholder data from features.
         """
         image, label = self.__load_features()
 
-
-        data_ph, label_ph = tf.train.shuffle_batch([image, label], batch_size=self.batch_size,
-                         capacity=self.prefetch_capacity, num_threads=self.prefetch_threads,
-                         min_after_dequeue=1, name="shuffle_batch")
-
+        data_ph, label_ph = tf.train.shuffle_batch(
+            [image, label],
+            batch_size=self.batch_size,
+            capacity=self.prefetch_capacity,
+            num_threads=self.prefetch_threads,
+            min_after_dequeue=1,
+            name="shuffle_batch")
 
         self.data_ph = data_ph
         self.label_ph = label_ph
 
-
     def get_batch(self):
         pass
-

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """Evaluates networks trained with tf.train.MonitoredTrainingSession
 
 Usage:
@@ -106,8 +105,8 @@ def main(argv=None):
             print(str_evaluations)
             sys.stdout.flush()
             with open(evaluated_file, 'a') as f:
-                f.write('{} {}\n'.format(
-                    evaluations['global_step'], str_evaluations))
+                f.write('{} {}\n'.format(evaluations['global_step'],
+                                         str_evaluations))
         if run_once:
             break
         time.sleep(eval_interval_secs)

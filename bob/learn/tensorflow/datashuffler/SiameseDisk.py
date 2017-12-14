@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 11 May 2016 09:39:36 CEST 
+# @date: Wed 11 May 2016 09:39:36 CEST
 
 import numpy
 import bob.core
@@ -44,7 +44,10 @@ class SiameseDisk(Siamese, Disk):
        The algorithm used for feature scaling. Look :py:class:`bob.learn.tensorflow.datashuffler.ScaleFactor`, :py:class:`bob.learn.tensorflow.datashuffler.Linear` and :py:class:`bob.learn.tensorflow.datashuffler.MeanOffset`
 
     """
-    def __init__(self, data, labels,
+
+    def __init__(self,
+                 data,
+                 labels,
                  input_shape,
                  input_dtype="float32",
                  batch_size=1,
@@ -53,8 +56,7 @@ class SiameseDisk(Siamese, Disk):
                  normalizer=None,
                  prefetch=False,
                  prefetch_capacity=10,
-                 prefetch_threads=5
-                 ):
+                 prefetch_threads=5):
 
         if isinstance(data, list):
             data = numpy.array(data)
@@ -73,8 +75,7 @@ class SiameseDisk(Siamese, Disk):
             normalizer=normalizer,
             prefetch=prefetch,
             prefetch_capacity=prefetch_capacity,
-            prefetch_threads=prefetch_threads
-        )
+            prefetch_threads=prefetch_threads)
         # Seting the seed
         numpy.random.seed(seed)
 
@@ -100,13 +101,16 @@ class SiameseDisk(Siamese, Disk):
 
             # Applying the data augmentation
             if self.data_augmentation is not None:
-                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(left)))
+                d = self.bob2skimage(
+                    self.data_augmentation(self.skimage2bob(left)))
                 left = d
 
-                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(right)))
+                d = self.bob2skimage(
+                    self.data_augmentation(self.skimage2bob(right)))
                 right = d
 
             left = self.normalize_sample(left)
             right = self.normalize_sample(right)
 
-            yield left.astype(self.input_dtype), right.astype(self.input_dtype), label
+            yield left.astype(self.input_dtype), right.astype(
+                self.input_dtype), label

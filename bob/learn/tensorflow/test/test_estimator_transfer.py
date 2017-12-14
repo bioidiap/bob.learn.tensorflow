@@ -27,7 +27,11 @@ epochs = 2
 steps = 5000
 
 
-def dummy_adapted(inputs, reuse=False, mode=tf.estimator.ModeKeys.TRAIN, trainable_variables=None, **kwargs):
+def dummy_adapted(inputs,
+                  reuse=False,
+                  mode=tf.estimator.ModeKeys.TRAIN,
+                  trainable_variables=None,
+                  **kwargs):
     """
     Create all the necessary variables for this CNN
 
@@ -43,24 +47,32 @@ def dummy_adapted(inputs, reuse=False, mode=tf.estimator.ModeKeys.TRAIN, trainab
     """
 
     slim = tf.contrib.slim
-    graph, end_points = dummy(inputs, reuse=reuse, mode=mode, trainable_variables=trainable_variables)
+    graph, end_points = dummy(
+        inputs,
+        reuse=reuse,
+        mode=mode,
+        trainable_variables=trainable_variables)
 
     initializer = tf.contrib.layers.xavier_initializer()
     with tf.variable_scope('Adapted', reuse=reuse):
         name = 'fc2'
-        graph = slim.fully_connected(graph, 50,
-                                     weights_initializer=initializer,
-                                     activation_fn=tf.nn.relu,
-                                     scope=name,
-                                     trainable=True)
+        graph = slim.fully_connected(
+            graph,
+            50,
+            weights_initializer=initializer,
+            activation_fn=tf.nn.relu,
+            scope=name,
+            trainable=True)
         end_points[name] = graph
 
         name = 'fc3'
-        graph = slim.fully_connected(graph, 25,
-                                     weights_initializer=initializer,
-                                     activation_fn=None,
-                                     scope=name,
-                                     trainable=True)
+        graph = slim.fully_connected(
+            graph,
+            25,
+            weights_initializer=initializer,
+            activation_fn=None,
+            scope=name,
+            trainable=True)
         end_points[name] = graph
 
     return graph, end_points
@@ -70,31 +82,35 @@ def test_logitstrainer():
     # Trainer logits
     try:
         embedding_validation = False
-        trainer = Logits(model_dir=model_dir,
-                         architecture=dummy,
-                         optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-                         n_classes=10,
-                         loss_op=mean_cross_entropy_loss,
-                         embedding_validation=embedding_validation,
-                         validation_batch_size=validation_batch_size)
+        trainer = Logits(
+            model_dir=model_dir,
+            architecture=dummy,
+            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+            n_classes=10,
+            loss_op=mean_cross_entropy_loss,
+            embedding_validation=embedding_validation,
+            validation_batch_size=validation_batch_size)
         run_logitstrainer_mnist(trainer, augmentation=True)
         del trainer
 
         ## Again
-        extra_checkpoint = {"checkpoint_path": "./temp",
-                            "scopes": dict({"Dummy/": "Dummy/"}),
-                            "trainable_variables": []
-                            }
+        extra_checkpoint = {
+            "checkpoint_path": "./temp",
+            "scopes": dict({
+                "Dummy/": "Dummy/"
+            }),
+            "trainable_variables": []
+        }
 
-        trainer = Logits(model_dir=model_dir_adapted,
-                         architecture=dummy_adapted,
-                         optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-                         n_classes=10,
-                         loss_op=mean_cross_entropy_loss,
-                         embedding_validation=embedding_validation,
-                         validation_batch_size=validation_batch_size,
-                         extra_checkpoint=extra_checkpoint
-                         )
+        trainer = Logits(
+            model_dir=model_dir_adapted,
+            architecture=dummy_adapted,
+            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+            n_classes=10,
+            loss_op=mean_cross_entropy_loss,
+            embedding_validation=embedding_validation,
+            validation_batch_size=validation_batch_size,
+            extra_checkpoint=extra_checkpoint)
 
         run_logitstrainer_mnist(trainer, augmentation=True)
 
@@ -114,29 +130,33 @@ def test_logitstrainer_center_loss():
     try:
         embedding_validation = False
 
-        trainer = LogitsCenterLoss(model_dir=model_dir,
-                                   architecture=dummy,
-                                   optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-                                   n_classes=10,
-                                   embedding_validation=embedding_validation,
-                                   validation_batch_size=validation_batch_size)
+        trainer = LogitsCenterLoss(
+            model_dir=model_dir,
+            architecture=dummy,
+            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+            n_classes=10,
+            embedding_validation=embedding_validation,
+            validation_batch_size=validation_batch_size)
         run_logitstrainer_mnist(trainer, augmentation=True)
         del trainer
 
         ## Again
-        extra_checkpoint = {"checkpoint_path": "./temp",
-                            "scopes": dict({"Dummy/": "Dummy/"}),
-                            "trainable_variables": ["Dummy"]
-                            }
+        extra_checkpoint = {
+            "checkpoint_path": "./temp",
+            "scopes": dict({
+                "Dummy/": "Dummy/"
+            }),
+            "trainable_variables": ["Dummy"]
+        }
 
-        trainer = LogitsCenterLoss(model_dir=model_dir_adapted,
-                                   architecture=dummy_adapted,
-                                   optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-                                   n_classes=10,
-                                   embedding_validation=embedding_validation,
-                                   validation_batch_size=validation_batch_size,
-                                   extra_checkpoint=extra_checkpoint
-                                   )
+        trainer = LogitsCenterLoss(
+            model_dir=model_dir_adapted,
+            architecture=dummy_adapted,
+            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+            n_classes=10,
+            embedding_validation=embedding_validation,
+            validation_batch_size=validation_batch_size,
+            extra_checkpoint=extra_checkpoint)
 
         run_logitstrainer_mnist(trainer, augmentation=True)
 

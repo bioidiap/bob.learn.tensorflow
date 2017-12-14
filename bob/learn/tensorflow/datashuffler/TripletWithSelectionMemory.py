@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 11 May 2016 09:39:36 CEST 
+# @date: Wed 11 May 2016 09:39:36 CEST
 
 import numpy
 import tensorflow as tf
@@ -60,7 +60,9 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
 
     """
 
-    def __init__(self, data, labels,
+    def __init__(self,
+                 data,
+                 labels,
                  input_shape,
                  input_dtype="float32",
                  batch_size=1,
@@ -77,8 +79,7 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
             batch_size=batch_size,
             seed=seed,
             data_augmentation=data_augmentation,
-            normalizer=normalizer
-        )
+            normalizer=normalizer)
         self.clear_variables()
         # Seting the seed
         numpy.random.seed(seed)
@@ -101,12 +102,17 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
         shape = [self.batch_size] + list(self.input_shape[1:])
 
         # Selecting the classes used in the selection
-        indexes = numpy.random.choice(len(self.possible_labels), self.total_identities, replace=False)
-        samples_per_identity = numpy.ceil(self.batch_size/float(self.total_identities))
-        anchor_labels = numpy.ones(samples_per_identity) * self.possible_labels[indexes[0]]
+        indexes = numpy.random.choice(
+            len(self.possible_labels), self.total_identities, replace=False)
+        samples_per_identity = numpy.ceil(
+            self.batch_size / float(self.total_identities))
+        anchor_labels = numpy.ones(
+            samples_per_identity) * self.possible_labels[indexes[0]]
 
         for i in range(1, self.total_identities):
-            anchor_labels = numpy.hstack((anchor_labels,numpy.ones(samples_per_identity) * self.possible_labels[indexes[i]]))
+            anchor_labels = numpy.hstack((anchor_labels,
+                                          numpy.ones(samples_per_identity) *
+                                          self.possible_labels[indexes[i]]))
         anchor_labels = anchor_labels[0:self.batch_size]
 
         samples_a = numpy.zeros(shape=shape, dtype=self.input_dtype)
@@ -117,8 +123,10 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
         embedding_a = self.project(samples_a)
 
         # Getting the positives
-        samples_p, embedding_p, d_anchor_positive = self.get_positives(anchor_labels, embedding_a)
-        samples_n = self.get_negative(anchor_labels, embedding_a, d_anchor_positive)
+        samples_p, embedding_p, d_anchor_positive = self.get_positives(
+            anchor_labels, embedding_a)
+        samples_n = self.get_negative(anchor_labels, embedding_a,
+                                      d_anchor_positive)
 
         return samples_a, samples_p, samples_n
 
@@ -144,14 +152,16 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
             l = anchor_labels[i]
             indexes = numpy.where(self.labels == l)[0]
             numpy.random.shuffle(indexes)
-            samples_p[i, ...] = self.normalize_sample(self.data[indexes[0], ...])
+            samples_p[i, ...] = self.normalize_sample(
+                self.data[indexes[0], ...])
 
         embedding_p = self.project(samples_p)
 
         # Computing the distances
         d_anchor_positive = []
         for i in range(shape[0]):
-            d_anchor_positive.append(euclidean(embedding_a[i, :], embedding_p[i, :]))
+            d_anchor_positive.append(
+                euclidean(embedding_a[i, :], embedding_p[i, :]))
 
         return samples_p, embedding_p, d_anchor_positive
 
@@ -175,18 +185,23 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
         temp_samples_n = numpy.zeros(shape=shape, dtype='float32')
         samples_n = numpy.zeros(shape=shape, dtype='float32')
         for i in range(shape[0]):
-            temp_samples_n[i, ...] = self.normalize_sample(self.data[indexes[i], ...])
+            temp_samples_n[i, ...] = self.normalize_sample(
+                self.data[indexes[i], ...])
 
         # Computing all the embeddings
         embedding_temp_n = self.project(temp_samples_n)
 
         # Computing the distances
-        d_anchor_negative = cdist(embedding_a, embedding_temp_n, metric='euclidean')
+        d_anchor_negative = cdist(
+            embedding_a, embedding_temp_n, metric='euclidean')
 
         # Selecting the negative samples
         for i in range(shape[0]):
             label = anchor_labels[i]
-            possible_candidates = [d if d > d_anchor_positive[i] else numpy.inf for d in d_anchor_negative[i]]
+            possible_candidates = [
+                d if d > d_anchor_positive[i] else numpy.inf
+                for d in d_anchor_negative[i]
+            ]
 
             for j in numpy.argsort(possible_candidates):
 
@@ -194,7 +209,8 @@ class TripletWithSelectionMemory(Triplet, Memory, OnlineSampling):
                 if self.labels[indexes[j]] != label:
                     samples_n[i, ...] = temp_samples_n[j, ...]
                     if numpy.isinf(possible_candidates[j]):
-                        logger.info("SEMI-HARD negative not found, took the first one")
+                        logger.info(
+                            "SEMI-HARD negative not found, took the first one")
                     break
 
         return samples_n

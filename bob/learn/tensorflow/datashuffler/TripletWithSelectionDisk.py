@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 11 May 2016 09:39:36 CEST 
+# @date: Wed 11 May 2016 09:39:36 CEST
 
 import numpy
 import tensorflow as tf
@@ -48,7 +48,9 @@ class TripletWithSelectionDisk(Triplet, Disk, OnlineSampling):
 
     """
 
-    def __init__(self, data, labels,
+    def __init__(self,
+                 data,
+                 labels,
                  input_shape,
                  input_dtype="float32",
                  batch_size=1,
@@ -65,8 +67,7 @@ class TripletWithSelectionDisk(Triplet, Disk, OnlineSampling):
             batch_size=batch_size,
             seed=seed,
             data_augmentation=data_augmentation,
-            normalizer=normalizer
-        )
+            normalizer=normalizer)
         self.clear_variables()
         # Seting the seed
         numpy.random.seed(seed)
@@ -91,10 +92,14 @@ class TripletWithSelectionDisk(Triplet, Disk, OnlineSampling):
         sample_n = numpy.zeros(shape=shape, dtype=self.input_dtype)
 
         for i in range(shape[0]):
-            file_name_a, file_name_p, file_name_n = self.get_one_triplet(self.data, self.labels)
-            sample_a[i, ...] = self.normalize_sample(self.load_from_file(str(file_name_a)))
-            sample_p[i, ...] = self.normalize_sample(self.load_from_file(str(file_name_p)))
-            sample_n[i, ...] = self.normalize_sample(self.load_from_file(str(file_name_n)))
+            file_name_a, file_name_p, file_name_n = self.get_one_triplet(
+                self.data, self.labels)
+            sample_a[i, ...] = self.normalize_sample(
+                self.load_from_file(str(file_name_a)))
+            sample_p[i, ...] = self.normalize_sample(
+                self.load_from_file(str(file_name_p)))
+            sample_n[i, ...] = self.normalize_sample(
+                self.load_from_file(str(file_name_n)))
 
         return [sample_a, sample_p, sample_n]
 
@@ -113,12 +118,17 @@ class TripletWithSelectionDisk(Triplet, Disk, OnlineSampling):
             return self.get_random_batch()
 
         # Selecting the classes used in the selection
-        indexes = numpy.random.choice(len(self.possible_labels), self.total_identities, replace=False)
-        samples_per_identity = numpy.ceil(self.batch_size/float(self.total_identities))
-        anchor_labels = numpy.ones(samples_per_identity) * self.possible_labels[indexes[0]]
+        indexes = numpy.random.choice(
+            len(self.possible_labels), self.total_identities, replace=False)
+        samples_per_identity = numpy.ceil(
+            self.batch_size / float(self.total_identities))
+        anchor_labels = numpy.ones(
+            samples_per_identity) * self.possible_labels[indexes[0]]
 
         for i in range(1, self.total_identities):
-            anchor_labels = numpy.hstack((anchor_labels,numpy.ones(samples_per_identity) * self.possible_labels[indexes[i]]))
+            anchor_labels = numpy.hstack((anchor_labels,
+                                          numpy.ones(samples_per_identity) *
+                                          self.possible_labels[indexes[i]]))
         anchor_labels = anchor_labels[0:self.batch_size]
 
         data_a = numpy.zeros(shape=self.shape, dtype=self.input_dtype)
@@ -137,9 +147,11 @@ class TripletWithSelectionDisk(Triplet, Disk, OnlineSampling):
             label = anchor_labels[i]
             #anchor = self.get_anchor(label)
             #logger.info("********* Positives")
-            positive, distance_anchor_positive = self.get_positive(label, features_a[i])
+            positive, distance_anchor_positive = self.get_positive(
+                label, features_a[i])
             #logger.info("********* Negatives")
-            negative = self.get_negative(label, features_a[i], distance_anchor_positive)
+            negative = self.get_negative(label, features_a[i],
+                                         distance_anchor_positive)
 
             #logger.info("********* Appending")
 
@@ -180,14 +192,16 @@ class TripletWithSelectionDisk(Triplet, Disk, OnlineSampling):
 
         numpy.random.shuffle(indexes)
         indexes = indexes[
-                  0:self.batch_size]  # Limiting to the batch size, otherwise the number of comparisons will explode
+            0:self.
+            batch_size]  # Limiting to the batch size, otherwise the number of comparisons will explode
         distances = []
         shape = tuple([len(indexes)] + list(self.shape[1:]))
         sample_p = numpy.zeros(shape=shape, dtype=self.input_dtype)
 
         for i in range(shape[0]):
             file_name = self.data[indexes[i], ...]
-            sample_p[i, ...] =  self.normalize_sample(self.load_from_file(str(file_name)))
+            sample_p[i, ...] = self.normalize_sample(
+                self.load_from_file(str(file_name)))
 
         embedding_p = self.project(sample_p)
 
@@ -210,13 +224,15 @@ class TripletWithSelectionDisk(Triplet, Disk, OnlineSampling):
         indexes = numpy.where(self.labels != label)[0]
         numpy.random.shuffle(indexes)
         indexes = indexes[
-                  0:self.batch_size*3] # Limiting to the batch size, otherwise the number of comparisons will explode
+            0:self.batch_size *
+            3]  # Limiting to the batch size, otherwise the number of comparisons will explode
 
         shape = tuple([len(indexes)] + list(self.shape[1:]))
         sample_n = numpy.zeros(shape=shape, dtype=self.input_dtype)
         for i in range(shape[0]):
             file_name = self.data[indexes[i], ...]
-            sample_n[i, ...] =  self.normalize_sample(self.load_from_file(str(file_name)))
+            sample_n[i, ...] = self.normalize_sample(
+                self.load_from_file(str(file_name)))
 
         embedding_n = self.project(sample_n)
 

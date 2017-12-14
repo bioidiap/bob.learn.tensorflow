@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 11 May 2016 09:39:36 CEST 
+# @date: Wed 11 May 2016 09:39:36 CEST
 
 import numpy
 import bob.io.base
@@ -50,7 +50,9 @@ class TripletDisk(Triplet, Disk):
 
     """
 
-    def __init__(self, data, labels,
+    def __init__(self,
+                 data,
+                 labels,
                  input_shape,
                  input_dtype="float32",
                  batch_size=1,
@@ -59,8 +61,7 @@ class TripletDisk(Triplet, Disk):
                  normalizer=None,
                  prefetch=False,
                  prefetch_capacity=50,
-                 prefetch_threads=10
-                 ):
+                 prefetch_threads=10):
 
         if isinstance(data, list):
             data = numpy.array(data)
@@ -78,8 +79,7 @@ class TripletDisk(Triplet, Disk):
             normalizer=normalizer,
             prefetch=prefetch,
             prefetch_capacity=prefetch_capacity,
-            prefetch_threads=prefetch_threads
-        )
+            prefetch_threads=prefetch_threads)
         # Seting the seed
         numpy.random.seed(seed)
 
@@ -100,7 +100,8 @@ class TripletDisk(Triplet, Disk):
 
         for i in range(self.data.shape[0]):
 
-            anchor_filename, positive_filename, negative_filename = six.next(triplets)
+            anchor_filename, positive_filename, negative_filename = six.next(
+                triplets)
 
             anchor = self.load_from_file(str(anchor_filename))
             positive = self.load_from_file(str(positive_filename))
@@ -108,14 +109,17 @@ class TripletDisk(Triplet, Disk):
 
             # Applying the data augmentation
             if self.data_augmentation is not None:
-                    d = self.bob2skimage(self.data_augmentation(self.skimage2bob(anchor)))
-                    anchor = d
+                d = self.bob2skimage(
+                    self.data_augmentation(self.skimage2bob(anchor)))
+                anchor = d
 
-                    d = self.bob2skimage(self.data_augmentation(self.skimage2bob(positive)))
-                    positive = d
+                d = self.bob2skimage(
+                    self.data_augmentation(self.skimage2bob(positive)))
+                positive = d
 
-                    d = self.bob2skimage(self.data_augmentation(self.skimage2bob(negative)))
-                    negative = d
+                d = self.bob2skimage(
+                    self.data_augmentation(self.skimage2bob(negative)))
+                negative = d
 
             # Scaling
             anchor = self.normalize_sample(anchor).astype(self.input_dtype)

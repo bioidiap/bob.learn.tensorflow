@@ -7,8 +7,13 @@ from functools import partial
 from . import append_image_augmentation, triplets_random_generator, from_filename_to_tensor
 
 
-def shuffle_data_and_labels_image_augmentation(filenames, labels, data_shape, data_type,
-                                               batch_size, epochs=None, buffer_size=10**3,
+def shuffle_data_and_labels_image_augmentation(filenames,
+                                               labels,
+                                               data_shape,
+                                               data_type,
+                                               batch_size,
+                                               epochs=None,
+                                               buffer_size=10**3,
                                                gray_scale=False,
                                                output_shape=None,
                                                random_flip=False,
@@ -75,18 +80,21 @@ def shuffle_data_and_labels_image_augmentation(filenames, labels, data_shape, da
        extension:
            If None, will load files using `tf.image.decode..` if set to `hdf5`, will load with `bob.io.base.load`
      
-    """                            
+    """
 
-    dataset = create_dataset_from_path_augmentation(filenames, labels, data_shape,
-                                                    data_type,
-                                                    gray_scale=gray_scale,
-                                                    output_shape=output_shape,
-                                                    random_flip=random_flip,
-                                                    random_brightness=random_brightness,
-                                                    random_contrast=random_contrast,
-                                                    random_saturation=random_saturation,
-                                                    per_image_normalization=per_image_normalization,
-                                                    extension=extension)
+    dataset = create_dataset_from_path_augmentation(
+        filenames,
+        labels,
+        data_shape,
+        data_type,
+        gray_scale=gray_scale,
+        output_shape=output_shape,
+        random_flip=random_flip,
+        random_brightness=random_brightness,
+        random_contrast=random_contrast,
+        random_saturation=random_saturation,
+        per_image_normalization=per_image_normalization,
+        extension=extension)
 
     dataset = dataset.shuffle(buffer_size).batch(batch_size).repeat(epochs)
     #dataset = dataset.batch(buffer_size).batch(batch_size).repeat(epochs)
@@ -95,9 +103,11 @@ def shuffle_data_and_labels_image_augmentation(filenames, labels, data_shape, da
     return data
 
 
-def create_dataset_from_path_augmentation(filenames, labels,
-                                          data_shape, data_type=tf.float32,
-                                          gray_scale=False, 
+def create_dataset_from_path_augmentation(filenames,
+                                          labels,
+                                          data_shape,
+                                          data_type=tf.float32,
+                                          gray_scale=False,
                                           output_shape=None,
                                           random_flip=False,
                                           random_brightness=False,
@@ -125,28 +135,35 @@ def create_dataset_from_path_augmentation(filenames, labels,
        feature:
     
     """
- 
-    parser = partial(image_augmentation_parser,
-                     data_shape=data_shape,
-                     data_type=data_type,
-                     gray_scale=gray_scale, 
-                     output_shape=output_shape,
-                     random_flip=random_flip,
-                     random_brightness=random_brightness,
-                     random_contrast=random_contrast,
-                     random_saturation=random_saturation,
-                     per_image_normalization=per_image_normalization,
-                     extension=extension) 
 
-    anchor_data, positive_data, negative_data = triplets_random_generator(filenames, labels)
+    parser = partial(
+        image_augmentation_parser,
+        data_shape=data_shape,
+        data_type=data_type,
+        gray_scale=gray_scale,
+        output_shape=output_shape,
+        random_flip=random_flip,
+        random_brightness=random_brightness,
+        random_contrast=random_contrast,
+        random_saturation=random_saturation,
+        per_image_normalization=per_image_normalization,
+        extension=extension)
 
-    dataset = tf.contrib.data.Dataset.from_tensor_slices((anchor_data, positive_data, negative_data))
+    anchor_data, positive_data, negative_data = triplets_random_generator(
+        filenames, labels)
+
+    dataset = tf.contrib.data.Dataset.from_tensor_slices(
+        (anchor_data, positive_data, negative_data))
     dataset = dataset.map(parser)
     return dataset
 
 
-def image_augmentation_parser(anchor, positive, negative, data_shape, data_type=tf.float32,
-                              gray_scale=False, 
+def image_augmentation_parser(anchor,
+                              positive,
+                              negative,
+                              data_shape,
+                              data_type=tf.float32,
+                              gray_scale=False,
                               output_shape=None,
                               random_flip=False,
                               random_brightness=False,
@@ -154,13 +171,13 @@ def image_augmentation_parser(anchor, positive, negative, data_shape, data_type=
                               random_saturation=False,
                               per_image_normalization=True,
                               extension=None):
-
     """
     Parses a single tf.Example into image and label tensors.
     """
 
     triplet = dict()
-    for n, v in zip(['anchor', 'positive', 'negative'], [anchor, positive, negative]):
+    for n, v in zip(['anchor', 'positive', 'negative'],
+                    [anchor, positive, negative]):
 
         # Convert the image data from string back to the numbers
         image = from_filename_to_tensor(v, extension=extension)
@@ -169,13 +186,15 @@ def image_augmentation_parser(anchor, positive, negative, data_shape, data_type=
         image = tf.reshape(image, data_shape)
 
         # Applying image augmentation
-        image = append_image_augmentation(image, gray_scale=gray_scale,
-                                          output_shape=output_shape,
-                                          random_flip=random_flip,
-                                          random_brightness=random_brightness,
-                                          random_contrast=random_contrast,
-                                          random_saturation=random_saturation,
-                                          per_image_normalization=per_image_normalization)
+        image = append_image_augmentation(
+            image,
+            gray_scale=gray_scale,
+            output_shape=output_shape,
+            random_flip=random_flip,
+            random_brightness=random_brightness,
+            random_contrast=random_contrast,
+            random_saturation=random_saturation,
+            per_image_normalization=per_image_normalization)
 
         triplet[n] = image
 

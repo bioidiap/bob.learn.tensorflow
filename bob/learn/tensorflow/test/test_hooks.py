@@ -19,8 +19,8 @@ def test_early_stopping_linear_classifier():
     eval_input_fn = config.eval_input_fn
 
     hooks = [
-        EarlyStopping('linear/head/metrics/accuracy/value',
-                      min_delta=0.001, patience=1),
+        EarlyStopping(
+            'linear/head/metrics/accuracy/value', min_delta=0.001, patience=1),
     ]
 
     train_spec = tf.estimator.TrainSpec(input_fn=train_input_fn)
@@ -55,8 +55,8 @@ def test_early_stopping_logit_trainer():
     optimizer = tf.train.GradientDescentOptimizer(learning_rate=1e-1)
     loss_op = mean_cross_entropy_loss
 
-    estimator = Logits(architecture, optimizer, loss_op,
-                       n_classes=10, model_dir=None)
+    estimator = Logits(
+        architecture, optimizer, loss_op, n_classes=10, model_dir=None)
 
     try:
         tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)

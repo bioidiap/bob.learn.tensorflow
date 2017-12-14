@@ -24,7 +24,7 @@ from .TFRecordImage import TFRecordImage
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):
-  """Says object was actually declared here, an not on the import module.
+    """Says object was actually declared here, an not on the import module.
 
   Parameters:
 
@@ -34,25 +34,13 @@ def __appropriate__(*args):
   <https://github.com/sphinx-doc/sphinx/issues/3048>`
   """
 
-  for obj in args: obj.__module__ = __name__
+    for obj in args:
+        obj.__module__ = __name__
 
-__appropriate__(
-    Base,
-    Siamese,
-    Triplet,
-    Memory,
-    Disk,
-    OnlineSampling,
-    SiameseMemory,
-    TripletMemory,
-    TripletWithSelectionMemory,
-    TripletWithFastSelectionDisk,
-    SiameseDisk,
-    TripletDisk,
-    TripletWithSelectionDisk,
-    scale_factor, mean_offset, per_image_standarization,
-    DiskAudio,
-    TFRecord,
-    TFRecordImage
-    )
+
+__appropriate__(Base, Siamese, Triplet, Memory, Disk, OnlineSampling,
+                SiameseMemory, TripletMemory, TripletWithSelectionMemory,
+                TripletWithFastSelectionDisk, SiameseDisk, TripletDisk,
+                TripletWithSelectionDisk, scale_factor, mean_offset,
+                per_image_standarization, DiskAudio, TFRecord, TFRecordImage)
 __all__ = [_ for _ in dir() if not _.startswith('_')]

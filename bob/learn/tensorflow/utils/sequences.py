@@ -65,9 +65,7 @@ class PadSequence(Sequence):
         data, targets = [], []
         for file_object, target in zip(files, labels):
             loaded_data = self.preprocessor.read_original_data(
-                file_object,
-                self.original_directory,
-                self.original_extension)
+                file_object, self.original_directory, self.original_extension)
             preprocessed_data = self.preprocessor(loaded_data)
             data.append(preprocessed_data)
             targets.append(target)
@@ -100,15 +98,17 @@ def get_pad_files_labels(database, groups):
     tuple
         A tuple of (files, labels) for that particular group and protocol.
     """
-    files = database.samples(
-        groups=groups, protocol=database.protocol)
+    files = database.samples(groups=groups, protocol=database.protocol)
     labels = ((f.attack_type is None) for f in files)
     labels = numpy.fromiter(labels, bool, len(files))
     return files, labels
 
 
-def get_pad_sequences(database, preprocessor, batch_size,
-                      groups=('world', 'dev', 'eval'), shuffle=False,
+def get_pad_sequences(database,
+                      preprocessor,
+                      batch_size,
+                      groups=('world', 'dev', 'eval'),
+                      shuffle=False,
                       limit=None):
     """Returns a list of :any:`Sequence` objects for the database.
 
@@ -137,7 +137,8 @@ def get_pad_sequences(database, preprocessor, batch_size,
             files, labels = shuffle_data(files, labels)
         if limit is not None:
             files, labels = files[:limit], labels[:limit]
-        seqs.append(PadSequence(files, labels, batch_size, preprocessor,
-                                database.original_directory,
-                                database.original_extension))
+        seqs.append(
+            PadSequence(files, labels, batch_size, preprocessor,
+                        database.original_directory,
+                        database.original_extension))
     return seqs

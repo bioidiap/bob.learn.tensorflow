@@ -20,7 +20,10 @@ def example_parser(serialized_example, feature, data_shape, data_type):
     return image, label, key
 
 
-def image_augmentation_parser(serialized_example, feature, data_shape, data_type,
+def image_augmentation_parser(serialized_example,
+                              feature,
+                              data_shape,
+                              data_type,
                               gray_scale=False,
                               output_shape=None,
                               random_flip=False,
@@ -41,22 +44,26 @@ def image_augmentation_parser(serialized_example, feature, data_shape, data_type
     image = tf.reshape(image, data_shape)
 
     # Applying image augmentation
-    image = append_image_augmentation(image, gray_scale=gray_scale,
-                                      output_shape=output_shape,
-                                      random_flip=random_flip,
-                                      random_brightness=random_brightness,
-                                      random_contrast=random_contrast,
-                                      random_saturation=random_saturation,
-                                      per_image_normalization=per_image_normalization)
+    image = append_image_augmentation(
+        image,
+        gray_scale=gray_scale,
+        output_shape=output_shape,
+        random_flip=random_flip,
+        random_brightness=random_brightness,
+        random_contrast=random_contrast,
+        random_saturation=random_saturation,
+        per_image_normalization=per_image_normalization)
 
     # Cast label data into int64
     label = tf.cast(features['label'], tf.int64)
     key = tf.cast(features['key'], tf.string)
-    
+
     return image, label, key
 
 
-def read_and_decode(filename_queue, data_shape, data_type=tf.float32,
+def read_and_decode(filename_queue,
+                    data_shape,
+                    data_type=tf.float32,
                     feature=None):
     """
     Simples parse possible for a tfrecord.
@@ -71,7 +78,9 @@ def read_and_decode(filename_queue, data_shape, data_type=tf.float32,
     return example_parser(serialized_example, feature, data_shape, data_type)
 
 
-def create_dataset_from_records(tfrecord_filenames, data_shape, data_type,
+def create_dataset_from_records(tfrecord_filenames,
+                                data_shape,
+                                data_type,
                                 feature=None):
     """
     Create dataset from a list of tf-record files
@@ -94,21 +103,27 @@ def create_dataset_from_records(tfrecord_filenames, data_shape, data_type,
     if feature is None:
         feature = DEFAULT_FEATURE
     dataset = tf.contrib.data.TFRecordDataset(tfrecord_filenames)
-    parser = partial(example_parser, feature=feature, data_shape=data_shape,
-                     data_type=data_type)
+    parser = partial(
+        example_parser,
+        feature=feature,
+        data_shape=data_shape,
+        data_type=data_type)
     dataset = dataset.map(parser)
     return dataset
 
 
-def create_dataset_from_records_with_augmentation(tfrecord_filenames, data_shape, data_type,
-                                                  feature=None,
-                                                  gray_scale=False,
-                                                  output_shape=None,
-                                                  random_flip=False,
-                                                  random_brightness=False,
-                                                  random_contrast=False,
-                                                  random_saturation=False,
-                                                  per_image_normalization=True):
+def create_dataset_from_records_with_augmentation(
+        tfrecord_filenames,
+        data_shape,
+        data_type,
+        feature=None,
+        gray_scale=False,
+        output_shape=None,
+        random_flip=False,
+        random_brightness=False,
+        random_contrast=False,
+        random_saturation=False,
+        per_image_normalization=True):
     """
     Create dataset from a list of tf-record files
 
@@ -130,21 +145,28 @@ def create_dataset_from_records_with_augmentation(tfrecord_filenames, data_shape
     if feature is None:
         feature = DEFAULT_FEATURE
     dataset = tf.contrib.data.TFRecordDataset(tfrecord_filenames)
-    parser = partial(image_augmentation_parser, feature=feature, data_shape=data_shape,
-                     data_type=data_type,
-                     gray_scale=gray_scale,
-                     output_shape=output_shape,
-                     random_flip=random_flip,
-                     random_brightness=random_brightness,
-                     random_contrast=random_contrast,
-                     random_saturation=random_saturation,
-                     per_image_normalization=per_image_normalization)
+    parser = partial(
+        image_augmentation_parser,
+        feature=feature,
+        data_shape=data_shape,
+        data_type=data_type,
+        gray_scale=gray_scale,
+        output_shape=output_shape,
+        random_flip=random_flip,
+        random_brightness=random_brightness,
+        random_contrast=random_contrast,
+        random_saturation=random_saturation,
+        per_image_normalization=per_image_normalization)
     dataset = dataset.map(parser)
     return dataset
 
 
-def shuffle_data_and_labels_image_augmentation(tfrecord_filenames, data_shape, data_type,
-                                               batch_size, epochs=None, buffer_size=10**3,
+def shuffle_data_and_labels_image_augmentation(tfrecord_filenames,
+                                               data_shape,
+                                               data_type,
+                                               batch_size,
+                                               epochs=None,
+                                               buffer_size=10**3,
                                                gray_scale=False,
                                                output_shape=None,
                                                random_flip=False,
@@ -198,29 +220,35 @@ def shuffle_data_and_labels_image_augmentation(tfrecord_filenames, data_shape, d
 
     """
 
-    dataset = create_dataset_from_records_with_augmentation(tfrecord_filenames, data_shape,
-                                                            data_type,
-                                                            gray_scale=gray_scale,
-                                                            output_shape=output_shape,
-                                                            random_flip=random_flip,
-                                                            random_brightness=random_brightness,
-                                                            random_contrast=random_contrast,
-                                                            random_saturation=random_saturation,
-                                                            per_image_normalization=per_image_normalization)
+    dataset = create_dataset_from_records_with_augmentation(
+        tfrecord_filenames,
+        data_shape,
+        data_type,
+        gray_scale=gray_scale,
+        output_shape=output_shape,
+        random_flip=random_flip,
+        random_brightness=random_brightness,
+        random_contrast=random_contrast,
+        random_saturation=random_saturation,
+        per_image_normalization=per_image_normalization)
 
     dataset = dataset.shuffle(buffer_size).batch(batch_size).repeat(epochs)
 
     data, labels, key = dataset.make_one_shot_iterator().get_next()
-    
+
     features = dict()
     features['data'] = data
     features['key'] = key
-    
+
     return features, labels
 
 
-def shuffle_data_and_labels(tfrecord_filenames, data_shape, data_type,
-                            batch_size, epochs=None, buffer_size=10**3):
+def shuffle_data_and_labels(tfrecord_filenames,
+                            data_shape,
+                            data_type,
+                            batch_size,
+                            epochs=None,
+                            buffer_size=10**3):
     """
     Dump random batches from a list of tf-record files
 
@@ -254,12 +282,15 @@ def shuffle_data_and_labels(tfrecord_filenames, data_shape, data_type,
     features = dict()
     features['data'] = data
     features['key'] = key
-    
+
     return features, labels
 
 
-def batch_data_and_labels(tfrecord_filenames, data_shape, data_type,
-                          batch_size, epochs=1):
+def batch_data_and_labels(tfrecord_filenames,
+                          data_shape,
+                          data_type,
+                          batch_size,
+                          epochs=1):
     """
     Dump in order batches from a list of tf-record files
 
@@ -289,12 +320,15 @@ def batch_data_and_labels(tfrecord_filenames, data_shape, data_type,
     features = dict()
     features['data'] = data
     features['key'] = key
-    
+
     return features, labels
-    
-    
-def batch_data_and_labels_image_augmentation(tfrecord_filenames, data_shape, data_type,
-                                             batch_size, epochs=1,
+
+
+def batch_data_and_labels_image_augmentation(tfrecord_filenames,
+                                             data_shape,
+                                             data_type,
+                                             batch_size,
+                                             epochs=1,
                                              gray_scale=False,
                                              output_shape=None,
                                              random_flip=False,
@@ -323,23 +357,24 @@ def batch_data_and_labels_image_augmentation(tfrecord_filenames, data_shape, dat
            Number of epochs to be batched
 
     """
-                                          
-    dataset = create_dataset_from_records_with_augmentation(tfrecord_filenames, data_shape,
-                                                            data_type,
-                                                            gray_scale=gray_scale,
-                                                            output_shape=output_shape,
-                                                            random_flip=random_flip,
-                                                            random_brightness=random_brightness,
-                                                            random_contrast=random_contrast,
-                                                            random_saturation=random_saturation,
-                                                            per_image_normalization=per_image_normalization)
-                                          
+
+    dataset = create_dataset_from_records_with_augmentation(
+        tfrecord_filenames,
+        data_shape,
+        data_type,
+        gray_scale=gray_scale,
+        output_shape=output_shape,
+        random_flip=random_flip,
+        random_brightness=random_brightness,
+        random_contrast=random_contrast,
+        random_saturation=random_saturation,
+        per_image_normalization=per_image_normalization)
+
     dataset = dataset.batch(batch_size).repeat(epochs)
 
     data, labels, key = dataset.make_one_shot_iterator().get_next()
     features = dict()
     features['data'] = data
     features['key'] = key
-    
-    return features, labels    
 
+    return features, labels

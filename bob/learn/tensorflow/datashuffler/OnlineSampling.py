@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 11 May 2016 09:39:36 CEST 
+# @date: Wed 11 May 2016 09:39:36 CEST
 
 import tensorflow as tf
 from .Base import Base
@@ -42,14 +42,18 @@ class OnlineSampling(object):
 
         if self.feature_placeholder is None:
             shape = tuple([None] + list(data.shape[1:]))
-            self.feature_placeholder = tf.placeholder(tf.float32, shape=shape, name="feature")
-            embbeding = self.feature_extractor.compute_graph(self.feature_placeholder, self.feature_extractor.default_feature_layer)
+            self.feature_placeholder = tf.placeholder(
+                tf.float32, shape=shape, name="feature")
+            embbeding = self.feature_extractor.compute_graph(
+                self.feature_placeholder,
+                self.feature_extractor.default_feature_layer)
 
-            self.graph = tf.nn.l2_normalize(embbeding, 1, 1e-10, name='embeddings')
+            self.graph = tf.nn.l2_normalize(
+                embbeding, 1, 1e-10, name='embeddings')
 
         #if self.feature_placeholder.get_shape().as_list() != list(data.shape):
-            #tf.reshape(self.feature_placeholder, tf.pack([data.shape]))
-            #self.feature_placeholder.set_shape(data.shape)
+        #tf.reshape(self.feature_placeholder, tf.pack([data.shape]))
+        #self.feature_placeholder.set_shape(data.shape)
 
         feed_dict = {self.feature_placeholder: data}
         return self.session.run([self.graph], feed_dict=feed_dict)[0]

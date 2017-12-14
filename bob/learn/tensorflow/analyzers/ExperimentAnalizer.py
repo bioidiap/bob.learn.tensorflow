@@ -2,7 +2,6 @@
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 # @date: Tue 09 Aug 2016 15:33 CEST
-
 """
 Neural net work error rates analizer
 """
@@ -25,7 +24,8 @@ class ExperimentAnalizer:
 
     """
 
-    def __init__(self, convergence_threshold=0.01, convergence_reference='eer'):
+    def __init__(self, convergence_threshold=0.01,
+                 convergence_reference='eer'):
         """
         Use the CNN as feature extractor for a n-class classification
 
@@ -76,8 +76,10 @@ class ExperimentAnalizer:
         # Creating models
         models = []
         for i in range(len(base_data_shuffler.possible_labels)):
-            indexes_model = numpy.where(enroll_labels == data_shuffler.possible_labels[i])[0]
-            models.append(numpy.mean(enroll_features[indexes_model, :], axis=0))
+            indexes_model = numpy.where(
+                enroll_labels == data_shuffler.possible_labels[i])[0]
+            models.append(
+                numpy.mean(enroll_features[indexes_model, :], axis=0))
 
         # Probing
         positive_scores = numpy.zeros(shape=0)
@@ -87,16 +89,23 @@ class ExperimentAnalizer:
             # Positive scoring
             indexes = probe_labels == base_data_shuffler.possible_labels[i]
             positive_data = probe_features[indexes, :]
-            p = [cosine(models[i], positive_data[j]) for j in range(positive_data.shape[0])]
+            p = [
+                cosine(models[i], positive_data[j])
+                for j in range(positive_data.shape[0])
+            ]
             positive_scores = numpy.hstack((positive_scores, p))
 
             # negative scoring
             indexes = probe_labels != base_data_shuffler.possible_labels[i]
             negative_data = probe_features[indexes, :]
-            n = [cosine(models[i], negative_data[j]) for j in range(negative_data.shape[0])]
+            n = [
+                cosine(models[i], negative_data[j])
+                for j in range(negative_data.shape[0])
+            ]
             negative_scores = numpy.hstack((negative_scores, n))
 
-        return self.__compute_tensorflow_summary((-1)*negative_scores, (-1) * positive_scores)
+        return self.__compute_tensorflow_summary((-1) * negative_scores,
+                                                 (-1) * positive_scores)
 
     def __compute_tensorflow_summary(self, negative_scores, positive_scores):
         """
@@ -119,27 +128,38 @@ class ExperimentAnalizer:
 
         # Compute EER
         threshold = bob.measure.eer_threshold(negative_scores, positive_scores)
-        far, frr = bob.measure.farfrr(negative_scores, positive_scores, threshold)
+        far, frr = bob.measure.farfrr(negative_scores, positive_scores,
+                                      threshold)
         eer = (far + frr) / 2.
-        summaries.append(summary_pb2.Summary.Value(tag="EER", simple_value=eer))
+        summaries.append(
+            summary_pb2.Summary.Value(tag="EER", simple_value=eer))
         self.eer.append(eer)
 
         # Computing FAR 10
-        threshold = bob.measure.far_threshold(negative_scores, positive_scores, far_value=0.1)
-        far, frr = bob.measure.farfrr(negative_scores, positive_scores, threshold)
-        summaries.append(summary_pb2.Summary.Value(tag="FAR 10", simple_value=frr))
+        threshold = bob.measure.far_threshold(
+            negative_scores, positive_scores, far_value=0.1)
+        far, frr = bob.measure.farfrr(negative_scores, positive_scores,
+                                      threshold)
+        summaries.append(
+            summary_pb2.Summary.Value(tag="FAR 10", simple_value=frr))
         self.far10.append(frr)
 
         # Computing FAR 100
-        threshold = bob.measure.far_threshold(negative_scores, positive_scores, far_value=0.01)
-        far, frr = bob.measure.farfrr(negative_scores, positive_scores, threshold)
-        summaries.append(summary_pb2.Summary.Value(tag="FAR 100", simple_value=frr))
+        threshold = bob.measure.far_threshold(
+            negative_scores, positive_scores, far_value=0.01)
+        far, frr = bob.measure.farfrr(negative_scores, positive_scores,
+                                      threshold)
+        summaries.append(
+            summary_pb2.Summary.Value(tag="FAR 100", simple_value=frr))
         self.far100.append(frr)
 
         # Computing FAR 1000
-        threshold = bob.measure.far_threshold(negative_scores, positive_scores, far_value=0.001)
-        far, frr = bob.measure.farfrr(negative_scores, positive_scores, threshold)
-        summaries.append(summary_pb2.Summary.Value(tag="FAR 1000", simple_value=frr))
+        threshold = bob.measure.far_threshold(
+            negative_scores, positive_scores, far_value=0.001)
+        far, frr = bob.measure.farfrr(negative_scores, positive_scores,
+                                      threshold)
+        summaries.append(
+            summary_pb2.Summary.Value(tag="FAR 1000", simple_value=frr))
         self.far1000.append(frr)
 
         return summary_pb2.Summary(value=summaries)

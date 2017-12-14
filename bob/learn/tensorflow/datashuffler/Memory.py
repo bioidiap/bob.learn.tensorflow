@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 11 May 2016 09:39:36 CEST 
+# @date: Wed 11 May 2016 09:39:36 CEST
 
 import numpy
 from .Base import Base
@@ -9,7 +9,6 @@ import tensorflow as tf
 
 
 class Memory(Base):
-
     """
     This datashuffler deal with memory databases that are stored in a :py:class`numpy.array`
 
@@ -40,7 +39,9 @@ class Memory(Base):
        The algorithm used for feature scaling. Look :py:class:`bob.learn.tensorflow.datashuffler.ScaleFactor`, :py:class:`bob.learn.tensorflow.datashuffler.Linear` and :py:class:`bob.learn.tensorflow.datashuffler.MeanOffset`
     """
 
-    def __init__(self, data, labels,
+    def __init__(self,
+                 data,
+                 labels,
                  input_shape,
                  input_dtype="float32",
                  batch_size=1,
@@ -49,8 +50,7 @@ class Memory(Base):
                  normalizer=None,
                  prefetch=False,
                  prefetch_capacity=10,
-                 prefetch_threads=5
-                 ):
+                 prefetch_threads=5):
 
         super(Memory, self).__init__(
             data=data,
@@ -63,8 +63,7 @@ class Memory(Base):
             normalizer=normalizer,
             prefetch=prefetch,
             prefetch_capacity=prefetch_capacity,
-            prefetch_threads=prefetch_threads
-        )
+            prefetch_threads=prefetch_threads)
         # Seting the seed
         numpy.random.seed(seed)
         self.data = self.data.astype(input_dtype)

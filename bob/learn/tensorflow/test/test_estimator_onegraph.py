@@ -36,13 +36,14 @@ def test_logitstrainer():
     # Trainer logits
     try:
         embedding_validation = False
-        trainer = Logits(model_dir=model_dir,
-                         architecture=dummy,
-                         optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-                         n_classes=10,
-                         loss_op=mean_cross_entropy_loss,
-                         embedding_validation=embedding_validation,
-                         validation_batch_size=validation_batch_size)
+        trainer = Logits(
+            model_dir=model_dir,
+            architecture=dummy,
+            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+            n_classes=10,
+            loss_op=mean_cross_entropy_loss,
+            embedding_validation=embedding_validation,
+            validation_batch_size=validation_batch_size)
         run_logitstrainer_mnist(trainer, augmentation=True)
     finally:
         try:
@@ -56,13 +57,14 @@ def test_logitstrainer():
 def test_logitstrainer_embedding():
     try:
         embedding_validation = True
-        trainer = Logits(model_dir=model_dir,
-                         architecture=dummy,
-                         optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-                         n_classes=10,
-                         loss_op=mean_cross_entropy_loss,
-                         embedding_validation=embedding_validation,
-                         validation_batch_size=validation_batch_size)
+        trainer = Logits(
+            model_dir=model_dir,
+            architecture=dummy,
+            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+            n_classes=10,
+            loss_op=mean_cross_entropy_loss,
+            embedding_validation=embedding_validation,
+            validation_batch_size=validation_batch_size)
 
         run_logitstrainer_mnist(trainer)
     finally:
@@ -93,12 +95,14 @@ def test_logitstrainer_centerloss():
 
         # Checking if the centers were updated
         sess = tf.Session()
-        checkpoint_path = tf.train.get_checkpoint_state(model_dir).model_checkpoint_path
-        saver = tf.train.import_meta_graph(checkpoint_path + ".meta", clear_devices=True)
+        checkpoint_path = tf.train.get_checkpoint_state(
+            model_dir).model_checkpoint_path
+        saver = tf.train.import_meta_graph(
+            checkpoint_path + ".meta", clear_devices=True)
         saver.restore(sess, tf.train.latest_checkpoint(model_dir))
-        centers = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="center_loss/centers:0")[0]
+        centers = tf.get_collection(
+            tf.GraphKeys.GLOBAL_VARIABLES, scope="center_loss/centers:0")[0]
         assert numpy.sum(numpy.abs(centers.eval(sess))) > 0.0
-
 
     finally:
         try:
@@ -124,10 +128,13 @@ def test_logitstrainer_centerloss_embedding():
 
         # Checking if the centers were updated
         sess = tf.Session()
-        checkpoint_path = tf.train.get_checkpoint_state(model_dir).model_checkpoint_path
-        saver = tf.train.import_meta_graph(checkpoint_path + ".meta", clear_devices=True)
+        checkpoint_path = tf.train.get_checkpoint_state(
+            model_dir).model_checkpoint_path
+        saver = tf.train.import_meta_graph(
+            checkpoint_path + ".meta", clear_devices=True)
         saver.restore(sess, tf.train.latest_checkpoint(model_dir))
-        centers = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope="center_loss/centers:0")[0]
+        centers = tf.get_collection(
+            tf.GraphKeys.GLOBAL_VARIABLES, scope="center_loss/centers:0")[0]
         assert numpy.sum(numpy.abs(centers.eval(sess))) > 0.0
     finally:
         try:
@@ -145,27 +152,46 @@ def run_logitstrainer_mnist(trainer, augmentation=False):
 
     # Creating tf records for mnist
     train_data, train_labels, validation_data, validation_labels = load_mnist()
-    create_mnist_tfrecord(tfrecord_train, train_data, train_labels, n_samples=6000)
-    create_mnist_tfrecord(tfrecord_validation, validation_data, validation_labels, n_samples=validation_batch_size)
+    create_mnist_tfrecord(
+        tfrecord_train, train_data, train_labels, n_samples=6000)
+    create_mnist_tfrecord(
+        tfrecord_validation,
+        validation_data,
+        validation_labels,
+        n_samples=validation_batch_size)
 
     def input_fn():
         if augmentation:
-            return shuffle_data_and_labels_image_augmentation(tfrecord_train, data_shape, data_type, batch_size,
-                                                              epochs=epochs)
+            return shuffle_data_and_labels_image_augmentation(
+                tfrecord_train,
+                data_shape,
+                data_type,
+                batch_size,
+                epochs=epochs)
         else:
-            return shuffle_data_and_labels(tfrecord_train, data_shape, data_type,
-                                           batch_size, epochs=epochs)
+            return shuffle_data_and_labels(
+                tfrecord_train,
+                data_shape,
+                data_type,
+                batch_size,
+                epochs=epochs)
 
     def input_fn_validation():
-        return batch_data_and_labels(tfrecord_validation, data_shape, data_type,
-                                     validation_batch_size, epochs=1000)
+        return batch_data_and_labels(
+            tfrecord_validation,
+            data_shape,
+            data_type,
+            validation_batch_size,
+            epochs=1000)
 
-    hooks = [LoggerHookEstimator(trainer, 16, 300),
-
-             tf.train.SummarySaverHook(save_steps=1000,
-                                       output_dir=model_dir,
-                                       scaffold=tf.train.Scaffold(),
-                                       summary_writer=tf.summary.FileWriter(model_dir))]
+    hooks = [
+        LoggerHookEstimator(trainer, 16, 300),
+        tf.train.SummarySaverHook(
+            save_steps=1000,
+            output_dir=model_dir,
+            scaffold=tf.train.Scaffold(),
+            summary_writer=tf.summary.FileWriter(model_dir))
+    ]
 
     trainer.train(input_fn, steps=steps, hooks=hooks)
     if not trainer.embedding_validation:

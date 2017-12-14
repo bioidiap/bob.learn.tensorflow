@@ -9,7 +9,10 @@ import tensorflow as tf
 from bob.learn.tensorflow.utils import compute_euclidean_distance
 
 
-def triplet_loss(anchor_embedding, positive_embedding, negative_embedding, margin=5.0):
+def triplet_loss(anchor_embedding,
+                 positive_embedding,
+                 negative_embedding,
+                 margin=5.0):
     """
     Compute the triplet loss as in
 
@@ -37,15 +40,21 @@ def triplet_loss(anchor_embedding, positive_embedding, negative_embedding, margi
 
     with tf.name_scope("triplet_loss"):
         # Normalize
-        anchor_embedding = tf.nn.l2_normalize(anchor_embedding, 1, 1e-10, name="anchor")
-        positive_embedding = tf.nn.l2_normalize(positive_embedding, 1, 1e-10, name="positive")
-        negative_embedding = tf.nn.l2_normalize(negative_embedding, 1, 1e-10, name="negative")
+        anchor_embedding = tf.nn.l2_normalize(
+            anchor_embedding, 1, 1e-10, name="anchor")
+        positive_embedding = tf.nn.l2_normalize(
+            positive_embedding, 1, 1e-10, name="positive")
+        negative_embedding = tf.nn.l2_normalize(
+            negative_embedding, 1, 1e-10, name="negative")
 
-        d_positive = tf.reduce_sum(tf.square(tf.subtract(anchor_embedding, positive_embedding)), 1)
-        d_negative = tf.reduce_sum(tf.square(tf.subtract(anchor_embedding, negative_embedding)), 1)
+        d_positive = tf.reduce_sum(
+            tf.square(tf.subtract(anchor_embedding, positive_embedding)), 1)
+        d_negative = tf.reduce_sum(
+            tf.square(tf.subtract(anchor_embedding, negative_embedding)), 1)
 
         basic_loss = tf.add(tf.subtract(d_positive, d_negative), margin)
-        loss = tf.reduce_mean(tf.maximum(basic_loss, 0.0), 0, name=tf.GraphKeys.LOSSES)
+        loss = tf.reduce_mean(
+            tf.maximum(basic_loss, 0.0), 0, name=tf.GraphKeys.LOSSES)
         between_class_loss = tf.reduce_mean(d_negative)
         within_class_loss = tf.reduce_mean(d_positive)
 
@@ -56,7 +65,10 @@ def triplet_loss(anchor_embedding, positive_embedding, negative_embedding, margi
         return loss
 
 
-def triplet_loss_deprecated(anchor_embedding, positive_embedding, negative_embedding, margin=5.0):
+def triplet_loss_deprecated(anchor_embedding,
+                            positive_embedding,
+                            negative_embedding,
+                            margin=5.0):
     """
     Compute the triplet loss as in
 
@@ -84,15 +96,21 @@ def triplet_loss_deprecated(anchor_embedding, positive_embedding, negative_embed
 
     with tf.name_scope("triplet_loss"):
         # Normalize
-        anchor_embedding = tf.nn.l2_normalize(anchor_embedding, 1, 1e-10, name="anchor")
-        positive_embedding = tf.nn.l2_normalize(positive_embedding, 1, 1e-10, name="positive")
-        negative_embedding = tf.nn.l2_normalize(negative_embedding, 1, 1e-10, name="negative")
+        anchor_embedding = tf.nn.l2_normalize(
+            anchor_embedding, 1, 1e-10, name="anchor")
+        positive_embedding = tf.nn.l2_normalize(
+            positive_embedding, 1, 1e-10, name="positive")
+        negative_embedding = tf.nn.l2_normalize(
+            negative_embedding, 1, 1e-10, name="negative")
 
-        d_positive = tf.reduce_sum(tf.square(tf.subtract(anchor_embedding, positive_embedding)), 1)
-        d_negative = tf.reduce_sum(tf.square(tf.subtract(anchor_embedding, negative_embedding)), 1)
+        d_positive = tf.reduce_sum(
+            tf.square(tf.subtract(anchor_embedding, positive_embedding)), 1)
+        d_negative = tf.reduce_sum(
+            tf.square(tf.subtract(anchor_embedding, negative_embedding)), 1)
 
         basic_loss = tf.add(tf.subtract(d_positive, d_negative), margin)
-        loss = tf.reduce_mean(tf.maximum(basic_loss, 0.0), 0, name=tf.GraphKeys.LOSSES)
+        loss = tf.reduce_mean(
+            tf.maximum(basic_loss, 0.0), 0, name=tf.GraphKeys.LOSSES)
 
         loss_dict = dict()
         loss_dict['loss'] = loss
@@ -102,13 +120,17 @@ def triplet_loss_deprecated(anchor_embedding, positive_embedding, negative_embed
         return loss_dict
 
 
-def triplet_fisher_loss(anchor_embedding, positive_embedding, negative_embedding):
+def triplet_fisher_loss(anchor_embedding, positive_embedding,
+                        negative_embedding):
 
     with tf.name_scope("triplet_loss"):
         # Normalize
-        anchor_embedding = tf.nn.l2_normalize(anchor_embedding, 1, 1e-10, name="anchor")
-        positive_embedding = tf.nn.l2_normalize(positive_embedding, 1, 1e-10, name="positive")
-        negative_embedding = tf.nn.l2_normalize(negative_embedding, 1, 1e-10, name="negative")
+        anchor_embedding = tf.nn.l2_normalize(
+            anchor_embedding, 1, 1e-10, name="anchor")
+        positive_embedding = tf.nn.l2_normalize(
+            positive_embedding, 1, 1e-10, name="positive")
+        negative_embedding = tf.nn.l2_normalize(
+            negative_embedding, 1, 1e-10, name="negative")
 
         average_class = tf.reduce_mean(anchor_embedding, 0)
         average_total = tf.div(tf.add(tf.reduce_mean(anchor_embedding, axis=0),\
@@ -125,11 +147,15 @@ def triplet_fisher_loss(anchor_embedding, positive_embedding, negative_embedding
             positive = s[0]
             negative = s[1]
 
-            buffer_sw = tf.reshape(tf.subtract(positive, average_class), shape=(dim, 1))
-            buffer_sw = tf.matmul(buffer_sw, tf.reshape(buffer_sw, shape=(1, dim)))
+            buffer_sw = tf.reshape(
+                tf.subtract(positive, average_class), shape=(dim, 1))
+            buffer_sw = tf.matmul(buffer_sw,
+                                  tf.reshape(buffer_sw, shape=(1, dim)))
 
-            buffer_sb = tf.reshape(tf.subtract(negative, average_total), shape=(dim, 1))
-            buffer_sb = tf.matmul(buffer_sb, tf.reshape(buffer_sb, shape=(1, dim)))
+            buffer_sb = tf.reshape(
+                tf.subtract(negative, average_total), shape=(dim, 1))
+            buffer_sb = tf.matmul(buffer_sb,
+                                  tf.reshape(buffer_sb, shape=(1, dim)))
 
             if Sw is None:
                 Sw = buffer_sw
@@ -144,9 +170,12 @@ def triplet_fisher_loss(anchor_embedding, positive_embedding, negative_embedding
         loss = tf.trace(tf.div(Sw, Sb), name=tf.GraphKeys.LOSSES)
 
         return loss, tf.trace(Sb), tf.trace(Sw)
-        
-        
-def triplet_average_loss(anchor_embedding, positive_embedding, negative_embedding, margin=5.0):
+
+
+def triplet_average_loss(anchor_embedding,
+                         positive_embedding,
+                         negative_embedding,
+                         margin=5.0):
     """
     Compute the triplet loss as in
 
@@ -174,28 +203,38 @@ def triplet_average_loss(anchor_embedding, positive_embedding, negative_embeddin
 
     with tf.name_scope("triplet_loss"):
         # Normalize
-        anchor_embedding = tf.nn.l2_normalize(anchor_embedding, 1, 1e-10, name="anchor")
-        positive_embedding = tf.nn.l2_normalize(positive_embedding, 1, 1e-10, name="positive")
-        negative_embedding = tf.nn.l2_normalize(negative_embedding, 1, 1e-10, name="negative")
+        anchor_embedding = tf.nn.l2_normalize(
+            anchor_embedding, 1, 1e-10, name="anchor")
+        positive_embedding = tf.nn.l2_normalize(
+            positive_embedding, 1, 1e-10, name="positive")
+        negative_embedding = tf.nn.l2_normalize(
+            negative_embedding, 1, 1e-10, name="negative")
 
         anchor_mean = tf.reduce_mean(anchor_embedding, 0)
 
-        d_positive = tf.reduce_sum(tf.square(tf.subtract(anchor_mean, positive_embedding)), 1)
-        d_negative = tf.reduce_sum(tf.square(tf.subtract(anchor_mean, negative_embedding)), 1)
+        d_positive = tf.reduce_sum(
+            tf.square(tf.subtract(anchor_mean, positive_embedding)), 1)
+        d_negative = tf.reduce_sum(
+            tf.square(tf.subtract(anchor_mean, negative_embedding)), 1)
 
         basic_loss = tf.add(tf.subtract(d_positive, d_negative), margin)
-        loss = tf.reduce_mean(tf.maximum(basic_loss, 0.0), 0, name=tf.GraphKeys.LOSSES)
+        loss = tf.reduce_mean(
+            tf.maximum(basic_loss, 0.0), 0, name=tf.GraphKeys.LOSSES)
 
-        return loss, tf.reduce_mean(d_negative), tf.reduce_mean(d_positive)        
+        return loss, tf.reduce_mean(d_negative), tf.reduce_mean(d_positive)
 
 
-def triplet_fisher_loss(anchor_embedding, positive_embedding, negative_embedding):
+def triplet_fisher_loss(anchor_embedding, positive_embedding,
+                        negative_embedding):
 
     with tf.name_scope("triplet_loss"):
         # Normalize
-        anchor_embedding = tf.nn.l2_normalize(anchor_embedding, 1, 1e-10, name="anchor")
-        positive_embedding = tf.nn.l2_normalize(positive_embedding, 1, 1e-10, name="positive")
-        negative_embedding = tf.nn.l2_normalize(negative_embedding, 1, 1e-10, name="negative")
+        anchor_embedding = tf.nn.l2_normalize(
+            anchor_embedding, 1, 1e-10, name="anchor")
+        positive_embedding = tf.nn.l2_normalize(
+            positive_embedding, 1, 1e-10, name="positive")
+        negative_embedding = tf.nn.l2_normalize(
+            negative_embedding, 1, 1e-10, name="negative")
 
         average_class = tf.reduce_mean(anchor_embedding, 0)
         average_total = tf.div(tf.add(tf.reduce_mean(anchor_embedding, axis=0),\
@@ -212,11 +251,15 @@ def triplet_fisher_loss(anchor_embedding, positive_embedding, negative_embedding
             positive = s[0]
             negative = s[1]
 
-            buffer_sw = tf.reshape(tf.subtract(positive, average_class), shape=(dim, 1))
-            buffer_sw = tf.matmul(buffer_sw, tf.reshape(buffer_sw, shape=(1, dim)))
+            buffer_sw = tf.reshape(
+                tf.subtract(positive, average_class), shape=(dim, 1))
+            buffer_sw = tf.matmul(buffer_sw,
+                                  tf.reshape(buffer_sw, shape=(1, dim)))
 
-            buffer_sb = tf.reshape(tf.subtract(negative, average_total), shape=(dim, 1))
-            buffer_sb = tf.matmul(buffer_sb, tf.reshape(buffer_sb, shape=(1, dim)))
+            buffer_sb = tf.reshape(
+                tf.subtract(negative, average_total), shape=(dim, 1))
+            buffer_sb = tf.matmul(buffer_sb,
+                                  tf.reshape(buffer_sb, shape=(1, dim)))
 
             if Sw is None:
                 Sw = buffer_sw
@@ -231,4 +274,3 @@ def triplet_fisher_loss(anchor_embedding, positive_embedding, negative_embedding
         loss = tf.trace(tf.div(Sw, Sb), name=tf.GraphKeys.LOSSES)
 
         return loss, tf.trace(Sb), tf.trace(Sw)
-

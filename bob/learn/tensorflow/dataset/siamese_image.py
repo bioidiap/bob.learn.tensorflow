@@ -7,16 +7,21 @@ from functools import partial
 from . import append_image_augmentation, siamease_pairs_generator, from_filename_to_tensor
 
 
-def shuffle_data_and_labels_image_augmentation(filenames, labels, data_shape, data_type,
-                                              batch_size, epochs=None, buffer_size=10**3,
-                                              gray_scale=False, 
-                                              output_shape=None,
-                                              random_flip=False,
-                                              random_brightness=False,
-                                              random_contrast=False,
-                                              random_saturation=False,
-                                              per_image_normalization=True,
-                                              extension=None):
+def shuffle_data_and_labels_image_augmentation(filenames,
+                                               labels,
+                                               data_shape,
+                                               data_type,
+                                               batch_size,
+                                               epochs=None,
+                                               buffer_size=10**3,
+                                               gray_scale=False,
+                                               output_shape=None,
+                                               random_flip=False,
+                                               random_brightness=False,
+                                               random_contrast=False,
+                                               random_saturation=False,
+                                               per_image_normalization=True,
+                                               extension=None):
     """
     Dump random batches for siamese networks from a list of image paths and labels:
         
@@ -76,27 +81,32 @@ def shuffle_data_and_labels_image_augmentation(filenames, labels, data_shape, da
            
        extension:
            If None, will load files using `tf.image.decode..` if set to `hdf5`, will load with `bob.io.base.load`
-    """                            
+    """
 
-    dataset = create_dataset_from_path_augmentation(filenames, labels, data_shape,
-                                          data_type,
-                                          gray_scale=gray_scale, 
-                                          output_shape=output_shape,
-                                          random_flip=random_flip,
-                                          random_brightness=random_brightness,
-                                          random_contrast=random_contrast,
-                                          random_saturation=random_saturation,
-                                          per_image_normalization=per_image_normalization,
-                                          extension=extension)
+    dataset = create_dataset_from_path_augmentation(
+        filenames,
+        labels,
+        data_shape,
+        data_type,
+        gray_scale=gray_scale,
+        output_shape=output_shape,
+        random_flip=random_flip,
+        random_brightness=random_brightness,
+        random_contrast=random_contrast,
+        random_saturation=random_saturation,
+        per_image_normalization=per_image_normalization,
+        extension=extension)
 
     dataset = dataset.shuffle(buffer_size).batch(batch_size).repeat(epochs)
     data, labels = dataset.make_one_shot_iterator().get_next()
     return data, labels
 
 
-def create_dataset_from_path_augmentation(filenames, labels,
-                                          data_shape, data_type,
-                                          gray_scale=False, 
+def create_dataset_from_path_augmentation(filenames,
+                                          labels,
+                                          data_shape,
+                                          data_type,
+                                          gray_scale=False,
                                           output_shape=None,
                                           random_flip=False,
                                           random_brightness=False,
@@ -155,27 +165,34 @@ def create_dataset_from_path_augmentation(filenames, labels,
            If None, will load files using `tf.image.decode..` if set to `hdf5`, will load with `bob.io.base.load`
     
     """
- 
-    parser = partial(image_augmentation_parser,
-                     data_shape=data_shape,
-                     data_type=data_type,
-                     gray_scale=gray_scale, 
-                     output_shape=output_shape,
-                     random_flip=random_flip,
-                     random_brightness=random_brightness,
-                     random_contrast=random_contrast,
-                     random_saturation=random_saturation,
-                     per_image_normalization=per_image_normalization,
-                     extension=extension) 
 
-    left_data, right_data, siamese_labels = siamease_pairs_generator(filenames, labels)
-    dataset = tf.contrib.data.Dataset.from_tensor_slices((left_data, right_data, siamese_labels))
+    parser = partial(
+        image_augmentation_parser,
+        data_shape=data_shape,
+        data_type=data_type,
+        gray_scale=gray_scale,
+        output_shape=output_shape,
+        random_flip=random_flip,
+        random_brightness=random_brightness,
+        random_contrast=random_contrast,
+        random_saturation=random_saturation,
+        per_image_normalization=per_image_normalization,
+        extension=extension)
+
+    left_data, right_data, siamese_labels = siamease_pairs_generator(
+        filenames, labels)
+    dataset = tf.contrib.data.Dataset.from_tensor_slices(
+        (left_data, right_data, siamese_labels))
     dataset = dataset.map(parser)
     return dataset
 
 
-def image_augmentation_parser(filename_left, filename_right, label, data_shape, data_type,
-                              gray_scale=False, 
+def image_augmentation_parser(filename_left,
+                              filename_right,
+                              label,
+                              data_shape,
+                              data_type,
+                              gray_scale=False,
                               output_shape=None,
                               random_flip=False,
                               random_brightness=False,
@@ -183,11 +200,10 @@ def image_augmentation_parser(filename_left, filename_right, label, data_shape, 
                               random_saturation=False,
                               per_image_normalization=True,
                               extension=None):
-
     """
     Parses a single tf.Example into image and label tensors.
     """
-    
+
     # Convert the image data from string back to the numbers
     image_left = from_filename_to_tensor(filename_left, extension=extension)
     image_right = from_filename_to_tensor(filename_right, extension=extension)
@@ -195,28 +211,31 @@ def image_augmentation_parser(filename_left, filename_right, label, data_shape, 
     # Reshape image data into the original shape
     image_left = tf.reshape(image_left, data_shape)
     image_right = tf.reshape(image_right, data_shape)
-    
+
     #Applying image augmentation
-    image_left = append_image_augmentation(image_left, gray_scale=gray_scale,
-                                      output_shape=output_shape,
-                                      random_flip=random_flip,
-                                      random_brightness=random_brightness,
-                                      random_contrast=random_contrast,
-                                      random_saturation=random_saturation,
-                                      per_image_normalization=per_image_normalization)
-                                        
-    image_right = append_image_augmentation(image_right, gray_scale=gray_scale,
-                                      output_shape=output_shape,
-                                      random_flip=random_flip,
-                                      random_brightness=random_brightness,
-                                      random_contrast=random_contrast,
-                                      random_saturation=random_saturation,
-                                      per_image_normalization=per_image_normalization)
+    image_left = append_image_augmentation(
+        image_left,
+        gray_scale=gray_scale,
+        output_shape=output_shape,
+        random_flip=random_flip,
+        random_brightness=random_brightness,
+        random_contrast=random_contrast,
+        random_saturation=random_saturation,
+        per_image_normalization=per_image_normalization)
+
+    image_right = append_image_augmentation(
+        image_right,
+        gray_scale=gray_scale,
+        output_shape=output_shape,
+        random_flip=random_flip,
+        random_brightness=random_brightness,
+        random_contrast=random_contrast,
+        random_saturation=random_saturation,
+        per_image_normalization=per_image_normalization)
 
     image = dict()
-    image['left']  = image_left
+    image['left'] = image_left
     image['right'] = image_right
     label = tf.cast(label, tf.int64)
 
     return image, label
-

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """Trains and evaluates a network using Tensorflow estimators.
 This script calls the estimator.train_and_evaluate function. Please see:
 https://www.tensorflow.org/api_docs/python/tf/estimator/train_and_evaluate
@@ -46,31 +45,31 @@ logger = setup(__name__)
 
 
 def main(argv=None):
-  from docopt import docopt
-  import os
-  import sys
-  docs = __doc__ % {'prog': os.path.basename(sys.argv[0])}
-  version = pkg_resources.require('bob.learn.tensorflow')[0].version
-  defaults = docopt(docs, argv=[""])
-  args = docopt(docs, argv=argv, version=version)
-  config_files = args['<config_files>']
-  config = read_config_file(config_files)
+    from docopt import docopt
+    import os
+    import sys
+    docs = __doc__ % {'prog': os.path.basename(sys.argv[0])}
+    version = pkg_resources.require('bob.learn.tensorflow')[0].version
+    defaults = docopt(docs, argv=[""])
+    args = docopt(docs, argv=argv, version=version)
+    config_files = args['<config_files>']
+    config = read_config_file(config_files)
 
-  # optional arguments
-  verbosity = get_from_config_or_commandline(
-      config, 'verbose', args, defaults)
+    # optional arguments
+    verbosity = get_from_config_or_commandline(config, 'verbose', args,
+                                               defaults)
 
-  # Sets-up logging
-  set_verbosity_level(logger, verbosity)
+    # Sets-up logging
+    set_verbosity_level(logger, verbosity)
 
-  # required arguments
-  estimator = config.estimator
-  train_spec = config.train_spec
-  eval_spec = config.eval_spec
+    # required arguments
+    estimator = config.estimator
+    train_spec = config.train_spec
+    eval_spec = config.eval_spec
 
-  # Train and evaluate
-  tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
+    # Train and evaluate
+    tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
 
 
 if __name__ == '__main__':
-  main()
+    main()

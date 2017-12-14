@@ -10,14 +10,16 @@ from nose.tools import assert_raises_regexp
 
 slim = tf.contrib.slim
 
+
 def test_simple():
     tf.reset_default_graph()
     x = np.zeros([64, 10, 36])
     graph = maxout(x, num_units=3)
     assert graph.get_shape().as_list() == [64, 10, 3]
     tf.reset_default_graph()
-    assert len(tf.global_variables())==0
-    
+    assert len(tf.global_variables()) == 0
+
+
 def test_fully_connected():
     tf.reset_default_graph()
     x = np.zeros([64, 50])
@@ -25,7 +27,7 @@ def test_fully_connected():
     graph = maxout(graph, num_units=10)
     assert graph.get_shape().as_list() == [64, 10]
     tf.reset_default_graph()
-    assert len(tf.global_variables())==0
+    assert len(tf.global_variables()) == 0
 
 
 def test_nchw():
@@ -35,7 +37,8 @@ def test_nchw():
     graph = maxout(graph, num_units=1)
     assert graph.get_shape().as_list() == [10, 100, 100, 1]
     tf.reset_default_graph()
-    assert len(tf.global_variables())==0
+    assert len(tf.global_variables()) == 0
+
 
 def test_invalid_shape():
     tf.reset_default_graph()
@@ -44,5 +47,4 @@ def test_invalid_shape():
     with assert_raises_regexp(ValueError, 'number of features'):
         graph = maxout(graph, num_units=2)
     tf.reset_default_graph()
-    assert len(tf.global_variables())==0
-
+    assert len(tf.global_variables()) == 0

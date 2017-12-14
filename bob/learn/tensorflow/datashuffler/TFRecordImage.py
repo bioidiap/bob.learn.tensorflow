@@ -9,6 +9,7 @@ import bob.ip.base
 import numpy
 from .TFRecord import TFRecord
 
+
 class TFRecordImage(TFRecord):
     """
     Datashuffler that wraps the batching using tfrecords.
@@ -32,28 +33,29 @@ class TFRecordImage(TFRecord):
       gray_scale: Convert the output to gray scale
     """
 
-    def __init__(self,filename_queue,
-                         input_shape=[None, 28, 28, 1],
-                         output_shape=[None, 28, 28, 1],
-                         input_dtype=tf.uint8,
-                         batch_size=32,
-                         seed=10,
-                         prefetch_capacity=1000,
-                         prefetch_threads=5,
-                         shuffle=True,
-                         normalization=False,
-                         random_flip=True,
-                         random_crop=True,
-                         gray_scale=False
-                         ):
+    def __init__(self,
+                 filename_queue,
+                 input_shape=[None, 28, 28, 1],
+                 output_shape=[None, 28, 28, 1],
+                 input_dtype=tf.uint8,
+                 batch_size=32,
+                 seed=10,
+                 prefetch_capacity=1000,
+                 prefetch_threads=5,
+                 shuffle=True,
+                 normalization=False,
+                 random_flip=True,
+                 random_crop=True,
+                 gray_scale=False):
 
-        super(TFRecord, self).__init__(filename_queue=filename_queue,
-                                       input_shape=input_shape,
-                                       input_dtype=input_dtype,
-                                       batch_size=batch_size,
-                                       seed=seed,
-                                       prefetch_capacity=prefetch_capacity,
-                                       prefetch_threads=prefetch_threads)
+        super(TFRecord, self).__init__(
+            filename_queue=filename_queue,
+            input_shape=input_shape,
+            input_dtype=input_dtype,
+            batch_size=batch_size,
+            seed=seed,
+            prefetch_capacity=prefetch_capacity,
+            prefetch_threads=prefetch_threads)
         # Preparing the output
         self.output_shape = output_shape
 
@@ -62,7 +64,6 @@ class TFRecordImage(TFRecord):
         self.random_crop = random_crop
         self.random_flip = random_flip
         self.gray_scale = gray_scale
-
 
     def create_placeholders(self):
         """
@@ -79,7 +80,8 @@ class TFRecordImage(TFRecord):
             self.output_shape[3] = 1
 
         if self.random_crop:
-            image = tf.image.resize_image_with_crop_or_pad(image, self.output_shape[1], self.output_shape[2])
+            image = tf.image.resize_image_with_crop_or_pad(
+                image, self.output_shape[1], self.output_shape[2])
 
         if self.random_flip:
             image = tf.image.random_flip_left_right(image)
@@ -90,16 +92,21 @@ class TFRecordImage(TFRecord):
 
         image.set_shape(tuple(self.output_shape[1:]))
 
-
         if self.shuffle:
-            data_ph, label_ph = tf.train.shuffle_batch([image, label], batch_size=self.batch_size,
-                             capacity=self.prefetch_capacity, num_threads=self.prefetch_threads,
-                             min_after_dequeue=self.prefetch_capacity//2, name="shuffle_batch")
+            data_ph, label_ph = tf.train.shuffle_batch(
+                [image, label],
+                batch_size=self.batch_size,
+                capacity=self.prefetch_capacity,
+                num_threads=self.prefetch_threads,
+                min_after_dequeue=self.prefetch_capacity // 2,
+                name="shuffle_batch")
         else:
-            data_ph, label_ph = tf.train.batch([image, label], batch_size=self.batch_size,
-                             capacity=self.prefetch_capacity, num_threads=self.prefetch_threads, name="batch")
-
+            data_ph, label_ph = tf.train.batch(
+                [image, label],
+                batch_size=self.batch_size,
+                capacity=self.prefetch_capacity,
+                num_threads=self.prefetch_threads,
+                name="batch")
 
         self.data_ph = data_ph
         self.label_ph = label_ph
-
