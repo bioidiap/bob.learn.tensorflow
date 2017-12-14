@@ -30,6 +30,11 @@ The configuration files should have the following objects totally:
   estimator
   train_spec
   eval_spec
+
+  ## Optional objects:
+  exit_ok_exceptions : [Exception]
+    A list of exceptions to exit properly if they occur. If nothing is
+    provided, the EarlyStopException is handled by default.
 """
 from __future__ import absolute_import
 from __future__ import division
@@ -40,6 +45,7 @@ import tensorflow as tf
 from bob.extension.config import load as read_config_file
 from bob.learn.tensorflow.utils.commandline import \
     get_from_config_or_commandline
+from bob.learn.tensorflow.utils.hooks import EarlyStopException
 from bob.core.log import setup, set_verbosity_level
 logger = setup(__name__)
 
@@ -62,13 +68,21 @@ def main(argv=None):
     # Sets-up logging
     set_verbosity_level(logger, verbosity)
 
-    # required arguments
+    # required objects
     estimator = config.estimator
     train_spec = config.train_spec
     eval_spec = config.eval_spec
 
+    # optional objects
+    exit_ok_exceptions = getattr(config, 'exit_ok_exceptions',
+                                 (EarlyStopException,))
+
     # Train and evaluate
-    tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
+    try:
+        tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
+    except exit_ok_exceptions as e:
+        logger.exception(e)
+        return
 
 
 if __name__ == '__main__':
