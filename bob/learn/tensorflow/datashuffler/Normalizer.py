@@ -4,6 +4,7 @@
 
 import numpy
 
+
 def scale_factor(x, scale_factor=0.00390625):
     """
     Normalize a sample by a scale factor
@@ -21,10 +22,10 @@ def mean_offset(x, mean_offset):
 
     return x
 
+
 def per_image_standarization(x):
-    
+
     mean = numpy.mean(x)
     std = numpy.std(x)
 
-    return (x-mean)/max(std, 1/numpy.sqrt(numpy.prod(x.shape)))
-
+    return (x - mean) / max(std, 1 / numpy.sqrt(numpy.prod(x.shape)))

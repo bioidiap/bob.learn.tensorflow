@@ -16,9 +16,8 @@ train_data, train_labels, validation_data, validation_labels = \
     load_mnist()
 train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
 
-train_data_shuffler = TripletMemory(train_data, train_labels,
-                                    input_shape=INPUT_SHAPE,
-                                    batch_size=BATCH_SIZE)
+train_data_shuffler = TripletMemory(
+    train_data, train_labels, input_shape=INPUT_SHAPE, batch_size=BATCH_SIZE)
 
 ### ARCHITECTURE ###
 architecture = Chopra(seed=SEED, n_classes=10)
@@ -26,14 +25,11 @@ architecture = Chopra(seed=SEED, n_classes=10)
 ### LOSS ###
 loss = TripletLoss(margin=4.)
 
-
 ### LEARNING RATE ###
 learning_rate = constant(base_learning_rate=0.01)
 
-
 ### SOLVER ###
 optimizer = tf.train.GradientDescentOptimizer(learning_rate)
-
 
 ### Trainer ###
 trainer = Trainer

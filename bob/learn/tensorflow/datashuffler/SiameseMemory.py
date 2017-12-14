@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 11 May 2016 09:39:36 CEST 
+# @date: Wed 11 May 2016 09:39:36 CEST
 
 import numpy
 import six
@@ -43,7 +43,9 @@ class SiameseMemory(Siamese, Memory):
 
     """
 
-    def __init__(self, data, labels,
+    def __init__(self,
+                 data,
+                 labels,
                  input_shape=[None, 28, 28, 1],
                  input_dtype="float32",
                  batch_size=32,
@@ -52,8 +54,7 @@ class SiameseMemory(Siamese, Memory):
                  normalizer=None,
                  prefetch=False,
                  prefetch_capacity=50,
-                 prefetch_threads=10
-                 ):
+                 prefetch_threads=10):
 
         super(SiameseMemory, self).__init__(
             data=data,
@@ -66,8 +67,7 @@ class SiameseMemory(Siamese, Memory):
             normalizer=normalizer,
             prefetch=prefetch,
             prefetch_capacity=prefetch_capacity,
-            prefetch_threads=prefetch_threads
-        )
+            prefetch_threads=prefetch_threads)
         # Seting the seed
         numpy.random.seed(seed)
         self.data = self.data.astype(input_dtype)
@@ -89,13 +89,16 @@ class SiameseMemory(Siamese, Memory):
 
             # Applying the data augmentation
             if self.data_augmentation is not None:
-                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(left)))
+                d = self.bob2skimage(
+                    self.data_augmentation(self.skimage2bob(left)))
                 left = d
 
-                d = self.bob2skimage(self.data_augmentation(self.skimage2bob(right)))
+                d = self.bob2skimage(
+                    self.data_augmentation(self.skimage2bob(right)))
                 right = d
 
             left = self.normalize_sample(left)
             right = self.normalize_sample(right)
 
-            yield left.astype(self.input_dtype), right.astype(self.input_dtype), label
+            yield left.astype(self.input_dtype), right.astype(
+                self.input_dtype), label

@@ -3,20 +3,22 @@ import numpy
 import os
 import bob.io.base
 
-DEFAULT_FEATURE = {'data': tf.FixedLenFeature([], tf.string),
-                   'label': tf.FixedLenFeature([], tf.int64),
-                   'key': tf.FixedLenFeature([], tf.string)}
+DEFAULT_FEATURE = {
+    'data': tf.FixedLenFeature([], tf.string),
+    'label': tf.FixedLenFeature([], tf.int64),
+    'key': tf.FixedLenFeature([], tf.string)
+}
 
 
 def from_hdf5file_to_tensor(filename):
     import bob.io.image
     data = bob.io.image.to_matplotlib(bob.io.base.load(filename))
-    
-    #reshaping to ndim == 3    
+
+    #reshaping to ndim == 3
     if data.ndim == 2:
         data = numpy.reshape(data, (data.shape[0], data.shape[1], 1))
     data = data.astype("float32")
-    
+
     return data
 
 
@@ -27,14 +29,16 @@ def from_filename_to_tensor(filename, extension=None):
     If the file extension is something that tensorflow understands (.jpg, .bmp, .tif,...),
     it uses the `tf.image.decode_image` otherwise it uses `bob.io.base.load`
     """
-    
+
     if extension == "hdf5":
         return tf.py_func(from_hdf5file_to_tensor, [filename], [tf.float32])
     else:
-        return tf.cast(tf.image.decode_image(tf.read_file(filename)), tf.float32)
+        return tf.cast(
+            tf.image.decode_image(tf.read_file(filename)), tf.float32)
 
 
-def append_image_augmentation(image, gray_scale=False,
+def append_image_augmentation(image,
+                              gray_scale=False,
                               output_shape=None,
                               random_flip=False,
                               random_brightness=False,
@@ -73,8 +77,8 @@ def append_image_augmentation(image, gray_scale=False,
 
     if output_shape is not None:
         assert len(output_shape) == 2
-        image = tf.image.resize_image_with_crop_or_pad(
-            image, output_shape[0], output_shape[1])
+        image = tf.image.resize_image_with_crop_or_pad(image, output_shape[0],
+                                                       output_shape[1])
 
     if random_flip:
         image = tf.image.random_flip_left_right(image)
@@ -137,18 +141,20 @@ def triplets_random_generator(input_data, input_labels):
     input_labels = numpy.array(input_labels)
     total_samples = input_data.shape[0]
 
-    indexes_per_labels = arrange_indexes_by_label(
-        input_labels, possible_labels)
+    indexes_per_labels = arrange_indexes_by_label(input_labels,
+                                                  possible_labels)
 
     # searching for random triplets
     offset_class = 0
     for i in range(total_samples):
 
-        anchor_sample = input_data[indexes_per_labels[possible_labels[offset_class]][numpy.random.randint(
-            len(indexes_per_labels[possible_labels[offset_class]]))], ...]
+        anchor_sample = input_data[indexes_per_labels[possible_labels[
+            offset_class]][numpy.random.randint(
+                len(indexes_per_labels[possible_labels[offset_class]]))], ...]
 
-        positive_sample = input_data[indexes_per_labels[possible_labels[offset_class]][numpy.random.randint(
-            len(indexes_per_labels[possible_labels[offset_class]]))], ...]
+        positive_sample = input_data[indexes_per_labels[possible_labels[
+            offset_class]][numpy.random.randint(
+                len(indexes_per_labels[possible_labels[offset_class]]))], ...]
 
         # Changing the class
         offset_class += 1
@@ -156,8 +162,9 @@ def triplets_random_generator(input_data, input_labels):
         if offset_class == len(possible_labels):
             offset_class = 0
 
-        negative_sample = input_data[indexes_per_labels[possible_labels[offset_class]][numpy.random.randint(
-            len(indexes_per_labels[possible_labels[offset_class]]))], ...]
+        negative_sample = input_data[indexes_per_labels[possible_labels[
+            offset_class]][numpy.random.randint(
+                len(indexes_per_labels[possible_labels[offset_class]]))], ...]
 
         append(str(anchor_sample), str(positive_sample), str(negative_sample))
         # yield anchor, positive, negative
@@ -199,8 +206,8 @@ def siamease_pairs_generator(input_data, input_labels):
     # for l in possible_labels:
     #    indexes_per_labels[l] = numpy.where(input_labels == l)[0]
     #    numpy.random.shuffle(indexes_per_labels[l])
-    indexes_per_labels = arrange_indexes_by_label(
-        input_labels, possible_labels)
+    indexes_per_labels = arrange_indexes_by_label(input_labels,
+                                                  possible_labels)
 
     left_possible_indexes = numpy.random.choice(
         possible_labels, total_samples, replace=True)
@@ -215,10 +222,10 @@ def siamease_pairs_generator(input_data, input_labels):
             class_index = left_possible_indexes[i]
 
             # Now selecting the samples for the pair
-            left = input_data[indexes_per_labels[class_index][numpy.random.randint(
-                len(indexes_per_labels[class_index]))]]
-            right = input_data[indexes_per_labels[class_index][numpy.random.randint(
-                len(indexes_per_labels[class_index]))]]
+            left = input_data[indexes_per_labels[class_index][
+                numpy.random.randint(len(indexes_per_labels[class_index]))]]
+            right = input_data[indexes_per_labels[class_index][
+                numpy.random.randint(len(indexes_per_labels[class_index]))]]
             append(left, right, 0)
             # yield left, right, 0
         else:
@@ -237,10 +244,12 @@ def siamease_pairs_generator(input_data, input_labels):
 
             if j < total_samples:
                 # Now selecting the samples for the pair
-                left = input_data[indexes_per_labels[class_index[0]][numpy.random.randint(
-                    len(indexes_per_labels[class_index[0]]))]]
-                right = input_data[indexes_per_labels[class_index[1]][numpy.random.randint(
-                    len(indexes_per_labels[class_index[1]]))]]
+                left = input_data[indexes_per_labels[class_index[0]][
+                    numpy.random.randint(
+                        len(indexes_per_labels[class_index[0]]))]]
+                right = input_data[indexes_per_labels[class_index[1]][
+                    numpy.random.randint(
+                        len(indexes_per_labels[class_index[1]]))]]
                 append(left, right, 1)
 
         genuine = not genuine
@@ -274,9 +283,8 @@ def blocks_tensorflow(images, block_size):
     # extract image patches for each color space:
     output = []
     for i in range(3):
-        blocks = tf.extract_image_patches(
-            images[:, :, :, i:i + 1], block_size, block_size, [1, 1, 1, 1],
-            "VALID")
+        blocks = tf.extract_image_patches(images[:, :, :, i:i + 1], block_size,
+                                          block_size, [1, 1, 1, 1], "VALID")
         if i == 0:
             n_blocks = int(numpy.prod(blocks.shape[1:3]))
         blocks = tf.reshape(blocks, output_size)

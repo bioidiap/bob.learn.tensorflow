@@ -19,7 +19,6 @@ import shutil
 from scipy.spatial.distance import cosine
 import bob.measure
 from .test_cnn import dummy_experiment
-
 """
 Some unit tests for the datashuffler
 """
@@ -36,38 +35,43 @@ def test_cnn_trainer():
     # Loading data
     train_data, train_labels, validation_data, validation_labels = load_mnist()
     train_data = numpy.reshape(train_data, (train_data.shape[0], 28, 28, 1))
-    validation_data = numpy.reshape(validation_data, (validation_data.shape[0], 28, 28, 1))
+    validation_data = numpy.reshape(validation_data,
+                                    (validation_data.shape[0], 28, 28, 1))
 
     # Creating datashufflers
-    train_data_shuffler = Memory(train_data, train_labels,
-                                 input_shape=[None, 28, 28, 1],
-                                 batch_size=batch_size,
-                                 prefetch=True,
-                                 prefetch_threads=1)
+    train_data_shuffler = Memory(
+        train_data,
+        train_labels,
+        input_shape=[None, 28, 28, 1],
+        batch_size=batch_size,
+        prefetch=True,
+        prefetch_threads=1)
     directory = "./temp/cnn"
 
     # Preparing the graph
     inputs = train_data_shuffler("data", from_queue=True)
     labels = train_data_shuffler("label", from_queue=True)
 
-    prelogits,_ = chopra(inputs, seed=seed)
+    prelogits, _ = chopra(inputs, seed=seed)
     logits = append_logits(prelogits, n_classes=10)
-    embedding = Embedding(train_data_shuffler("data", from_queue=False), logits)
+    embedding = Embedding(
+        train_data_shuffler("data", from_queue=False), logits)
 
     # Loss for the softmax
     loss = mean_cross_entropy_loss(logits, labels)
 
     # One graph trainer
-    trainer = Trainer(train_data_shuffler,
-                      iterations=iterations,
-                      analizer=None,
-                      temp_dir=directory
-                      )
-    trainer.create_network_from_scratch(graph=logits,
-                                        loss=loss,
-                                        learning_rate=constant(0.01, name="regular_lr"),
-                                        optimizer=tf.train.GradientDescentOptimizer(0.01),
-                                        )
+    trainer = Trainer(
+        train_data_shuffler,
+        iterations=iterations,
+        analizer=None,
+        temp_dir=directory)
+    trainer.create_network_from_scratch(
+        graph=logits,
+        loss=loss,
+        learning_rate=constant(0.01, name="regular_lr"),
+        optimizer=tf.train.GradientDescentOptimizer(0.01),
+    )
     trainer.train()
 
     # Using embedding to compute the accuracy
@@ -80,11 +84,10 @@ def test_cnn_trainer():
     del trainer
     del embedding
     tf.reset_default_graph()
-    assert len(tf.global_variables())==0    
+    assert len(tf.global_variables()) == 0
 
 
 def test_siamesecnn_trainer():
-
     """
     tf.reset_default_graph()
 
@@ -139,6 +142,7 @@ def test_siamesecnn_trainer():
     assert len(tf.global_variables())==0    
     """
     assert True
+
 
 def test_tripletcnn_trainer():
     """

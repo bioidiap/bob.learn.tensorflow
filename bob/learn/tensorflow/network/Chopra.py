@@ -4,19 +4,19 @@
 
 import tensorflow as tf
 
-def chopra(inputs, conv1_kernel_size=[7, 7],
-           conv1_output=15,
 
-           pooling1_size=[2, 2],
-
-
-           conv2_kernel_size=[6, 6],
-           conv2_output=45,
-
-           pooling2_size=[4, 3],
-           fc1_output=250,
-           seed=10,
-           reuse=False,):
+def chopra(
+        inputs,
+        conv1_kernel_size=[7, 7],
+        conv1_output=15,
+        pooling1_size=[2, 2],
+        conv2_kernel_size=[6, 6],
+        conv2_output=45,
+        pooling2_size=[4, 3],
+        fc1_output=250,
+        seed=10,
+        reuse=False,
+):
     """Class that creates the architecture presented in the paper:
 
     Chopra, Sumit, Raia Hadsell, and Yann LeCun. "Learning a similarity metric discriminatively, with application to
@@ -63,36 +63,47 @@ def chopra(inputs, conv1_kernel_size=[7, 7],
     slim = tf.contrib.slim
 
     end_points = dict()
-    
-    initializer = tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=seed)
 
-    graph = slim.conv2d(inputs, conv1_output, conv1_kernel_size, activation_fn=tf.nn.relu,
-                        stride=1,
-                        weights_initializer=initializer,
-                        scope='conv1',
-                        reuse=reuse)
+    initializer = tf.contrib.layers.xavier_initializer(
+        uniform=False, dtype=tf.float32, seed=seed)
+
+    graph = slim.conv2d(
+        inputs,
+        conv1_output,
+        conv1_kernel_size,
+        activation_fn=tf.nn.relu,
+        stride=1,
+        weights_initializer=initializer,
+        scope='conv1',
+        reuse=reuse)
     end_points['conv1'] = graph
-    
+
     graph = slim.max_pool2d(graph, pooling1_size, scope='pool1')
     end_points['pool1'] = graph
 
-    graph = slim.conv2d(graph, conv2_output, conv2_kernel_size, activation_fn=tf.nn.relu,
-                        stride=1,
-                        weights_initializer=initializer,
-                        scope='conv2', reuse=reuse)
+    graph = slim.conv2d(
+        graph,
+        conv2_output,
+        conv2_kernel_size,
+        activation_fn=tf.nn.relu,
+        stride=1,
+        weights_initializer=initializer,
+        scope='conv2',
+        reuse=reuse)
     end_points['conv2'] = graph
     graph = slim.max_pool2d(graph, pooling2_size, scope='pool2')
-    end_points['pool2'] = graph        
+    end_points['pool2'] = graph
 
     graph = slim.flatten(graph, scope='flatten1')
-    end_points['flatten1'] = graph        
+    end_points['flatten1'] = graph
 
-    graph = slim.fully_connected(graph, fc1_output,
-                                 weights_initializer=initializer,
-                                 activation_fn=None,
-                                 scope='fc1',
-                                 reuse=reuse)
-    end_points['fc1'] = graph                                     
-    
+    graph = slim.fully_connected(
+        graph,
+        fc1_output,
+        weights_initializer=initializer,
+        activation_fn=None,
+        scope='fc1',
+        reuse=reuse)
+    end_points['fc1'] = graph
+
     return graph, end_points
-

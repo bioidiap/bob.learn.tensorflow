@@ -103,8 +103,10 @@ def _create_tfrecord(test_dir):
 
 
 def _create_checkpoint(tmpdir, model_dir, dummy_tfrecord):
-    config = CONFIG % {'model_dir': model_dir,
-                       'tfrecord_filenames': dummy_tfrecord}
+    config = CONFIG % {
+        'model_dir': model_dir,
+        'tfrecord_filenames': dummy_tfrecord
+    }
     config_path = os.path.join(tmpdir, 'train_config.py')
     with open(config_path, 'w') as f:
         f.write(config)
@@ -112,8 +114,10 @@ def _create_checkpoint(tmpdir, model_dir, dummy_tfrecord):
 
 
 def _eval(tmpdir, model_dir, dummy_tfrecord):
-    config = CONFIG % {'model_dir': model_dir,
-                       'tfrecord_filenames': dummy_tfrecord}
+    config = CONFIG % {
+        'model_dir': model_dir,
+        'tfrecord_filenames': dummy_tfrecord
+    }
     config_path = os.path.join(tmpdir, 'eval_config.py')
     with open(config_path, 'w') as f:
         f.write(config)
@@ -121,8 +125,10 @@ def _eval(tmpdir, model_dir, dummy_tfrecord):
 
 
 def _train_and_evaluate(tmpdir, model_dir, dummy_tfrecord):
-    config = CONFIG % {'model_dir': model_dir,
-                       'tfrecord_filenames': dummy_tfrecord}
+    config = CONFIG % {
+        'model_dir': model_dir,
+        'tfrecord_filenames': dummy_tfrecord
+    }
     config_path = os.path.join(tmpdir, 'train_config.py')
     with open(config_path, 'w') as f:
         f.write(config)

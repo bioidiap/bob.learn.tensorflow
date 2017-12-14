@@ -27,8 +27,8 @@ CLIENT_IDS = dict(zip(CLIENT_IDS, range(len(CLIENT_IDS))))
 def file_to_label(f):
     return CLIENT_IDS[str(f.client_id)]
 
-# Optional objects:
 
+# Optional objects:
 
 # The groups that you want to create tfrecords for. It should be a list of
 # 'world' ('train' in bob.pad.base), 'dev', and 'eval' values. [default:
@@ -41,6 +41,7 @@ reader = Preprocessor().read_data
 reader = Extractor().read_feature
 # or
 from bob.bio.base.utils import load as reader
+
 # or a reader that casts images to uint8:
 
 

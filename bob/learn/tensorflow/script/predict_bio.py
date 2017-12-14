@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """Saves predictions or embeddings of tf.estimators. This script works with
 bob.bio.base databases. To use it see the configuration details below. This
 script works with tensorflow 1.4 and above.
@@ -169,18 +168,17 @@ def main(argv=None):
     config = read_config_file(config_files)
 
     # optional arguments
-    verbosity = get_from_config_or_commandline(
-        config, 'verbose', args, defaults)
-    predict_keys = get_from_config_or_commandline(
-        config, 'predict_keys', args, defaults)
-    checkpoint_path = get_from_config_or_commandline(
-        config, 'checkpoint_path', args, defaults)
+    verbosity = get_from_config_or_commandline(config, 'verbose', args,
+                                               defaults)
+    predict_keys = get_from_config_or_commandline(config, 'predict_keys', args,
+                                                  defaults)
+    checkpoint_path = get_from_config_or_commandline(config, 'checkpoint_path',
+                                                     args, defaults)
     multiple_samples = get_from_config_or_commandline(
         config, 'multiple_samples', args, defaults)
     number_of_parallel_jobs = get_from_config_or_commandline(
         config, 'number_of_parallel_jobs', args, defaults)
-    force = get_from_config_or_commandline(
-        config, 'force', args, defaults)
+    force = get_from_config_or_commandline(config, 'force', args, defaults)
     hooks = getattr(config, 'hooks', None)
     load_data = getattr(config, 'load_data', None)
 
@@ -192,8 +190,8 @@ def main(argv=None):
     database = config.database
     biofiles = config.biofiles
     bio_predict_input_fn = config.bio_predict_input_fn
-    output_dir = get_from_config_or_commandline(
-        config, 'output_dir', args, defaults, False)
+    output_dir = get_from_config_or_commandline(config, 'output_dir', args,
+                                                defaults, False)
 
     assert len(biofiles), "biofiles are empty!"
 
@@ -216,11 +214,13 @@ def main(argv=None):
         return
 
     generator = BioGenerator(
-        database, biofiles, load_data=load_data,
+        database,
+        biofiles,
+        load_data=load_data,
         multiple_samples=multiple_samples)
 
-    predict_input_fn = bio_predict_input_fn(
-        generator, generator.output_types, generator.output_shapes)
+    predict_input_fn = bio_predict_input_fn(generator, generator.output_types,
+                                            generator.output_shapes)
 
     if checkpoint_path:
         logger.info("Restoring the model from %s", checkpoint_path)

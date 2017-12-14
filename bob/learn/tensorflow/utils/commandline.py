@@ -1,4 +1,7 @@
-def get_from_config_or_commandline(config, keyword, args, defaults,
+def get_from_config_or_commandline(config,
+                                   keyword,
+                                   args,
+                                   defaults,
                                    default_is_valid=True):
     """Takes the value from command line, config file, and default value with
     this precedence.

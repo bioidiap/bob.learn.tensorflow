@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 11 May 2016 09:39:36 CEST 
+# @date: Wed 11 May 2016 09:39:36 CEST
 
 import numpy
 from .Base import Base
@@ -31,14 +31,21 @@ class Triplet(Base):
         """
         with tf.name_scope("Input"):
             self.data_ph = dict()
-            self.data_ph['anchor'] = tf.placeholder(tf.float32, shape=self.input_shape, name="anchor")
-            self.data_ph['positive'] = tf.placeholder(tf.float32, shape=self.input_shape, name="positive")
-            self.data_ph['negative'] = tf.placeholder(tf.float32, shape=self.input_shape, name="negative")
+            self.data_ph['anchor'] = tf.placeholder(
+                tf.float32, shape=self.input_shape, name="anchor")
+            self.data_ph['positive'] = tf.placeholder(
+                tf.float32, shape=self.input_shape, name="positive")
+            self.data_ph['negative'] = tf.placeholder(
+                tf.float32, shape=self.input_shape, name="negative")
 
             if self.prefetch:
-                queue = tf.FIFOQueue(capacity=self.prefetch_capacity,
-                                     dtypes=[tf.float32, tf.float32, tf.float32],
-                                     shapes=[self.input_shape[1:], self.input_shape[1:], self.input_shape[1:]])
+                queue = tf.FIFOQueue(
+                    capacity=self.prefetch_capacity,
+                    dtypes=[tf.float32, tf.float32, tf.float32],
+                    shapes=[
+                        self.input_shape[1:], self.input_shape[1:],
+                        self.input_shape[1:]
+                    ])
 
                 self.data_ph_from_queue = dict()
                 self.data_ph_from_queue['anchor'] = None
@@ -46,8 +53,13 @@ class Triplet(Base):
                 self.data_ph_from_queue['negative'] = None
 
                 # Fetching the place holders from the queue
-                self.enqueue_op = queue.enqueue_many([self.data_ph['anchor'], self.data_ph['positive'], self.data_ph['negative']])
-                self.data_ph_from_queue['anchor'], self.data_ph_from_queue['positive'], self.data_ph_from_queue['negative'] = queue.dequeue_many(self.batch_size)
+                self.enqueue_op = queue.enqueue_many([
+                    self.data_ph['anchor'], self.data_ph['positive'],
+                    self.data_ph['negative']
+                ])
+                self.data_ph_from_queue['anchor'], self.data_ph_from_queue[
+                    'positive'], self.data_ph_from_queue[
+                        'negative'] = queue.dequeue_many(self.batch_size)
 
             else:
                 self.data_ph_from_queue = dict()
@@ -68,9 +80,15 @@ class Triplet(Base):
 
         for i in range(input_data.shape[0]):
 
-            anchor = input_data[indexes_per_labels[self.possible_labels[offset_class]][numpy.random.randint(len(indexes_per_labels[self.possible_labels[offset_class]]))], ...]
+            anchor = input_data[indexes_per_labels[self.possible_labels[
+                offset_class]][numpy.random.randint(
+                    len(indexes_per_labels[self.possible_labels[
+                        offset_class]]))], ...]
 
-            positive = input_data[indexes_per_labels[self.possible_labels[offset_class]][numpy.random.randint(len(indexes_per_labels[self.possible_labels[offset_class]]))], ...]
+            positive = input_data[indexes_per_labels[self.possible_labels[
+                offset_class]][numpy.random.randint(
+                    len(indexes_per_labels[self.possible_labels[
+                        offset_class]]))], ...]
 
             # Changing the class
             offset_class += 1
@@ -78,13 +96,17 @@ class Triplet(Base):
             if offset_class == len(self.possible_labels):
                 offset_class = 0
 
-            negative = input_data[indexes_per_labels[self.possible_labels[offset_class]][numpy.random.randint(len(indexes_per_labels[self.possible_labels[offset_class]]))], ...]
+            negative = input_data[indexes_per_labels[self.possible_labels[
+                offset_class]][numpy.random.randint(
+                    len(indexes_per_labels[self.possible_labels[
+                        offset_class]]))], ...]
 
             yield anchor, positive, negative
 
     def get_one_triplet(self, input_data, input_labels):
         # Getting a pair of clients
-        index = numpy.random.choice(len(self.possible_labels), 2, replace=False)
+        index = numpy.random.choice(
+            len(self.possible_labels), 2, replace=False)
         index[0] = self.possible_labels[index[0]]
         index[1] = self.possible_labels[index[1]]
 

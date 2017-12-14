@@ -18,8 +18,8 @@ def file_to_label(f):
 
 
 def reader(biofile):
-    data = read_original_data(
-        biofile, database.original_directory, database.original_extension)
+    data = read_original_data(biofile, database.original_directory,
+                              database.original_extension)
     label = file_to_label(biofile)
     key = str(biofile.path).encode("utf-8")
     return (data, label, key)

@@ -3,10 +3,7 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 # @date:  Fri 04 Aug 2017 14:14:22 CEST
 
-
 ## MAXOUT IMPLEMENTED FOR TENSORFLOW
-
-
 
 from tensorflow.python.framework import ops
 from tensorflow.python.ops import math_ops
@@ -20,7 +17,6 @@ def maxout(inputs, num_units, axis=-1, name=None):
 
 
 class MaxOut(base.Layer):
-
     """
      Adds a maxout op from 
 
@@ -44,13 +40,8 @@ class MaxOut(base.Layer):
     name: Optional scope for name_scope.
     """
 
-    def __init__(self,
-                 num_units,
-                 axis=-1,
-                 name=None,
-                 **kwargs):
-        super(MaxOut, self).__init__(
-            name=name, trainable=False, **kwargs)
+    def __init__(self, num_units, axis=-1, name=None, **kwargs):
+        super(MaxOut, self).__init__(name=name, trainable=False, **kwargs)
         self.axis = axis
         self.num_units = num_units
 
@@ -63,8 +54,8 @@ class MaxOut(base.Layer):
         num_channels = shape[self.axis]
         if num_channels % self.num_units:
             raise ValueError('number of features({}) is not '
-                             'a multiple of num_units({})'
-                             .format(num_channels, self.num_units))
+                             'a multiple of num_units({})'.format(
+                                 num_channels, self.num_units))
         shape[self.axis] = -1
         shape += [num_channels // self.num_units]
 
@@ -73,10 +64,10 @@ class MaxOut(base.Layer):
             if shape[i] is None:
                 shape[i] = gen_array_ops.shape(inputs)[i]
 
-        outputs = math_ops.reduce_max(gen_array_ops.reshape(inputs, shape), -1, keep_dims=False)
+        outputs = math_ops.reduce_max(
+            gen_array_ops.reshape(inputs, shape), -1, keep_dims=False)
         shape = outputs.get_shape().as_list()
         shape[self.axis] = self.num_units
         outputs.set_shape(shape)
 
         return outputs
-

@@ -1,9 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 11 May 2016 09:39:36 CEST 
-
-
+# @date: Wed 11 May 2016 09:39:36 CEST
 """
 Script that computes statistics for image
 
@@ -20,6 +18,7 @@ import bob.io.base
 import os
 import numpy
 import bob.io.image
+
 
 def process_images(base_path, extension, shape):
 

@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """Returns predictions of networks trained with
 tf.train.MonitoredTrainingSession
 
@@ -78,12 +77,12 @@ def main(argv=None):
     config = read_config_file(config_files)
 
     # optional arguments
-    verbosity = get_from_config_or_commandline(
-        config, 'verbose', args, defaults)
-    predict_keys = get_from_config_or_commandline(
-        config, 'predict_keys', args, defaults)
-    checkpoint_path = get_from_config_or_commandline(
-        config, 'checkpoint_path', args, defaults)
+    verbosity = get_from_config_or_commandline(config, 'verbose', args,
+                                               defaults)
+    predict_keys = get_from_config_or_commandline(config, 'predict_keys', args,
+                                                  defaults)
+    checkpoint_path = get_from_config_or_commandline(config, 'checkpoint_path',
+                                                     args, defaults)
     hooks = getattr(config, 'hooks', None)
 
     # Sets-up logging
@@ -92,8 +91,8 @@ def main(argv=None):
     # required arguments
     estimator = config.estimator
     predict_input_fn = config.predict_input_fn
-    output_dir = get_from_config_or_commandline(
-        config, 'output_dir', args, defaults, False)
+    output_dir = get_from_config_or_commandline(config, 'output_dir', args,
+                                                defaults, False)
 
     predictions = estimator.predict(
         predict_input_fn,

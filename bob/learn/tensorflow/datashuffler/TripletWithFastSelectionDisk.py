@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 11 May 2016 09:39:36 CEST 
+# @date: Wed 11 May 2016 09:39:36 CEST
 
 import numpy
 import tensorflow as tf
@@ -59,7 +59,9 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnlineSampling):
        The algorithm used for feature scaling. Look :py:class:`bob.learn.tensorflow.datashuffler.ScaleFactor`, :py:class:`bob.learn.tensorflow.datashuffler.Linear` and :py:class:`bob.learn.tensorflow.datashuffler.MeanOffset`
     """
 
-    def __init__(self, data, labels,
+    def __init__(self,
+                 data,
+                 labels,
                  input_shape,
                  input_dtype="float32",
                  batch_size=1,
@@ -76,8 +78,7 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnlineSampling):
             batch_size=batch_size,
             seed=seed,
             data_augmentation=data_augmentation,
-            normalizer=normalizer
-        )
+            normalizer=normalizer)
         self.clear_variables()
         # Seting the seed
         numpy.random.seed(seed)
@@ -105,10 +106,14 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnlineSampling):
         sample_n = numpy.zeros(shape=shape, dtype=self.input_dtype)
 
         for i in range(shape[0]):
-            file_name_a, file_name_p, file_name_n = self.get_one_triplet(self.data, self.labels)
-            sample_a[i, ...] = self.normalize_sample(self.load_from_file(str(file_name_a)))
-            sample_p[i, ...] = self.normalize_sample(self.load_from_file(str(file_name_p)))
-            sample_n[i, ...] = self.normalize_sample(self.load_from_file(str(file_name_n)))
+            file_name_a, file_name_p, file_name_n = self.get_one_triplet(
+                self.data, self.labels)
+            sample_a[i, ...] = self.normalize_sample(
+                self.load_from_file(str(file_name_a)))
+            sample_p[i, ...] = self.normalize_sample(
+                self.load_from_file(str(file_name_p)))
+            sample_n[i, ...] = self.normalize_sample(
+                self.load_from_file(str(file_name_n)))
 
         return [sample_a, sample_p, sample_n]
 
@@ -127,12 +132,17 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnlineSampling):
             return self.get_random_batch()
 
         # Selecting the classes used in the selection
-        indexes = numpy.random.choice(len(self.possible_labels), self.total_identities, replace=False)
-        samples_per_identity = int(numpy.ceil(self.batch_size/float(self.total_identities)))
-        anchor_labels = numpy.ones(samples_per_identity) * self.possible_labels[indexes[0]]
+        indexes = numpy.random.choice(
+            len(self.possible_labels), self.total_identities, replace=False)
+        samples_per_identity = int(
+            numpy.ceil(self.batch_size / float(self.total_identities)))
+        anchor_labels = numpy.ones(
+            samples_per_identity) * self.possible_labels[indexes[0]]
 
         for i in range(1, self.total_identities):
-            anchor_labels = numpy.hstack((anchor_labels, numpy.ones(samples_per_identity) * self.possible_labels[indexes[i]]))
+            anchor_labels = numpy.hstack((anchor_labels,
+                                          numpy.ones(samples_per_identity) *
+                                          self.possible_labels[indexes[i]]))
         anchor_labels = anchor_labels[0:self.batch_size]
 
         samples_a = numpy.zeros(shape=self.shape, dtype=self.input_dtype)
@@ -143,8 +153,10 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnlineSampling):
         embedding_a = self.project(samples_a)
 
         # Getting the positives
-        samples_p, embedding_p, d_anchor_positive = self.get_positives(anchor_labels, embedding_a)
-        samples_n = self.get_negative(anchor_labels, embedding_a, d_anchor_positive)
+        samples_p, embedding_p, d_anchor_positive = self.get_positives(
+            anchor_labels, embedding_a)
+        samples_n = self.get_negative(anchor_labels, embedding_a,
+                                      d_anchor_positive)
 
         return samples_a, samples_p, samples_n
 
@@ -174,14 +186,16 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnlineSampling):
             indexes = numpy.where(self.labels == l)[0]
             numpy.random.shuffle(indexes)
             file_name = self.data[indexes[0], ...]
-            samples_p[i, ...] = self.normalize_sample(self.load_from_file(str(file_name)))
+            samples_p[i, ...] = self.normalize_sample(
+                self.load_from_file(str(file_name)))
 
         embedding_p = self.project(samples_p)
 
         # Computing the distances
         d_anchor_positive = []
         for i in range(self.shape[0]):
-            d_anchor_positive.append(euclidean(embedding_a[i, :], embedding_p[i, :]))
+            d_anchor_positive.append(
+                euclidean(embedding_a[i, :], embedding_p[i, :]))
 
         return samples_p, embedding_p, d_anchor_positive
 
@@ -194,7 +208,7 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnlineSampling):
         indexes = range(len(self.labels))
         numpy.random.shuffle(indexes)
 
-        negative_samples_search = self.batch_size*self.batch_increase_factor
+        negative_samples_search = self.batch_size * self.batch_increase_factor
 
         # Limiting to the batch size, otherwise the number of comparisons will explode
         indexes = indexes[0:negative_samples_search]
@@ -205,26 +219,32 @@ class TripletWithFastSelectionDisk(Triplet, Disk, OnlineSampling):
         samples_n = numpy.zeros(shape=self.shape, dtype=self.input_dtype)
         for i in range(shape[0]):
             file_name = self.data[indexes[i], ...]
-            temp_samples_n[i, ...] = self.normalize_sample(self.load_from_file(str(file_name)))
+            temp_samples_n[i, ...] = self.normalize_sample(
+                self.load_from_file(str(file_name)))
 
         # Computing all the embeddings
         embedding_temp_n = self.project(temp_samples_n)
 
         # Computing the distances
-        d_anchor_negative = cdist(embedding_a, embedding_temp_n, metric='euclidean')
+        d_anchor_negative = cdist(
+            embedding_a, embedding_temp_n, metric='euclidean')
 
         # Selecting the negative samples
         for i in range(self.shape[0]):
             label = anchor_labels[i]
-            possible_candidates = [d if d > d_anchor_positive[i] else numpy.inf for d in  d_anchor_negative[i]]
-            
+            possible_candidates = [
+                d if d > d_anchor_positive[i] else numpy.inf
+                for d in d_anchor_negative[i]
+            ]
+
             for j in numpy.argsort(possible_candidates):
 
                 # Checking if they don't have the same label
                 if self.labels[indexes[j]] != label:
                     samples_n[i, ...] = temp_samples_n[j, ...]
                     if numpy.isinf(possible_candidates[j]):
-                        logger.info("SEMI-HARD negative not found, took the first one")
+                        logger.info(
+                            "SEMI-HARD negative not found, took the first one")
                     break
 
         return samples_n

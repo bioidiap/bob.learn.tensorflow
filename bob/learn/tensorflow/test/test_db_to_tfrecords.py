@@ -12,20 +12,20 @@ dummy_config = pkg_resources.resource_filename(
 
 
 def test_verify_and_tfrecords():
-  test_dir = tempfile.mkdtemp(prefix='bobtest_')
+    test_dir = tempfile.mkdtemp(prefix='bobtest_')
 
-  config_path = os.path.join(test_dir, 'config.py')
-  with open(dummy_config) as f, open(config_path, 'w') as f2:
-    f2.write(f.read().replace('TEST_DIR', test_dir))
+    config_path = os.path.join(test_dir, 'config.py')
+    with open(dummy_config) as f, open(config_path, 'w') as f2:
+        f2.write(f.read().replace('TEST_DIR', test_dir))
 
-  parameters = [config_path]
-  try:
-    tfrecords(parameters)
+    parameters = [config_path]
+    try:
+        tfrecords(parameters)
 
-    # TODO: test if tfrecords are equal
-    # tfrecords_path = os.path.join(test_dir, 'sub_directory', 'dev.tfrecords')
-    # if regenerate_reference:
-    #   shutil.copy(tfrecords_path, tfrecords_reference)
+        # TODO: test if tfrecords are equal
+        # tfrecords_path = os.path.join(test_dir, 'sub_directory', 'dev.tfrecords')
+        # if regenerate_reference:
+        #   shutil.copy(tfrecords_path, tfrecords_reference)
 
-  finally:
-    shutil.rmtree(test_dir)
+    finally:
+        shutil.rmtree(test_dir)

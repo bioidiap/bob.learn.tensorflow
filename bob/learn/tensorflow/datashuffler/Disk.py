@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 11 May 2016 09:39:36 CEST 
+# @date: Wed 11 May 2016 09:39:36 CEST
 
 import numpy
 import bob.io.base
@@ -14,7 +14,6 @@ logger = bob.core.log.setup("bob.learn.tensorflow")
 
 
 class Disk(Base):
-
     """
      This datashuffler deal with databases that are stored in the disk.
      The data is loaded on the fly,.
@@ -46,7 +45,9 @@ class Disk(Base):
        The algorithm used for feature scaling. Look :py:class:`bob.learn.tensorflow.datashuffler.ScaleFactor`, :py:class:`bob.learn.tensorflow.datashuffler.Linear` and :py:class:`bob.learn.tensorflow.datashuffler.MeanOffset`
     """
 
-    def __init__(self, data, labels,
+    def __init__(self,
+                 data,
+                 labels,
                  input_shape,
                  input_dtype="float32",
                  batch_size=1,
@@ -55,8 +56,7 @@ class Disk(Base):
                  normalizer=None,
                  prefetch=False,
                  prefetch_capacity=10,
-                 prefetch_threads=5
-                 ):
+                 prefetch_threads=5):
 
         if isinstance(data, list):
             data = numpy.array(data)
@@ -75,8 +75,7 @@ class Disk(Base):
             normalizer=normalizer,
             prefetch=prefetch,
             prefetch_capacity=prefetch_capacity,
-            prefetch_threads=prefetch_threads
-        )
+            prefetch_threads=prefetch_threads)
         # Seting the seed
         numpy.random.seed(seed)
 
@@ -90,7 +89,7 @@ class Disk(Base):
         if self.data_augmentation is not None:
             d = self.data_augmentation(d)
 
-        if d.shape[0] != 3 and self.input_shape[2] != 3: # GRAY SCALE IMAGE
+        if d.shape[0] != 3 and self.input_shape[2] != 3:  # GRAY SCALE IMAGE
             data = numpy.zeros(shape=(d.shape[0], d.shape[1], 1))
             data[:, :, 0] = d
             data = self.rescale(data)
@@ -100,7 +99,8 @@ class Disk(Base):
 
         # Checking NaN
         if numpy.sum(numpy.isnan(data)) > 0:
-            logger.warning("######### Sample {0} has noise #########".format(file_name))
+            logger.warning(
+                "######### Sample {0} has noise #########".format(file_name))
 
         return data
 

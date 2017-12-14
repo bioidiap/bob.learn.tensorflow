@@ -20,8 +20,8 @@ def base_architecture(input_layer, mode, kernerl_size, data_format, **kwargs):
 
     # Pooling Layer #1
     # First max pooling layer with a 2x2 filter and stride of 2
-    pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[2, 2],
-                                    strides=2, data_format=data_format)
+    pool1 = tf.layers.max_pooling2d(
+        inputs=conv1, pool_size=[2, 2], strides=2, data_format=data_format)
     endpoints['pool1'] = pool1
 
     # Convolutional Layer #2
@@ -38,8 +38,8 @@ def base_architecture(input_layer, mode, kernerl_size, data_format, **kwargs):
 
     # Pooling Layer #2
     # Second max pooling layer with a 2x2 filter and stride of 2
-    pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[2, 2],
-                                    strides=2, data_format=data_format)
+    pool2 = tf.layers.max_pooling2d(
+        inputs=conv2, pool_size=[2, 2], strides=2, data_format=data_format)
     endpoints['pool2'] = pool2
 
     # Flatten tensor into a batch of vectors
@@ -55,21 +55,24 @@ def base_architecture(input_layer, mode, kernerl_size, data_format, **kwargs):
 
     # Add dropout operation; 0.6 probability that element will be kept
     dropout = tf.layers.dropout(
-        inputs=dense, rate=0.4,
-        training=mode == tf.estimator.ModeKeys.TRAIN)
+        inputs=dense, rate=0.4, training=mode == tf.estimator.ModeKeys.TRAIN)
     endpoints['dropout'] = dropout
 
     return dropout, endpoints
 
 
-def architecture(input_layer, mode=tf.estimator.ModeKeys.TRAIN,
-                 kernerl_size=(3, 3), n_classes=2,
-                 data_format='channels_last', reuse=False, **kwargs):
+def architecture(input_layer,
+                 mode=tf.estimator.ModeKeys.TRAIN,
+                 kernerl_size=(3, 3),
+                 n_classes=2,
+                 data_format='channels_last',
+                 reuse=False,
+                 **kwargs):
 
     with tf.variable_scope('SimpleCNN', reuse=reuse):
 
-        dropout, endpoints = base_architecture(
-            input_layer, mode, kernerl_size, data_format)
+        dropout, endpoints = base_architecture(input_layer, mode, kernerl_size,
+                                               data_format)
         # Logits layer
         # Input Tensor Shape: [batch_size, 1024]
         # Output Tensor Shape: [batch_size, n_classes]
@@ -108,8 +111,7 @@ def model_fn(features, labels, mode, params=None, config=None):
         return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
     # Calculate Loss (for both TRAIN and EVAL modes)
-    loss = tf.losses.sparse_softmax_cross_entropy(
-        logits=logits, labels=labels)
+    loss = tf.losses.sparse_softmax_cross_entropy(logits=logits, labels=labels)
     accuracy = tf.metrics.accuracy(
         labels=labels, predictions=predictions["classes"])
     metrics = {'accuracy': accuracy}

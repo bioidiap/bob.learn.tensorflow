@@ -5,7 +5,13 @@
 import tensorflow as tf
 
 
-def mlp(inputs, output_shape, hidden_layers=[10], hidden_activation=tf.nn.tanh, output_activation=None, seed=10, **kwargs):
+def mlp(inputs,
+        output_shape,
+        hidden_layers=[10],
+        hidden_activation=tf.nn.tanh,
+        output_activation=None,
+        seed=10,
+        **kwargs):
     """An MLP is a representation of a Multi-Layer Perceptron.
 
     This implementation is feed-forward and fully-connected.
@@ -30,20 +36,25 @@ def mlp(inputs, output_shape, hidden_layers=[10], hidden_activation=tf.nn.tanh, 
     """
 
     slim = tf.contrib.slim
-    initializer = tf.contrib.layers.xavier_initializer(uniform=False, dtype=tf.float32, seed=seed)
+    initializer = tf.contrib.layers.xavier_initializer(
+        uniform=False, dtype=tf.float32, seed=seed)
 
     graph = inputs
     for i in range(len(hidden_layers)):
 
         weights = hidden_layers[i]
-        graph = slim.fully_connected(graph, weights,
-                                     weights_initializer=initializer,
-                                     activation_fn=hidden_activation,
-                                     scope='fc_{0}'.format(i))
+        graph = slim.fully_connected(
+            graph,
+            weights,
+            weights_initializer=initializer,
+            activation_fn=hidden_activation,
+            scope='fc_{0}'.format(i))
 
-    graph = slim.fully_connected(graph, output_shape,
-                                 weights_initializer=initializer,
-                                 activation_fn=output_activation,
-                                 scope='fc_output')
+    graph = slim.fully_connected(
+        graph,
+        output_shape,
+        weights_initializer=initializer,
+        activation_fn=output_activation,
+        scope='fc_output')
 
     return graph

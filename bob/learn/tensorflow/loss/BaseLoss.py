@@ -23,17 +23,26 @@ def mean_cross_entropy_loss(logits, labels, add_regularization_losses=True):
 
     with tf.variable_scope('cross_entropy_loss'):
 
-        loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(
-                                          logits=logits, labels=labels), name=tf.GraphKeys.LOSSES)
-        
+        loss = tf.reduce_mean(
+            tf.nn.sparse_softmax_cross_entropy_with_logits(
+                logits=logits, labels=labels),
+            name=tf.GraphKeys.LOSSES)
+
         if add_regularization_losses:
-            regularization_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-            return tf.add_n([loss] + regularization_losses, name=tf.GraphKeys.LOSSES)
+            regularization_losses = tf.get_collection(
+                tf.GraphKeys.REGULARIZATION_LOSSES)
+            return tf.add_n(
+                [loss] + regularization_losses, name=tf.GraphKeys.LOSSES)
         else:
             return loss
-            
 
-def mean_cross_entropy_center_loss(logits, prelogits, labels, n_classes, alpha=0.9, factor=0.01):
+
+def mean_cross_entropy_center_loss(logits,
+                                   prelogits,
+                                   labels,
+                                   n_classes,
+                                   alpha=0.9,
+                                   factor=0.01):
     """
     Implementation of the CrossEntropy + Center Loss from the paper
     "A Discriminative Feature Learning Approach for Deep Face Recognition"(http://ydwen.github.io/papers/WenECCV16.pdf)
@@ -49,30 +58,38 @@ def mean_cross_entropy_center_loss(logits, prelogits, labels, n_classes, alpha=0
     """
     # Cross entropy
     with tf.variable_scope('cross_entropy_loss'):
-        loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(
-                                          logits=logits, labels=labels), name=tf.GraphKeys.LOSSES)
-                                          
+        loss = tf.reduce_mean(
+            tf.nn.sparse_softmax_cross_entropy_with_logits(
+                logits=logits, labels=labels),
+            name=tf.GraphKeys.LOSSES)
+
         tf.summary.scalar('cross_entropy_loss', loss)
 
-    # Appending center loss        
+    # Appending center loss
     with tf.variable_scope('center_loss'):
         n_features = prelogits.get_shape()[1]
-        
-        centers = tf.get_variable('centers', [n_classes, n_features], dtype=tf.float32,
-            initializer=tf.constant_initializer(0), trainable=False)
-            
+
+        centers = tf.get_variable(
+            'centers', [n_classes, n_features],
+            dtype=tf.float32,
+            initializer=tf.constant_initializer(0),
+            trainable=False)
+
         #label = tf.reshape(labels, [-1])
         centers_batch = tf.gather(centers, labels)
         diff = (1 - alpha) * (centers_batch - prelogits)
         centers = tf.scatter_sub(centers, labels, diff)
-        center_loss = tf.reduce_mean(tf.square(prelogits - centers_batch))       
-        tf.add_to_collection(tf.GraphKeys.REGULARIZATION_LOSSES, center_loss * factor)
+        center_loss = tf.reduce_mean(tf.square(prelogits - centers_batch))
+        tf.add_to_collection(tf.GraphKeys.REGULARIZATION_LOSSES,
+                             center_loss * factor)
         tf.summary.scalar('center_loss', center_loss)
 
     # Adding the regularizers in the loss
     with tf.variable_scope('total_loss'):
-        regularization_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-        total_loss = tf.add_n([loss] + regularization_losses, name=tf.GraphKeys.LOSSES)
+        regularization_losses = tf.get_collection(
+            tf.GraphKeys.REGULARIZATION_LOSSES)
+        total_loss = tf.add_n(
+            [loss] + regularization_losses, name=tf.GraphKeys.LOSSES)
         tf.summary.scalar('total_loss', total_loss)
 
     loss = dict()
@@ -80,4 +97,3 @@ def mean_cross_entropy_center_loss(logits, prelogits, labels, n_classes, alpha=0
     loss['centers'] = centers
 
     return loss
-

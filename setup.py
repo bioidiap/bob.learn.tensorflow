@@ -20,7 +20,6 @@ setup(
     name='bob.learn.tensorflow',
     version=open("version.txt").read().rstrip(),
     description='Bob bindings for tensorflow',
-
     url='',
     license='BSD',
     author='Tiago de Freitas Pereira',
@@ -42,7 +41,6 @@ setup(
     install_requires=install_requires,
     packages=find_packages(),
     zip_safe=False,
-
     entry_points={
 
         # scripts should be declared using this entry:
@@ -56,7 +54,6 @@ setup(
             'bob_tf_predict_generic = bob.learn.tensorflow.script.predict_generic:main',
             'bob_tf_predict_bio = bob.learn.tensorflow.script.predict_bio:main',
         ],
-
     },
 
     # Classifiers are important if you plan to distribute this package through

@@ -47,25 +47,24 @@ class SiameseTrainer(Trainer):
 
     """
 
-    def __init__(self,
-                 train_data_shuffler,
-                 validation_data_shuffler=None,
-                 validate_with_embeddings=False,
+    def __init__(
+            self,
+            train_data_shuffler,
+            validation_data_shuffler=None,
+            validate_with_embeddings=False,
 
-                 ###### training options ##########
-                 iterations=5000,
-                 snapshot=500,
-                 validation_snapshot=100,
-                 keep_checkpoint_every_n_hours=2,
+            ###### training options ##########
+            iterations=5000,
+            snapshot=500,
+            validation_snapshot=100,
+            keep_checkpoint_every_n_hours=2,
 
-                 ## Analizer
-                 analizer=SoftmaxAnalizer(),
+            ## Analizer
+            analizer=SoftmaxAnalizer(),
 
-                 # Temporatu dir
-                 temp_dir="siamese_cnn",
-
-                 verbosity_level=2
-                 ):
+            # Temporatu dir
+            temp_dir="siamese_cnn",
+            verbosity_level=2):
 
         self.train_data_shuffler = train_data_shuffler
 
@@ -119,22 +118,25 @@ class SiameseTrainer(Trainer):
         self.session = Session.instance(new=True).session
         self.from_scratch = True
 
-    def create_network_from_scratch(self,
-                                    graph,
-                                    validation_graph=None,
-                                    optimizer=tf.train.AdamOptimizer(),
-                                    loss=None,
+    def create_network_from_scratch(
+            self,
+            graph,
+            validation_graph=None,
+            optimizer=tf.train.AdamOptimizer(),
+            loss=None,
 
-                                    # Learning rate
-                                    learning_rate=None,
-                                    ):
+            # Learning rate
+            learning_rate=None,
+    ):
 
         self.data_ph = self.train_data_shuffler("data")
         self.label_ph = self.train_data_shuffler("label")
 
         self.graph = graph
         if "left" and "right" not in self.graph:
-            raise ValueError("`graph` should be a dictionary with two elements (`left`and `right`)")
+            raise ValueError(
+                "`graph` should be a dictionary with two elements (`left`and `right`)"
+            )
 
         self.loss = loss
         self.optimizer_class = optimizer
@@ -162,7 +164,8 @@ class SiameseTrainer(Trainer):
 
         # Preparing the optimizer
         self.optimizer_class._learning_rate = self.learning_rate
-        self.optimizer = self.optimizer_class.minimize(self.loss['loss'], global_step=self.global_step)
+        self.optimizer = self.optimizer_class.minimize(
+            self.loss['loss'], global_step=self.global_step)
         tf.add_to_collection("optimizer", self.optimizer)
         tf.add_to_collection("learning_rate", self.learning_rate)
 
@@ -207,20 +210,24 @@ class SiameseTrainer(Trainer):
 
         [batch_left, batch_right, labels] = data_shuffler.get_batch()
 
-        feed_dict = {self.data_ph['left']: batch_left,
-                     self.data_ph['right']: batch_right,
-                     self.label_ph: labels}
+        feed_dict = {
+            self.data_ph['left']: batch_left,
+            self.data_ph['right']: batch_right,
+            self.label_ph: labels
+        }
 
         return feed_dict
 
     def fit(self, step):
         feed_dict = self.get_feed_dict(self.train_data_shuffler)
 
-        _, l, bt_class, wt_class, lr, summary = self.session.run([
-                                                self.optimizer,
-                                                self.loss['loss'], self.loss['between_class'],
-                                                self.loss['within_class'],
-                                                self.learning_rate, self.summaries_train], feed_dict=feed_dict)
+        _, l, bt_class, wt_class, lr, summary = self.session.run(
+            [
+                self.optimizer, self.loss['loss'], self.loss['between_class'],
+                self.loss['within_class'], self.learning_rate,
+                self.summaries_train
+            ],
+            feed_dict=feed_dict)
 
         logger.info("Loss training set step={0} = {1}".format(step, l))
         self.train_summary_writter.add_summary(summary, step)
@@ -252,7 +259,8 @@ class SiameseTrainer(Trainer):
         # Opening a new session for validation
         feed_dict = self.get_feed_dict(data_shuffler)
 
-        l, summary = self.session.run([self.loss, self.summaries_validation], feed_dict=feed_dict)
+        l, summary = self.session.run(
+            [self.loss, self.summaries_validation], feed_dict=feed_dict)
         self.validation_summary_writter.add_summary(summary, step)
 
         #summaries = [summary_pb2.Summary.Value(tag="loss", simple_value=float(l))]
@@ -268,15 +276,21 @@ class SiameseTrainer(Trainer):
 
         """
         while not self.thread_pool.should_stop():
-            [train_data_left, train_data_right, train_labels] = self.train_data_shuffler.get_batch()
+            [train_data_left, train_data_right,
+             train_labels] = self.train_data_shuffler.get_batch()
 
             data_ph = dict()
-            data_ph['left'] = self.train_data_shuffler("data", from_queue=False)['left']
-            data_ph['right'] = self.train_data_shuffler("data", from_queue=False)['right']
+            data_ph['left'] = self.train_data_shuffler(
+                "data", from_queue=False)['left']
+            data_ph['right'] = self.train_data_shuffler(
+                "data", from_queue=False)['right']
             label_ph = self.train_data_shuffler("label", from_queue=False)
 
-            feed_dict = {data_ph['left']: train_data_left,
-                         data_ph['right']: train_data_right,
-                         label_ph: train_labels}
+            feed_dict = {
+                data_ph['left']: train_data_left,
+                data_ph['right']: train_data_right,
+                label_ph: train_labels
+            }
 
-            self.session.run(self.train_data_shuffler.enqueue_op, feed_dict=feed_dict)
+            self.session.run(
+                self.train_data_shuffler.enqueue_op, feed_dict=feed_dict)

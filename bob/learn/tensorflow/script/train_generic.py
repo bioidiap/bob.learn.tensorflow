@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-
 """Trains networks using Tensorflow estimators.
 
 Usage:
@@ -55,16 +54,15 @@ def main(argv=None):
     defaults = docopt(docs, argv=[""])
     args = docopt(docs, argv=argv, version=version)
     config_files = args['<config_files>']
-    
+
     config = read_config_file(config_files)
 
     # optional arguments
-    verbosity = get_from_config_or_commandline(
-        config, 'verbose', args, defaults)
-    max_steps = get_from_config_or_commandline(
-        config, 'max_steps', args, defaults)
-    steps = get_from_config_or_commandline(
-        config, 'steps', args, defaults)
+    verbosity = get_from_config_or_commandline(config, 'verbose', args,
+                                               defaults)
+    max_steps = get_from_config_or_commandline(config, 'max_steps', args,
+                                               defaults)
+    steps = get_from_config_or_commandline(config, 'steps', args, defaults)
     hooks = getattr(config, 'hooks', None)
 
     # Sets-up logging
@@ -75,8 +73,8 @@ def main(argv=None):
     train_input_fn = config.train_input_fn
 
     # Train
-    estimator.train(input_fn=train_input_fn, hooks=hooks, steps=steps,
-                    max_steps=max_steps)
+    estimator.train(
+        input_fn=train_input_fn, hooks=hooks, steps=steps, max_steps=max_steps)
 
 
 if __name__ == '__main__':

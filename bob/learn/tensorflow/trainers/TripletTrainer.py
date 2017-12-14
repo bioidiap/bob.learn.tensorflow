@@ -48,25 +48,24 @@ class TripletTrainer(Trainer):
 
     """
 
-    def __init__(self,
-                 train_data_shuffler,
-                 validation_data_shuffler=None,
-                 validate_with_embeddings=False,
+    def __init__(
+            self,
+            train_data_shuffler,
+            validation_data_shuffler=None,
+            validate_with_embeddings=False,
 
-                 ###### training options ##########
-                 iterations=5000,
-                 snapshot=500,
-                 validation_snapshot=100,
-                 keep_checkpoint_every_n_hours=2,
+            ###### training options ##########
+            iterations=5000,
+            snapshot=500,
+            validation_snapshot=100,
+            keep_checkpoint_every_n_hours=2,
 
-                 ## Analizer
-                 analizer=SoftmaxAnalizer(),
+            ## Analizer
+            analizer=SoftmaxAnalizer(),
 
-                 # Temporatu dir
-                 temp_dir="triplet_cnn",
-
-                 verbosity_level=2
-                 ):
+            # Temporatu dir
+            temp_dir="triplet_cnn",
+            verbosity_level=2):
 
         self.train_data_shuffler = train_data_shuffler
 
@@ -121,21 +120,24 @@ class TripletTrainer(Trainer):
         self.session = Session.instance(new=True).session
         self.from_scratch = True
 
-    def create_network_from_scratch(self,
-                                    graph,
-                                    validation_graph=None,
-                                    optimizer=tf.train.AdamOptimizer(),
-                                    loss=None,
+    def create_network_from_scratch(
+            self,
+            graph,
+            validation_graph=None,
+            optimizer=tf.train.AdamOptimizer(),
+            loss=None,
 
-                                    # Learning rate
-                                    learning_rate=None,
-                                    ):
+            # Learning rate
+            learning_rate=None,
+    ):
 
         self.data_ph = self.train_data_shuffler("data")
 
         self.graph = graph
         if "anchor" and "positive" and "negative" not in self.graph:
-            raise ValueError("`graph` should be a dictionary with two elements (`anchor`, `positive` and `negative`)")
+            raise ValueError(
+                "`graph` should be a dictionary with two elements (`anchor`, `positive` and `negative`)"
+            )
 
         self.loss = loss
         self.optimizer_class = optimizer
@@ -165,7 +167,8 @@ class TripletTrainer(Trainer):
 
         # Preparing the optimizer
         self.optimizer_class._learning_rate = self.learning_rate
-        self.optimizer = self.optimizer_class.minimize(self.loss['loss'], global_step=self.global_step)
+        self.optimizer = self.optimizer_class.minimize(
+            self.loss['loss'], global_step=self.global_step)
         tf.add_to_collection("optimizer", self.optimizer)
         tf.add_to_collection("learning_rate", self.learning_rate)
 
@@ -206,20 +209,25 @@ class TripletTrainer(Trainer):
 
     def get_feed_dict(self, data_shuffler):
 
-        [batch_anchor, batch_positive, batch_negative] = data_shuffler.get_batch()
-        feed_dict = {self.data_ph['anchor']: batch_anchor,
-                     self.data_ph['positive']: batch_positive,
-                     self.data_ph['negative']: batch_negative}
+        [batch_anchor, batch_positive,
+         batch_negative] = data_shuffler.get_batch()
+        feed_dict = {
+            self.data_ph['anchor']: batch_anchor,
+            self.data_ph['positive']: batch_positive,
+            self.data_ph['negative']: batch_negative
+        }
 
         return feed_dict
 
     def fit(self, step):
         feed_dict = self.get_feed_dict(self.train_data_shuffler)
-        _, l, bt_class, wt_class, lr, summary = self.session.run([
-                                                self.optimizer,
-                                                self.loss['loss'], self.loss['between_class'],
-                                                self.loss['within_class'],
-                                                self.learning_rate, self.summaries_train], feed_dict=feed_dict)
+        _, l, bt_class, wt_class, lr, summary = self.session.run(
+            [
+                self.optimizer, self.loss['loss'], self.loss['between_class'],
+                self.loss['within_class'], self.learning_rate,
+                self.summaries_train
+            ],
+            feed_dict=feed_dict)
 
         logger.info("Loss training set step={0} = {1}".format(step, l))
         self.train_summary_writter.add_summary(summary, step)
@@ -242,15 +250,22 @@ class TripletTrainer(Trainer):
 
         """
         while not self.thread_pool.should_stop():
-            [train_data_anchor, train_data_positive, train_data_negative] = self.train_data_shuffler.get_batch()
+            [train_data_anchor, train_data_positive,
+             train_data_negative] = self.train_data_shuffler.get_batch()
 
             data_ph = dict()
-            data_ph['anchor'] = self.train_data_shuffler("data", from_queue=False)['anchor']
-            data_ph['positive'] = self.train_data_shuffler("data", from_queue=False)['positive']
-            data_ph['negative'] = self.train_data_shuffler("data", from_queue=False)['negative']
+            data_ph['anchor'] = self.train_data_shuffler(
+                "data", from_queue=False)['anchor']
+            data_ph['positive'] = self.train_data_shuffler(
+                "data", from_queue=False)['positive']
+            data_ph['negative'] = self.train_data_shuffler(
+                "data", from_queue=False)['negative']
 
-            feed_dict = {data_ph['anchor']: train_data_anchor,
-                         data_ph['positive']: train_data_positive,
-                         data_ph['negative']: train_data_negative}
+            feed_dict = {
+                data_ph['anchor']: train_data_anchor,
+                data_ph['positive']: train_data_positive,
+                data_ph['negative']: train_data_negative
+            }
 
-            self.session.run(self.train_data_shuffler.enqueue_op, feed_dict=feed_dict)
+            self.session.run(
+                self.train_data_shuffler.enqueue_op, feed_dict=feed_dict)
