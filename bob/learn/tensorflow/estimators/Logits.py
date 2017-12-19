@@ -92,7 +92,8 @@ class Logits(estimator.Estimator):
                  model_dir="",
                  validation_batch_size=None,
                  params=None,
-                 extra_checkpoint=None):
+                 extra_checkpoint=None,
+                 apply_moving_averages=True):
 
         self.architecture = architecture
         self.optimizer = optimizer
@@ -107,7 +108,6 @@ class Logits(estimator.Estimator):
             check_features(features)
             data = features['data']
             key = features['key']
-
             # Configure the Training Op (for TRAIN mode)
             if mode == tf.estimator.ModeKeys.TRAIN:
 
@@ -121,17 +121,36 @@ class Logits(estimator.Estimator):
                     trainable_variables=trainable_variables)[0]
                 logits = append_logits(prelogits, n_classes)
 
-                # Compute Loss (for both TRAIN and EVAL modes)
-                self.loss = self.loss_op(logits, labels)
-
                 if self.extra_checkpoint is not None:
                     tf.contrib.framework.init_from_checkpoint(
                         self.extra_checkpoint["checkpoint_path"],
                         self.extra_checkpoint["scopes"])
 
                 global_step = tf.train.get_or_create_global_step()
-                train_op = self.optimizer.minimize(
-                    self.loss, global_step=global_step)
+
+                # Compute the moving average of all individual losses and the total loss.
+                if apply_moving_averages:
+                    variable_averages = tf.train.ExponentialMovingAverage(0.9999, global_step)
+                    variable_averages_op = variable_averages.apply(tf.trainable_variables())
+                else:
+                    variable_averages_op = tf.no_op(name='noop')
+
+                with tf.control_dependencies([variable_averages_op]):
+
+                    # Compute Loss (for both TRAIN and EVAL modes)
+                    self.loss = self.loss_op(logits, labels)
+
+                    # Compute the moving average of all individual losses and the total loss.
+                    loss_averages = tf.train.ExponentialMovingAverage(0.9, name='avg')
+                    loss_averages_op = loss_averages.apply(tf.get_collection(tf.GraphKeys.LOSSES))
+
+                    for l in tf.get_collection(tf.GraphKeys.LOSSES):
+                        tf.summary.scalar(l.op.name+"_averaged", loss_averages.average(l))
+
+                    global_step = tf.train.get_or_create_global_step()
+                    train_op = tf.group(self.optimizer.minimize(self.loss, global_step=global_step),
+                                        variable_averages_op, loss_averages_op)
+
                 return tf.estimator.EstimatorSpec(
                     mode=mode, loss=self.loss, train_op=train_op)
 
@@ -266,6 +285,7 @@ class LogitsCenterLoss(estimator.Estimator):
             validation_batch_size=None,
             params=None,
             extra_checkpoint=None,
+            apply_moving_averages=True
     ):
 
         self.architecture = architecture
@@ -307,27 +327,43 @@ class LogitsCenterLoss(estimator.Estimator):
                     trainable_variables=trainable_variables)[0]
                 logits = append_logits(prelogits, n_classes)
 
-                # Compute Loss (for TRAIN mode)
-                loss_dict = mean_cross_entropy_center_loss(
-                    logits,
-                    prelogits,
-                    labels,
-                    self.n_classes,
-                    alpha=self.alpha,
-                    factor=self.factor)
-
-                self.loss = loss_dict['loss']
-                centers = loss_dict['centers']
-
-                if self.extra_checkpoint is not None:
-                    tf.contrib.framework.init_from_checkpoint(
-                        self.extra_checkpoint["checkpoint_path"],
-                        self.extra_checkpoint["scopes"])
-
                 global_step = tf.train.get_or_create_global_step()
-                train_op = tf.group(
-                    self.optimizer.minimize(
-                        self.loss, global_step=global_step), centers)
+
+                # Compute the moving average of all individual losses and the total loss.
+                if apply_moving_averages:
+                    variable_averages = tf.train.ExponentialMovingAverage(0.9999, global_step)
+                    variable_averages_op = variable_averages.apply(tf.trainable_variables())
+                else:
+                    variable_averages_op = tf.no_op(name='noop')
+
+                with tf.control_dependencies([variable_averages_op]):
+                    # Compute Loss (for TRAIN mode)
+                    loss_dict = mean_cross_entropy_center_loss(
+                        logits,
+                        prelogits,
+                        labels,
+                        self.n_classes,
+                        alpha=self.alpha,
+                        factor=self.factor)
+
+                    self.loss = loss_dict['loss']
+                    centers = loss_dict['centers']
+
+                    # Compute the moving average of all individual losses and the total loss.
+                    loss_averages = tf.train.ExponentialMovingAverage(0.9, name='avg')
+                    loss_averages_op = loss_averages.apply(tf.get_collection(tf.GraphKeys.LOSSES))
+                    
+                    for l in tf.get_collection(tf.GraphKeys.LOSSES):
+                        tf.summary.scalar(l.op.name, loss_averages.average(l))
+
+                    if self.extra_checkpoint is not None:
+                        tf.contrib.framework.init_from_checkpoint(
+                            self.extra_checkpoint["checkpoint_path"],
+                            self.extra_checkpoint["scopes"])
+
+                    train_op = tf.group(
+                        self.optimizer.minimize(
+                            self.loss, global_step=global_step), centers, variable_averages_op, loss_averages_op)
                 return tf.estimator.EstimatorSpec(
                     mode=mode, loss=self.loss, train_op=train_op)
 

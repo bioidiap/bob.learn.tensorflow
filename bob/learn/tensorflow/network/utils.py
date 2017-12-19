@@ -9,7 +9,7 @@ import tensorflow.contrib.slim as slim
 def append_logits(graph,
                   n_classes,
                   reuse=False,
-                  l2_regularizer=0.001,
+                  l2_regularizer=5e-05,
                   weights_std=0.1):
     return slim.fully_connected(
         graph,
