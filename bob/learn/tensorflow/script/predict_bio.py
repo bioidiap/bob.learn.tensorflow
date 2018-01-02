@@ -203,8 +203,8 @@ def main(argv=None):
         biofiles = biofiles[start:end]
 
     # filter the existing files
-    paths = (make_output_path(output_dir, f.make_path("", ""))
-             for f in biofiles)
+    paths = [make_output_path(output_dir, f.make_path("", ""))
+             for f in biofiles]
     indexes = non_existing_files(paths, force)
     biofiles = [biofiles[i] for i in indexes]
 
