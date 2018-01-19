@@ -29,3 +29,8 @@ def test_verify_and_tfrecords():
 
     finally:
         shutil.rmtree(test_dir)
+
+
+def test_tfrecords_size_estimate():
+    total_size = tfrecords([dummy_config, '--size-estimate'])
+    assert total_size == 2079170, total_size
