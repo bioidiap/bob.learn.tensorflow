@@ -80,6 +80,12 @@ class Logits(estimator.Estimator):
             "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),
             "trainable_variables": [<LIST OF VARIABLES OR SCOPES THAT YOU WANT TO RETRAIN>]
         }
+        
+      apply_moving_averages: bool
+        Apply exponential moving average in the training variables and in the loss.
+        https://www.tensorflow.org/api_docs/python/tf/train/ExponentialMovingAverage
+        By default the decay for the variable averages is 0.9999 and for the loss is 0.9
+        
     """
 
     def __init__(self,
@@ -269,6 +275,13 @@ class LogitsCenterLoss(estimator.Estimator):
             "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),
             "trainable_variables": [<LIST OF VARIABLES OR SCOPES THAT YOU WANT TO TRAIN>]
         }
+        
+      apply_moving_averages: bool
+        Apply exponential moving average in the training variables and in the loss.
+        https://www.tensorflow.org/api_docs/python/tf/train/ExponentialMovingAverage
+        By default the decay for the variable averages is 0.9999 and for the loss is 0.9
+        
+      
 
     """
 

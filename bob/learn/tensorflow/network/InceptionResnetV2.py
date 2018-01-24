@@ -321,13 +321,6 @@ def inception_resnet_v2(inputs,
             [slim.batch_norm, slim.dropout],
                 is_training=(mode == tf.estimator.ModeKeys.TRAIN)):
 
-            #with slim.arg_scope(
-            #    [slim.conv2d, slim.fully_connected],
-            #        weights_initializer=tf.truncated_normal_initializer(stddev=0.1),
-            #        weights_regularizer=slim.l2_regularizer(weight_decay),
-            #        normalizer_fn=slim.batch_norm,
-            #        normalizer_params=batch_norm_params):
-
                 with slim.arg_scope(
                     [slim.conv2d, slim.max_pool2d, slim.avg_pool2d],
                      stride=1,

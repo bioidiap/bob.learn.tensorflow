@@ -5,7 +5,6 @@ from .MLP import mlp
 from .Embedding import Embedding
 from .InceptionResnetV2 import inception_resnet_v2, inception_resnet_v2_batch_norm
 from .InceptionResnetV1 import inception_resnet_v1, inception_resnet_v1_batch_norm
-from .vgg import vgg_16
 from . import SimpleCNN
 
 
