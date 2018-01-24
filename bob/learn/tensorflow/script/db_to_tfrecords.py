@@ -157,6 +157,7 @@ def main(argv=None):
     sample_counter = 0
     with tf.python_io.TFRecordWriter(output) as writer:
         if shuffle:
+            logger.info("Shuffling the samples before writing ...")
             random.shuffle(samples)
         for i, sample in enumerate(samples):
             logger.info('Processing file %d out of %d', i + 1, n_samples)
