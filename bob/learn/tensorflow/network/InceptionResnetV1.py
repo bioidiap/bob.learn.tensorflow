@@ -24,7 +24,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
-
+from .utils import is_trainable
 
 # Inception-Renset-A
 def block35(net,
@@ -254,13 +254,46 @@ def reduction_b(net, reuse=None, trainable_variables=True):
                     3)
     return net
 
+def inception_resnet_v1_batch_norm(inputs,
+                        dropout_keep_prob=0.8,
+                        bottleneck_layer_size=128,
+                        reuse=None,
+                        scope='InceptionResnetV1',
+                        mode=tf.estimator.ModeKeys.TRAIN,
+                        trainable_variables=None,
+                        weight_decay=1e-5,
+                        **kwargs):
+    """
+    Creates the Inception Resnet V1 model applying batch not to each 
+    Convolutional and FullyConnected layer.
 
-def inference(images,
-              keep_probability,
-              phase_train=True,
-              bottleneck_layer_size=128,
-              weight_decay=0.0,
-              reuse=None):
+    Parameters
+    ----------
+
+      inputs: a 4-D tensor of size [batch_size, height, width, 3].
+      
+      num_classes: number of predicted classes.
+      
+      is_training: whether is training or not.
+      
+      dropout_keep_prob: float, the fraction to keep before final layer.
+      
+      reuse: whether or not the network and its variables should be reused. To be
+        able to reuse 'scope' must be given.
+        
+      scope: Optional variable_scope.
+
+      trainable_variables: list
+        List of variables to be trainable=True
+
+    Returns
+    -------
+      logits: the logits outputs of the model.
+      end_points: the set of end_points from the inception model.
+
+    """
+                        
+
     batch_norm_params = {
         # Decay for the moving averages.
         'decay': 0.995,
@@ -271,19 +304,20 @@ def inference(images,
         # Moving averages ends up in the trainable variables collection
         'variables_collections': [tf.GraphKeys.TRAINABLE_VARIABLES],
     }
-
+    
     with slim.arg_scope(
         [slim.conv2d, slim.fully_connected],
             weights_initializer=tf.truncated_normal_initializer(stddev=0.1),
             weights_regularizer=slim.l2_regularizer(weight_decay),
             normalizer_fn=slim.batch_norm,
             normalizer_params=batch_norm_params):
-        return inception_resnet_v1(
-            images,
-            is_training=phase_train,
-            dropout_keep_prob=keep_probability,
-            bottleneck_layer_size=bottleneck_layer_size,
-            reuse=reuse)
+        return inception_resnet_v1(inputs,
+                        dropout_keep_prob=0.8,
+                        bottleneck_layer_size=128,
+                        reuse=None,
+                        scope='InceptionResnetV1',
+                        mode=mode,
+                        trainable_variables=None,)
 
 
 def inception_resnet_v1(inputs,
@@ -292,25 +326,35 @@ def inception_resnet_v1(inputs,
                         reuse=None,
                         scope='InceptionResnetV1',
                         mode=tf.estimator.ModeKeys.TRAIN,
-                        trainable_variables=True,
-                        **kwargs):
+                        trainable_variables=None,
+                        **kwargs):                        
     """
     Creates the Inception Resnet V1 model.
 
-    **Parameters**
+    Parameters
+    ----------
 
-      inputs:
-         a 4-D tensor of size [batch_size, height, width, 3].
-      num_classes:
-         number of predicted classes.
-      mode:
-         whether is training or not.
-      dropout_keep_prob:
-         the fraction to keep before final layer.
-      reuse:
-         whether or not the network and its variables should be reused. To be able to reuse 'scope' must be given.
-      scope:
-         Optional variable_scope.
+      inputs: a 4-D tensor of size [batch_size, height, width, 3].
+      
+      num_classes: number of predicted classes.
+      
+      is_training: whether is training or not.
+      
+      dropout_keep_prob: float, the fraction to keep before final layer.
+      
+      reuse: whether or not the network and its variables should be reused. To be
+        able to reuse 'scope' must be given.
+        
+      scope: Optional variable_scope.
+
+      trainable_variables: list
+        List of variables to be trainable=True
+
+    Returns
+    -------
+      logits: the logits outputs of the model.
+      end_points: the set of end_points from the inception model.
+
     """
     end_points = {}
 
@@ -318,127 +362,164 @@ def inception_resnet_v1(inputs,
         with slim.arg_scope(
             [slim.batch_norm, slim.dropout],
                 is_training=(mode == tf.estimator.ModeKeys.TRAIN)):
+
+
             with slim.arg_scope(
                 [slim.conv2d, slim.max_pool2d, slim.avg_pool2d],
                     stride=1,
                     padding='SAME'):
 
                 # 149 x 149 x 32
+                name = "Conv2d_1a_3x3"
+                trainable = is_trainable(name, trainable_variables)
                 net = slim.conv2d(
                     inputs,
                     32,
                     3,
                     stride=2,
                     padding='VALID',
-                    scope='Conv2d_1a_3x3',
-                    trainable=trainable_variables)
-                end_points['Conv2d_1a_3x3'] = net
+                    scope=name,
+                    trainable=trainable,
+                    reuse=reuse)
+                end_points[name] = net
+                
                 # 147 x 147 x 32
+                name = "Conv2d_2a_3x3"
+                trainable = is_trainable(name, trainable_variables)
                 net = slim.conv2d(
                     net,
                     32,
                     3,
                     padding='VALID',
-                    scope='Conv2d_2a_3x3',
-                    trainable=trainable_variables)
-                end_points['Conv2d_2a_3x3'] = net
+                    scope=name,
+                    trainable=trainable,
+                    reuse=reuse)
+                end_points[name] = net
+                
                 # 147 x 147 x 64
+                name = "Conv2d_2b_3x3"
+                trainable = is_trainable(name, trainable_variables)
                 net = slim.conv2d(
                     net,
                     64,
                     3,
-                    scope='Conv2d_2b_3x3',
-                    trainable=trainable_variables)
-                end_points['Conv2d_2b_3x3'] = net
+                    scope=name,
+                    trainable=trainable,
+                    reuse=reuse)
+                end_points[name] = net
                 # 73 x 73 x 64
                 net = slim.max_pool2d(
                     net, 3, stride=2, padding='VALID', scope='MaxPool_3a_3x3')
                 end_points['MaxPool_3a_3x3'] = net
+                
                 # 73 x 73 x 80
+                name = "Conv2d_3b_1x1"
+                trainable = is_trainable(name, trainable_variables)
                 net = slim.conv2d(
                     net,
                     80,
                     1,
                     padding='VALID',
-                    scope='Conv2d_3b_1x1',
-                    trainable=trainable_variables)
-                end_points['Conv2d_3b_1x1'] = net
+                    scope=name,
+                    trainable=trainable,
+                    reuse=reuse)
+                end_points[name] = net
+
                 # 71 x 71 x 192
+                name = "Conv2d_4a_3x3"
+                trainable = is_trainable(name, trainable_variables)
                 net = slim.conv2d(
                     net,
                     192,
                     3,
                     padding='VALID',
-                    scope='Conv2d_4a_3x3',
-                    trainable=trainable_variables)
-                end_points['Conv2d_4a_3x3'] = net
+                    scope=name,
+                    trainable=trainable,
+                    reuse=reuse)
+                end_points[name] = net
+                
                 # 35 x 35 x 256
+                name = "Conv2d_4b_3x3"
+                trainable = is_trainable(name, trainable_variables)
                 net = slim.conv2d(
                     net,
                     256,
                     3,
                     stride=2,
                     padding='VALID',
-                    scope='Conv2d_4b_3x3',
-                    trainable=trainable_variables)
-                end_points['Conv2d_4b_3x3'] = net
+                    scope=name,
+                    trainable=trainable,
+                    reuse=reuse)
+                end_points[name] = net
 
                 # 5 x Inception-resnet-A
+                name = "block35"
+                trainable = is_trainable(name, trainable_variables)
                 net = slim.repeat(
                     net,
                     5,
                     block35,
                     scale=0.17,
-                    trainable_variables=trainable_variables,
+                    trainable_variables=trainable,
                     reuse=reuse)
-                end_points['Mixed_5a'] = net
+                end_points[name] = net
 
                 # Reduction-A
-                with tf.variable_scope('Mixed_6a'):
+                name = "Mixed_6a"
+                trainable = is_trainable(name, trainable_variables)
+                with tf.variable_scope(name):
                     net = reduction_a(
                         net,
                         192,
                         192,
                         256,
                         384,
-                        trainable_variables=trainable_variables,
+                        trainable_variables=trainable,
                         reuse=reuse)
-                end_points['Mixed_6a'] = net
+                end_points[name] = net
 
                 # 10 x Inception-Resnet-B
+                name = "block17"
+                trainable = is_trainable(name, trainable_variables)
                 net = slim.repeat(
                     net,
                     10,
                     block17,
                     scale=0.10,
-                    trainable_variables=trainable_variables,
+                    trainable_variables=trainable,
                     reuse=reuse)
-                end_points['Mixed_6b'] = net
+                end_points[name] = net
 
                 # Reduction-B
-                with tf.variable_scope('Mixed_7a'):
+                name = "Mixed_7a"
+                trainable = is_trainable(name, trainable_variables)
+                with tf.variable_scope(name):
                     net = reduction_b(
                         net,
-                        trainable_variables=trainable_variables,
+                        trainable_variables=trainable,
                         reuse=reuse)
-                end_points['Mixed_7a'] = net
+                end_points[name] = net
 
                 # 5 x Inception-Resnet-C
+                name = "block8"
+                trainable = is_trainable(name, trainable_variables)
                 net = slim.repeat(
                     net,
                     5,
                     block8,
                     scale=0.20,
-                    trainable_variables=trainable_variables,
+                    trainable_variables=trainable,
                     reuse=reuse)
-                end_points['Mixed_8a'] = net
+                end_points[name] = net
 
+                name = "Mixed_8b"
+                trainable = is_trainable(name, trainable_variables)
                 net = block8(
                     net,
                     activation_fn=None,
-                    trainable_variables=trainable_variables,
+                    trainable_variables=trainable,
                     reuse=reuse)
-                end_points['Mixed_8b'] = net
+                end_points[name] = net
 
                 with tf.variable_scope('Logits'):
                     end_points['PrePool'] = net
@@ -458,12 +539,14 @@ def inception_resnet_v1(inputs,
 
                     end_points['PreLogitsFlatten'] = net
 
+                name = "Bottleneck"
+                trainable = is_trainable(name, trainable_variables)
                 net = slim.fully_connected(
                     net,
                     bottleneck_layer_size,
                     activation_fn=None,
-                    scope='Bottleneck',
+                    scope=name,
                     reuse=reuse,
-                    trainable=trainable_variables)
+                    trainable=trainable)
 
     return net, end_points

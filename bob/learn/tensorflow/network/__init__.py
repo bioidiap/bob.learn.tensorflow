@@ -3,8 +3,8 @@ from .LightCNN9 import light_cnn9
 from .Dummy import dummy
 from .MLP import mlp
 from .Embedding import Embedding
-from .InceptionResnetV2 import inception_resnet_v2
-from .InceptionResnetV1 import inception_resnet_v1
+from .InceptionResnetV2 import inception_resnet_v2, inception_resnet_v2_batch_norm
+from .InceptionResnetV1 import inception_resnet_v1, inception_resnet_v1_batch_norm
 from . import SimpleCNN
 
 

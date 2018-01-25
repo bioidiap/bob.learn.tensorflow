@@ -22,19 +22,22 @@ def mean_cross_entropy_loss(logits, labels, add_regularization_losses=True):
     """
 
     with tf.variable_scope('cross_entropy_loss'):
-
-        loss = tf.reduce_mean(
+        cross_loss = tf.reduce_mean(
             tf.nn.sparse_softmax_cross_entropy_with_logits(
                 logits=logits, labels=labels),
-            name=tf.GraphKeys.LOSSES)
+            name="cross_entropy_loss")
+
+        tf.summary.scalar('cross_entropy_loss', cross_loss)
+        tf.add_to_collection(tf.GraphKeys.LOSSES, cross_loss)
 
         if add_regularization_losses:
             regularization_losses = tf.get_collection(
                 tf.GraphKeys.REGULARIZATION_LOSSES)
-            return tf.add_n(
-                [loss] + regularization_losses, name=tf.GraphKeys.LOSSES)
+                
+            total_loss = tf.add_n([cross_loss] + regularization_losses, name="total_loss")
+            return total_loss
         else:
-            return loss
+            return cross_loss
 
 
 def mean_cross_entropy_center_loss(logits,
@@ -58,12 +61,12 @@ def mean_cross_entropy_center_loss(logits,
     """
     # Cross entropy
     with tf.variable_scope('cross_entropy_loss'):
-        loss = tf.reduce_mean(
+        cross_loss = tf.reduce_mean(
             tf.nn.sparse_softmax_cross_entropy_with_logits(
                 logits=logits, labels=labels),
-            name=tf.GraphKeys.LOSSES)
-
-        tf.summary.scalar('cross_entropy_loss', loss)
+            name="cross_entropy_loss")
+        tf.add_to_collection(tf.GraphKeys.LOSSES, cross_loss)
+        tf.summary.scalar('cross_entropy_loss', cross_loss)
 
     # Appending center loss
     with tf.variable_scope('center_loss'):
@@ -89,7 +92,8 @@ def mean_cross_entropy_center_loss(logits,
         regularization_losses = tf.get_collection(
             tf.GraphKeys.REGULARIZATION_LOSSES)
         total_loss = tf.add_n(
-            [loss] + regularization_losses, name=tf.GraphKeys.LOSSES)
+            [cross_loss] + regularization_losses, name="total_loss")
+        tf.add_to_collection(tf.GraphKeys.LOSSES, total_loss)
         tf.summary.scalar('total_loss', total_loss)
 
     loss = dict()
