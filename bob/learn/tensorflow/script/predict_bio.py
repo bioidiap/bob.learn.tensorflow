@@ -240,6 +240,9 @@ def main(argv=None):
         pred_buffer = defaultdict(list)
         for i, pred in enumerate(predictions):
             key = pred['key']
+            # key is in bytes format in Python 3
+            if sys.version_info >= (3, ):
+                key = key.decode(errors='replace')
             prob = pred.get('probabilities', pred.get('embeddings'))
             pred_buffer[key].append(prob)
             if i == 0:
