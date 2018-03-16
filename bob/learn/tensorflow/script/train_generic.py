@@ -73,6 +73,7 @@ def main(argv=None):
     train_input_fn = config.train_input_fn
 
     # Train
+    logger.info("Training a model in %s", estimator.model_dir)
     estimator.train(
         input_fn=train_input_fn, hooks=hooks, steps=steps, max_steps=max_steps)
 

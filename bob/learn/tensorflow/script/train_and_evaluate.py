@@ -77,6 +77,8 @@ def main(argv=None):
     exit_ok_exceptions = getattr(config, 'exit_ok_exceptions',
                                  (EarlyStopException,))
 
+    logger.info("Training a model in %s", estimator.model_dir)
+
     # Train and evaluate
     try:
         tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
