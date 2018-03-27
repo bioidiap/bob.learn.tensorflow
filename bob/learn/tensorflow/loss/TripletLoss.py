@@ -79,61 +79,6 @@ def triplet_loss(anchor_embedding,
         return loss
 
 
-def triplet_loss_deprecated(anchor_embedding,
-                            positive_embedding,
-                            negative_embedding,
-                            margin=5.0):
-    """
-    Compute the triplet loss as in
-
-    Schroff, Florian, Dmitry Kalenichenko, and James Philbin.
-    "Facenet: A unified embedding for face recognition and clustering."
-    Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition. 2015.
-
-    :math:`L  = sum(  |f_a - f_p|^2 - |f_a - f_n|^2  + \lambda)`
-
-    **Parameters**
-
-    left_feature:
-      First element of the pair
-
-    right_feature:
-      Second element of the pair
-
-    label:
-      Label of the pair (0 or 1)
-
-    margin:
-      Contrastive margin
-
-    """
-
-    with tf.name_scope("triplet_loss"):
-        # Normalize
-        anchor_embedding = tf.nn.l2_normalize(
-            anchor_embedding, 1, 1e-10, name="anchor")
-        positive_embedding = tf.nn.l2_normalize(
-            positive_embedding, 1, 1e-10, name="positive")
-        negative_embedding = tf.nn.l2_normalize(
-            negative_embedding, 1, 1e-10, name="negative")
-
-        d_positive = tf.reduce_sum(
-            tf.square(tf.subtract(anchor_embedding, positive_embedding)), 1)
-        d_negative = tf.reduce_sum(
-            tf.square(tf.subtract(anchor_embedding, negative_embedding)), 1)
-
-        basic_loss = tf.add(tf.subtract(d_positive, d_negative), margin)
-        loss = tf.reduce_mean(
-            tf.maximum(basic_loss, 0.0), 0, name=tf.GraphKeys.LOSSES)
-
-        loss_dict = dict()
-        loss_dict['loss'] = loss
-        loss_dict['between_class'] = tf.reduce_mean(d_negative)
-        loss_dict['within_class'] = tf.reduce_mean(d_positive)
-
-        return loss_dict
-
-
 def triplet_fisher_loss(anchor_embedding, positive_embedding,
                         negative_embedding):
 

@@ -11,15 +11,6 @@ from nose.tools import assert_raises_regexp
 slim = tf.contrib.slim
 
 
-def test_simple():
-    tf.reset_default_graph()
-    x = np.zeros([64, 10, 36])
-    graph = maxout(x, num_units=3)
-    assert graph.get_shape().as_list() == [64, 10, 3]
-    tf.reset_default_graph()
-    assert len(tf.global_variables()) == 0
-
-
 def test_fully_connected():
     tf.reset_default_graph()
     x = np.zeros([64, 50])

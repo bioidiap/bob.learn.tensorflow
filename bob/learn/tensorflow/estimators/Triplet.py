@@ -172,3 +172,4 @@ class Triplet(estimator.Estimator):
 
         super(Triplet, self).__init__(
             model_fn=_model_fn, model_dir=model_dir, config=config)
+
