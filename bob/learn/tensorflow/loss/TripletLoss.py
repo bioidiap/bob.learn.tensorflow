@@ -53,14 +53,28 @@ def triplet_loss(anchor_embedding,
             tf.square(tf.subtract(anchor_embedding, negative_embedding)), 1)
 
         basic_loss = tf.add(tf.subtract(d_positive, d_negative), margin)
-        loss = tf.reduce_mean(
-            tf.maximum(basic_loss, 0.0), 0, name=tf.GraphKeys.LOSSES)
-        between_class_loss = tf.reduce_mean(d_negative)
-        within_class_loss = tf.reduce_mean(d_positive)
 
-        tf.summary.scalar('loss', loss)
-        tf.summary.scalar('between_class', between_class_loss)
-        tf.summary.scalar('within_class', within_class_loss)
+        with tf.name_scope("TripletLoss"):
+            # Between
+            between_class_loss = tf.reduce_mean(d_negative)
+            tf.summary.scalar('between_class', between_class_loss)            
+            tf.add_to_collection(tf.GraphKeys.LOSSES, between_class_loss)
+        
+            # Within
+            within_class_loss = tf.reduce_mean(d_positive)
+            tf.summary.scalar('within_class', within_class_loss)            
+            tf.add_to_collection(tf.GraphKeys.LOSSES, within_class_loss)
+
+            # Total loss
+            loss = tf.reduce_mean(
+                tf.maximum(basic_loss, 0.0), 0, name="total_loss")
+            tf.add_to_collection(tf.GraphKeys.LOSSES, loss)
+            tf.summary.scalar('loss_raw', loss)            
+
+            # Appending the regularization loss
+            #regularization_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
+            #loss = tf.add_n([loss] + regularization_losses, name="total_loss")
+            #tf.summary.scalar('loss', loss)
 
         return loss
 
