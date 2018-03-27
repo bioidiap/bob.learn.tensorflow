@@ -52,19 +52,28 @@ def contrastive_loss(left_embedding,
             within_class = tf.multiply(one - labels,
                                        tf.square(d))  # (1-Y)*(d^2)
             within_class_loss = tf.reduce_mean(
-                within_class, name=tf.GraphKeys.LOSSES)
+                within_class, name="within_class")
+            tf.add_to_collection(tf.GraphKeys.LOSSES, within_class_loss)
 
         with tf.name_scope("between_class"):
             max_part = tf.square(tf.maximum(contrastive_margin - d, 0))
             between_class = tf.multiply(
                 labels, max_part)  # (Y) * max((margin - d)^2, 0)
             between_class_loss = tf.reduce_mean(
-                between_class, name=tf.GraphKeys.LOSSES)
+                between_class, name="between_class")
+            tf.add_to_collection(tf.GraphKeys.LOSSES, between_class_loss)
 
         with tf.name_scope("total_loss"):
             loss = 0.5 * (within_class + between_class)
-            loss = tf.reduce_mean(loss, name=tf.GraphKeys.LOSSES)
-
+            loss = tf.reduce_mean(loss, name="total_loss_raw")
+            tf.summary.scalar('loss_raw', loss)
+            tf.add_to_collection(tf.GraphKeys.LOSSES, loss)
+            
+            ## Appending the regularization loss
+            #regularization_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
+            #loss = tf.add_n([loss] + regularization_losses, name="total_loss")
+            
+            
         tf.summary.scalar('loss', loss)
         tf.summary.scalar('between_class', between_class_loss)
         tf.summary.scalar('within_class', within_class_loss)
