@@ -182,7 +182,7 @@ def run_triplet_estimator(trainer):
     trainer.train(input_fn, steps=steps, hooks=hooks)
 
     acc = trainer.evaluate(input_validation_fn)
-    assert acc['accuracy'] > 0.5
+    assert acc['accuracy'] > 0.3
 
     # Cleaning up
     tf.reset_default_graph()
