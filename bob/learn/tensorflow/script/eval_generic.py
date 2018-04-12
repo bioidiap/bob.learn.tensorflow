@@ -26,7 +26,6 @@ The configuration files should have the following objects totally:
 
   eval_interval_secs
   run_once
-  steps
   hooks
   name
 
@@ -60,7 +59,6 @@ def main(argv=None):
 
     eval_interval_secs = getattr(config, 'eval_interval_secs', 60)
     run_once = getattr(config, 'run_once', False)
-    steps = getattr(config, 'steps', None)
     hooks = getattr(config, 'hooks', None)
     name = getattr(config, 'eval_name', None)
 
@@ -93,7 +91,7 @@ def main(argv=None):
             # Evaluate
             evaluations = estimator.evaluate(
                 input_fn=eval_input_fn,
-                steps=1,
+                steps=None,
                 hooks=hooks,
                 checkpoint_path=checkpoint_path,
                 name=name,
