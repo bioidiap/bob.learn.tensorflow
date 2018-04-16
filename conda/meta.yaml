@@ -6,15 +6,6 @@ package:
   version: {{ environ.get('BOB_PACKAGE_VERSION', '0.0.1') }}
 
 build:
-  entry_points:
-    - bob_tf_compute_statistics.py = bob.learn.tensorflow.script.compute_statistics:main
-    - bob_tf_db_to_tfrecords       = bob.learn.tensorflow.script.db_to_tfrecords:main
-    - bob_tf_train_generic         = bob.learn.tensorflow.script.train_generic:main
-    - bob_tf_eval_generic          = bob.learn.tensorflow.script.eval_generic:main
-    - bob_tf_train_and_evaluate    = bob.learn.tensorflow.script.train_and_evaluate:main
-    - bob_tf_predict_generic       = bob.learn.tensorflow.script.predict_generic:main
-    - bob_tf_predict_bio           = bob.learn.tensorflow.script.predict_bio:main
-    
   number: {{ environ.get('BOB_BUILD_NUMBER', 0) }}
   run_exports:
     - {{ pin_subpackage(name) }}
@@ -45,8 +36,6 @@ requirements:
     - bob.db.mnist
     - bob.db.atnt
     - bob.bio.base
-    - scipy {{ scipy }}
-    - six {{ six }}
   run:
     - python
     - setuptools
@@ -58,13 +47,6 @@ test:
   imports:
     - {{ name }}
   commands:
-    - bob_tf_compute_statistics.py --help
-    - bob_tf_db_to_tfrecords --help
-    - bob_tf_train_generic --help
-    - bob_tf_eval_generic --help
-    - bob_tf_train_and_evaluate --help
-    - bob_tf_predict_generic --help
-    - bob_tf_predict_bio --help
     - nosetests --with-coverage --cover-package={{ name }} -sv {{ name }}
     - sphinx-build -aEW {{ project_dir }}/doc {{ project_dir }}/sphinx
     - sphinx-build -aEb doctest {{ project_dir }}/doc sphinx
