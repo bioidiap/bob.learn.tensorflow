@@ -177,7 +177,7 @@ def predict_bio(estimator, database, biofiles, bio_predict_input_fn,
     """
     logger.debug('estimator: %s', estimator)
     logger.debug('database: %s', database)
-    logger.debug('biofiles: %s', biofiles)
+    logger.debug('len(biofiles): %s', len(biofiles))
     logger.debug('bio_predict_input_fn: %s', bio_predict_input_fn)
     logger.debug('output_dir: %s', output_dir)
     logger.debug('load_data: %s', load_data)
