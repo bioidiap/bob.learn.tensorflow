@@ -47,7 +47,7 @@ import tensorflow as tf
 def base_architecture(input_layer, mode, data_format, **kwargs):
     # Keep track of all the endpoints
     endpoints = {}
-    bn_axis = 1 if data_format.lower() == 'channels_first' else -1
+    bn_axis = 1 if data_format.lower() == 'channels_first' else 3
     training = mode == tf.estimator.ModeKeys.TRAIN
 
     # ======================
@@ -57,17 +57,20 @@ def base_architecture(input_layer, mode, data_format, **kwargs):
         filters=50,
         kernel_size=(5, 5),
         padding="same",
-        activation=tf.nn.relu,
+        activation=None,
         data_format=data_format)
     endpoints['Conv-1'] = conv1
 
     # Batch Normalization #1
-    bn1 = tf.layers.batch_normalization(conv1, axis=bn_axis, training=training)
+    bn1 = tf.layers.batch_normalization(
+        conv1, axis=bn_axis, training=training, fused=True)
     endpoints['BN-1'] = bn1
+    bn1_act = tf.nn.relu(bn1)
+    endpoints['BN-1-activation'] = bn1_act
 
     # Pooling Layer #1
     pool1 = tf.layers.max_pooling2d(
-        inputs=bn1, pool_size=[2, 2], strides=2, data_format=data_format)
+        inputs=bn1_act, pool_size=[2, 2], strides=2, data_format=data_format)
     endpoints['MaxPooling-1'] = pool1
 
     # ======================
@@ -77,17 +80,20 @@ def base_architecture(input_layer, mode, data_format, **kwargs):
         filters=100,
         kernel_size=(3, 3),
         padding="same",
-        activation=tf.nn.relu,
+        activation=None,
         data_format=data_format)
     endpoints['Conv-2'] = conv2
 
     # Batch Normalization #2
-    bn2 = tf.layers.batch_normalization(conv2, axis=bn_axis, training=training)
+    bn2 = tf.layers.batch_normalization(
+        conv2, axis=bn_axis, training=training, fused=True)
     endpoints['BN-2'] = bn2
+    bn2_act = tf.nn.relu(bn2)
+    endpoints['BN-2-activation'] = bn2_act
 
     # Pooling Layer #2
     pool2 = tf.layers.max_pooling2d(
-        inputs=bn2, pool_size=[2, 2], strides=2, data_format=data_format)
+        inputs=bn2_act, pool_size=[2, 2], strides=2, data_format=data_format)
     endpoints['MaxPooling-2'] = pool2
 
     # ======================
@@ -97,17 +103,20 @@ def base_architecture(input_layer, mode, data_format, **kwargs):
         filters=150,
         kernel_size=(3, 3),
         padding="same",
-        activation=tf.nn.relu,
+        activation=None,
         data_format=data_format)
     endpoints['Conv-3'] = conv3
 
     # Batch Normalization #3
-    bn3 = tf.layers.batch_normalization(conv3, axis=bn_axis, training=training)
+    bn3 = tf.layers.batch_normalization(
+        conv3, axis=bn_axis, training=training, fused=True)
     endpoints['BN-3'] = bn3
+    bn3_act = tf.nn.relu(bn3)
+    endpoints['BN-3-activation'] = bn3_act
 
     # Pooling Layer #3
     pool3 = tf.layers.max_pooling2d(
-        inputs=bn3, pool_size=[3, 3], strides=2, data_format=data_format)
+        inputs=bn3_act, pool_size=[3, 3], strides=2, data_format=data_format)
     endpoints['MaxPooling-3'] = pool3
 
     # ======================
@@ -117,17 +126,20 @@ def base_architecture(input_layer, mode, data_format, **kwargs):
         filters=200,
         kernel_size=(3, 3),
         padding="same",
-        activation=tf.nn.relu,
+        activation=None,
         data_format=data_format)
     endpoints['Conv-4'] = conv4
 
     # Batch Normalization #4
-    bn4 = tf.layers.batch_normalization(conv4, axis=bn_axis, training=training)
+    bn4 = tf.layers.batch_normalization(
+        conv4, axis=bn_axis, training=training, fused=True)
     endpoints['BN-4'] = bn4
+    bn4_act = tf.nn.relu(bn4)
+    endpoints['BN-4-activation'] = bn4_act
 
     # Pooling Layer #4
     pool4 = tf.layers.max_pooling2d(
-        inputs=bn4, pool_size=[2, 2], strides=2, data_format=data_format)
+        inputs=bn4_act, pool_size=[2, 2], strides=2, data_format=data_format)
     endpoints['MaxPooling-4'] = pool4
 
     # ======================
@@ -137,17 +149,20 @@ def base_architecture(input_layer, mode, data_format, **kwargs):
         filters=250,
         kernel_size=(3, 3),
         padding="same",
-        activation=tf.nn.relu,
+        activation=None,
         data_format=data_format)
     endpoints['Conv-5'] = conv5
 
     # Batch Normalization #5
-    bn5 = tf.layers.batch_normalization(conv5, axis=bn_axis, training=training)
+    bn5 = tf.layers.batch_normalization(
+        conv5, axis=bn_axis, training=training, fused=True)
     endpoints['BN-5'] = bn5
+    bn5_act = tf.nn.relu(bn5)
+    endpoints['BN-5-activation'] = bn5_act
 
     # Pooling Layer #5
     pool5 = tf.layers.max_pooling2d(
-        inputs=bn5, pool_size=[2, 2], strides=2, data_format=data_format)
+        inputs=bn5_act, pool_size=[2, 2], strides=2, data_format=data_format)
     endpoints['MaxPooling-5'] = pool5
 
     # Flatten tensor into a batch of vectors
@@ -157,27 +172,33 @@ def base_architecture(input_layer, mode, data_format, **kwargs):
     # ========================
     # Fully Connected Layer #1
     fc_1 = tf.layers.dense(
-        inputs=pool5_flat, units=1000, activation=tf.nn.relu)
+        inputs=pool5_flat, units=1000, activation=None)
     endpoints['FC-1'] = fc_1
 
     # Batch Normalization #6
-    bn6 = tf.layers.batch_normalization(fc_1, axis=bn_axis, training=training)
+    bn6 = tf.layers.batch_normalization(
+        fc_1, axis=bn_axis, training=training, fused=True)
     endpoints['BN-6'] = bn6
+    bn6_act = tf.nn.relu(bn6)
+    endpoints['BN-6-activation'] = bn6_act
 
     # Dropout
-    dropout = tf.layers.dropout(inputs=bn6, rate=0.5, training=training)
+    dropout = tf.layers.dropout(inputs=bn6_act, rate=0.5, training=training)
     endpoints['dropout'] = dropout
 
     # ========================
     # Fully Connected Layer #2
-    fc_2 = tf.layers.dense(inputs=dropout, units=400, activation=tf.nn.relu)
+    fc_2 = tf.layers.dense(inputs=dropout, units=400, activation=None)
     endpoints['FC-2'] = fc_2
 
     # Batch Normalization #7
-    bn7 = tf.layers.batch_normalization(fc_2, axis=bn_axis, training=training)
+    bn7 = tf.layers.batch_normalization(
+        fc_2, axis=bn_axis, training=training, fused=True)
     endpoints['BN-7'] = bn7
+    bn7_act = tf.nn.relu(bn7)
+    endpoints['BN-7-activation'] = bn7_act
 
-    return bn7, endpoints
+    return bn7_act, endpoints
 
 
 def architecture(input_layer,
@@ -189,9 +210,9 @@ def architecture(input_layer,
 
     with tf.variable_scope('PatchCNN', reuse=reuse):
 
-        bn7, endpoints = base_architecture(input_layer, mode, data_format)
+        bn7_act, endpoints = base_architecture(input_layer, mode, data_format)
         # Logits layer
-        logits = tf.layers.dense(inputs=bn7, units=n_classes)
+        logits = tf.layers.dense(inputs=bn7_act, units=n_classes)
         endpoints['FC-3'] = logits
         endpoints['logits'] = logits
 
@@ -204,7 +225,8 @@ def model_fn(features, labels, mode, params=None, config=None):
     key = features['key']
 
     params = params or {}
-    learning_rate = params.get('learning_rate', 1e-3)
+    initial_learning_rate = params.get('learning_rate', 1e-3)
+    momentum = params.get('momentum', 0.99)
 
     arch_kwargs = {
         'n_classes': params.get('n_classes', None),
@@ -233,14 +255,24 @@ def model_fn(features, labels, mode, params=None, config=None):
 
     # Configure the training op
     if mode == tf.estimator.ModeKeys.TRAIN:
-        optimizer = tf.train.GradientDescentOptimizer(
-            learning_rate=learning_rate)
+
+        learning_rate = tf.train.exponential_decay(
+            learning_rate=initial_learning_rate,
+            global_step=tf.train.get_or_create_global_step(),
+            decay_steps=1e5,
+            decay_rate=1e-4)
+
+        optimizer = tf.train.MomentumOptimizer(
+            learning_rate=learning_rate,
+            momentum=momentum)
         train_op = optimizer.minimize(
             loss=loss, global_step=tf.train.get_or_create_global_step())
+
         # Log accuracy and loss
         with tf.name_scope('train_metrics'):
             tf.summary.scalar('accuracy', accuracy[1])
             tf.summary.scalar('loss', loss)
+            tf.summary.scalar('learning_rate', learning_rate)
     else:
         train_op = None
 
