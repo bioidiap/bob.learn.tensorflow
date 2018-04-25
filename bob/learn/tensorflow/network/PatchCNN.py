@@ -216,9 +216,11 @@ def architecture(input_layer,
                  n_classes=2,
                  data_format='channels_last',
                  reuse=False,
+                 regularizer=None,
                  **kwargs):
 
-    with tf.variable_scope('PatchCNN', reuse=reuse):
+    with tf.variable_scope('PatchCNN', reuse=reuse,
+                           regularizer=regularizer):
 
         bn7_act, endpoints = base_architecture(
             input_layer, mode, data_format, skip_first_two_pool)
@@ -238,11 +240,16 @@ def model_fn(features, labels, mode, params=None, config=None):
     params = params or {}
     initial_learning_rate = params.get('learning_rate', 1e-3)
     momentum = params.get('momentum', 0.99)
+    decay_steps = params.get('decay_steps', 1e5)
+    decay_rate = params.get('decay_rate', 1e-4)
+    staircase = params.get('staircase', True)
+    regularization_rate = params.get('regularization_rate', 0)
 
     arch_kwargs = {
         'skip_first_two_pool': params.get('skip_first_two_pool'),
         'n_classes': params.get('n_classes'),
         'data_format': params.get('data_format'),
+        'regularizer': params.get('regularizer')
     }
     arch_kwargs = {k: v for k, v in arch_kwargs.items() if v is not None}
 
@@ -261,6 +268,10 @@ def model_fn(features, labels, mode, params=None, config=None):
 
     # Calculate Loss (for both TRAIN and EVAL modes)
     loss = tf.losses.sparse_softmax_cross_entropy(logits=logits, labels=labels)
+    # Add the regularization terms to the loss
+    loss += regularization_rate * \
+        tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
+
     accuracy = tf.metrics.accuracy(
         labels=labels, predictions=predictions["classes"])
     metrics = {'accuracy': accuracy}
@@ -271,8 +282,9 @@ def model_fn(features, labels, mode, params=None, config=None):
         learning_rate = tf.train.exponential_decay(
             learning_rate=initial_learning_rate,
             global_step=tf.train.get_or_create_global_step(),
-            decay_steps=1e5,
-            decay_rate=1e-4)
+            decay_steps=decay_steps,
+            decay_rate=decay_rate,
+            staircase=staircase)
 
         optimizer = tf.train.MomentumOptimizer(
             learning_rate=learning_rate,
