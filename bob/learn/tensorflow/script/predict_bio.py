@@ -4,8 +4,6 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-# import pkg_resources so that bob imports work properly:
-import pkg_resources
 import os
 import sys
 import logging
