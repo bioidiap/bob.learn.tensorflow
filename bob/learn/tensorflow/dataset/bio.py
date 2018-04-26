@@ -116,7 +116,6 @@ class BioGenerator(object):
         for f, label, key in six.moves.zip(self.biofiles, self.labels,
                                            self.keys):
             data = self.load_data(self.database, f)
-            # labels
             if self.multiple_samples:
                 for d in data:
                     yield (d, label, key)
