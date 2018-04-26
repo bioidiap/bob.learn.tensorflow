@@ -87,7 +87,7 @@ class BioGenerator(object):
     @property
     def labels(self):
         for f in self.biofiles:
-            yield self.biofile_to_label(f)
+            yield int(self.biofile_to_label(f))
 
     @property
     def keys(self):
