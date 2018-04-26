@@ -223,7 +223,8 @@ def architecture(input_layer,
                            regularizer=regularizer):
 
         bn7_act, endpoints = base_architecture(
-            input_layer, mode, data_format, skip_first_two_pool)
+            input_layer=input_layer, mode=mode, data_format=data_format,
+            skip_first_two_pool=skip_first_two_pool)
         # Logits layer
         logits = tf.layers.dense(inputs=bn7_act, units=n_classes)
         endpoints['FC-3'] = logits
@@ -238,6 +239,8 @@ def model_fn(features, labels, mode, params=None, config=None):
     key = features['key']
 
     params = params or {}
+    params = {k: v for k, v in params.items() if v is not None}
+
     initial_learning_rate = params.get('learning_rate', 1e-3)
     momentum = params.get('momentum', 0.99)
     decay_steps = params.get('decay_steps', 1e5)
@@ -253,7 +256,7 @@ def model_fn(features, labels, mode, params=None, config=None):
     }
     arch_kwargs = {k: v for k, v in arch_kwargs.items() if v is not None}
 
-    logits, _ = architecture(data, mode, **arch_kwargs)
+    logits, _ = architecture(data, mode=mode, **arch_kwargs)
 
     predictions = {
         # Generate predictions (for PREDICT and EVAL mode)
@@ -269,8 +272,9 @@ def model_fn(features, labels, mode, params=None, config=None):
     # Calculate Loss (for both TRAIN and EVAL modes)
     loss = tf.losses.sparse_softmax_cross_entropy(logits=logits, labels=labels)
     # Add the regularization terms to the loss
-    loss += regularization_rate * \
-        tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
+    if tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES):
+        loss += regularization_rate * \
+            tf.add_n(tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES))
 
     accuracy = tf.metrics.accuracy(
         labels=labels, predictions=predictions["classes"])
