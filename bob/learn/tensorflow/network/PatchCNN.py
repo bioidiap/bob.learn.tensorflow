@@ -44,170 +44,130 @@ from __future__ import print_function
 import tensorflow as tf
 
 
-def base_architecture(input_layer, mode, data_format,
-                      skip_first_two_pool=False, **kwargs):
-    # Keep track of all the endpoints
-    endpoints = {}
+def create_conv_layer(inputs, mode, data_format, endpoints, number, filters,
+                      kernel_size, pool_size, pool_strides, skip_pool=False):
     bn_axis = 1 if data_format.lower() == 'channels_first' else 3
     training = mode == tf.estimator.ModeKeys.TRAIN
 
-    # ======================
-    # Convolutional Layer #1
-    conv1 = tf.layers.conv2d(
-        inputs=input_layer,
-        filters=50,
-        kernel_size=(5, 5),
+    name = 'Conv-{}'.format(number)
+    conv = tf.layers.conv2d(
+        inputs=inputs,
+        filters=filters,
+        kernel_size=kernel_size,
         padding="same",
         activation=None,
-        data_format=data_format)
-    endpoints['Conv-1'] = conv1
+        data_format=data_format,
+        name=name)
+    endpoints[name] = conv
 
-    # Batch Normalization #1
-    bn1 = tf.layers.batch_normalization(
-        conv1, axis=bn_axis, training=training, fused=True)
-    endpoints['BN-1'] = bn1
-    bn1_act = tf.nn.relu(bn1)
-    endpoints['BN-1-activation'] = bn1_act
+    name = 'BN-{}'.format(number)
+    bn = tf.layers.batch_normalization(
+        conv, axis=bn_axis, training=training, fused=True, name=name)
+    endpoints[name] = bn
 
-    # Pooling Layer #1
-    if skip_first_two_pool:
-        pool1 = bn1_act
+    name = 'Activation-{}'.format(number)
+    bn_act = tf.nn.relu(bn, name=name)
+    endpoints[name] = bn_act
+
+    name = 'MaxPooling-{}'.format(number)
+    if skip_pool:
+        pool = bn_act
     else:
-        pool1 = tf.layers.max_pooling2d(
-            inputs=bn1_act, pool_size=[2, 2], strides=2,
-            data_format=data_format)
-    endpoints['MaxPooling-1'] = pool1
+        pool = tf.layers.max_pooling2d(
+            inputs=bn_act, pool_size=pool_size, strides=pool_strides,
+            data_format=data_format, name=name)
+    endpoints[name] = pool
+
+    return pool
+
+
+def create_dense_layer(inputs, mode, endpoints, number, units):
+    training = mode == tf.estimator.ModeKeys.TRAIN
+
+    name = 'FC-{}'.format(number)
+    fc = tf.layers.dense(
+        inputs=inputs, units=units, activation=None, name=name)
+    endpoints[name] = fc
+
+    name = 'BN-{}'.format(number + 5)
+    bn = tf.layers.batch_normalization(
+        fc, axis=1, training=training, fused=True, name=name)
+    endpoints[name] = bn
+
+    name = 'Activation-{}'.format(number + 5)
+    bn_act = tf.nn.relu(bn, name=name)
+    endpoints[name] = bn_act
+
+    return bn_act
+
+
+def base_architecture(input_layer, mode, data_format,
+                      skip_first_two_pool=False, **kwargs):
+    training = mode == tf.estimator.ModeKeys.TRAIN
+    # Keep track of all the endpoints
+    endpoints = {}
+
+    # ======================
+    # Convolutional Layer #1
+    pool1 = create_conv_layer(
+        inputs=input_layer, mode=mode, data_format=data_format,
+        endpoints=endpoints, number=1, filters=50, kernel_size=(5, 5),
+        pool_size=(2, 2), pool_strides=2, skip_pool=skip_first_two_pool)
 
     # ======================
     # Convolutional Layer #2
-    conv2 = tf.layers.conv2d(
-        inputs=pool1,
-        filters=100,
-        kernel_size=(3, 3),
-        padding="same",
-        activation=None,
-        data_format=data_format)
-    endpoints['Conv-2'] = conv2
-
-    # Batch Normalization #2
-    bn2 = tf.layers.batch_normalization(
-        conv2, axis=bn_axis, training=training, fused=True)
-    endpoints['BN-2'] = bn2
-    bn2_act = tf.nn.relu(bn2)
-    endpoints['BN-2-activation'] = bn2_act
-
-    # Pooling Layer #2
-    if skip_first_two_pool:
-        pool2 = bn2_act
-    else:
-        pool2 = tf.layers.max_pooling2d(
-            inputs=bn2_act, pool_size=[2, 2], strides=2,
-            data_format=data_format)
-    endpoints['MaxPooling-2'] = pool2
+    pool2 = create_conv_layer(
+        inputs=pool1, mode=mode, data_format=data_format,
+        endpoints=endpoints, number=2, filters=100, kernel_size=(3, 3),
+        pool_size=(2, 2), pool_strides=2, skip_pool=skip_first_two_pool)
 
     # ======================
     # Convolutional Layer #3
-    conv3 = tf.layers.conv2d(
-        inputs=pool2,
-        filters=150,
-        kernel_size=(3, 3),
-        padding="same",
-        activation=None,
-        data_format=data_format)
-    endpoints['Conv-3'] = conv3
-
-    # Batch Normalization #3
-    bn3 = tf.layers.batch_normalization(
-        conv3, axis=bn_axis, training=training, fused=True)
-    endpoints['BN-3'] = bn3
-    bn3_act = tf.nn.relu(bn3)
-    endpoints['BN-3-activation'] = bn3_act
-
-    # Pooling Layer #3
-    pool3 = tf.layers.max_pooling2d(
-        inputs=bn3_act, pool_size=[3, 3], strides=2, data_format=data_format)
-    endpoints['MaxPooling-3'] = pool3
+    pool3 = create_conv_layer(
+        inputs=pool2, mode=mode, data_format=data_format,
+        endpoints=endpoints, number=3, filters=150, kernel_size=(3, 3),
+        pool_size=(3, 3), pool_strides=2)
 
     # ======================
     # Convolutional Layer #4
-    conv4 = tf.layers.conv2d(
-        inputs=pool3,
-        filters=200,
-        kernel_size=(3, 3),
-        padding="same",
-        activation=None,
-        data_format=data_format)
-    endpoints['Conv-4'] = conv4
-
-    # Batch Normalization #4
-    bn4 = tf.layers.batch_normalization(
-        conv4, axis=bn_axis, training=training, fused=True)
-    endpoints['BN-4'] = bn4
-    bn4_act = tf.nn.relu(bn4)
-    endpoints['BN-4-activation'] = bn4_act
-
-    # Pooling Layer #4
-    pool4 = tf.layers.max_pooling2d(
-        inputs=bn4_act, pool_size=[2, 2], strides=2, data_format=data_format)
-    endpoints['MaxPooling-4'] = pool4
+    pool4 = create_conv_layer(
+        inputs=pool3, mode=mode, data_format=data_format,
+        endpoints=endpoints, number=4, filters=200, kernel_size=(3, 3),
+        pool_size=(2, 2), pool_strides=2)
 
     # ======================
     # Convolutional Layer #5
-    conv5 = tf.layers.conv2d(
-        inputs=pool4,
-        filters=250,
-        kernel_size=(3, 3),
-        padding="same",
-        activation=None,
-        data_format=data_format)
-    endpoints['Conv-5'] = conv5
+    pool5 = create_conv_layer(
+        inputs=pool4, mode=mode, data_format=data_format,
+        endpoints=endpoints, number=5, filters=250, kernel_size=(3, 3),
+        pool_size=(2, 2), pool_strides=2)
 
-    # Batch Normalization #5
-    bn5 = tf.layers.batch_normalization(
-        conv5, axis=bn_axis, training=training, fused=True)
-    endpoints['BN-5'] = bn5
-    bn5_act = tf.nn.relu(bn5)
-    endpoints['BN-5-activation'] = bn5_act
-
-    # Pooling Layer #5
-    pool5 = tf.layers.max_pooling2d(
-        inputs=bn5_act, pool_size=[2, 2], strides=2, data_format=data_format)
-    endpoints['MaxPooling-5'] = pool5
-
+    # ========================
     # Flatten tensor into a batch of vectors
-    pool5_flat = tf.layers.flatten(pool5)
-    endpoints['MaxPooling-5-Flat'] = pool5_flat
+    name = 'MaxPooling-5-Flat'
+    pool5_flat = tf.layers.flatten(pool5, name=name)
+    endpoints[name] = pool5_flat
 
     # ========================
     # Fully Connected Layer #1
-    fc_1 = tf.layers.dense(
-        inputs=pool5_flat, units=1000, activation=None)
-    endpoints['FC-1'] = fc_1
+    fc1 = create_dense_layer(
+        inputs=pool5_flat, mode=mode, endpoints=endpoints, number=1,
+        units=1000)
 
-    # Batch Normalization #6
-    bn6 = tf.layers.batch_normalization(
-        fc_1, axis=1, training=training, fused=True)
-    endpoints['BN-6'] = bn6
-    bn6_act = tf.nn.relu(bn6)
-    endpoints['BN-6-activation'] = bn6_act
-
+    # ========================
     # Dropout
-    dropout = tf.layers.dropout(inputs=bn6_act, rate=0.5, training=training)
-    endpoints['dropout'] = dropout
+    name = 'dropout'
+    dropout = tf.layers.dropout(
+        inputs=fc1, rate=0.5, training=training, name=name)
+    endpoints[name] = dropout
 
     # ========================
     # Fully Connected Layer #2
-    fc_2 = tf.layers.dense(inputs=dropout, units=400, activation=None)
-    endpoints['FC-2'] = fc_2
+    fc2 = create_dense_layer(
+        inputs=dropout, mode=mode, endpoints=endpoints, number=2,
+        units=400)
 
-    # Batch Normalization #7
-    bn7 = tf.layers.batch_normalization(
-        fc_2, axis=1, training=training, fused=True)
-    endpoints['BN-7'] = bn7
-    bn7_act = tf.nn.relu(bn7)
-    endpoints['BN-7-activation'] = bn7_act
-
-    return bn7_act, endpoints
+    return fc2, endpoints
 
 
 def architecture(input_layer,
@@ -222,11 +182,11 @@ def architecture(input_layer,
     with tf.variable_scope('PatchCNN', reuse=reuse,
                            regularizer=regularizer):
 
-        bn7_act, endpoints = base_architecture(
+        fc2, endpoints = base_architecture(
             input_layer=input_layer, mode=mode, data_format=data_format,
             skip_first_two_pool=skip_first_two_pool)
         # Logits layer
-        logits = tf.layers.dense(inputs=bn7_act, units=n_classes)
+        logits = tf.layers.dense(inputs=fc2, units=n_classes)
         endpoints['FC-3'] = logits
         endpoints['logits'] = logits
 
