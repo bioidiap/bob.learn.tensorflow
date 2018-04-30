@@ -73,6 +73,7 @@ def compute_statistics(database, biofiles, load_data, multiple_samples,
     logger.debug('kwargs: %s', kwargs)
 
     assert len(biofiles), "biofiles are empty!"
+    logger.info('Calculating the mean for %d files', len(biofiles))
 
     generator = BioGenerator(
         database,
