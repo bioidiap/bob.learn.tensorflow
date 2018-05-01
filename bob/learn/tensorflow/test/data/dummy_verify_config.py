@@ -6,8 +6,6 @@ groups = ['dev']
 
 samples = database.all_files(groups=groups)
 
-output = os.path.join('TEST_DIR', 'dev.tfrecords')
-
 CLIENT_IDS = (str(f.client_id) for f in database.all_files(groups=groups))
 CLIENT_IDS = list(set(CLIENT_IDS))
 CLIENT_IDS = dict(zip(CLIENT_IDS, range(len(CLIENT_IDS))))

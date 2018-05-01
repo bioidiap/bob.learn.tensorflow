@@ -220,12 +220,13 @@ def db_to_tfrecords(samples, reader, output, shuffle, allow_failures,
                 sample_count += 1
 
     if not size_estimate:
-        print("Wrote {} samples into the tfrecords file.".format(sample_count))
+        click.echo(
+            "Wrote {} samples into the tfrecords file.".format(sample_count))
     else:
         # delete the empty tfrecords file
         try:
             os.remove(output)
         except Exception:
             pass
-    print("The total size of the tfrecords file will roughly be "
-          "{} bytes".format(_bytes2human(total_size)))
+    click.echo("The total size of the tfrecords file will be roughly "
+               "{} bytes".format(_bytes2human(total_size)))
