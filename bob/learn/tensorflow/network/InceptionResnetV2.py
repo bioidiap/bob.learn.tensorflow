@@ -213,35 +213,35 @@ def inception_resnet_v2_batch_norm(inputs,
                         weight_decay = 5e-5,
                         **kwargs):
     """
-    Creates the Inception Resnet V2 model applying batch not to each 
+    Creates the Inception Resnet V2 model applying batch not to each
     Convolutional and FullyConnected layer.
 
-   
+
     **Parameters**:
-    
+
       inputs: a 4-D tensor of size [batch_size, height, width, 3].
-      
+
       num_classes: number of predicted classes.
-      
+
       is_training: whether is training or not.
-      
+
       dropout_keep_prob: float, the fraction to keep before final layer.
-      
+
       reuse: whether or not the network and its variables should be reused. To be
         able to reuse 'scope' must be given.
-        
+
       scope: Optional variable_scope.
 
       trainable_variables: list
         List of variables to be trainable=True
-      
+
     **Returns**:
-    
+
       logits: the logits outputs of the model.
       end_points: the set of end_points from the inception model.
     """
 
-                        
+
     batch_norm_params = {
         # Decay for the moving averages.
         'decay': 0.995,
@@ -278,43 +278,32 @@ def inception_resnet_v2(inputs,
                         trainable_variables=None,
                         **kwargs):
     """Creates the Inception Resnet V2 model.
-   
+
     Parameters
     ----------
-    
+
       inputs: a 4-D tensor of size [batch_size, height, width, 3].
-      
+
       num_classes: number of predicted classes.
-      
+
       is_training: whether is training or not.
-      
+
       dropout_keep_prob: float, the fraction to keep before final layer.
-      
+
       reuse: whether or not the network and its variables should be reused. To be
         able to reuse 'scope' must be given.
-        
+
       scope: Optional variable_scope.
 
       trainable_variables: list
         List of variables to be trainable=True
-      
+
     Returns
     -------
       logits: the logits outputs of the model.
       end_points: the set of end_points from the inception model.
     """
     end_points = {}
-
-    batch_norm_params = {
-        # Decay for the moving averages.
-        'decay': 0.995,
-        # epsilon to prevent 0s in variance.
-        'epsilon': 0.001,
-        # force in-place updates of mean and variance estimates
-        'updates_collections': None,
-        # Moving averages ends up in the trainable variables collection
-        'variables_collections': [tf.GraphKeys.TRAINABLE_VARIABLES],
-    }
 
     with tf.variable_scope(scope, 'InceptionResnetV2', [inputs], reuse=reuse):
         with slim.arg_scope(

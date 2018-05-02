@@ -1,124 +1,24 @@
 #!/usr/bin/env python
-"""Saves predictions or embeddings of tf.estimators. This script works with
-bob.bio.base databases. To use it see the configuration details below. This
-script works with tensorflow 1.4 and above.
-
-Usage:
-    %(prog)s [-v...] [-k KEY]... [options] <config_files>...
-    %(prog)s --help
-    %(prog)s --version
-
-Arguments:
-    <config_files>                     The configuration files. The
-                                       configuration files are loaded in order
-                                       and they need to have several objects
-                                       inside totally. See below for
-                                       explanation.
-
-Options:
-    -h --help                          Show this help message and exit
-    --version                          Show version and exit
-    -o PATH, --output-dir PATH         Name of the output file.
-    -k KEY, --predict-keys KEY         List of `str`, name of the keys to
-                                       predict. It is used if the
-                                       `EstimatorSpec.predictions` is a `dict`.
-                                       If `predict_keys` is used then rest of
-                                       the predictions will be filtered from
-                                       the dictionary. If `None`, returns all.
-    --checkpoint-path=<path>           Path of a specific checkpoint to
-                                       predict. If `None`, the latest
-                                       checkpoint in `model_dir` is used.
-    --multiple-samples                 If provided, it assumes that the db
-                                       interface returns several samples from a
-                                       biofile. This option can be used when
-                                       you are working with sequences.
-    -p N, --number-of-parallel-jobs N  The number of parallel jobs that this
-                                       script is run in the SGE grid. You
-                                       should use this option with ``jman
-                                       submit -t N``.
-    -f, --force                        If provided, it will overwrite the
-                                       existing predictions.
-    -v, --verbose                      Increases the output verbosity level
-
-The -- options above can also be supplied through configuration files. You just
-need to create a variable with a name that replaces ``-`` with ``_``. For
-example, use ``multiple_samples`` instead of ``--multiple-samples``.
-
-The configuration files should have the following objects totally:
-
-    # Required objects:
-
-    estimator : :any:`tf.estimator.Estimator`
-        An estimator instance that represents the neural network.
-    database : :any:`bob.bio.base.database.BioDatabase`
-        A bio database. Its original_directory must point to the correct path.
-    biofiles : [:any:`bob.bio.base.database.BioFile`]
-        The list of the bio files .
-    bio_predict_input_fn : callable
-        A callable with the signature of
-        ``input_fn = bio_predict_input_fn(generator, output_types, output_shapes)``
-        The inputs are documented in :any:`tf.data.Dataset.from_generator` and
-        the output should be a function with no arguments and is passed to
-        :any:`tf.estimator.Estimator.predict`.
-
-    # Optional objects:
-
-    load_data : :obj:`object`, optional
-        A callable with the signature of
-        ``data = load_data(database, biofile)``.
-        :any:`bob.bio.base.read_original_data` is used by default.
-    hooks : [:any:`tf.train.SessionRunHook`]
-        Optional hooks that you may want to attach to the predictions.
-
-An example configuration for a trained model and its evaluation could be::
-
-    import tensorflow as tf
-
-    # define the database:
-    from bob.bio.base.test.dummy.database import database
-
-    # load the estimator model
-    estimator = tf.estimator.Estimator(model_fn, model_dir)
-
-    groups = ['dev']
-    biofiles = database.all_files(groups)
-
-
-    # the ``dataset = tf.data.Dataset.from_generator(generator, output_types,
-    # output_shapes)`` line is mandatory in the function below. You have to
-    # create it in your configuration file since you want it to be created in
-    # the same graph as your model.
-    def bio_predict_input_fn(generator, output_types, output_shapes):
-        def input_fn():
-            dataset = tf.data.Dataset.from_generator(generator, output_types,
-                                                     output_shapes)
-            # apply all kinds of transformations here, process the data even
-            # further if you want.
-            dataset = dataset.prefetch(1)
-            dataset = dataset.batch(10**3)
-            images, labels, keys = dataset.make_one_shot_iterator().get_next()
-
-            return {'data': images, 'keys': keys}, labels
-        return input_fn
+"""Saves predictions or embeddings of tf.estimators.
 """
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-# import pkg_resources so that bob imports work properly:
-import pkg_resources
 import os
+import sys
+import logging
+import click
+from bob.extension.scripts.click_helper import (
+    verbosity_option, ConfigCommand, ResourceOption)
 from multiprocessing import Pool
 from collections import defaultdict
 import numpy as np
 from bob.io.base import create_directories_safe
 from bob.bio.base.utils import save
-from bob.extension.config import load as read_config_file
 from bob.bio.base.tools.grid import indices
-from bob.learn.tensorflow.utils.commandline import \
-    get_from_config_or_commandline
 from bob.learn.tensorflow.dataset.bio import BioGenerator
-from bob.core.log import setup, set_verbosity_level
-logger = setup(__name__)
+
+logger = logging.getLogger(__name__)
 
 
 def make_output_path(output_dir, key):
@@ -157,49 +57,142 @@ def save_predictions(pool, output_dir, key, pred_buffer):
     pool.apply_async(save, (np.mean(pred_buffer[key], axis=0), outpath))
 
 
-def main(argv=None):
-    from docopt import docopt
-    import sys
-    docs = __doc__ % {'prog': os.path.basename(sys.argv[0])}
-    version = pkg_resources.require('bob.learn.tensorflow')[0].version
-    defaults = docopt(docs, argv=[""])
-    args = docopt(docs, argv=argv, version=version)
-    config_files = args['<config_files>']
-    config = read_config_file(config_files)
+@click.command(entry_point_group='bob.learn.tensorflow.config',
+               cls=ConfigCommand)
+@click.option('--estimator', '-e', required=True, cls=ResourceOption,
+              entry_point_group='bob.learn.tensorflow.estimator')
+@click.option('--database', '-d', required=True, cls=ResourceOption,
+              entry_point_group='bob.bio.database')
+@click.option('--biofiles', required=True, cls=ResourceOption,
+              help='You can only provide this through config files.')
+@click.option('--bio-predict-input-fn', required=True, cls=ResourceOption,
+              entry_point_group='bob.learn.tensorflow.biogenerator_input')
+@click.option('--output-dir', '-o', required=True, cls=ResourceOption)
+@click.option('--load-data', cls=ResourceOption,
+              entry_point_group='bob.learn.tensorflow.load_data')
+@click.option('--hooks', cls=ResourceOption, multiple=True,
+              entry_point_group='bob.learn.tensorflow.hook')
+@click.option('--predict-keys', '-k', multiple=True, default=None,
+              cls=ResourceOption)
+@click.option('--checkpoint-path', cls=ResourceOption)
+@click.option('--multiple-samples', is_flag=True, cls=ResourceOption)
+@click.option('--array', '-t', type=click.INT, default=1, cls=ResourceOption)
+@click.option('--force', '-f', is_flag=True, cls=ResourceOption)
+@verbosity_option(cls=ResourceOption)
+def predict_bio(estimator, database, biofiles, bio_predict_input_fn,
+                output_dir, load_data, hooks, predict_keys, checkpoint_path,
+                multiple_samples, array, force, **kwargs):
+    """Saves predictions or embeddings of tf.estimators.
 
-    # optional arguments
-    verbosity = get_from_config_or_commandline(config, 'verbose', args,
-                                               defaults)
-    predict_keys = get_from_config_or_commandline(config, 'predict_keys', args,
-                                                  defaults)
-    checkpoint_path = get_from_config_or_commandline(config, 'checkpoint_path',
-                                                     args, defaults)
-    multiple_samples = get_from_config_or_commandline(
-        config, 'multiple_samples', args, defaults)
-    number_of_parallel_jobs = get_from_config_or_commandline(
-        config, 'number_of_parallel_jobs', args, defaults)
-    force = get_from_config_or_commandline(config, 'force', args, defaults)
-    hooks = getattr(config, 'hooks', None)
-    load_data = getattr(config, 'load_data', None)
+    This script works with bob.bio.base databases. This script works with
+    tensorflow 1.4 and above.
 
-    # Sets-up logging
-    set_verbosity_level(logger, verbosity)
+    \b
+    Parameters
+    ----------
+    estimator : tf.estimator.Estimator
+        The estimator that will be trained. Can be a
+        ``bob.learn.tensorflow.estimator`` entry point or a path to a Python
+        file which contains a variable named `estimator`.
+    database : :any:`bob.bio.base.database.BioDatabase`
+        A bio database. Its original_directory must point to the correct path.
+    biofiles : [:any:`bob.bio.base.database.BioFile`]
+        The list of the bio files.
+    bio_predict_input_fn : callable
+        A callable with the signature of
+        ``input_fn = bio_predict_input_fn(generator, output_types, output_shapes)``
+        The inputs are documented in :any:`tf.data.Dataset.from_generator` and
+        the output should be a function with no arguments and is passed to
+        :any:`tf.estimator.Estimator.predict`.
+    output_dir : str
+        The directory to save the predictions.
+    load_data : callable, optional
+        A callable with the signature of
+        ``data = load_data(database, biofile)``.
+        :any:`bob.bio.base.read_original_data` is used by default.
+    hooks : [tf.train.SessionRunHook], optional
+        List of SessionRunHook subclass instances. Used for callbacks inside
+        the training loop. Can be a ``bob.learn.tensorflow.hook`` entry point
+        or a path to a Python file which contains a variable named `hooks`.
+    predict_keys : [str] or None, optional
+        List of `str`, name of the keys to predict. It is used if the
+        `EstimatorSpec.predictions` is a `dict`. If `predict_keys` is used then
+        rest of the predictions will be filtered from the dictionary. If
+        `None`, returns all.
+    checkpoint_path : str, optional
+        Path of a specific checkpoint to predict. If `None`, the latest
+        checkpoint in `model_dir` is used.
+    multiple_samples : bool, optional
+        If provided, it assumes that the db interface returns several samples
+        from a biofile. This option can be used when you are working with
+        sequences.
+    force : bool, optional
+        Whether to overwrite existing predictions.
+    array : int, optional
+        Use this option alongside gridtk to submit this script as an array job.
+    verbose : int, optional
+        Increases verbosity (see help for --verbose).
 
-    # required arguments
-    estimator = config.estimator
-    database = config.database
-    biofiles = config.biofiles
-    bio_predict_input_fn = config.bio_predict_input_fn
-    output_dir = get_from_config_or_commandline(config, 'output_dir', args,
-                                                defaults, False)
+    \b
+    [CONFIG]...            Configuration files. It is possible to pass one or
+                           several Python files (or names of
+                           ``bob.learn.tensorflow.config`` entry points or
+                           module names) which contain the parameters listed
+                           above as Python variables. The options through the
+                           command-line (see below) will override the values of
+                           configuration files.
+
+    An example configuration for a trained model and its evaluation could be::
+
+        import tensorflow as tf
+
+        # define the database:
+        from bob.bio.base.test.dummy.database import database
+
+        # load the estimator model
+        estimator = tf.estimator.Estimator(model_fn, model_dir)
+
+        groups = ['dev']
+        biofiles = database.all_files(groups)
+
+
+        # the ``dataset = tf.data.Dataset.from_generator(generator,
+        # output_types, output_shapes)`` line is mandatory in the function
+        # below. You have to create it in your configuration file since you
+        # want it to be created in the same graph as your model.
+        def bio_predict_input_fn(generator, output_types, output_shapes):
+            def input_fn():
+                dataset = tf.data.Dataset.from_generator(
+                    generator, output_types, output_shapes)
+                # apply all kinds of transformations here, process the data
+                # even further if you want.
+                dataset = dataset.prefetch(1)
+                dataset = dataset.batch(10**3)
+                images, labels, keys = dataset.make_one_shot_iterator().get_next()
+
+                return {'data': images, 'keys': keys}, labels
+            return input_fn
+    """
+    logger.debug('estimator: %s', estimator)
+    logger.debug('database: %s', database)
+    logger.debug('len(biofiles): %s', len(biofiles))
+    logger.debug('bio_predict_input_fn: %s', bio_predict_input_fn)
+    logger.debug('output_dir: %s', output_dir)
+    logger.debug('load_data: %s', load_data)
+    logger.debug('hooks: %s', hooks)
+    logger.debug('predict_keys: %s', predict_keys)
+    logger.debug('checkpoint_path: %s', checkpoint_path)
+    logger.debug('multiple_samples: %s', multiple_samples)
+    logger.debug('array: %s', array)
+    logger.debug('force: %s', force)
+    logger.debug('kwargs: %s', kwargs)
 
     assert len(biofiles), "biofiles are empty!"
 
-    if number_of_parallel_jobs is not None:
-        number_of_parallel_jobs = int(number_of_parallel_jobs)
-        logger.info("number_of_parallel_jobs: %d", number_of_parallel_jobs)
-    if number_of_parallel_jobs > 1:
-        start, end = indices(biofiles, number_of_parallel_jobs)
+    if array is not None:
+        logger.info("array: %d", array)
+    if array > 1:
+        start, end = indices(biofiles, array)
         biofiles = biofiles[start:end]
 
     # filter the existing files
@@ -240,6 +233,9 @@ def main(argv=None):
         pred_buffer = defaultdict(list)
         for i, pred in enumerate(predictions):
             key = pred['key']
+            # key is in bytes format in Python 3
+            if sys.version_info >= (3, ):
+                key = key.decode(errors='replace')
             prob = pred.get('probabilities', pred.get('embeddings'))
             pred_buffer[key].append(prob)
             if i == 0:
@@ -254,7 +250,3 @@ def main(argv=None):
     finally:
         pool.close()
         pool.join()
-
-
-if __name__ == '__main__':
-    main()

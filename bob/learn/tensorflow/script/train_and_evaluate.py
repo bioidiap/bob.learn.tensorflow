@@ -1,81 +1,72 @@
 #!/usr/bin/env python
 """Trains and evaluates a network using Tensorflow estimators.
-This script calls the estimator.train_and_evaluate function. Please see:
-https://www.tensorflow.org/api_docs/python/tf/estimator/train_and_evaluate
-https://www.tensorflow.org/api_docs/python/tf/estimator/TrainSpec
-https://www.tensorflow.org/api_docs/python/tf/estimator/EvalSpec
-for more details.
-
-Usage:
-    %(prog)s [-v...] [options] <config_files>...
-    %(prog)s --help
-    %(prog)s --version
-
-Arguments:
-    <config_files>                     The configuration files. The
-                                       configuration files are loaded in order
-                                       and they need to have several objects
-                                       inside totally. See below for
-                                       explanation.
-
-Options:
-    -h --help                          Show this help message and exit
-    --version                          Show version and exit
-    -v, --verbose                      Increases the output verbosity level
-
-The configuration files should have the following objects totally:
-
-  ## Required objects:
-
-  estimator
-  train_spec
-  eval_spec
-
-  ## Optional objects:
-  exit_ok_exceptions : [Exception]
-    A list of exceptions to exit properly if they occur. If nothing is
-    provided, the EarlyStopException is handled by default.
 """
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-# import pkg_resources so that bob imports work properly:
-import pkg_resources
 import tensorflow as tf
-from bob.extension.config import load as read_config_file
-from bob.learn.tensorflow.utils.commandline import \
-    get_from_config_or_commandline
 from bob.learn.tensorflow.utils.hooks import EarlyStopException
-from bob.core.log import setup, set_verbosity_level
-logger = setup(__name__)
+import logging
+import click
+from bob.extension.scripts.click_helper import (
+    verbosity_option, ConfigCommand, ResourceOption)
+
+logger = logging.getLogger(__name__)
 
 
-def main(argv=None):
-    from docopt import docopt
-    import os
-    import sys
-    docs = __doc__ % {'prog': os.path.basename(sys.argv[0])}
-    version = pkg_resources.require('bob.learn.tensorflow')[0].version
-    defaults = docopt(docs, argv=[""])
-    args = docopt(docs, argv=argv, version=version)
-    config_files = args['<config_files>']
-    config = read_config_file(config_files)
+@click.command(entry_point_group='bob.learn.tensorflow.config',
+               cls=ConfigCommand)
+@click.option('--estimator', '-e', required=True, cls=ResourceOption,
+              entry_point_group='bob.learn.tensorflow.estimator')
+@click.option('--train-spec', '-it', required=True, cls=ResourceOption,
+              entry_point_group='bob.learn.tensorflow.trainspec')
+@click.option('--eval-spec', '-ie', required=True, cls=ResourceOption,
+              entry_point_group='bob.learn.tensorflow.evalspec')
+@click.option('--exit-ok-exceptions', cls=ResourceOption, multiple=True,
+              default=(EarlyStopException,), show_default=True,
+              entry_point_group='bob.learn.tensorflow.exception')
+@verbosity_option(cls=ResourceOption)
+def train_and_evaluate(estimator, train_spec, eval_spec, exit_ok_exceptions,
+                       **kwargs):
+    """Trains and evaluates a network using Tensorflow estimators.
 
-    # optional arguments
-    verbosity = get_from_config_or_commandline(config, 'verbose', args,
-                                               defaults)
+    This script calls the estimator.train_and_evaluate function. Please see:
+    https://www.tensorflow.org/api_docs/python/tf/estimator/train_and_evaluate
+    https://www.tensorflow.org/api_docs/python/tf/estimator/TrainSpec
+    https://www.tensorflow.org/api_docs/python/tf/estimator/EvalSpec
+    for more details.
 
-    # Sets-up logging
-    set_verbosity_level(logger, verbosity)
+    \b
+    Parameters
+    ----------
+    estimator : tf.estimator.Estimator
+        The estimator that will be trained. Can be a
+        ``bob.learn.tensorflow.estimator`` entry point or a path to a Python
+        file which contains a variable named `estimator`.
+    train_spec : tf.estimator.TrainSpec
+        See :any:`tf.estimator.Estimator.train_and_evaluate`.
+    eval_spec : tf.estimator.EvalSpec
+        See :any:`tf.estimator.Estimator.train_and_evaluate`.
+    exit_ok_exceptions : [Exception], optional
+        A list of exceptions to exit properly if they occur. If nothing is
+        provided, the EarlyStopException is handled by default.
+    verbose : int, optional
+        Increases verbosity (see help for --verbose).
 
-    # required objects
-    estimator = config.estimator
-    train_spec = config.train_spec
-    eval_spec = config.eval_spec
-
-    # optional objects
-    exit_ok_exceptions = getattr(config, 'exit_ok_exceptions',
-                                 (EarlyStopException,))
+    \b
+    [CONFIG]...            Configuration files. It is possible to pass one or
+                           several Python files (or names of
+                           ``bob.learn.tensorflow.config`` entry points or
+                           module names) which contain the parameters listed
+                           above as Python variables. The options through the
+                           command-line (see below) will override the values of
+                           configuration files.
+    """
+    logger.debug('estimator: %s', estimator)
+    logger.debug('train_spec: %s', train_spec)
+    logger.debug('eval_spec: %s', eval_spec)
+    logger.debug('exit_ok_exceptions: %s', exit_ok_exceptions)
+    logger.debug('kwargs: %s', kwargs)
 
     # Train and evaluate
     try:
@@ -83,7 +74,3 @@ def main(argv=None):
     except exit_ok_exceptions as e:
         logger.exception(e)
         return
-
-
-if __name__ == '__main__':
-    main()

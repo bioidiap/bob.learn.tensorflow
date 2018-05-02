@@ -87,7 +87,7 @@ class BioGenerator(object):
     @property
     def labels(self):
         for f in self.biofiles:
-            yield self.biofile_to_label(f)
+            yield int(self.biofile_to_label(f))
 
     @property
     def keys(self):
@@ -116,7 +116,6 @@ class BioGenerator(object):
         for f, label, key in six.moves.zip(self.biofiles, self.labels,
                                            self.keys):
             data = self.load_data(self.database, f)
-            # labels
             if self.multiple_samples:
                 for d in data:
                     yield (d, label, key)

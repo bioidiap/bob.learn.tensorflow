@@ -43,16 +43,19 @@ setup(
     zip_safe=False,
     entry_points={
 
-        # scripts should be declared using this entry:
-        'console_scripts': [
-            'bob_tf_compute_statistics.py = bob.learn.tensorflow.script.compute_statistics:main',
-            'bob_tf_db_to_tfrecords = bob.learn.tensorflow.script.db_to_tfrecords:main',
-            'bob_tf_load_and_debug.py = bob.learn.tensorflow.script.load_and_debug:main',
-            'bob_tf_train_generic = bob.learn.tensorflow.script.train_generic:main',
-            'bob_tf_eval_generic = bob.learn.tensorflow.script.eval_generic:main',
-            'bob_tf_train_and_evaluate = bob.learn.tensorflow.script.train_and_evaluate:main',
-            'bob_tf_predict_generic = bob.learn.tensorflow.script.predict_generic:main',
-            'bob_tf_predict_bio = bob.learn.tensorflow.script.predict_bio:main',
+        # main entry for bob tf cli
+        'bob.cli': [
+            'tf = bob.learn.tensorflow.script.tf:tf',
+        ],
+
+        # bob tf scripts
+        'bob.learn.tensorflow.cli': [
+            'compute_statistics = bob.learn.tensorflow.script.compute_statistics:compute_statistics',
+            'db_to_tfrecords = bob.learn.tensorflow.script.db_to_tfrecords:db_to_tfrecords',
+            'eval = bob.learn.tensorflow.script.eval:eval',
+            'predict_bio = bob.learn.tensorflow.script.predict_bio:predict_bio',
+            'train = bob.learn.tensorflow.script.train:train',
+            'train_and_evaluate = bob.learn.tensorflow.script.train_and_evaluate:train_and_evaluate',
         ],
     },
 

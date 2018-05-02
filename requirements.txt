@@ -1,6 +1,5 @@
 setuptools
 docopt
-ipython
 bob.blitz
 bob.core
 bob.db.base

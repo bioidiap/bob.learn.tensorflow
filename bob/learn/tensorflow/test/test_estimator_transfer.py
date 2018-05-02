@@ -136,7 +136,8 @@ def test_logitstrainer_center_loss():
             optimizer=tf.train.GradientDescentOptimizer(learning_rate),
             n_classes=10,
             embedding_validation=embedding_validation,
-            validation_batch_size=validation_batch_size)
+            validation_batch_size=validation_batch_size,
+            apply_moving_averages=False)
         run_logitstrainer_mnist(trainer, augmentation=True)
         del trainer
 
@@ -156,7 +157,8 @@ def test_logitstrainer_center_loss():
             n_classes=10,
             embedding_validation=embedding_validation,
             validation_batch_size=validation_batch_size,
-            extra_checkpoint=extra_checkpoint)
+            extra_checkpoint=extra_checkpoint,
+            apply_moving_averages=False)
 
         run_logitstrainer_mnist(trainer, augmentation=True)
 

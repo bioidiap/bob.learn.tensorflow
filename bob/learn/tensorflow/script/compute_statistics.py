@@ -1,60 +1,92 @@
 #!/usr/bin/env python
-# vim: set fileencoding=utf-8 :
-# @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-# @date: Wed 11 May 2016 09:39:36 CEST
+"""Computes statistics on a BioGenerator.
 """
-Script that computes statistics for image
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+import logging
+import click
+import numpy as np
+from bob.extension.scripts.click_helper import (
+    verbosity_option, ConfigCommand, ResourceOption)
+from bob.learn.tensorflow.dataset.bio import BioGenerator
 
-Usage:
-  compute_statistics.py <base_path> <output_file> --extension=<arg>
-  compute_statistics.py -h | --help
-Options:
-  -h --help     Show this screen.
-  --extension=<arg>    [default: .hdf5]
-"""
-
-from docopt import docopt
-import bob.io.base
-import os
-import numpy
-import bob.io.image
+logger = logging.getLogger(__name__)
 
 
-def process_images(base_path, extension, shape):
+@click.command(entry_point_group='bob.learn.tensorflow.config',
+               cls=ConfigCommand)
+@click.option('--database', '-d', required=True, cls=ResourceOption,
+              entry_point_group='bob.bio.database')
+@click.option('--biofiles', required=True, cls=ResourceOption,
+              help='You can only provide this through config files.')
+@click.option('--load-data', cls=ResourceOption,
+              entry_point_group='bob.learn.tensorflow.load_data')
+@click.option('--multiple-samples', is_flag=True, cls=ResourceOption)
+@verbosity_option(cls=ResourceOption)
+def compute_statistics(database, biofiles, load_data, multiple_samples,
+                       **kwargs):
+    """Computes statistics on a BioGenerator.
 
-    files = os.listdir(base_path)
-    sum_data = numpy.zeros(shape=shape)
-    print("Processing {0}".format(base_path))
-    count = 0
-    for f in files:
-        path = os.path.join(base_path, f)
-        if os.path.isdir(path):
-            c, s = process_images(path, extension, shape)
-            count += c
-            sum_data += s
+    This script works with bob.bio.base databases. It will load all the samples
+    and print their mean.
 
-        if os.path.splitext(path)[1] == extension:
-            data = bob.io.base.load(path)
-            count += 1
-            sum_data += data
+    \b
+    Parameters
+    ----------
+    database : :any:`bob.bio.base.database.BioDatabase`
+        A bio database. Its original_directory must point to the correct path.
+    biofiles : [:any:`bob.bio.base.database.BioFile`]
+        The list of the bio files.
+    load_data : callable, optional
+        A callable with the signature of
+        ``data = load_data(database, biofile)``.
+        :any:`bob.bio.base.read_original_data` is used by default.
+    multiple_samples : bool, optional
+        If provided, it assumes that the db interface returns several samples
+        from a biofile. This option can be used when you are working with
+        sequences.
+    verbose : int, optional
+        Increases verbosity (see help for --verbose).
 
-    return count, sum_data
+    \b
+    [CONFIG]...            Configuration files. It is possible to pass one or
+                           several Python files (or names of
+                           ``bob.learn.tensorflow.config`` entry points or
+                           module names) which contain the parameters listed
+                           above as Python variables. The options through the
+                           command-line (see below) will override the values of
+                           configuration files.
 
+    An example configuration could be::
 
-def main():
-    args = docopt(__doc__, version='Mnist training with TensorFlow')
+        # define the database:
+        from bob.bio.base.test.dummy.database import database
 
-    BASE_PATH = args['<base_path>']
-    EXTENSION = args['--extension']
-    OUTPUT_FILE = args['<output_file>']
-    #SHAPE = [3, 224, 224]
-    SHAPE = [1, 64, 64]
+        groups = ['dev']
+        biofiles = database.all_files(groups)
+    """
+    logger.debug('database: %s', database)
+    logger.debug('len(biofiles): %s', len(biofiles))
+    logger.debug('load_data: %s', load_data)
+    logger.debug('multiple_samples: %s', multiple_samples)
+    logger.debug('kwargs: %s', kwargs)
 
-    count, sum_data = process_images(BASE_PATH, EXTENSION, SHAPE)
+    assert len(biofiles), "biofiles are empty!"
+    logger.info('Calculating the mean for %d files', len(biofiles))
 
-    means = numpy.zeros(shape=SHAPE)
-    for s in range(SHAPE[0]):
-        means[s, ...] = sum_data[s, ...] / float(count)
+    generator = BioGenerator(
+        database,
+        biofiles,
+        load_data=load_data,
+        multiple_samples=multiple_samples)
 
-    bob.io.base.save(means, OUTPUT_FILE)
-    bob.io.base.save(means[0, :, :].astype("uint8"), "xuxa.png")
+    for i, (data, _, _) in enumerate(generator()):
+        if i == 0:
+            mean = np.cast['float'](data)
+        else:
+            mean += data
+
+    mean = mean.reshape(mean.shape[0], -1)
+    mean = np.mean(mean, axis=1)
+    click.echo(mean / (i + 1.))
