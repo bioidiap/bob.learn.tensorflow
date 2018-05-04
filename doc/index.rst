@@ -1,16 +1,14 @@
 .. vim: set fileencoding=utf-8 :
-.. date: Thu Sep 20 11:58:57 CEST 2012
 
 .. _bob.learn.tensorflow:
 
-========================
- Tensorflow Bob Bindings
-========================
+=======================
+ Tensorflow Bob Bridge
+=======================
 
 `bob.learn.tensorflow` is a high-level library, written in Python that runs on top of TensorFlow.
 The goal here is to be able to do fast experimentation with neural networks.
 
-===========
 Users Guide
 ===========
 
@@ -20,7 +18,6 @@ Users Guide
    user_guide.rst
    references
 
-================
 Reference Manual
 ================
 
@@ -29,7 +26,6 @@ Reference Manual
 
    py_api
 
-==================
 Indices and tables
 ==================
 

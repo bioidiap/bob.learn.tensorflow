@@ -19,7 +19,7 @@ class Logits(estimator.Estimator):
     """
     NN Trainer whose with logits as last layer
 
-    The **architecture** function should follow the following pattern:
+    The **architecture** function should follow the following pattern::
 
         def my_beautiful_architecture(placeholder, **kwargs):
 
@@ -29,63 +29,20 @@ class Logits(estimator.Estimator):
             ....
             return graph, end_points
 
-    The **loss** function should follow the following pattern:
+    The **loss** function should follow the following pattern::
 
-    def my_beautiful_loss(logits, labels, **kwargs):
-       return loss_set_of_ops(logits, labels)
+        def my_beautiful_loss(logits, labels, **kwargs):
+           return loss_set_of_ops(logits, labels)
 
-
-
-    Parameters
+    Attributes
     ----------
-
-      architecture:
-         Pointer to a function that builds the graph.
-
-      optimizer:
-         One of the tensorflow solvers
-         (https://www.tensorflow.org/api_guides/python/train)
-         - tf.train.GradientDescentOptimizer
-         - tf.train.AdagradOptimizer
-         - ....
-
-      config:
-
-      n_classes:
-         Number of classes of your problem. The logits will be appended in this
-         class
-
-      loss_op:
-         Pointer to a function that computes the loss.
-
-      embedding_validation:
-         Run the validation using embeddings?? [default: False]
-
-      model_dir:
-        Model path
-
-      validation_batch_size:
-        Size of the batch for validation. This value is used when the
-        validation with embeddings is used. This is a hack.
-
-      params:
-        Extra params for the model function (please see
-        https://www.tensorflow.org/extend/estimators for more info)
-
-      extra_checkpoint: dict
-        In case you want to use other model to initialize some variables.
-        This argument should be in the following format
-        extra_checkpoint = {
-            "checkpoint_path": <YOUR_CHECKPOINT>,
-            "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),
-            "trainable_variables": [<LIST OF VARIABLES OR SCOPES THAT YOU WANT TO RETRAIN>]
-        }
-        
-      apply_moving_averages: bool
-        Apply exponential moving average in the training variables and in the loss.
-        https://www.tensorflow.org/api_docs/python/tf/train/ExponentialMovingAverage
-        By default the decay for the variable averages is 0.9999 and for the loss is 0.9
-        
+    architecture
+    embedding_validation
+    extra_checkpoint
+    loss
+    loss_op
+    n_classes
+    optimizer
     """
 
     def __init__(self,
@@ -100,7 +57,49 @@ class Logits(estimator.Estimator):
                  params=None,
                  extra_checkpoint=None,
                  apply_moving_averages=True):
+        """NN trainer with logits layer as the last layer
 
+        Parameters
+        ----------
+        architecture : callable
+            Pointer to a function that builds the graph.
+        optimizer : TYPE
+            One of the tensorflow solvers
+            (https://www.tensorflow.org/api_guides/python/train)
+            - tf.train.GradientDescentOptimizer
+            - tf.train.AdagradOptimizer
+            - ....
+        loss_op : TYPE
+            Pointer to a function that computes the loss.
+        n_classes : TYPE
+            Number of classes of your problem. The logits will be appended in
+            this class.
+        config : None, optional
+            The run_config
+        embedding_validation : bool, optional
+            Run the validation using embeddings??
+        model_dir : str, optional
+            Model path
+        validation_batch_size : None, optional
+            Size of the batch for validation. This value is used when the
+            validation with embeddings is used. This is a hack.
+        params : None, optional
+            Extra params for the model function (please see
+            https://www.tensorflow.org/extend/estimators for more info)
+        extra_checkpoint : dict
+            In case you want to use other model to initialize some variables.
+            This argument should be in the following format
+            extra_checkpoint = {
+                "checkpoint_path": <YOUR_CHECKPOINT>,
+                "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),
+                "trainable_variables": [<LIST OF VARIABLES OR SCOPES THAT YOU WANT TO RETRAIN>]
+            }
+
+        apply_moving_averages : bool
+            Apply exponential moving average in the training variables and in the loss.
+            https://www.tensorflow.org/api_docs/python/tf/train/ExponentialMovingAverage
+            By default the decay for the variable averages is 0.9999 and for the loss is 0.9
+        """
         self.architecture = architecture
         self.optimizer = optimizer
         self.n_classes = n_classes
@@ -136,22 +135,27 @@ class Logits(estimator.Estimator):
 
                 # Compute the moving average of all individual losses and the total loss.
                 if apply_moving_averages:
-                    variable_averages = tf.train.ExponentialMovingAverage(0.9999, global_step)
-                    variable_averages_op = variable_averages.apply(tf.trainable_variables())
+                    variable_averages = tf.train.ExponentialMovingAverage(
+                        0.9999, global_step)
+                    variable_averages_op = variable_averages.apply(
+                        tf.trainable_variables())
                 else:
                     variable_averages_op = tf.no_op(name='noop')
 
                 with tf.control_dependencies([variable_averages_op]):
 
                     # Compute Loss (for both TRAIN and EVAL modes)
-                    self.loss = self.loss_op(logits, labels)
+                    self.loss = self.loss_op(logits=logits, labels=labels)
 
                     # Compute the moving average of all individual losses and the total loss.
-                    loss_averages = tf.train.ExponentialMovingAverage(0.9, name='avg')
-                    loss_averages_op = loss_averages.apply(tf.get_collection(tf.GraphKeys.LOSSES))
+                    loss_averages = tf.train.ExponentialMovingAverage(
+                        0.9, name='avg')
+                    loss_averages_op = loss_averages.apply(
+                        tf.get_collection(tf.GraphKeys.LOSSES))
 
                     for l in tf.get_collection(tf.GraphKeys.LOSSES):
-                        tf.summary.scalar(l.op.name+"_averaged", loss_averages.average(l))
+                        tf.summary.scalar(
+                            l.op.name + "_averaged", loss_averages.average(l))
 
                     global_step = tf.train.get_or_create_global_step()
                     train_op = tf.group(self.optimizer.minimize(self.loss, global_step=global_step),
@@ -187,7 +191,7 @@ class Logits(estimator.Estimator):
                     mode=mode, predictions=predictions)
 
             # IF Validation
-            self.loss = self.loss_op(logits, labels)
+            self.loss = self.loss_op(logits=logits, labels=labels)
 
             if self.embedding_validation:
                 predictions_op = predict_using_tensors(
@@ -266,7 +270,7 @@ class LogitsCenterLoss(estimator.Estimator):
       params:
         Extra params for the model function (please see
         https://www.tensorflow.org/extend/estimators for more info)
-        
+
       extra_checkpoint: dict
         In case you want to use other model to initialize some variables.
         This argument should be in the following format
@@ -275,13 +279,13 @@ class LogitsCenterLoss(estimator.Estimator):
             "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),
             "trainable_variables": [<LIST OF VARIABLES OR SCOPES THAT YOU WANT TO TRAIN>]
         }
-        
+
       apply_moving_averages: bool
         Apply exponential moving average in the training variables and in the loss.
         https://www.tensorflow.org/api_docs/python/tf/train/ExponentialMovingAverage
         By default the decay for the variable averages is 0.9999 and for the loss is 0.9
-        
-      
+
+
 
     """
 
@@ -344,8 +348,10 @@ class LogitsCenterLoss(estimator.Estimator):
 
                 # Compute the moving average of all individual losses and the total loss.
                 if apply_moving_averages:
-                    variable_averages = tf.train.ExponentialMovingAverage(0.9999, global_step)
-                    variable_averages_op = variable_averages.apply(tf.trainable_variables())
+                    variable_averages = tf.train.ExponentialMovingAverage(
+                        0.9999, global_step)
+                    variable_averages_op = variable_averages.apply(
+                        tf.trainable_variables())
                 else:
                     variable_averages_op = tf.no_op(name='noop')
 
@@ -363,9 +369,11 @@ class LogitsCenterLoss(estimator.Estimator):
                     centers = loss_dict['centers']
 
                     # Compute the moving average of all individual losses and the total loss.
-                    loss_averages = tf.train.ExponentialMovingAverage(0.9, name='avg')
-                    loss_averages_op = loss_averages.apply(tf.get_collection(tf.GraphKeys.LOSSES))
-                    
+                    loss_averages = tf.train.ExponentialMovingAverage(
+                        0.9, name='avg')
+                    loss_averages_op = loss_averages.apply(
+                        tf.get_collection(tf.GraphKeys.LOSSES))
+
                     for l in tf.get_collection(tf.GraphKeys.LOSSES):
                         tf.summary.scalar(l.op.name, loss_averages.average(l))
 

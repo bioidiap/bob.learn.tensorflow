@@ -28,7 +28,7 @@ else:
     extensions.append('sphinx.ext.pngmath')
 
 # Be picky about warnings
-nitpicky = True
+nitpicky = False
 keep_warnings = True
 
 # Ignores stuff we can't easily resolve on other project's sphinx manuals
@@ -223,7 +223,6 @@ autodoc_member_order = 'bysource'
 autodoc_default_flags = [
     'members',
     'undoc-members',
-    'inherited-members',
     'show-inheritance',
 ]
 

@@ -18,20 +18,22 @@ def get_trainable_variables(extra_checkpoint):
     Given the extra_checkpoint dictionary provided to the estimator,
     extract the content of "trainable_variables" e.
 
-    If trainable_variables is not provided, all end points are trainable by default.
+    If trainable_variables is not provided, all end points are trainable by
+    default.
     If trainable_variables==[], all end points are NOT trainable.
-    If trainable_variables contains some end_points, ONLY these endpoints will be trainable.
+    If trainable_variables contains some end_points, ONLY these endpoints will
+    be trainable.
 
     Parameters
     ----------
-        extra_checkpoint: dict
-          The `extra_checkpoint dictionary provided to the estimator
+    extra_checkpoint : dict
+        The `extra_checkpoint dictionary provided to the estimator
 
     Returns
     -------
-      Returns `None` if `trainable_variables` is not in extra_checkpoint;
-      otherwise returns the content of `extra_checkpoint
-
+    None or object
+        Returns `None` if `trainable_variables` is not in extra_checkpoint;
+        otherwise returns the content of `extra_checkpoint
     """
 
     # If you don't set anything, everything is trainable
