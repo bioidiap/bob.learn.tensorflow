@@ -69,3 +69,71 @@ def simple_lstm_network(train_data_shuffler, lstm_cell_size=64, batch_size=10,
                                  weights_initializer=initializer, weights_regularizer=regularizer, reuse=reuse)
 
     return graph
+
+
+def double_lstm_network(train_data_shuffler, lstm_cell_size=64, batch_size=10,
+                        num_time_steps=28, num_classes=10, seed=10, reuse=False,
+                        dropout=False, input_dropout=1.0, output_dropout=1.0):
+
+    if isinstance(train_data_shuffler, tf.Tensor):
+        inputs = train_data_shuffler
+    else:
+        inputs = train_data_shuffler("data", from_queue=False)
+
+    initializer = tf.contrib.layers.xavier_initializer(seed=seed)
+
+    # First LSTM layer network
+    graph = lstm(inputs, lstm_cell_size, num_time_steps=num_time_steps, batch_size=batch_size,
+                 output_activation_size=num_classes, scope='lstm1', name='sync_cell_l1',
+                 weights_initializer=initializer, activation=tf.nn.sigmoid, reuse=reuse,
+                 dropout=dropout, input_dropout=input_dropout, output_dropout=output_dropout, full_output=True)
+
+    # Second LSTM layer network of twice smaller size
+    graph = lstm(graph, lstm_cell_size/2, num_time_steps=num_time_steps, batch_size=batch_size,
+                 output_activation_size=num_classes, scope='lstm2', name='sync_cell_l2',
+                 weights_initializer=initializer, activation=tf.nn.sigmoid, reuse=reuse,
+                 dropout=dropout, input_dropout=input_dropout, output_dropout=output_dropout)
+
+    regularizer = None
+    # fully connect the LSTM output to the classes
+    graph = slim.fully_connected(graph, num_classes, activation_fn=None, scope='fc1',
+                                 weights_initializer=initializer, weights_regularizer=regularizer, reuse=reuse)
+
+    return graph
+
+
+def triple_lstm_network(train_data_shuffler, lstm_cell_size=64, batch_size=10,
+                        num_time_steps=28, num_classes=10, seed=10, reuse=False,
+                        dropout=False, input_dropout=1.0, output_dropout=1.0):
+
+    if isinstance(train_data_shuffler, tf.Tensor):
+        inputs = train_data_shuffler
+    else:
+        inputs = train_data_shuffler("data", from_queue=False)
+
+    initializer = tf.contrib.layers.xavier_initializer(seed=seed)
+
+    # First LSTM layer network
+    graph = lstm(inputs, lstm_cell_size, num_time_steps=num_time_steps, batch_size=batch_size,
+                 output_activation_size=num_classes, scope='lstm1', name='sync_cell_l1',
+                 weights_initializer=initializer, activation=tf.nn.sigmoid, reuse=reuse,
+                 dropout=dropout, input_dropout=input_dropout, output_dropout=output_dropout, full_output=True)
+
+    # Second LSTM layer network of twice smaller size
+    graph = lstm(graph, lstm_cell_size/2, num_time_steps=num_time_steps, batch_size=batch_size,
+                 output_activation_size=num_classes, scope='lstm2', name='sync_cell_l2',
+                 weights_initializer=initializer, activation=tf.nn.sigmoid, reuse=reuse,
+                 dropout=dropout, input_dropout=input_dropout, output_dropout=output_dropout, full_output=True)
+
+    # Third LSTM layer network three time smaller size
+    graph = lstm(graph, lstm_cell_size/4, num_time_steps=num_time_steps, batch_size=batch_size,
+                 output_activation_size=num_classes, scope='lstm3', name='sync_cell_l3',
+                 weights_initializer=initializer, activation=tf.nn.sigmoid, reuse=reuse,
+                 dropout=dropout, input_dropout=input_dropout, output_dropout=output_dropout)
+
+    regularizer = None
+    # fully connect the LSTM output to the classes
+    graph = slim.fully_connected(graph, num_classes, activation_fn=None, scope='fc1',
+                                 weights_initializer=initializer, weights_regularizer=regularizer, reuse=reuse)
+
+    return graph

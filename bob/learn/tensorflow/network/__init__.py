@@ -3,7 +3,7 @@ from .LightCNN9 import LightCNN9
 from .Dummy import Dummy
 from .MLP import MLP
 from .Embedding import Embedding
-from .lstm import simple_lstm_network
+from .lstm import simple_lstm_network, double_lstm_network, triple_lstm_network
 from .lstm import RegularizedLoss
 from .simplemlp import mlp_network
 from .simplecnn import simple2Dcnn_network
