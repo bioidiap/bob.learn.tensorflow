@@ -132,6 +132,7 @@ def model_fn(features, labels, mode, params=None, config=None):
 
     params = params or {}
     learning_rate = params.get('learning_rate', 1e-5)
+    apply_moving_averages = params.get('apply_moving_averages', False)
 
     arch_kwargs = {
         'kernerl_size': params.get('kernerl_size', None),
@@ -154,28 +155,60 @@ def model_fn(features, labels, mode, params=None, config=None):
     if mode == tf.estimator.ModeKeys.PREDICT:
         return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
-    # Calculate Loss (for both TRAIN and EVAL modes)
-    loss = tf.losses.sparse_softmax_cross_entropy(logits=logits, labels=labels)
     accuracy = tf.metrics.accuracy(
         labels=labels, predictions=predictions["classes"])
     metrics = {'accuracy': accuracy}
 
-    # Configure the training op
+    global_step = tf.train.get_or_create_global_step()
+
+    # Compute the moving average of all individual losses and the total loss.
+    if apply_moving_averages and mode == tf.estimator.ModeKeys.TRAIN:
+        variable_averages = tf.train.ExponentialMovingAverage(
+            0.9999, global_step)
+        variable_averages_op = variable_averages.apply(
+            tf.trainable_variables())
+    else:
+        variable_averages_op = tf.no_op(name='noop')
+
     if mode == tf.estimator.ModeKeys.TRAIN:
-        global_step = tf.train.get_or_create_global_step()
-        optimizer = tf.train.GradientDescentOptimizer(
-            learning_rate=learning_rate)
         # for batch normalization to be updated as well:
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
-        with tf.control_dependencies(update_ops):
-            train_op = optimizer.minimize(
-                loss=loss, global_step=global_step)
-        # Log accuracy and loss
-        with tf.name_scope('train_metrics'):
-            tf.summary.scalar('accuracy', accuracy[1])
-            tf.summary.scalar('loss', loss)
     else:
-        train_op = None
+        update_ops = []
+
+    with tf.control_dependencies([variable_averages_op] + update_ops):
+
+        # Calculate Loss (for both TRAIN and EVAL modes)
+        loss = tf.losses.sparse_softmax_cross_entropy(
+            logits=logits, labels=labels)
+
+        if apply_moving_averages and mode == tf.estimator.ModeKeys.TRAIN:
+            # Compute the moving average of all individual losses and the total
+            # loss.
+            loss_averages = tf.train.ExponentialMovingAverage(0.9, name='avg')
+            loss_averages_op = loss_averages.apply(
+                tf.get_collection(tf.GraphKeys.LOSSES))
+        else:
+            loss_averages_op = tf.no_op(name='noop')
+
+        if mode == tf.estimator.ModeKeys.TRAIN:
+
+            optimizer = tf.train.GradientDescentOptimizer(
+                learning_rate=learning_rate)
+            train_op = tf.group(
+                optimizer.minimize(loss, global_step=global_step),
+                variable_averages_op, loss_averages_op)
+
+            # Log accuracy and loss
+            with tf.name_scope('train_metrics'):
+                tf.summary.scalar('accuracy', accuracy[1])
+                tf.summary.scalar('loss', loss)
+                if apply_moving_averages:
+                    for l in tf.get_collection(tf.GraphKeys.LOSSES):
+                        tf.summary.scalar(l.op.name + "_averaged",
+                                          loss_averages.average(l))
+        else:
+            train_op = None
 
     return tf.estimator.EstimatorSpec(
         mode=mode,
