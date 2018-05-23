@@ -74,8 +74,8 @@ def save_predictions(pool, output_dir, key, pred_buffer):
               entry_point_group='bob.learn.tensorflow.hook')
 @click.option('--predict-keys', '-k', multiple=True, default=None,
               cls=ResourceOption)
-@click.option('--checkpoint-path', cls=ResourceOption)
-@click.option('--multiple-samples', is_flag=True, cls=ResourceOption)
+@click.option('--checkpoint-path', '-c', cls=ResourceOption)
+@click.option('--multiple-samples', '-m', is_flag=True, cls=ResourceOption)
 @click.option('--array', '-t', type=click.INT, default=1, cls=ResourceOption)
 @click.option('--force', '-f', is_flag=True, cls=ResourceOption)
 @verbosity_option(cls=ResourceOption)
