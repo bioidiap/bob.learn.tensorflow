@@ -102,7 +102,7 @@ def create_dataset_from_records(tfrecord_filenames,
 
     if feature is None:
         feature = DEFAULT_FEATURE
-    dataset = tf.contrib.data.TFRecordDataset(tfrecord_filenames)
+    dataset = tf.data.TFRecordDataset(tfrecord_filenames)
     parser = partial(
         example_parser,
         feature=feature,
@@ -144,7 +144,7 @@ def create_dataset_from_records_with_augmentation(
 
     if feature is None:
         feature = DEFAULT_FEATURE
-    dataset = tf.contrib.data.TFRecordDataset(tfrecord_filenames)
+    dataset = tf.data.TFRecordDataset(tfrecord_filenames)
     parser = partial(
         image_augmentation_parser,
         feature=feature,
