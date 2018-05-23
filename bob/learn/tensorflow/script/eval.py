@@ -22,7 +22,7 @@ from bob.io.base import create_directories_safe
 logger = logging.getLogger(__name__)
 
 
-def save_best_n_models(train_dir, save_dir, evaluated_file,
+def save_n_best_models(train_dir, save_dir, evaluated_file,
                        keep_n_best_models):
     create_directories_safe(save_dir)
     evaluated = read_evaluated_file(evaluated_file)
@@ -185,7 +185,7 @@ def eval(estimator, eval_input_fn, hooks, run_once, eval_interval_secs, name,
             sys.stdout.flush()
 
             # Save the best N models into the eval directory
-            save_best_n_models(estimator.model_dir, eval_dir, evaluated_file,
+            save_n_best_models(estimator.model_dir, eval_dir, evaluated_file,
                                keep_n_best_models)
 
         if run_once:
