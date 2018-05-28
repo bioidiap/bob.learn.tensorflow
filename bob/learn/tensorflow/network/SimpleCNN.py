@@ -153,6 +153,7 @@ def model_fn(features, labels, mode, params=None, config=None):
     extra_checkpoint = params.get('extra_checkpoint', None)
     trainable_variables = get_trainable_variables(extra_checkpoint)
     loss_weights = params.get('loss_weights', 1.0)
+    add_histograms = params.get('add_histograms', None)
 
     arch_kwargs = {
         'kernerl_size': params.get('kernerl_size', None),
@@ -239,6 +240,15 @@ def model_fn(features, labels, mode, params=None, config=None):
                     for l in tf.get_collection(tf.GraphKeys.LOSSES):
                         tf.summary.scalar(l.op.name + "_averaged",
                                           loss_averages.average(l))
+
+            # add histograms summaries
+            if add_histograms == 'all':
+                for v in tf.all_variables():
+                    tf.summary.histogram(v.name, v)
+            elif add_histograms == 'train':
+                for v in tf.trainable_variables():
+                    tf.summary.histogram(v.name, v)
+
         else:
             train_op = None
 

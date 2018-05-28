@@ -67,7 +67,7 @@ def input_fn(mode, batch_size=1):
             'convert_to_records.py first to convert the MNIST data to '
             'TFRecord file format.')
 
-    dataset = tf.contrib.data.TFRecordDataset(tfrecords_files)
+    dataset = tf.data.TFRecordDataset(tfrecords_files)
 
     # For training, repeat the dataset forever
     if mode == tf.estimator.ModeKeys.TRAIN:

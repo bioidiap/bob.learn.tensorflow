@@ -4,18 +4,99 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+import click
 import logging
 import os
-import time
 import six
+import shutil
 import sys
 import tensorflow as tf
+import time
+from glob import glob
+from collections import defaultdict, OrderedDict
 from ..utils.eval import get_global_step
-import click
 from bob.extension.scripts.click_helper import (
     verbosity_option, ConfigCommand, ResourceOption)
+from bob.io.base import create_directories_safe
 
 logger = logging.getLogger(__name__)
+
+
+def save_n_best_models(train_dir, save_dir, evaluated_file,
+                       keep_n_best_models):
+    create_directories_safe(save_dir)
+    evaluated = read_evaluated_file(evaluated_file)
+
+    def _key(x):
+        x = x[1]
+        ac = x.get('accuracy')
+        lo = x.get('loss') or 0
+        return ac * -1 if ac is not None else lo
+
+    best_models = OrderedDict(sorted(
+        evaluated.items(), key=_key)[:keep_n_best_models])
+
+    # delete the old saved models that are not in top N best anymore
+    saved_models = defaultdict(list)
+    for path in glob('{}/model.ckpt-*'.format(save_dir)):
+        global_step = path.split('model.ckpt-')[1].split('.')[0]
+        saved_models[global_step].append(path)
+
+    for global_step, paths in saved_models.items():
+        if global_step not in best_models:
+            for path in paths:
+                logger.info("Deleting `%s'", path)
+                os.remove(path)
+
+    # copy over the best models if not already there
+    for global_step in best_models:
+        for path in glob('{}/model.ckpt-{}.*'.format(train_dir, global_step)):
+            dst = os.path.join(save_dir, os.path.basename(path))
+            if os.path.isfile(dst):
+                continue
+            logger.info("Copying `%s' over to `%s'", path, dst)
+            shutil.copy(path, dst)
+
+    # create a checkpoint file indicating to the best existing model:
+    # 1. filter non-existing models first
+    def _filter(x):
+        return len(glob('{}/model.ckpt-{}.*'.format(save_dir, x[0]))) > 0
+    best_models = OrderedDict(filter(_filter, best_models.items()))
+
+    # 2. create the checkpoint file
+    with open(os.path.join(save_dir, 'checkpoint'), 'wt') as f:
+        for i, global_step in enumerate(best_models):
+            if i == 0:
+                f.write('model_checkpoint_path: "model.ckpt-{}"\n'.format(
+                    global_step))
+            f.write('all_model_checkpoint_paths: "model.ckpt-{}"\n'.format(
+                global_step))
+
+
+def read_evaluated_file(path):
+    evaluated = {}
+    with open(path) as f:
+        for line in f:
+            global_step, line = line.split(' ', 1)
+            temp = {}
+            for k_v in line.strip().split(', '):
+                k, v = k_v.split(' = ')
+                v = float(v)
+                if 'global_step' in k:
+                    v = int(v)
+                temp[k] = v
+            evaluated[global_step] = temp
+    return evaluated
+
+
+def append_evaluated_file(path, evaluations):
+    str_evaluations = ', '.join(
+        '%s = %s' % (k, v)
+        for k, v in sorted(six.iteritems(evaluations)))
+    with open(path, 'a') as f:
+        f.write('{} {}\n'.format(evaluations['global_step'],
+                                 str_evaluations))
+    return str_evaluations
 
 
 @click.command(entry_point_group='bob.learn.tensorflow.config',
@@ -28,12 +109,14 @@ logger = logging.getLogger(__name__)
               entry_point_group='bob.learn.tensorflow.hook')
 @click.option('--run-once', cls=ResourceOption, default=False,
               show_default=True)
-@click.option('--eval-interval-secs', cls=ResourceOption, type=click.types.INT,
+@click.option('--eval-interval-secs', cls=ResourceOption, type=click.INT,
               default=60, show_default=True)
 @click.option('--name', cls=ResourceOption)
+@click.option('--keep-n-best-models', '-K', type=click.INT, cls=ResourceOption,
+              default=0, show_default=True)
 @verbosity_option(cls=ResourceOption)
 def eval(estimator, eval_input_fn, hooks, run_once, eval_interval_secs, name,
-         **kwargs):
+         keep_n_best_models, **kwargs):
     """Evaluates networks using Tensorflow estimators.
 
     \b
@@ -76,18 +159,20 @@ def eval(estimator, eval_input_fn, hooks, run_once, eval_interval_secs, name,
     logger.debug('run_once: %s', run_once)
     logger.debug('eval_interval_secs: %s', eval_interval_secs)
     logger.debug('name: %s', name)
+    logger.debug('keep_n_best_models: %s', keep_n_best_models)
     logger.debug('kwargs: %s', kwargs)
 
-    if name:
-        real_name = 'eval_' + name
-    else:
-        real_name = 'eval'
-    evaluated_file = os.path.join(estimator.model_dir, real_name, 'evaluated')
+    real_name = 'eval_' + name if name else 'eval'
+    eval_dir = os.path.join(estimator.model_dir, real_name)
+    evaluated_file = os.path.join(eval_dir, 'evaluated')
     while True:
-        evaluated_steps = []
+        evaluated_steps = {}
         if os.path.exists(evaluated_file):
-            with open(evaluated_file) as f:
-                evaluated_steps = [line.split()[0] for line in f]
+            evaluated_steps = read_evaluated_file(evaluated_file)
+
+            # Save the best N models into the eval directory
+            save_n_best_models(estimator.model_dir, eval_dir, evaluated_file,
+                               keep_n_best_models)
 
         ckpt = tf.train.get_checkpoint_state(estimator.model_dir)
         if (not ckpt) or (not ckpt.model_checkpoint_path):
@@ -113,14 +198,15 @@ def eval(estimator, eval_input_fn, hooks, run_once, eval_interval_secs, name,
                 name=name,
             )
 
-            str_evaluations = ', '.join(
-                '%s = %s' % (k, v)
-                for k, v in sorted(six.iteritems(evaluations)))
-            print(str_evaluations)
+            str_evaluations = append_evaluated_file(
+                evaluated_file, evaluations)
+            click.echo(str_evaluations)
             sys.stdout.flush()
-            with open(evaluated_file, 'a') as f:
-                f.write('{} {}\n'.format(evaluations['global_step'],
-                                         str_evaluations))
+
+            # Save the best N models into the eval directory
+            save_n_best_models(estimator.model_dir, eval_dir, evaluated_file,
+                               keep_n_best_models)
+
         if run_once:
             break
         time.sleep(eval_interval_secs)
