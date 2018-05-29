@@ -44,6 +44,7 @@ def append_image_augmentation(image,
                               random_brightness=False,
                               random_contrast=False,
                               random_saturation=False,
+                              random_rotate=False,
                               per_image_normalization=True):
     """
     Append to the current tensor some random image augmentation operation
@@ -66,6 +67,9 @@ def append_image_augmentation(image,
 
        random_saturation:
            Adjust the saturation of an RGB image by a random factor (https://www.tensorflow.org/api_docs/python/tf/image/random_saturation)
+
+       random_rotate:
+           Randomly rotate face images between -5 and 5 degrees
 
        per_image_normalization:
            Linearly scales image to have zero mean and unit norm.
@@ -91,6 +95,10 @@ def append_image_augmentation(image,
 
     if random_saturation:
         image = tf.image.random_saturation(image, lower=0, upper=0.5)
+
+    if random_rotate:
+        image = tf.contrib.image.rotate(image, angles=numpy.random.randint(-5,5),
+                interpolation="BILINEAR")
 
     if gray_scale:
         image = tf.image.rgb_to_grayscale(image, name="rgb_to_gray")

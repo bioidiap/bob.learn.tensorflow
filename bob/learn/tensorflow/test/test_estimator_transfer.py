@@ -21,9 +21,9 @@ model_dir_adapted = "./temp2"
 learning_rate = 0.1
 data_shape = (28, 28, 1)  # size of atnt images
 data_type = tf.float32
-batch_size = 16
+batch_size = 32
 validation_batch_size = 250
-epochs = 2
+epochs = 6
 steps = 5000
 
 

@@ -30,6 +30,7 @@ def image_augmentation_parser(serialized_example,
                               random_brightness=False,
                               random_contrast=False,
                               random_saturation=False,
+                              random_rotate=False,
                               per_image_normalization=True):
     """
     Parses a single tf.Example into image and label tensors.
@@ -52,6 +53,7 @@ def image_augmentation_parser(serialized_example,
         random_brightness=random_brightness,
         random_contrast=random_contrast,
         random_saturation=random_saturation,
+        random_rotate=random_rotate,
         per_image_normalization=per_image_normalization)
 
     # Cast label data into int64
@@ -123,6 +125,7 @@ def create_dataset_from_records_with_augmentation(
         random_brightness=False,
         random_contrast=False,
         random_saturation=False,
+        random_rotate=False,
         per_image_normalization=True):
     """
     Create dataset from a list of tf-record files
@@ -156,6 +159,7 @@ def create_dataset_from_records_with_augmentation(
         random_brightness=random_brightness,
         random_contrast=random_contrast,
         random_saturation=random_saturation,
+        random_rotate=random_rotate,
         per_image_normalization=per_image_normalization)
     dataset = dataset.map(parser)
     return dataset
@@ -173,6 +177,7 @@ def shuffle_data_and_labels_image_augmentation(tfrecord_filenames,
                                                random_brightness=False,
                                                random_contrast=False,
                                                random_saturation=False,
+                                               random_rotate=False,
                                                per_image_normalization=True):
     """
     Dump random batches from a list of tf-record files and applies some image augmentation
@@ -215,7 +220,10 @@ def shuffle_data_and_labels_image_augmentation(tfrecord_filenames,
        random_saturation:
            Adjust the saturation of an RGB image by a random factor (https://www.tensorflow.org/api_docs/python/tf/image/random_saturation)
 
-       per_image_normalization:
+       random_rotate:
+           Randomly rotate face images between -5 and 5 degrees
+
+      per_image_normalization:
            Linearly scales image to have zero mean and unit norm.
 
     """
@@ -230,6 +238,7 @@ def shuffle_data_and_labels_image_augmentation(tfrecord_filenames,
         random_brightness=random_brightness,
         random_contrast=random_contrast,
         random_saturation=random_saturation,
+        random_rotate=random_rotate,
         per_image_normalization=per_image_normalization)
 
     dataset = dataset.shuffle(buffer_size).batch(batch_size).repeat(epochs)
@@ -335,6 +344,7 @@ def batch_data_and_labels_image_augmentation(tfrecord_filenames,
                                              random_brightness=False,
                                              random_contrast=False,
                                              random_saturation=False,
+                                             random_rotate=False,
                                              per_image_normalization=True):
     """
     Dump in order batches from a list of tf-record files
@@ -368,6 +378,7 @@ def batch_data_and_labels_image_augmentation(tfrecord_filenames,
         random_brightness=random_brightness,
         random_contrast=random_contrast,
         random_saturation=random_saturation,
+        random_rotate=random_rotate,
         per_image_normalization=per_image_normalization)
 
     dataset = dataset.batch(batch_size).repeat(epochs)

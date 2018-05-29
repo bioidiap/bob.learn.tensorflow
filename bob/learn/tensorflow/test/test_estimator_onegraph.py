@@ -13,6 +13,7 @@ from bob.learn.tensorflow.dataset.tfrecords import shuffle_data_and_labels, batc
 from bob.learn.tensorflow.utils import load_mnist, create_mnist_tfrecord
 from bob.learn.tensorflow.utils.hooks import LoggerHookEstimator
 from bob.learn.tensorflow.loss import mean_cross_entropy_loss
+from bob.learn.tensorflow.utils import reproducible
 
 import numpy
 
@@ -26,11 +27,11 @@ model_dir = "./temp"
 learning_rate = 0.1
 data_shape = (28, 28, 1)  # size of atnt images
 data_type = tf.float32
-batch_size = 16
+batch_size = 32
 validation_batch_size = 250
-epochs = 1
+epochs = 6
 steps = 5000
-
+reproducible.set_seed()
 
 def test_logitstrainer():
     # Trainer logits
@@ -167,6 +168,8 @@ def run_logitstrainer_mnist(trainer, augmentation=False):
                 data_shape,
                 data_type,
                 batch_size,
+                random_flip=True,
+                random_rotate=True,
                 epochs=epochs)
         else:
             return shuffle_data_and_labels(
@@ -196,10 +199,10 @@ def run_logitstrainer_mnist(trainer, augmentation=False):
     trainer.train(input_fn, steps=steps, hooks=hooks)
     if not trainer.embedding_validation:
         acc = trainer.evaluate(input_fn_validation)
-        assert acc['accuracy'] > 0.20
+        assert acc['accuracy'] > 0.10
     else:
         acc = trainer.evaluate(input_fn_validation)
-        assert acc['accuracy'] > 0.20
+        assert acc['accuracy'] > 0.10
 
     # Cleaning up
     tf.reset_default_graph()
