@@ -20,6 +20,7 @@ def shuffle_data_and_labels_image_augmentation(filenames,
                                                random_brightness=False,
                                                random_contrast=False,
                                                random_saturation=False,
+                                               random_rotate=False,
                                                per_image_normalization=True,
                                                extension=None):
     """
@@ -70,6 +71,9 @@ def shuffle_data_and_labels_image_augmentation(filenames,
        random_saturation:
            Adjust the saturation of an RGB image by a random factor (https://www.tensorflow.org/api_docs/python/tf/image/random_saturation)
 
+       random_rotate:
+           Randomly rotate face images between -10 and 10 degrees
+
        per_image_normalization:
            Linearly scales image to have zero mean and unit norm.
 
@@ -89,6 +93,7 @@ def shuffle_data_and_labels_image_augmentation(filenames,
         random_brightness=random_brightness,
         random_contrast=random_contrast,
         random_saturation=random_saturation,
+        random_rotate=random_rotate,
         per_image_normalization=per_image_normalization,
         extension=extension)
 
@@ -108,6 +113,7 @@ def create_dataset_from_path_augmentation(filenames,
                                           random_brightness=False,
                                           random_contrast=False,
                                           random_saturation=False,
+                                          random_rotate=False,
                                           per_image_normalization=True,
                                           extension=None):
     """
@@ -141,6 +147,7 @@ def create_dataset_from_path_augmentation(filenames,
         random_brightness=random_brightness,
         random_contrast=random_contrast,
         random_saturation=random_saturation,
+        random_rotate=random_rotate,
         per_image_normalization=per_image_normalization,
         extension=extension)
 
@@ -159,6 +166,7 @@ def image_augmentation_parser(filename,
                               random_brightness=False,
                               random_contrast=False,
                               random_saturation=False,
+                              random_rotate=False,
                               per_image_normalization=True,
                               extension=None):
     """
@@ -180,6 +188,7 @@ def image_augmentation_parser(filename,
         random_brightness=random_brightness,
         random_contrast=random_contrast,
         random_saturation=random_saturation,
+        random_rotate=random_rotate,
         per_image_normalization=per_image_normalization)
 
     label = tf.cast(label, tf.int64)
