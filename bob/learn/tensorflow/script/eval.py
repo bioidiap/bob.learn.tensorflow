@@ -29,9 +29,9 @@ def save_n_best_models(train_dir, save_dir, evaluated_file,
 
     def _key(x):
         x = x[1]
-        ac = x.get('accuracy')
+        ac = x.get('accuracy') or 0
         lo = x.get('loss') or 0
-        return ac * -1 if ac is not None else lo
+        return (lo, ac * -1)
 
     best_models = OrderedDict(sorted(
         evaluated.items(), key=_key)[:keep_n_best_models])
