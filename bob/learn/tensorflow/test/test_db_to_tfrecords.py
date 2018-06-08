@@ -18,8 +18,10 @@ def test_db_to_tfrecords():
 
     try:
         runner = CliRunner()
-        result = runner.invoke(db_to_tfrecords, args=(
-            dummy_config, '--output', output_path), standalone_mode=False)
+        result = runner.invoke(
+            db_to_tfrecords,
+            args=(dummy_config, '--output', output_path),
+            standalone_mode=False)
         assert result.exit_code == 0, '%s\n%s\n%s' % (
             result.exc_info, result.output, result.exception)
 

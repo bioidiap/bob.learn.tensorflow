@@ -62,4 +62,3 @@ def dummy(inputs,
         end_points[name] = graph
 
     return graph, end_points
-

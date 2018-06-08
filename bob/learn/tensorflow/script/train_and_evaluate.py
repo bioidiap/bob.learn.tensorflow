@@ -8,23 +8,39 @@ import tensorflow as tf
 from bob.learn.tensorflow.utils.hooks import EarlyStopException
 import logging
 import click
-from bob.extension.scripts.click_helper import (
-    verbosity_option, ConfigCommand, ResourceOption)
+from bob.extension.scripts.click_helper import (verbosity_option,
+                                                ConfigCommand, ResourceOption)
 
 logger = logging.getLogger(__name__)
 
 
-@click.command(entry_point_group='bob.learn.tensorflow.config',
-               cls=ConfigCommand)
-@click.option('--estimator', '-e', required=True, cls=ResourceOption,
-              entry_point_group='bob.learn.tensorflow.estimator')
-@click.option('--train-spec', '-it', required=True, cls=ResourceOption,
-              entry_point_group='bob.learn.tensorflow.trainspec')
-@click.option('--eval-spec', '-ie', required=True, cls=ResourceOption,
-              entry_point_group='bob.learn.tensorflow.evalspec')
-@click.option('--exit-ok-exceptions', cls=ResourceOption, multiple=True,
-              default=(EarlyStopException,), show_default=True,
-              entry_point_group='bob.learn.tensorflow.exception')
+@click.command(
+    entry_point_group='bob.learn.tensorflow.config', cls=ConfigCommand)
+@click.option(
+    '--estimator',
+    '-e',
+    required=True,
+    cls=ResourceOption,
+    entry_point_group='bob.learn.tensorflow.estimator')
+@click.option(
+    '--train-spec',
+    '-it',
+    required=True,
+    cls=ResourceOption,
+    entry_point_group='bob.learn.tensorflow.trainspec')
+@click.option(
+    '--eval-spec',
+    '-ie',
+    required=True,
+    cls=ResourceOption,
+    entry_point_group='bob.learn.tensorflow.evalspec')
+@click.option(
+    '--exit-ok-exceptions',
+    cls=ResourceOption,
+    multiple=True,
+    default=(EarlyStopException, ),
+    show_default=True,
+    entry_point_group='bob.learn.tensorflow.exception')
 @verbosity_option(cls=ResourceOption)
 def train_and_evaluate(estimator, train_spec, eval_spec, exit_ok_exceptions,
                        **kwargs):

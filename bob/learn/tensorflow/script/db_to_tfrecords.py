@@ -12,8 +12,8 @@ import logging
 import click
 import tensorflow as tf
 from bob.io.base import create_directories_safe
-from bob.extension.scripts.click_helper import (
-    verbosity_option, ConfigCommand, ResourceOption)
+from bob.extension.scripts.click_helper import (verbosity_option,
+                                                ConfigCommand, ResourceOption)
 
 logger = logging.getLogger(__name__)
 
@@ -73,8 +73,8 @@ def _bytes2human(n, format='%(value).1f %(symbol)s', symbols='customary'):
     return format % dict(symbol=symbols[0], value=n)
 
 
-@click.command(entry_point_group='bob.learn.tensorflow.config',
-               cls=ConfigCommand)
+@click.command(
+    entry_point_group='bob.learn.tensorflow.config', cls=ConfigCommand)
 @click.option('--samples', required=True, cls=ResourceOption)
 @click.option('--reader', required=True, cls=ResourceOption)
 @click.option('--output', '-o', required=True, cls=ResourceOption)
@@ -211,7 +211,10 @@ def db_to_tfrecords(samples, reader, output, shuffle, allow_failures,
             if multiple_samples:
                 for sample in data:
                     total_size += write_a_sample(
-                        writer, sample, label, key,
+                        writer,
+                        sample,
+                        label,
+                        key,
                         size_estimate=size_estimate)
                     sample_count += 1
             else:

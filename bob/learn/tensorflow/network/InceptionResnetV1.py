@@ -26,6 +26,7 @@ import tensorflow as tf
 import tensorflow.contrib.slim as slim
 from .utils import is_trainable
 
+
 # Inception-Renset-A
 def block35(net,
             scale=1.0,
@@ -254,15 +255,16 @@ def reduction_b(net, reuse=None, trainable_variables=True):
                     3)
     return net
 
+
 def inception_resnet_v1_batch_norm(inputs,
-                        dropout_keep_prob=0.8,
-                        bottleneck_layer_size=128,
-                        reuse=None,
-                        scope='InceptionResnetV1',
-                        mode=tf.estimator.ModeKeys.TRAIN,
-                        trainable_variables=None,
-                        weight_decay=1e-5,
-                        **kwargs):
+                                   dropout_keep_prob=0.8,
+                                   bottleneck_layer_size=128,
+                                   reuse=None,
+                                   scope='InceptionResnetV1',
+                                   mode=tf.estimator.ModeKeys.TRAIN,
+                                   trainable_variables=None,
+                                   weight_decay=1e-5,
+                                   **kwargs):
     """
     Creates the Inception Resnet V1 model applying batch not to each 
     Convolutional and FullyConnected layer.
@@ -292,7 +294,6 @@ def inception_resnet_v1_batch_norm(inputs,
       end_points: the set of end_points from the inception model.
 
     """
-                        
 
     batch_norm_params = {
         # Decay for the moving averages.
@@ -304,20 +305,22 @@ def inception_resnet_v1_batch_norm(inputs,
         # Moving averages ends up in the trainable variables collection
         'variables_collections': [tf.GraphKeys.TRAINABLE_VARIABLES],
     }
-    
+
     with slim.arg_scope(
         [slim.conv2d, slim.fully_connected],
             weights_initializer=tf.truncated_normal_initializer(stddev=0.1),
             weights_regularizer=slim.l2_regularizer(weight_decay),
             normalizer_fn=slim.batch_norm,
             normalizer_params=batch_norm_params):
-        return inception_resnet_v1(inputs,
-                        dropout_keep_prob=0.8,
-                        bottleneck_layer_size=128,
-                        reuse=None,
-                        scope='InceptionResnetV1',
-                        mode=mode,
-                        trainable_variables=None,)
+        return inception_resnet_v1(
+            inputs,
+            dropout_keep_prob=0.8,
+            bottleneck_layer_size=128,
+            reuse=None,
+            scope='InceptionResnetV1',
+            mode=mode,
+            trainable_variables=None,
+        )
 
 
 def inception_resnet_v1(inputs,
@@ -327,7 +330,7 @@ def inception_resnet_v1(inputs,
                         scope='InceptionResnetV1',
                         mode=tf.estimator.ModeKeys.TRAIN,
                         trainable_variables=None,
-                        **kwargs):                        
+                        **kwargs):
     """
     Creates the Inception Resnet V1 model.
 
@@ -363,7 +366,6 @@ def inception_resnet_v1(inputs,
             [slim.batch_norm, slim.dropout],
                 is_training=(mode == tf.estimator.ModeKeys.TRAIN)):
 
-
             with slim.arg_scope(
                 [slim.conv2d, slim.max_pool2d, slim.avg_pool2d],
                     stride=1,
@@ -382,7 +384,7 @@ def inception_resnet_v1(inputs,
                     trainable=trainable,
                     reuse=reuse)
                 end_points[name] = net
-                
+
                 # 147 x 147 x 32
                 name = "Conv2d_2a_3x3"
                 trainable = is_trainable(name, trainable_variables)
@@ -395,23 +397,18 @@ def inception_resnet_v1(inputs,
                     trainable=trainable,
                     reuse=reuse)
                 end_points[name] = net
-                
+
                 # 147 x 147 x 64
                 name = "Conv2d_2b_3x3"
                 trainable = is_trainable(name, trainable_variables)
                 net = slim.conv2d(
-                    net,
-                    64,
-                    3,
-                    scope=name,
-                    trainable=trainable,
-                    reuse=reuse)
+                    net, 64, 3, scope=name, trainable=trainable, reuse=reuse)
                 end_points[name] = net
                 # 73 x 73 x 64
                 net = slim.max_pool2d(
                     net, 3, stride=2, padding='VALID', scope='MaxPool_3a_3x3')
                 end_points['MaxPool_3a_3x3'] = net
-                
+
                 # 73 x 73 x 80
                 name = "Conv2d_3b_1x1"
                 trainable = is_trainable(name, trainable_variables)
@@ -437,7 +434,7 @@ def inception_resnet_v1(inputs,
                     trainable=trainable,
                     reuse=reuse)
                 end_points[name] = net
-                
+
                 # 35 x 35 x 256
                 name = "Conv2d_4b_3x3"
                 trainable = is_trainable(name, trainable_variables)
@@ -495,9 +492,7 @@ def inception_resnet_v1(inputs,
                 trainable = is_trainable(name, trainable_variables)
                 with tf.variable_scope(name):
                     net = reduction_b(
-                        net,
-                        trainable_variables=trainable,
-                        reuse=reuse)
+                        net, trainable_variables=trainable, reuse=reuse)
                 end_points[name] = net
 
                 # 5 x Inception-Resnet-C

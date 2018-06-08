@@ -44,8 +44,16 @@ from __future__ import print_function
 import tensorflow as tf
 
 
-def create_conv_layer(inputs, mode, data_format, endpoints, number, filters,
-                      kernel_size, pool_size, pool_strides, skip_pool=False):
+def create_conv_layer(inputs,
+                      mode,
+                      data_format,
+                      endpoints,
+                      number,
+                      filters,
+                      kernel_size,
+                      pool_size,
+                      pool_strides,
+                      skip_pool=False):
     bn_axis = 1 if data_format.lower() == 'channels_first' else 3
     training = mode == tf.estimator.ModeKeys.TRAIN
 
@@ -74,8 +82,12 @@ def create_conv_layer(inputs, mode, data_format, endpoints, number, filters,
         pool = bn_act
     else:
         pool = tf.layers.max_pooling2d(
-            inputs=bn_act, pool_size=pool_size, strides=pool_strides,
-            padding='same', data_format=data_format, name=name)
+            inputs=bn_act,
+            pool_size=pool_size,
+            strides=pool_strides,
+            padding='same',
+            data_format=data_format,
+            name=name)
     endpoints[name] = pool
 
     return pool
@@ -101,8 +113,11 @@ def create_dense_layer(inputs, mode, endpoints, number, units):
     return bn_act
 
 
-def base_architecture(input_layer, mode, data_format,
-                      skip_first_two_pool=False, **kwargs):
+def base_architecture(input_layer,
+                      mode,
+                      data_format,
+                      skip_first_two_pool=False,
+                      **kwargs):
     training = mode == tf.estimator.ModeKeys.TRAIN
     # Keep track of all the endpoints
     endpoints = {}
@@ -110,37 +125,69 @@ def base_architecture(input_layer, mode, data_format,
     # ======================
     # Convolutional Layer #1
     pool1 = create_conv_layer(
-        inputs=input_layer, mode=mode, data_format=data_format,
-        endpoints=endpoints, number=1, filters=50, kernel_size=(5, 5),
-        pool_size=(2, 2), pool_strides=2, skip_pool=skip_first_two_pool)
+        inputs=input_layer,
+        mode=mode,
+        data_format=data_format,
+        endpoints=endpoints,
+        number=1,
+        filters=50,
+        kernel_size=(5, 5),
+        pool_size=(2, 2),
+        pool_strides=2,
+        skip_pool=skip_first_two_pool)
 
     # ======================
     # Convolutional Layer #2
     pool2 = create_conv_layer(
-        inputs=pool1, mode=mode, data_format=data_format,
-        endpoints=endpoints, number=2, filters=100, kernel_size=(3, 3),
-        pool_size=(2, 2), pool_strides=2, skip_pool=skip_first_two_pool)
+        inputs=pool1,
+        mode=mode,
+        data_format=data_format,
+        endpoints=endpoints,
+        number=2,
+        filters=100,
+        kernel_size=(3, 3),
+        pool_size=(2, 2),
+        pool_strides=2,
+        skip_pool=skip_first_two_pool)
 
     # ======================
     # Convolutional Layer #3
     pool3 = create_conv_layer(
-        inputs=pool2, mode=mode, data_format=data_format,
-        endpoints=endpoints, number=3, filters=150, kernel_size=(3, 3),
-        pool_size=(3, 3), pool_strides=2)
+        inputs=pool2,
+        mode=mode,
+        data_format=data_format,
+        endpoints=endpoints,
+        number=3,
+        filters=150,
+        kernel_size=(3, 3),
+        pool_size=(3, 3),
+        pool_strides=2)
 
     # ======================
     # Convolutional Layer #4
     pool4 = create_conv_layer(
-        inputs=pool3, mode=mode, data_format=data_format,
-        endpoints=endpoints, number=4, filters=200, kernel_size=(3, 3),
-        pool_size=(2, 2), pool_strides=2)
+        inputs=pool3,
+        mode=mode,
+        data_format=data_format,
+        endpoints=endpoints,
+        number=4,
+        filters=200,
+        kernel_size=(3, 3),
+        pool_size=(2, 2),
+        pool_strides=2)
 
     # ======================
     # Convolutional Layer #5
     pool5 = create_conv_layer(
-        inputs=pool4, mode=mode, data_format=data_format,
-        endpoints=endpoints, number=5, filters=250, kernel_size=(3, 3),
-        pool_size=(2, 2), pool_strides=2)
+        inputs=pool4,
+        mode=mode,
+        data_format=data_format,
+        endpoints=endpoints,
+        number=5,
+        filters=250,
+        kernel_size=(3, 3),
+        pool_size=(2, 2),
+        pool_strides=2)
 
     # ========================
     # Flatten tensor into a batch of vectors
@@ -151,7 +198,10 @@ def base_architecture(input_layer, mode, data_format,
     # ========================
     # Fully Connected Layer #1
     fc1 = create_dense_layer(
-        inputs=pool5_flat, mode=mode, endpoints=endpoints, number=1,
+        inputs=pool5_flat,
+        mode=mode,
+        endpoints=endpoints,
+        number=1,
         units=1000)
 
     # ========================
@@ -164,8 +214,7 @@ def base_architecture(input_layer, mode, data_format,
     # ========================
     # Fully Connected Layer #2
     fc2 = create_dense_layer(
-        inputs=dropout, mode=mode, endpoints=endpoints, number=2,
-        units=400)
+        inputs=dropout, mode=mode, endpoints=endpoints, number=2, units=400)
 
     return fc2, endpoints
 
@@ -179,11 +228,12 @@ def architecture(input_layer,
                  regularizer=None,
                  **kwargs):
 
-    with tf.variable_scope('PatchCNN', reuse=reuse,
-                           regularizer=regularizer):
+    with tf.variable_scope('PatchCNN', reuse=reuse, regularizer=regularizer):
 
         fc2, endpoints = base_architecture(
-            input_layer=input_layer, mode=mode, data_format=data_format,
+            input_layer=input_layer,
+            mode=mode,
+            data_format=data_format,
             skip_first_two_pool=skip_first_two_pool)
         # Logits layer
         logits = tf.layers.dense(inputs=fc2, units=n_classes)
@@ -252,14 +302,12 @@ def model_fn(features, labels, mode, params=None, config=None):
             staircase=staircase)
 
         optimizer = tf.train.MomentumOptimizer(
-            learning_rate=learning_rate,
-            momentum=momentum)
+            learning_rate=learning_rate, momentum=momentum)
 
         # for batch normalization to be updated as well:
         update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
         with tf.control_dependencies(update_ops):
-            train_op = optimizer.minimize(
-                loss=loss, global_step=global_step)
+            train_op = optimizer.minimize(loss=loss, global_step=global_step)
 
         # Log accuracy and loss
         with tf.name_scope('train_metrics'):

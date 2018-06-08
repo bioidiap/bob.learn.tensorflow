@@ -8,8 +8,8 @@ import os
 import sys
 import logging
 import click
-from bob.extension.scripts.click_helper import (
-    verbosity_option, ConfigCommand, ResourceOption)
+from bob.extension.scripts.click_helper import (verbosity_option,
+                                                ConfigCommand, ResourceOption)
 from multiprocessing import Pool
 from collections import defaultdict
 import numpy as np
@@ -58,23 +58,42 @@ def save_predictions(pool, output_dir, key, pred_buffer):
     pool.apply_async(save, (np.mean(pred_buffer[key], axis=0), outpath))
 
 
-@click.command(entry_point_group='bob.learn.tensorflow.config',
-               cls=ConfigCommand)
-@click.option('--estimator', '-e', required=True, cls=ResourceOption,
-              entry_point_group='bob.learn.tensorflow.estimator')
-@click.option('--database', '-d', required=True, cls=ResourceOption,
-              entry_point_group='bob.bio.database')
-@click.option('--biofiles', required=True, cls=ResourceOption,
-              help='You can only provide this through config files.')
-@click.option('--bio-predict-input-fn', required=True, cls=ResourceOption,
-              entry_point_group='bob.learn.tensorflow.biogenerator_input')
+@click.command(
+    entry_point_group='bob.learn.tensorflow.config', cls=ConfigCommand)
+@click.option(
+    '--estimator',
+    '-e',
+    required=True,
+    cls=ResourceOption,
+    entry_point_group='bob.learn.tensorflow.estimator')
+@click.option(
+    '--database',
+    '-d',
+    required=True,
+    cls=ResourceOption,
+    entry_point_group='bob.bio.database')
+@click.option(
+    '--biofiles',
+    required=True,
+    cls=ResourceOption,
+    help='You can only provide this through config files.')
+@click.option(
+    '--bio-predict-input-fn',
+    required=True,
+    cls=ResourceOption,
+    entry_point_group='bob.learn.tensorflow.biogenerator_input')
 @click.option('--output-dir', '-o', required=True, cls=ResourceOption)
-@click.option('--load-data', cls=ResourceOption,
-              entry_point_group='bob.learn.tensorflow.load_data')
-@click.option('--hooks', cls=ResourceOption, multiple=True,
-              entry_point_group='bob.learn.tensorflow.hook')
-@click.option('--predict-keys', '-k', multiple=True, default=None,
-              cls=ResourceOption)
+@click.option(
+    '--load-data',
+    cls=ResourceOption,
+    entry_point_group='bob.learn.tensorflow.load_data')
+@click.option(
+    '--hooks',
+    cls=ResourceOption,
+    multiple=True,
+    entry_point_group='bob.learn.tensorflow.hook')
+@click.option(
+    '--predict-keys', '-k', multiple=True, default=None, cls=ResourceOption)
 @click.option('--checkpoint-path', '-c', cls=ResourceOption)
 @click.option('--multiple-samples', '-m', is_flag=True, cls=ResourceOption)
 @click.option('--array', '-t', type=click.INT, default=1, cls=ResourceOption)
@@ -199,8 +218,9 @@ def predict_bio(estimator, database, biofiles, bio_predict_input_fn,
         biofiles = biofiles[start:end]
 
     # filter the existing files
-    paths = [make_output_path(output_dir, f.make_path("", ""))
-             for f in biofiles]
+    paths = [
+        make_output_path(output_dir, f.make_path("", "")) for f in biofiles
+    ]
     indexes = non_existing_files(paths, force)
     biofiles = [biofiles[i] for i in indexes]
 

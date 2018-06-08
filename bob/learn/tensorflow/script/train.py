@@ -6,20 +6,31 @@ from __future__ import division
 from __future__ import print_function
 import logging
 import click
-from bob.extension.scripts.click_helper import (
-    verbosity_option, ConfigCommand, ResourceOption)
+from bob.extension.scripts.click_helper import (verbosity_option,
+                                                ConfigCommand, ResourceOption)
 
 logger = logging.getLogger(__name__)
 
 
-@click.command(entry_point_group='bob.learn.tensorflow.config',
-               cls=ConfigCommand)
-@click.option('--estimator', '-e', required=True, cls=ResourceOption,
-              entry_point_group='bob.learn.tensorflow.estimator')
-@click.option('--train-input-fn', '-i', required=True, cls=ResourceOption,
-              entry_point_group='bob.learn.tensorflow.input_fn')
-@click.option('--hooks', cls=ResourceOption, multiple=True,
-              entry_point_group='bob.learn.tensorflow.hook')
+@click.command(
+    entry_point_group='bob.learn.tensorflow.config', cls=ConfigCommand)
+@click.option(
+    '--estimator',
+    '-e',
+    required=True,
+    cls=ResourceOption,
+    entry_point_group='bob.learn.tensorflow.estimator')
+@click.option(
+    '--train-input-fn',
+    '-i',
+    required=True,
+    cls=ResourceOption,
+    entry_point_group='bob.learn.tensorflow.input_fn')
+@click.option(
+    '--hooks',
+    cls=ResourceOption,
+    multiple=True,
+    entry_point_group='bob.learn.tensorflow.hook')
 @click.option('--steps', '-s', cls=ResourceOption, type=click.types.INT)
 @click.option('--max-steps', '-m', cls=ResourceOption, type=click.types.INT)
 @verbosity_option(cls=ResourceOption)
