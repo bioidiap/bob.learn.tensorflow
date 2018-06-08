@@ -38,8 +38,7 @@ def model_fn(features, labels, mode, params, config):
         else:
             reuse = True
         with tf.variable_scope('SimpleCNN', reuse=reuse):
-            net, _ = simplecnn_arch(
-                patches[:, i], mode, **simplecnn_kwargs)
+            net, _ = simplecnn_arch(patches[:, i], mode, **simplecnn_kwargs)
         if i == 0:
             simplecnn_embeddings = net
         else:

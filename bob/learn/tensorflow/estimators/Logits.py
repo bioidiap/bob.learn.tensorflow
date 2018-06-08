@@ -136,8 +136,10 @@ class Logits(estimator.Estimator):
 
                 # Compute the moving average of all individual losses and the total loss.
                 if apply_moving_averages:
-                    variable_averages = tf.train.ExponentialMovingAverage(0.9999, global_step)
-                    variable_averages_op = variable_averages.apply(tf.trainable_variables())
+                    variable_averages = tf.train.ExponentialMovingAverage(
+                        0.9999, global_step)
+                    variable_averages_op = variable_averages.apply(
+                        tf.trainable_variables())
                 else:
                     variable_averages_op = tf.no_op(name='noop')
 
@@ -147,15 +149,20 @@ class Logits(estimator.Estimator):
                     self.loss = self.loss_op(logits=logits, labels=labels)
 
                     # Compute the moving average of all individual losses and the total loss.
-                    loss_averages = tf.train.ExponentialMovingAverage(0.9, name='avg')
-                    loss_averages_op = loss_averages.apply(tf.get_collection(tf.GraphKeys.LOSSES))
+                    loss_averages = tf.train.ExponentialMovingAverage(
+                        0.9, name='avg')
+                    loss_averages_op = loss_averages.apply(
+                        tf.get_collection(tf.GraphKeys.LOSSES))
 
                     for l in tf.get_collection(tf.GraphKeys.LOSSES):
-                        tf.summary.scalar(l.op.name+"_averaged", loss_averages.average(l))
+                        tf.summary.scalar(l.op.name + "_averaged",
+                                          loss_averages.average(l))
 
                     global_step = tf.train.get_or_create_global_step()
-                    train_op = tf.group(self.optimizer.minimize(self.loss, global_step=global_step),
-                                        variable_averages_op, loss_averages_op)
+                    train_op = tf.group(
+                        self.optimizer.minimize(
+                            self.loss, global_step=global_step),
+                        variable_averages_op, loss_averages_op)
 
                 return tf.estimator.EstimatorSpec(
                     mode=mode, loss=self.loss, train_op=train_op)
@@ -285,21 +292,19 @@ class LogitsCenterLoss(estimator.Estimator):
 
     """
 
-    def __init__(
-            self,
-            architecture=None,
-            optimizer=None,
-            config=None,
-            n_classes=0,
-            embedding_validation=False,
-            model_dir="",
-            alpha=0.9,
-            factor=0.01,
-            validation_batch_size=None,
-            params=None,
-            extra_checkpoint=None,
-            apply_moving_averages=True
-    ):
+    def __init__(self,
+                 architecture=None,
+                 optimizer=None,
+                 config=None,
+                 n_classes=0,
+                 embedding_validation=False,
+                 model_dir="",
+                 alpha=0.9,
+                 factor=0.01,
+                 validation_batch_size=None,
+                 params=None,
+                 extra_checkpoint=None,
+                 apply_moving_averages=True):
 
         self.architecture = architecture
         self.optimizer = optimizer
@@ -344,8 +349,10 @@ class LogitsCenterLoss(estimator.Estimator):
 
                 # Compute the moving average of all individual losses and the total loss.
                 if apply_moving_averages:
-                    variable_averages = tf.train.ExponentialMovingAverage(0.9999, global_step)
-                    variable_averages_op = variable_averages.apply(tf.trainable_variables())
+                    variable_averages = tf.train.ExponentialMovingAverage(
+                        0.9999, global_step)
+                    variable_averages_op = variable_averages.apply(
+                        tf.trainable_variables())
                 else:
                     variable_averages_op = tf.no_op(name='noop')
 
@@ -363,8 +370,10 @@ class LogitsCenterLoss(estimator.Estimator):
                     centers = loss_dict['centers']
 
                     # Compute the moving average of all individual losses and the total loss.
-                    loss_averages = tf.train.ExponentialMovingAverage(0.9, name='avg')
-                    loss_averages_op = loss_averages.apply(tf.get_collection(tf.GraphKeys.LOSSES))
+                    loss_averages = tf.train.ExponentialMovingAverage(
+                        0.9, name='avg')
+                    loss_averages_op = loss_averages.apply(
+                        tf.get_collection(tf.GraphKeys.LOSSES))
 
                     for l in tf.get_collection(tf.GraphKeys.LOSSES):
                         tf.summary.scalar(l.op.name, loss_averages.average(l))
@@ -376,7 +385,8 @@ class LogitsCenterLoss(estimator.Estimator):
 
                     train_op = tf.group(
                         self.optimizer.minimize(
-                            self.loss, global_step=global_step), centers, variable_averages_op, loss_averages_op)
+                            self.loss, global_step=global_step), centers,
+                        variable_averages_op, loss_averages_op)
                 return tf.estimator.EstimatorSpec(
                     mode=mode, loss=self.loss, train_op=train_op)
 

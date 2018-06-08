@@ -102,8 +102,8 @@ def _create_tfrecord(test_dir):
         f2.write(f.read().replace('TEST_DIR', test_dir))
     output = os.path.join(test_dir, 'dev.tfrecords')
     runner = CliRunner()
-    result = runner.invoke(db_to_tfrecords, args=[
-        dummy_tfrecord_config, '--output', output])
+    result = runner.invoke(
+        db_to_tfrecords, args=[dummy_tfrecord_config, '--output', output])
     assert result.exit_code == 0, '%s\n%s\n%s' % (
         result.exc_info, result.output, result.exception)
     return output

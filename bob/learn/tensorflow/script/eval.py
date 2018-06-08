@@ -15,8 +15,8 @@ import time
 from glob import glob
 from collections import defaultdict, OrderedDict
 from ..utils.eval import get_global_step
-from bob.extension.scripts.click_helper import (
-    verbosity_option, ConfigCommand, ResourceOption)
+from bob.extension.scripts.click_helper import (verbosity_option,
+                                                ConfigCommand, ResourceOption)
 from bob.io.base import create_directories_safe
 
 logger = logging.getLogger(__name__)
@@ -33,8 +33,8 @@ def save_n_best_models(train_dir, save_dir, evaluated_file,
         lo = x.get('loss') or 0
         return (lo, ac * -1)
 
-    best_models = OrderedDict(sorted(
-        evaluated.items(), key=_key)[:keep_n_best_models])
+    best_models = OrderedDict(
+        sorted(evaluated.items(), key=_key)[:keep_n_best_models])
 
     # delete the old saved models that are not in top N best anymore
     saved_models = defaultdict(list)
@@ -61,6 +61,7 @@ def save_n_best_models(train_dir, save_dir, evaluated_file,
     # 1. filter non-existing models first
     def _filter(x):
         return len(glob('{}/model.ckpt-{}.*'.format(save_dir, x[0]))) > 0
+
     best_models = OrderedDict(filter(_filter, best_models.items()))
 
     # 2. create the checkpoint file
@@ -91,29 +92,47 @@ def read_evaluated_file(path):
 
 def append_evaluated_file(path, evaluations):
     str_evaluations = ', '.join(
-        '%s = %s' % (k, v)
-        for k, v in sorted(six.iteritems(evaluations)))
+        '%s = %s' % (k, v) for k, v in sorted(six.iteritems(evaluations)))
     with open(path, 'a') as f:
-        f.write('{} {}\n'.format(evaluations['global_step'],
-                                 str_evaluations))
+        f.write('{} {}\n'.format(evaluations['global_step'], str_evaluations))
     return str_evaluations
 
 
-@click.command(entry_point_group='bob.learn.tensorflow.config',
-               cls=ConfigCommand)
-@click.option('--estimator', '-e', required=True, cls=ResourceOption,
-              entry_point_group='bob.learn.tensorflow.estimator')
-@click.option('--eval-input-fn', '-i', required=True, cls=ResourceOption,
-              entry_point_group='bob.learn.tensorflow.input_fn')
-@click.option('--hooks', cls=ResourceOption, multiple=True,
-              entry_point_group='bob.learn.tensorflow.hook')
-@click.option('--run-once', cls=ResourceOption, default=False,
-              show_default=True)
-@click.option('--eval-interval-secs', cls=ResourceOption, type=click.INT,
-              default=60, show_default=True)
+@click.command(
+    entry_point_group='bob.learn.tensorflow.config', cls=ConfigCommand)
+@click.option(
+    '--estimator',
+    '-e',
+    required=True,
+    cls=ResourceOption,
+    entry_point_group='bob.learn.tensorflow.estimator')
+@click.option(
+    '--eval-input-fn',
+    '-i',
+    required=True,
+    cls=ResourceOption,
+    entry_point_group='bob.learn.tensorflow.input_fn')
+@click.option(
+    '--hooks',
+    cls=ResourceOption,
+    multiple=True,
+    entry_point_group='bob.learn.tensorflow.hook')
+@click.option(
+    '--run-once', cls=ResourceOption, default=False, show_default=True)
+@click.option(
+    '--eval-interval-secs',
+    cls=ResourceOption,
+    type=click.INT,
+    default=60,
+    show_default=True)
 @click.option('--name', cls=ResourceOption)
-@click.option('--keep-n-best-models', '-K', type=click.INT, cls=ResourceOption,
-              default=0, show_default=True)
+@click.option(
+    '--keep-n-best-models',
+    '-K',
+    type=click.INT,
+    cls=ResourceOption,
+    default=0,
+    show_default=True)
 @verbosity_option(cls=ResourceOption)
 def eval(estimator, eval_input_fn, hooks, run_once, eval_interval_secs, name,
          keep_n_best_models, **kwargs):
@@ -198,8 +217,8 @@ def eval(estimator, eval_input_fn, hooks, run_once, eval_interval_secs, name,
                 name=name,
             )
 
-            str_evaluations = append_evaluated_file(
-                evaluated_file, evaluations)
+            str_evaluations = append_evaluated_file(evaluated_file,
+                                                    evaluations)
             click.echo(str_evaluations)
             sys.stdout.flush()
 

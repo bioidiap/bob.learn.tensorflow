@@ -7,21 +7,30 @@ from __future__ import print_function
 import logging
 import click
 import numpy as np
-from bob.extension.scripts.click_helper import (
-    verbosity_option, ConfigCommand, ResourceOption)
+from bob.extension.scripts.click_helper import (verbosity_option,
+                                                ConfigCommand, ResourceOption)
 from bob.learn.tensorflow.dataset.bio import BioGenerator
 
 logger = logging.getLogger(__name__)
 
 
-@click.command(entry_point_group='bob.learn.tensorflow.config',
-               cls=ConfigCommand)
-@click.option('--database', '-d', required=True, cls=ResourceOption,
-              entry_point_group='bob.bio.database')
-@click.option('--biofiles', required=True, cls=ResourceOption,
-              help='You can only provide this through config files.')
-@click.option('--load-data', cls=ResourceOption,
-              entry_point_group='bob.learn.tensorflow.load_data')
+@click.command(
+    entry_point_group='bob.learn.tensorflow.config', cls=ConfigCommand)
+@click.option(
+    '--database',
+    '-d',
+    required=True,
+    cls=ResourceOption,
+    entry_point_group='bob.bio.database')
+@click.option(
+    '--biofiles',
+    required=True,
+    cls=ResourceOption,
+    help='You can only provide this through config files.')
+@click.option(
+    '--load-data',
+    cls=ResourceOption,
+    entry_point_group='bob.learn.tensorflow.load_data')
 @click.option('--multiple-samples', is_flag=True, cls=ResourceOption)
 @verbosity_option(cls=ResourceOption)
 def compute_statistics(database, biofiles, load_data, multiple_samples,

@@ -79,9 +79,9 @@ def test_siamesetrainer():
     try:
 
         # Setting seed
-        session_config, run_config,_,_,_ = reproducible.set_seed()
+        session_config, run_config, _, _, _ = reproducible.set_seed()
         run_config = run_config.replace(save_checkpoints_steps=500)
-    
+
         trainer = Siamese(
             model_dir=model_dir,
             architecture=dummy,
@@ -112,7 +112,7 @@ def test_siamesetrainer_transfer():
     # Trainer logits first than siamese
     try:
         # Setting seed
-        session_config, run_config,_,_,_ = reproducible.set_seed()
+        session_config, run_config, _, _, _ = reproducible.set_seed()
         run_config = run_config.replace(save_checkpoints_steps=500)
 
         extra_checkpoint = {
@@ -140,7 +140,7 @@ def test_siamesetrainer_transfer():
             model_dir=model_dir_adapted,
             architecture=dummy_adapted,
             optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-            config=run_config,            
+            config=run_config,
             loss_op=contrastive_loss,
             validation_batch_size=validation_batch_size,
             extra_checkpoint=extra_checkpoint)
@@ -175,9 +175,8 @@ def test_siamesetrainer_transfer_extraparams():
             "trainable_variables": ["Dummy"]
         }
 
-
         # Setting seed
-        session_config, run_config,_,_,_ = reproducible.set_seed()
+        session_config, run_config, _, _, _ = reproducible.set_seed()
         run_config = run_config.replace(save_checkpoints_steps=500)
 
         # LOGISTS

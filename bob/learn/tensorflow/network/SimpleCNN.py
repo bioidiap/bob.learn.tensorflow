@@ -4,9 +4,17 @@ from .utils import is_trainable
 from ..estimators import get_trainable_variables
 
 
-def create_conv_layer(inputs, mode, data_format, endpoints, number, filters,
-                      kernel_size, pool_size, pool_strides,
-                      add_batch_norm=False, trainable_variables=None):
+def create_conv_layer(inputs,
+                      mode,
+                      data_format,
+                      endpoints,
+                      number,
+                      filters,
+                      kernel_size,
+                      pool_size,
+                      pool_strides,
+                      add_batch_norm=False,
+                      trainable_variables=None):
     bn_axis = 1 if data_format.lower() == 'channels_first' else 3
     training = mode == tf.estimator.ModeKeys.TRAIN
 
@@ -42,15 +50,22 @@ def create_conv_layer(inputs, mode, data_format, endpoints, number, filters,
 
     name = 'pool{}'.format(number)
     pool = tf.layers.max_pooling2d(
-        inputs=bn_act, pool_size=pool_size, strides=pool_strides,
-        padding='same', data_format=data_format)
+        inputs=bn_act,
+        pool_size=pool_size,
+        strides=pool_strides,
+        padding='same',
+        data_format=data_format)
     endpoints[name] = pool
 
     return pool
 
 
-def base_architecture(input_layer, mode, kernerl_size, data_format,
-                      add_batch_norm=False, trainable_variables=None,
+def base_architecture(input_layer,
+                      mode,
+                      kernerl_size,
+                      data_format,
+                      add_batch_norm=False,
+                      trainable_variables=None,
                       **kwargs):
     training = mode == tf.estimator.ModeKeys.TRAIN
     # Keep track of all the endpoints
@@ -61,18 +76,32 @@ def base_architecture(input_layer, mode, kernerl_size, data_format,
     # activation.
     # Padding is added to preserve width and height.
     pool1 = create_conv_layer(
-        inputs=input_layer, mode=mode, data_format=data_format,
-        endpoints=endpoints, number=1, filters=32, kernel_size=kernerl_size,
-        pool_size=(2, 2), pool_strides=2, add_batch_norm=add_batch_norm,
+        inputs=input_layer,
+        mode=mode,
+        data_format=data_format,
+        endpoints=endpoints,
+        number=1,
+        filters=32,
+        kernel_size=kernerl_size,
+        pool_size=(2, 2),
+        pool_strides=2,
+        add_batch_norm=add_batch_norm,
         trainable_variables=trainable_variables)
 
     # Convolutional Layer #2
     # Computes 64 features using a kernerl_size filter.
     # Padding is added to preserve width and height.
     pool2 = create_conv_layer(
-        inputs=pool1, mode=mode, data_format=data_format,
-        endpoints=endpoints, number=2, filters=64, kernel_size=kernerl_size,
-        pool_size=(2, 2), pool_strides=2, add_batch_norm=add_batch_norm,
+        inputs=pool1,
+        mode=mode,
+        data_format=data_format,
+        endpoints=endpoints,
+        number=2,
+        filters=64,
+        kernel_size=kernerl_size,
+        pool_size=(2, 2),
+        pool_strides=2,
+        add_batch_norm=add_batch_norm,
         trainable_variables=trainable_variables)
 
     # Flatten tensor into a batch of vectors
@@ -89,7 +118,9 @@ def base_architecture(input_layer, mode, kernerl_size, data_format,
     name = 'dense'
     trainable = is_trainable(name, trainable_variables)
     dense = tf.layers.dense(
-        inputs=pool2_flat, units=1024, activation=activation,
+        inputs=pool2_flat,
+        units=1024,
+        activation=activation,
         trainable=trainable)
     endpoints[name] = dense
 
@@ -127,7 +158,10 @@ def architecture(input_layer,
     with tf.variable_scope('SimpleCNN', reuse=reuse):
 
         dropout, endpoints = base_architecture(
-            input_layer, mode, kernerl_size, data_format,
+            input_layer,
+            mode,
+            kernerl_size,
+            data_format,
             add_batch_norm=add_batch_norm,
             trainable_variables=trainable_variables)
         # Logits layer
@@ -135,8 +169,8 @@ def architecture(input_layer,
         # Output Tensor Shape: [batch_size, n_classes]
         name = 'logits'
         trainable = is_trainable(name, trainable_variables)
-        logits = tf.layers.dense(inputs=dropout, units=n_classes,
-                                 trainable=trainable)
+        logits = tf.layers.dense(
+            inputs=dropout, units=n_classes, trainable=trainable)
         endpoints[name] = logits
 
     return logits, endpoints

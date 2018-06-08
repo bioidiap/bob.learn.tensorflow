@@ -107,4 +107,3 @@ def chopra(
     end_points['fc1'] = graph
 
     return graph, end_points
-

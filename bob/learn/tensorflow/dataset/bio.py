@@ -80,9 +80,10 @@ class BioGenerator(object):
         self._output_shapes = (data.shape, tf.TensorShape([]),
                                tf.TensorShape([]))
 
-        logger.info("Initializing a dataset with %d files and %s types "
-                    "and %s shapes", len(self.biofiles), self.output_types,
-                    self.output_shapes)
+        logger.info(
+            "Initializing a dataset with %d files and %s types "
+            "and %s shapes", len(self.biofiles), self.output_types,
+            self.output_shapes)
 
     @property
     def labels(self):

@@ -97,8 +97,10 @@ def append_image_augmentation(image,
         image = tf.image.random_saturation(image, lower=0, upper=0.5)
 
     if random_rotate:
-        image = tf.contrib.image.rotate(image, angles=numpy.random.randint(-5,5),
-                interpolation="BILINEAR")
+        image = tf.contrib.image.rotate(
+            image,
+            angles=numpy.random.randint(-5, 5),
+            interpolation="BILINEAR")
 
     if gray_scale:
         image = tf.image.rgb_to_grayscale(image, name="rgb_to_gray")
