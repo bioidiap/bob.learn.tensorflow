@@ -4,13 +4,7 @@ import numpy as np
 import tensorflow as tf
 
 
-def model_fn(features, labels, mode, params, config):
-    """The model function for join face and patch PAD. The input to the model
-    is 160x160 faces."""
-
-    faces = features['data']
-    key = features['key']
-
+def architecture(faces, mode, **kwargs):
     # construct patches inside the model
     ksizes = strides = [1, 28, 28, 1]
     rates = [1, 1, 1, 1]
@@ -19,18 +13,12 @@ def model_fn(features, labels, mode, params, config):
     # n_blocks should be 25 for 160x160 faces
     patches = tf.reshape(patches, [-1, n_blocks, 28, 28, 3])
 
-    # organize the parameters
-    params = params or {}
-    learning_rate = params.get('learning_rate', 1e-4)
-    apply_moving_averages = params.get('apply_moving_averages', True)
-    n_classes = params.get('n_classes', 2)
-    add_histograms = params.get('add_histograms')
-
     simplecnn_kwargs = {
         'kernerl_size': (3, 3),
         'data_format': 'channels_last',
         'add_batch_norm': True,
     }
+    endpoints = {}
     # construct simplecnn from patches
     for i in range(n_blocks):
         if i == 0:
@@ -38,18 +26,42 @@ def model_fn(features, labels, mode, params, config):
         else:
             reuse = True
         with tf.variable_scope('SimpleCNN', reuse=reuse):
-            net, _ = simplecnn_arch(patches[:, i], mode, **simplecnn_kwargs)
+            net, temp = simplecnn_arch(patches[:, i], mode, **simplecnn_kwargs)
         if i == 0:
             simplecnn_embeddings = net
+            endpoints.update(temp)
         else:
             simplecnn_embeddings += net
     # average the embeddings of patches
     simplecnn_embeddings /= n_blocks
 
     # construct inception_resnet_v2 from faces
-    incresv2_embeddings, _ = inception_resnet_v2_batch_norm(faces, mode=mode)
+    incresv2_embeddings, temp = inception_resnet_v2_batch_norm(
+        faces, mode=mode)
+    endpoints.update(temp)
 
     embeddings = tf.concat([simplecnn_embeddings, incresv2_embeddings], 1)
+
+    endpoints['final_embeddings'] = embeddings
+
+    return embeddings, endpoints
+
+
+def model_fn(features, labels, mode, params, config):
+    """The model function for join face and patch PAD. The input to the model
+    is 160x160 faces."""
+
+    faces = features['data']
+    key = features['key']
+
+    # organize the parameters
+    params = params or {}
+    learning_rate = params.get('learning_rate', 1e-4)
+    apply_moving_averages = params.get('apply_moving_averages', True)
+    n_classes = params.get('n_classes', 2)
+    add_histograms = params.get('add_histograms')
+
+    embeddings, _ = architecture(faces, mode)
 
     # Logits layer
     logits = tf.layers.dense(inputs=embeddings, units=n_classes, name='logits')
