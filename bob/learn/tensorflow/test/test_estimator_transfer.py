@@ -81,6 +81,7 @@ def dummy_adapted(inputs,
 def test_logitstrainer():
     # Trainer logits
     try:
+        _, run_config,_,_,_ = reproducible.set_seed()
         embedding_validation = False
         trainer = Logits(
             model_dir=model_dir,
@@ -89,7 +90,9 @@ def test_logitstrainer():
             n_classes=10,
             loss_op=mean_cross_entropy_loss,
             embedding_validation=embedding_validation,
-            validation_batch_size=validation_batch_size)
+            validation_batch_size=validation_batch_size,
+            config=run_config
+            )
         run_logitstrainer_mnist(trainer, augmentation=True)
         del trainer
 
@@ -110,7 +113,9 @@ def test_logitstrainer():
             loss_op=mean_cross_entropy_loss,
             embedding_validation=embedding_validation,
             validation_batch_size=validation_batch_size,
-            extra_checkpoint=extra_checkpoint)
+            extra_checkpoint=extra_checkpoint,
+            config=run_config          
+            )
 
         run_logitstrainer_mnist(trainer, augmentation=True)
 
@@ -129,7 +134,7 @@ def test_logitstrainer_center_loss():
     # Trainer logits
     try:
         embedding_validation = False
-
+        _, run_config,_,_,_ = reproducible.set_seed()
         trainer = LogitsCenterLoss(
             model_dir=model_dir,
             architecture=dummy,
@@ -137,7 +142,9 @@ def test_logitstrainer_center_loss():
             n_classes=10,
             embedding_validation=embedding_validation,
             validation_batch_size=validation_batch_size,
-            apply_moving_averages=False)
+            apply_moving_averages=False,
+            config=run_config
+            )
         run_logitstrainer_mnist(trainer, augmentation=True)
         del trainer
 
@@ -158,7 +165,9 @@ def test_logitstrainer_center_loss():
             embedding_validation=embedding_validation,
             validation_batch_size=validation_batch_size,
             extra_checkpoint=extra_checkpoint,
-            apply_moving_averages=False)
+            apply_moving_averages=False,
+            config=run_config
+            )
 
         run_logitstrainer_mnist(trainer, augmentation=True)
 

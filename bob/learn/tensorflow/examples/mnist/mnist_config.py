@@ -75,7 +75,7 @@ def input_fn(mode, batch_size=1):
 
     # Map example_parser over dataset, and batch results by up to batch_size
     dataset = dataset.map(
-        example_parser, num_threads=1, output_buffer_size=batch_size)
+        example_parser, num_parallel_calls=1).prefetch(batch_size)
     dataset = dataset.batch(batch_size)
     images, labels, keys = dataset.make_one_shot_iterator().get_next()
 
