@@ -78,6 +78,8 @@ def append_image_augmentation(image,
 
     # Casting to float32
     image = tf.cast(image, tf.float32)
+    # FORCING A SEED FOR THE RANDOM OPERATIONS
+    tf.set_random_seed(0)
 
     if output_shape is not None:
         assert len(output_shape) == 2
