@@ -184,10 +184,11 @@ def model_fn(features, labels, mode, params=None, config=None):
     params = params or {}
     learning_rate = params.get('learning_rate', 1e-5)
     apply_moving_averages = params.get('apply_moving_averages', False)
-    extra_checkpoint = params.get('extra_checkpoint', None)
+    extra_checkpoint = params.get('extra_checkpoint')
     trainable_variables = get_trainable_variables(extra_checkpoint)
     loss_weights = params.get('loss_weights', 1.0)
-    add_histograms = params.get('add_histograms', None)
+    add_histograms = params.get('add_histograms')
+    nnet_optimizer = params.get('nnet_optimizer') or 'sgd'
 
     arch_kwargs = {
         'kernerl_size': params.get('kernerl_size', None),
@@ -260,8 +261,12 @@ def model_fn(features, labels, mode, params=None, config=None):
 
         if mode == tf.estimator.ModeKeys.TRAIN:
 
-            optimizer = tf.train.GradientDescentOptimizer(
-                learning_rate=learning_rate)
+            if nnet_optimizer == 'sgd':
+                optimizer = tf.train.GradientDescentOptimizer(
+                    learning_rate=learning_rate)
+            else:
+                optimizer = tf.train.AdamOptimizer(
+                    learning_rate=learning_rate)
             train_op = tf.group(
                 optimizer.minimize(loss, global_step=global_step),
                 variable_averages_op, loss_averages_op)
