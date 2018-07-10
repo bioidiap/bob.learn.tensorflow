@@ -19,7 +19,7 @@ def compute_euclidean_distance(x, y):
 
 
 def load_mnist(perc_train=0.9):
-
+    numpy.random.seed(0)
     import bob.db.mnist
     db = bob.db.mnist.Database()
     raw_data = db.data()
