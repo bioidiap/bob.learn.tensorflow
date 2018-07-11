@@ -191,8 +191,8 @@ def create_dataset_from_path_augmentation(filenames,
 
     left_data, right_data, siamese_labels = siamease_pairs_generator(
         filenames, labels)
-    dataset = tf.data.Dataset.from_tensor_slices(
-        (left_data, right_data, siamese_labels))
+    dataset = tf.data.Dataset.from_tensor_slices((left_data, right_data,
+                                                  siamese_labels))
     dataset = dataset.map(parser)
     return dataset
 
