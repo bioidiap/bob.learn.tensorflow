@@ -191,12 +191,11 @@ def predict_bio(estimator, database, biofiles, bio_predict_input_fn,
                 return {'data': images, 'keys': keys}, labels
             return input_fn
     """
-    log_parameters(logger)
+    log_parameters(logger, ignore=('biofiles',))
+    logger.debug("len(biofiles): %d", len(biofiles))
 
     assert len(biofiles), "biofiles are empty!"
 
-    if array is not None:
-        logger.info("array: %d", array)
     if array > 1:
         start, end = indices(biofiles, array)
         biofiles = biofiles[start:end]
