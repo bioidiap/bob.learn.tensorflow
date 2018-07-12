@@ -15,8 +15,8 @@ import time
 from glob import glob
 from collections import defaultdict, OrderedDict
 from ..utils.eval import get_global_step
-from bob.extension.scripts.click_helper import (verbosity_option,
-                                                ConfigCommand, ResourceOption)
+from bob.extension.scripts.click_helper import (
+    verbosity_option, ConfigCommand, ResourceOption, log_parameters)
 from bob.io.base import create_directories_safe
 
 logger = logging.getLogger(__name__)
@@ -105,81 +105,51 @@ def append_evaluated_file(path, evaluations):
     '-e',
     required=True,
     cls=ResourceOption,
-    entry_point_group='bob.learn.tensorflow.estimator')
+    entry_point_group='bob.learn.tensorflow.estimator',
+    help='The estimator that will be evaluated.')
 @click.option(
     '--eval-input-fn',
     '-i',
     required=True,
     cls=ResourceOption,
-    entry_point_group='bob.learn.tensorflow.input_fn')
+    entry_point_group='bob.learn.tensorflow.input_fn',
+    help='The ``input_fn`` that will be given to '
+    ':any:`tf.estimator.Estimator.eval`.')
 @click.option(
     '--hooks',
     cls=ResourceOption,
     multiple=True,
-    entry_point_group='bob.learn.tensorflow.hook')
+    entry_point_group='bob.learn.tensorflow.hook',
+    help='List of SessionRunHook subclass instances. Used for callbacks '
+    'inside the evaluation loop.')
 @click.option(
-    '--run-once', cls=ResourceOption, default=False, show_default=True)
+    '--run-once',
+    cls=ResourceOption,
+    default=False,
+    show_default=True,
+    help='If given, the model will be evaluated only once.')
 @click.option(
     '--eval-interval-secs',
     cls=ResourceOption,
     type=click.INT,
     default=60,
-    show_default=True)
-@click.option('--name', cls=ResourceOption)
+    show_default=True,
+    help='The seconds to wait for the next evaluation.')
+@click.option('--name', cls=ResourceOption, help='Name of the evaluation')
 @click.option(
     '--keep-n-best-models',
     '-K',
     type=click.INT,
     cls=ResourceOption,
     default=0,
-    show_default=True)
+    show_default=True,
+    help='If more than 0, will keep the best N models in the evaluation folder'
+)
 @verbosity_option(cls=ResourceOption)
 def eval(estimator, eval_input_fn, hooks, run_once, eval_interval_secs, name,
          keep_n_best_models, **kwargs):
-    """Evaluates networks using Tensorflow estimators.
-
-    \b
-    Parameters
-    ----------
-    estimator : tf.estimator.Estimator
-        The estimator that will be trained. Can be a
-        ``bob.learn.tensorflow.estimator`` entry point or a path to a Python
-        file which contains a variable named `estimator`.
-    eval_input_fn : callable
-        The ``input_fn`` that will be given to
-        :any:`tf.estimator.Estimator.train`. Can be a
-        ``bob.learn.tensorflow.input_fn`` entry point or a path to a Python
-        file which contains a variable named `eval_input_fn`.
-    hooks : [tf.train.SessionRunHook], optional
-        List of SessionRunHook subclass instances. Used for callbacks inside
-        the training loop. Can be a ``bob.learn.tensorflow.hook`` entry point
-        or a path to a Python file which contains a variable named `hooks`.
-    run_once : bool, optional
-        If given, the model will be evaluated only once.
-    eval_interval_secs : int, optional
-        The seconds to wait for the next evaluation.
-    name : str, optional
-        Name of the evaluation
-    verbose : int, optional
-        Increases verbosity (see help for --verbose).
-
-    \b
-    [CONFIG]...            Configuration files. It is possible to pass one or
-                           several Python files (or names of
-                           ``bob.learn.tensorflow.config`` entry points or
-                           module names) which contain the parameters listed
-                           above as Python variables. The options through the
-                           command-line (see below) will override the values of
-                           configuration files.
-    """
-    logger.debug('estimator: %s', estimator)
-    logger.debug('eval_input_fn: %s', eval_input_fn)
-    logger.debug('hooks: %s', hooks)
-    logger.debug('run_once: %s', run_once)
-    logger.debug('eval_interval_secs: %s', eval_interval_secs)
-    logger.debug('name: %s', name)
-    logger.debug('keep_n_best_models: %s', keep_n_best_models)
-    logger.debug('kwargs: %s', kwargs)
+    """Evaluates networks using Tensorflow estimators."""
+    log_parameters(logger)
 
     real_name = 'eval_' + name if name else 'eval'
     eval_dir = os.path.join(estimator.model_dir, real_name)

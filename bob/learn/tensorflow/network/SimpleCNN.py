@@ -265,8 +265,7 @@ def model_fn(features, labels, mode, params=None, config=None):
                 optimizer = tf.train.GradientDescentOptimizer(
                     learning_rate=learning_rate)
             else:
-                optimizer = tf.train.AdamOptimizer(
-                    learning_rate=learning_rate)
+                optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
             train_op = tf.group(
                 optimizer.minimize(loss, global_step=global_step),
                 variable_averages_op, loss_averages_op)

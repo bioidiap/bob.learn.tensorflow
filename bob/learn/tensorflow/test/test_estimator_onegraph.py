@@ -38,7 +38,7 @@ def test_logitstrainer():
     # Trainer logits
     try:
         embedding_validation = False
-        _, run_config,_,_,_ = reproducible.set_seed() 
+        _, run_config, _, _, _ = reproducible.set_seed()
         trainer = Logits(
             model_dir=model_dir,
             architecture=dummy,
@@ -61,7 +61,7 @@ def test_logitstrainer():
 def test_logitstrainer_embedding():
     try:
         embedding_validation = True
-        _, run_config,_,_,_ = reproducible.set_seed()
+        _, run_config, _, _, _ = reproducible.set_seed()
         trainer = Logits(
             model_dir=model_dir,
             architecture=dummy,
@@ -71,7 +71,7 @@ def test_logitstrainer_embedding():
             embedding_validation=embedding_validation,
             validation_batch_size=validation_batch_size,
             config=run_config)
-        
+
         run_logitstrainer_mnist(trainer)
     finally:
         try:
@@ -85,7 +85,7 @@ def test_logitstrainer_embedding():
 def test_logitstrainer_centerloss():
     try:
         embedding_validation = False
-        _, run_config,_,_,_ = reproducible.set_seed()
+        _, run_config, _, _, _ = reproducible.set_seed()
         run_config = run_config.replace(save_checkpoints_steps=1000)
         trainer = LogitsCenterLoss(
             model_dir=model_dir,
@@ -122,7 +122,7 @@ def test_logitstrainer_centerloss():
 def test_logitstrainer_centerloss_embedding():
     try:
         embedding_validation = True
-        _, run_config,_,_,_ = reproducible.set_seed()
+        _, run_config, _, _, _ = reproducible.set_seed()
         trainer = LogitsCenterLoss(
             model_dir=model_dir,
             architecture=dummy,
@@ -131,8 +131,7 @@ def test_logitstrainer_centerloss_embedding():
             embedding_validation=embedding_validation,
             validation_batch_size=validation_batch_size,
             factor=0.01,
-            config=run_config
-            )
+            config=run_config)
         run_logitstrainer_mnist(trainer)
 
         # Checking if the centers were updated

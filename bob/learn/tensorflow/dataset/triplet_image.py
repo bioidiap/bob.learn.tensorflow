@@ -159,8 +159,8 @@ def create_dataset_from_path_augmentation(filenames,
     anchor_data, positive_data, negative_data = triplets_random_generator(
         filenames, labels)
 
-    dataset = tf.data.Dataset.from_tensor_slices(
-        (anchor_data, positive_data, negative_data))
+    dataset = tf.data.Dataset.from_tensor_slices((anchor_data, positive_data,
+                                                  negative_data))
     dataset = dataset.map(parser)
     return dataset
 
