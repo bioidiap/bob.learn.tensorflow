@@ -26,12 +26,11 @@ def compute_features(input_image, architecture, checkpoint_dir, target_end_point
        Dictionary containing the end point tensors
 
     """
-
     input_pl = tf.placeholder('float32', shape=(1, input_image.shape[1],
                                                    input_image.shape[2],
                                                    input_image.shape[3]))
     # TODO: Think on how abstract this normalization operation
-    _, end_points = architecture(tf.stack([tf.image.per_image_standardization(i) for i in tf.unstack(input_image)]), mode=tf.estimator.ModeKeys.PREDICT, trainable_variables=None)
+    _, end_points = architecture(tf.stack([tf.image.per_image_standardization(i) for i in tf.unstack(input_pl)]), mode=tf.estimator.ModeKeys.PREDICT, trainable_variables=None)
 
     with tf.Session() as sess:
         # Restoring the checkpoint for the given architecture

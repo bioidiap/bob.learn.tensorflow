@@ -168,10 +168,10 @@ def style_transfer(content_image_path, output_path, style_image_paths,
     """
 
     # Reading and converting to the tensorflow format
-    content_image = bob.io.image.to_matplotlib(bob.io.base.load(content_image_path))
+    content_image = bob.io.image.to_matplotlib(bob.io.base.load(content_image_path)).astype("float32")
     style_images = []
     for path in style_image_paths:
-        image = bob.io.image.to_matplotlib(bob.io.base.load(path))
+        image = bob.io.image.to_matplotlib(bob.io.base.load(path)).astype("float32")
         style_images.append(numpy.reshape(image, wise_shape(image.shape)))
 
     # Reshaping to NxWxHxC
