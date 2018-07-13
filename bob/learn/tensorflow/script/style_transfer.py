@@ -98,9 +98,68 @@ def style_transfer(content_image_path, output_path, style_image_paths,
                    content_weight, style_weight, denoise_weight, content_end_points,
                    style_end_points, scopes, pure_noise,  **kwargs):
     """
-     Trains neural style transfer from
+     Trains neural style transfer using the approach presented in:
 
     Gatys, Leon A., Alexander S. Ecker, and Matthias Bethge. "A neural algorithm of artistic style." arXiv preprint arXiv:1508.06576 (2015).
+
+    \b
+
+    If you want run a style transfer using InceptionV2 as basis folo
+
+    Below follow a CONFIG template
+    
+    CONFIG.PY
+    ```
+
+       from bob.extension import rc
+
+       from bob.learn.tensorflow.network import inception_resnet_v2_batch_norm
+       architecture = inception_resnet_v2_batch_norm
+
+       checkpoint_dir = rc["bob.bio.face_ongoing.idiap_casia_inception_v2_centerloss_rgb"]
+
+       style_end_points = ["Conv2d_1a_3x3", "Conv2d_2b_3x3", "Conv2d_3b_1x1", "Conv2d_4a_3x3"]
+
+       content_end_points = ["Bottleneck", "PreLogitsFlatten"]
+
+       scopes = {"InceptionResnetV2/":"InceptionResnetV2/"}
+
+    ```
+    \b
+
+    Then run::
+
+       $ bob tf style <content-image> <output-image> --style-image-paths <style-image> CONFIG.py
+
+
+    You can also provide a list of images to encode the style using the config file as in the example below.
+
+    CONFIG.PY
+    ```
+
+       from bob.extension import rc
+
+       from bob.learn.tensorflow.network import inception_resnet_v2_batch_norm
+       architecture = inception_resnet_v2_batch_norm
+
+       checkpoint_dir = rc["bob.bio.face_ongoing.idiap_casia_inception_v2_centerloss_rgb"]
+
+       style_end_points = ["Conv2d_1a_3x3", "Conv2d_2b_3x3", "Conv2d_3b_1x1", "Conv2d_4a_3x3"]
+
+       content_end_points = ["Bottleneck", "PreLogitsFlatten"]
+
+       scopes = {"InceptionResnetV2/":"InceptionResnetV2/"}
+
+       style_image_paths = ["STYLE_1.png",
+                            "STYLE_2.png"]
+
+    ```
+ 
+    Then run::
+
+       $ bob tf style <content-image> <output-image> CONFIG.py
+
+    \b \b
 
     """
 
