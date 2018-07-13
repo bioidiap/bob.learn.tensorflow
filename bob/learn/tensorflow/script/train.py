@@ -53,8 +53,7 @@ logger = logging.getLogger(__name__)
 @verbosity_option(cls=ResourceOption)
 def train(estimator, train_input_fn, hooks, steps, max_steps, **kwargs):
     """Trains networks using Tensorflow estimators."""
-    if not click.get_current_context(True) is None:
-        log_parameters(logger)
+    log_parameters(logger)
 
     # Train
     logger.info("Training a model in %s", estimator.model_dir)

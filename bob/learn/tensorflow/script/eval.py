@@ -165,8 +165,7 @@ def append_evaluated_file(path, evaluations):
 def eval(estimator, eval_input_fn, hooks, run_once, eval_interval_secs, name,
          keep_n_best_models, sort_by_accuracy, max_wait_intervals, **kwargs):
     """Evaluates networks using Tensorflow estimators."""
-    if not click.get_current_context(True) is None:
-        log_parameters(logger)
+    log_parameters(logger)
 
     real_name = 'eval_' + name if name else 'eval'
     eval_dir = os.path.join(estimator.model_dir, real_name)
