@@ -5,6 +5,7 @@ from .MLP import mlp
 from .InceptionResnetV2 import inception_resnet_v2, inception_resnet_v2_batch_norm
 from .InceptionResnetV1 import inception_resnet_v1, inception_resnet_v1_batch_norm
 from . import SimpleCNN
+from .Vgg import vgg_19, vgg_16
 
 
 # gets sphinx autodoc done right - don't remove it
