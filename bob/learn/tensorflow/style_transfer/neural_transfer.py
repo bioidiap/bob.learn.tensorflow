@@ -5,6 +5,7 @@
 
 import tensorflow as tf
 import numpy
+import os
 
 def compute_features(input_image, architecture, checkpoint_dir, target_end_points):
     """
@@ -26,9 +27,11 @@ def compute_features(input_image, architecture, checkpoint_dir, target_end_point
        Dictionary containing the end point tensors
 
     """
+
     input_pl = tf.placeholder('float32', shape=(1, input_image.shape[1],
                                                    input_image.shape[2],
                                                    input_image.shape[3]))
+
     # TODO: Think on how abstract this normalization operation
     _, end_points = architecture(tf.stack([tf.image.per_image_standardization(i) for i in tf.unstack(input_pl)]), mode=tf.estimator.ModeKeys.PREDICT, trainable_variables=None)
 
@@ -36,7 +39,11 @@ def compute_features(input_image, architecture, checkpoint_dir, target_end_point
         # Restoring the checkpoint for the given architecture
         sess.run(tf.global_variables_initializer())
         saver = tf.train.Saver()
-        saver.restore(sess, tf.train.latest_checkpoint(checkpoint_dir))
+
+        if os.path.isdir(checkpoint_dir):
+            saver.restore(sess, tf.train.latest_checkpoint(checkpoint_dir))
+        else:
+            saver.restore(sess, checkpoint_dir)
 
         #content_feature = sess.run(end_points[CONTENT_END_POINTS], feed_dict={input_image: content_image})
         features = []

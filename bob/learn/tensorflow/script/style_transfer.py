@@ -15,7 +15,7 @@ import numpy
 import bob.ip.base
 import bob.ip.color
 import sys
-
+import os
 from bob.learn.tensorflow.style_transfer import compute_features, compute_gram
 from bob.learn.tensorflow.loss import linear_gram_style_loss, content_loss, denoising_loss
 
@@ -178,7 +178,7 @@ def style_transfer(content_image_path, output_path, style_image_paths,
     content_image = numpy.reshape(content_image, wise_shape(content_image.shape))
 
     # Base content features
-    logger.info("Computing content features")    
+    logger.info("Computing content features")
     content_features = compute_features(content_image, architecture, checkpoint_dir, content_end_points)
 
     # Base style features
@@ -228,8 +228,7 @@ def style_transfer(content_image_path, output_path, style_image_paths,
 
         solver = tf.train.AdamOptimizer(learning_rate).minimize(total_loss)
 
-        tf.contrib.framework.init_from_checkpoint(tf.train.latest_checkpoint(checkpoint_dir),
-                                                  scopes)
+        tf.contrib.framework.init_from_checkpoint(tf.train.latest_checkpoint(checkpoint_dir) if os.path.isdir(checkpoint_dir) else checkpoint_dir, scopes)
         # Training
         with tf.Session() as sess: 
             sess.run(tf.global_variables_initializer())
@@ -245,12 +244,20 @@ def style_transfer(content_image_path, output_path, style_image_paths,
             normalized_style_image = normalize4save(raw_style_image)
 
             if pure_noise:
-                bob.io.base.save(normalized_style_image, output_path)
+                if normalized_style_image.shape[0] == 1:
+                    bob.io.base.save(normalized_style_image[0, :, :], output_path)
+                else:
+                    bob.io.base.save(normalized_style_image, output_path)
             else:
                 # Original output
-                normalized_style_image_yuv = bob.ip.color.rgb_to_yuv(bob.ip.color.gray_to_rgb(bob.ip.color.rgb_to_gray(normalized_style_image)))
-                
-                content_image_yuv = bob.ip.color.rgb_to_yuv(bob.io.base.load(content_image_path))
+                if normalized_style_image.shape[0] == 1:
+                    normalized_style_image_yuv = bob.ip.color.rgb_to_yuv(bob.ip.color.gray_to_rgb(normalized_style_image[0,:,:]))
+                    # Loading the content image and clipping from 0-255 in case is in another scale
+                    scaled_content_image = normalize4save(bob.io.base.load(content_image_path).astype("float32")).astype("float64")
+                    content_image_yuv = bob.ip.color.rgb_to_yuv(bob.ip.color.gray_to_rgb(scaled_content_image))
+                else:
+                    normalized_style_image_yuv = bob.ip.color.rgb_to_yuv(bob.ip.color.gray_to_rgb(bob.ip.color.rgb_to_gray(normalized_style_image)))
+                    content_image_yuv = bob.ip.color.rgb_to_yuv(bob.io.base.load(content_image_path))
                 
                 output_image = numpy.zeros(shape=content_image_yuv.shape, dtype="uint8")
                 output_image[0,:,:] = normalized_style_image_yuv[0,:,:]
