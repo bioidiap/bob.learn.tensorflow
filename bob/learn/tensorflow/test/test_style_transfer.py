@@ -19,11 +19,6 @@ from bob.learn.tensorflow.estimators import Logits
 from bob.learn.tensorflow.network import dummy
 from bob.learn.tensorflow.script.style_transfer import style_transfer
 
-#from bob.learn.tensorflow.script.db_to_tfrecords import db_to_tfrecords
-#from bob.learn.tensorflow.script.train import train
-#from bob.learn.tensorflow.script.eval import eval as eval_script
-#from bob.learn.tensorflow.script.train_and_evaluate import train_and_evaluate
-
 dummy_config = datafile('style_transfer.py', __name__)
 CONFIG = '''
 from bob.learn.tensorflow.network import dummy
@@ -75,12 +70,7 @@ def test_style_transfer():
                            args=[pkg_resources.resource_filename( __name__, 'data/dummy_image_database/m301_01_p01_i0_0_GRAY.png'),
                                output_style_image, dummy_config])
 
-    #assert result.exit_code == 0, '%s\n%s\n%s' % (result.exc_info, result.output, result.exception)
-
     try:
-        os.unlink(tfrecord_train)
-        os.unlink(tfrecord_validation)
-        os.unlink(dummy_config)
         os.unlink(dummy_config)
         shutil.rmtree(model_dir, ignore_errors=True)
     except Exception:

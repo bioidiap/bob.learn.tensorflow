@@ -42,8 +42,6 @@ def test_logitstrainer_images():
         run_logitstrainer_images(trainer)
     finally:
         try:
-            os.unlink(tfrecord_train)
-            os.unlink(tfrecord_validation)
             shutil.rmtree(model_dir, ignore_errors=True)
         except Exception:
             pass
