@@ -66,11 +66,11 @@ def normalize4save(img):
 @click.option('--content-weight',
               type=click.types.FLOAT,
               help='Weight of the content loss.',
-              default=1.)
+              default=5.)
 @click.option('--style-weight',
               type=click.types.FLOAT,
               help='Weight of the style loss.',
-              default=1000.)
+              default=100.)
 @click.option('--denoise-weight',
               type=click.types.FLOAT,
               help='Weight denoising loss.',
@@ -95,12 +95,23 @@ def normalize4save(img):
                help="If set will save the raw noisy generated image."
                     "If not set, the output will be RGB = stylizedYUV.Y, originalYUV.U, originalYUV.V"
               )
+@click.option('--preprocess-fn',
+              '-pr',
+              cls=ResourceOption,
+              entry_point_group='bob.learn.tensorflow.preprocess_fn',
+              help='Preprocess function. Pointer to a function that preprocess the INPUT signal')
+@click.option('--un-preprocess-fn',
+              '-un',
+              cls=ResourceOption,
+              entry_point_group='bob.learn.tensorflow.preprocess_fn',
+              help='Un preprocess function. Pointer to a function that preprocess the OUTPUT signal')
 @verbosity_option(cls=ResourceOption)
 def style_transfer(content_image_path, output_path, style_image_paths,
                    architecture, checkpoint_dir,
                    iterations, learning_rate,
                    content_weight, style_weight, denoise_weight, content_end_points,
-                   style_end_points, scopes, pure_noise,  **kwargs):
+                   style_end_points, scopes, pure_noise, preprocess_fn, 
+                   un_preprocess_fn, **kwargs):
     """
      Trains neural style transfer using the approach presented in:
 
@@ -179,13 +190,15 @@ def style_transfer(content_image_path, output_path, style_image_paths,
 
     # Base content features
     logger.info("Computing content features")
-    content_features = compute_features(content_image, architecture, checkpoint_dir, content_end_points)
+    content_features = compute_features(content_image, architecture, checkpoint_dir,
+                                        content_end_points, preprocess_fn)
 
     # Base style features
     logger.info("Computing style features")  
     style_grams = []
     for image in style_images:
-        style_features = compute_features(image, architecture, checkpoint_dir, style_end_points)
+        style_features = compute_features(image, architecture, checkpoint_dir, 
+                                          style_end_points, preprocess_fn)
         style_grams.append(compute_gram(style_features))
 
     # Organizing the trainer
@@ -195,8 +208,7 @@ def style_transfer(content_image_path, output_path, style_image_paths,
 
         # Random noise
         noise = tf.Variable(tf.random_normal(shape=content_image.shape),
-                            trainable=True)
-
+                            trainable=True) * 0.256
         _, end_points = architecture(noise,
                                       mode=tf.estimator.ModeKeys.PREDICT,
                                       trainable_variables=[])
@@ -240,6 +252,10 @@ def style_transfer(content_image_path, output_path, style_image_paths,
 
             # Saving generated image
             raw_style_image = sess.run(noise)[0, :, :,:]
+            # Unpreprocessing the signal
+            if un_preprocess_fn is not None:
+                raw_style_image = un_preprocess_fn(raw_style_image)
+
             raw_style_image = bob.io.image.to_bob(raw_style_image)
             normalized_style_image = normalize4save(raw_style_image)
 

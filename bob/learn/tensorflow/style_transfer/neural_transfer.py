@@ -7,7 +7,7 @@ import tensorflow as tf
 import numpy
 import os
 
-def compute_features(input_image, architecture, checkpoint_dir, target_end_points):
+def compute_features(input_image, architecture, checkpoint_dir, target_end_points, preprocess_fn=None):
     """
     For a given set of end_points, convolve the input image until these points
 
@@ -26,15 +26,19 @@ def compute_features(input_image, architecture, checkpoint_dir, target_end_point
     end_points: dict
        Dictionary containing the end point tensors
 
+    preprocess_fn:
+       Pointer to a preprocess function
+
     """
 
     input_pl = tf.placeholder('float32', shape=(1, input_image.shape[1],
                                                    input_image.shape[2],
                                                    input_image.shape[3]))
 
-    # TODO: Think on how abstract this normalization operation
-    _, end_points = architecture(tf.stack([tf.image.per_image_standardization(i) for i in tf.unstack(input_pl)]), mode=tf.estimator.ModeKeys.PREDICT, trainable_variables=None)
-
+    if preprocess_fn is None:
+        _, end_points = architecture(input_pl, mode=tf.estimator.ModeKeys.PREDICT, trainable_variables=None)
+    else:
+        _, end_points = architecture(tf.stack([preprocess_fn(i) for i in tf.unstack(input_pl)]), mode=tf.estimator.ModeKeys.PREDICT, trainable_variables=None)
     with tf.Session() as sess:
         # Restoring the checkpoint for the given architecture
         sess.run(tf.global_variables_initializer())
