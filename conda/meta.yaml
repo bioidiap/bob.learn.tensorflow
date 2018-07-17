@@ -37,6 +37,7 @@ requirements:
     - bob.db.mnist
     - bob.db.atnt
     - bob.bio.base
+    - bob.ip.color
   run:
     - python
     - setuptools
