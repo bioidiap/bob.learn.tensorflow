@@ -204,14 +204,14 @@ def block8(net,
 
 
 def inception_resnet_v2_batch_norm(inputs,
-                        dropout_keep_prob=0.8,
-                        bottleneck_layer_size=128,
-                        reuse=None,
-                        scope='InceptionResnetV2',
-                        mode=tf.estimator.ModeKeys.TRAIN,
-                        trainable_variables=None,
-                        weight_decay = 5e-5,
-                        **kwargs):
+                                   dropout_keep_prob=0.8,
+                                   bottleneck_layer_size=128,
+                                   reuse=None,
+                                   scope='InceptionResnetV2',
+                                   mode=tf.estimator.ModeKeys.TRAIN,
+                                   trainable_variables=None,
+                                   weight_decay=5e-5,
+                                   **kwargs):
     """
     Creates the Inception Resnet V2 model applying batch not to each
     Convolutional and FullyConnected layer.
@@ -241,7 +241,6 @@ def inception_resnet_v2_batch_norm(inputs,
       end_points: the set of end_points from the inception model.
     """
 
-
     batch_norm_params = {
         # Decay for the moving averages.
         'decay': 0.995,
@@ -250,8 +249,10 @@ def inception_resnet_v2_batch_norm(inputs,
         # force in-place updates of mean and variance estimates
         'updates_collections': None,
         # Moving averages ends up in the trainable variables collection
-        'variables_collections': [tf.GraphKeys.TRAINABLE_VARIABLES],
+        'variables_collections': [tf.GraphKeys.TRAINABLE_VARIABLES if mode==tf.estimator.ModeKeys.TRAIN else None],
     }
+    
+    
     weight_decay = 5e-5
     with slim.arg_scope(
         [slim.conv2d, slim.fully_connected],
@@ -306,17 +307,21 @@ def inception_resnet_v2(inputs,
     end_points = {}
 
     with tf.variable_scope(scope, 'InceptionResnetV2', [inputs], reuse=reuse):
-        with slim.arg_scope(
-            [slim.batch_norm, slim.dropout],
+        with slim.arg_scope([slim.dropout],
                 is_training=(mode == tf.estimator.ModeKeys.TRAIN)):
 
+            with slim.arg_scope(
+                [slim.conv2d, slim.max_pool2d, slim.avg_pool2d],
+                    stride=1,
+                    padding='SAME'):
+                # 149 x 149 x 32
+                name = "Conv2d_1a_3x3"
+                trainable = is_trainable(name, trainable_variables, mode=mode)
                 with slim.arg_scope(
-                    [slim.conv2d, slim.max_pool2d, slim.avg_pool2d],
-                     stride=1,
-                     padding='SAME'):
-                    # 149 x 149 x 32
-                    name = "Conv2d_1a_3x3"
-                    trainable = is_trainable(name, trainable_variables)
+                    [slim.batch_norm],
+                        is_training=(mode == tf.estimator.ModeKeys.TRAIN),
+                        trainable = trainable):
+                        
                     net = slim.conv2d(
                         inputs,
                         32,
@@ -328,9 +333,14 @@ def inception_resnet_v2(inputs,
                         reuse=reuse)
                     end_points[name] = net
 
-                    # 147 x 147 x 32
-                    name = "Conv2d_2a_3x3"
-                    trainable = is_trainable(name, trainable_variables)
+                # 147 x 147 x 32
+                name = "Conv2d_2a_3x3"
+                trainable = is_trainable(name, trainable_variables, mode=mode)
+                with slim.arg_scope(
+                    [slim.batch_norm],
+                        is_training=(mode == tf.estimator.ModeKeys.TRAIN),
+                        trainable = trainable):
+                
                     net = slim.conv2d(
                         net,
                         32,
@@ -341,21 +351,31 @@ def inception_resnet_v2(inputs,
                         reuse=reuse)
                     end_points[name] = net
 
-                    # 147 x 147 x 64
-                    name = "Conv2d_2b_3x3"
-                    trainable = is_trainable(name, trainable_variables)
+                # 147 x 147 x 64
+                name = "Conv2d_2b_3x3"
+                trainable = is_trainable(name, trainable_variables, mode=mode)
+                with slim.arg_scope(
+                    [slim.batch_norm],
+                        is_training=(mode == tf.estimator.ModeKeys.TRAIN),
+                        trainable = trainable):
+                
                     net = slim.conv2d(
                         net, 64, 3, scope=name, trainable=trainable, reuse=reuse)
                     end_points[name] = net
 
-                    # 73 x 73 x 64
-                    net = slim.max_pool2d(
-                        net, 3, stride=2, padding='VALID', scope='MaxPool_3a_3x3')
-                    end_points['MaxPool_3a_3x3'] = net
+                # 73 x 73 x 64
+                net = slim.max_pool2d(
+                    net, 3, stride=2, padding='VALID', scope='MaxPool_3a_3x3')
+                end_points['MaxPool_3a_3x3'] = net
 
-                    # 73 x 73 x 80
-                    name = "Conv2d_3b_1x1"
-                    trainable = is_trainable(name, trainable_variables)
+                # 73 x 73 x 80
+                name = "Conv2d_3b_1x1"
+                trainable = is_trainable(name, trainable_variables, mode=mode)                
+                with slim.arg_scope(
+                    [slim.batch_norm],
+                        is_training=(mode == tf.estimator.ModeKeys.TRAIN),
+                        trainable = trainable):
+                
                     net = slim.conv2d(
                         net,
                         80,
@@ -366,9 +386,14 @@ def inception_resnet_v2(inputs,
                         reuse=reuse)
                     end_points[name] = net
 
-                    # 71 x 71 x 192
-                    name = "Conv2d_4a_3x3"
-                    trainable = is_trainable(name, trainable_variables)
+                # 71 x 71 x 192
+                name = "Conv2d_4a_3x3"
+                trainable = is_trainable(name, trainable_variables, mode=mode)
+                with slim.arg_scope(
+                    [slim.batch_norm],
+                        is_training=(mode == tf.estimator.ModeKeys.TRAIN),
+                        trainable = trainable):
+                
                     net = slim.conv2d(
                         net,
                         192,
@@ -379,14 +404,19 @@ def inception_resnet_v2(inputs,
                         reuse=reuse)
                     end_points[name] = net
 
-                    # 35 x 35 x 192
-                    net = slim.max_pool2d(
-                        net, 3, stride=2, padding='VALID', scope='MaxPool_5a_3x3')
-                    end_points['MaxPool_5a_3x3'] = net
+                # 35 x 35 x 192
+                net = slim.max_pool2d(
+                    net, 3, stride=2, padding='VALID', scope='MaxPool_5a_3x3')
+                end_points['MaxPool_5a_3x3'] = net
 
-                    # 35 x 35 x 320
-                    name = "Mixed_5b"
-                    trainable = is_trainable(name, trainable_variables)
+                # 35 x 35 x 320
+                name = "Mixed_5b"
+                trainable = is_trainable(name, trainable_variables, mode=mode)
+                with slim.arg_scope(
+                    [slim.batch_norm],
+                        is_training=(mode == tf.estimator.ModeKeys.TRAIN),
+                        trainable = trainable):
+                
                     with tf.variable_scope(name):
                         with tf.variable_scope('Branch_0'):
                             tower_conv = slim.conv2d(
@@ -452,9 +482,14 @@ def inception_resnet_v2(inputs,
                         ], 3)
                     end_points[name] = net
 
-                    # BLOCK 35
-                    name = "Block35"
-                    trainable = is_trainable(name, trainable_variables)
+                # BLOCK 35
+                name = "Block35"
+                trainable = is_trainable(name, trainable_variables, mode=mode)
+                with slim.arg_scope(
+                    [slim.batch_norm],
+                        is_training=(mode == tf.estimator.ModeKeys.TRAIN),
+                        trainable = trainable):
+                
                     net = slim.repeat(
                         net,
                         10,
@@ -462,10 +497,16 @@ def inception_resnet_v2(inputs,
                         scale=0.17,
                         trainable_variables=trainable,
                         reuse=reuse)
+                end_points[name] = net
 
-                    # 17 x 17 x 1024
-                    name = "Mixed_6a"
-                    trainable = is_trainable(name, trainable_variables)
+                # 17 x 17 x 1024
+                name = "Mixed_6a"
+                trainable = is_trainable(name, trainable_variables, mode=mode)
+                with slim.arg_scope(
+                    [slim.batch_norm],
+                        is_training=(mode == tf.estimator.ModeKeys.TRAIN),
+                        trainable = trainable):
+                
                     with tf.variable_scope(name):
                         with tf.variable_scope('Branch_0'):
                             tower_conv = slim.conv2d(
@@ -509,12 +550,16 @@ def inception_resnet_v2(inputs,
                                 padding='VALID',
                                 scope='MaxPool_1a_3x3')
                         net = tf.concat([tower_conv, tower_conv1_2, tower_pool], 3)
+                        end_points[name] = net
 
-                    end_points[name] = net
-
-                    # BLOCK 17
-                    name = "Block17"
-                    trainable = is_trainable(name, trainable_variables)
+                # BLOCK 17
+                name = "Block17"
+                trainable = is_trainable(name, trainable_variables, mode=mode)
+                with slim.arg_scope(
+                    [slim.batch_norm],
+                        is_training=(mode == tf.estimator.ModeKeys.TRAIN),
+                        trainable = trainable):
+                
                     net = slim.repeat(
                         net,
                         20,
@@ -522,9 +567,15 @@ def inception_resnet_v2(inputs,
                         scale=0.10,
                         trainable_variables=trainable,
                         reuse=reuse)
+                end_points[name] = net
 
-                    name = "Mixed_7a"
-                    trainable = is_trainable(name, trainable_variables)
+                name = "Mixed_7a"
+                trainable = is_trainable(name, trainable_variables, mode=mode)
+                with slim.arg_scope(
+                    [slim.batch_norm],
+                        is_training=(mode == tf.estimator.ModeKeys.TRAIN),
+                        trainable = trainable):
+                
                     with tf.variable_scope(name):
                         with tf.variable_scope('Branch_0'):
                             tower_conv = slim.conv2d(
@@ -596,9 +647,14 @@ def inception_resnet_v2(inputs,
                         ], 3)
                     end_points[name] = net
 
-                    # Block 8
-                    name = "Block8"
-                    trainable = is_trainable(name, trainable_variables)
+                # Block 8
+                name = "Block8"
+                trainable = is_trainable(name, trainable_variables, mode=mode)
+                with slim.arg_scope(
+                    [slim.batch_norm],
+                        is_training=(mode == tf.estimator.ModeKeys.TRAIN),
+                        trainable = trainable):
+                
                     net = slim.repeat(
                         net,
                         9,
@@ -611,29 +667,40 @@ def inception_resnet_v2(inputs,
                         activation_fn=None,
                         trainable_variables=trainable,
                         reuse=reuse)
+                end_points[name] = net
 
-                    name = "Conv2d_7b_1x1"
-                    trainable = is_trainable(name, trainable_variables)
+                name = "Conv2d_7b_1x1"
+                trainable = is_trainable(name, trainable_variables, mode=mode)
+                with slim.arg_scope(
+                    [slim.batch_norm],
+                        is_training=(mode == tf.estimator.ModeKeys.TRAIN),
+                        trainable = trainable):
+                
                     net = slim.conv2d(
                         net, 1536, 1, scope=name, trainable=trainable, reuse=reuse)
                     end_points[name] = net
 
-                    with tf.variable_scope('Logits'):
-                        end_points['PrePool'] = net
-                        # pylint: disable=no-member
-                        net = slim.avg_pool2d(
-                            net,
-                            net.get_shape()[1:3],
-                            padding='VALID',
-                            scope='AvgPool_1a_8x8')
-                        net = slim.flatten(net)
+                with tf.variable_scope('Logits'):
+                    end_points['PrePool'] = net
+                    # pylint: disable=no-member
+                    net = slim.avg_pool2d(
+                        net,
+                        net.get_shape()[1:3],
+                        padding='VALID',
+                        scope='AvgPool_1a_8x8')
+                    net = slim.flatten(net)
 
-                        net = slim.dropout(net, dropout_keep_prob, scope='Dropout')
+                    net = slim.dropout(net, dropout_keep_prob, scope='Dropout')
 
-                        end_points['PreLogitsFlatten'] = net
+                    end_points['PreLogitsFlatten'] = net
 
-                    name = "Bottleneck"
-                    trainable = is_trainable(name, trainable_variables)
+                name = "Bottleneck"
+                trainable = is_trainable(name, trainable_variables, mode=mode)
+                with slim.arg_scope(
+                    [slim.batch_norm],
+                        is_training=(mode == tf.estimator.ModeKeys.TRAIN),
+                        trainable = trainable):
+                
                     net = slim.fully_connected(
                         net,
                         bottleneck_layer_size,

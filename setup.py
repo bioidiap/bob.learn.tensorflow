@@ -56,6 +56,7 @@ setup(
             'predict_bio = bob.learn.tensorflow.script.predict_bio:predict_bio',
             'train = bob.learn.tensorflow.script.train:train',
             'train_and_evaluate = bob.learn.tensorflow.script.train_and_evaluate:train_and_evaluate',
+            'style_transfer = bob.learn.tensorflow.script.style_transfer:style_transfer'
         ],
     },
 

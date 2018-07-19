@@ -13,7 +13,8 @@ def check_features(features):
     return True
 
 
-def get_trainable_variables(extra_checkpoint):
+def get_trainable_variables(extra_checkpoint,
+                            mode=tf.estimator.ModeKeys.TRAIN):
     """
     Given the extra_checkpoint dictionary provided to the estimator,
     extract the content of "trainable_variables" e.
@@ -27,14 +28,19 @@ def get_trainable_variables(extra_checkpoint):
     Parameters
     ----------
     extra_checkpoint : dict
-        The `extra_checkpoint dictionary provided to the estimator
+      The `extra_checkpoint dictionary provided to the estimator
+    mode
+        The estimator mode. TRAIN, EVAL, and PREDICT. If not TRAIN, None is
+        returned.
 
     Returns
     -------
-    None or object
-        Returns `None` if `trainable_variables` is not in extra_checkpoint;
-        otherwise returns the content of `extra_checkpoint
+    Returns `None` if `trainable_variables` is not in extra_checkpoint;
+    otherwise returns the content of `extra_checkpoint
+
     """
+    if mode != tf.estimator.ModeKeys.TRAIN:
+        return None
 
     # If you don't set anything, everything is trainable
     if extra_checkpoint is None or "trainable_variables" not in extra_checkpoint:

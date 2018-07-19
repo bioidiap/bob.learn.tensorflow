@@ -20,11 +20,12 @@ def shuffle_data_and_labels_image_augmentation(filenames,
                                                random_brightness=False,
                                                random_contrast=False,
                                                random_saturation=False,
+                                               random_rotate=False,
                                                per_image_normalization=True,
                                                extension=None):
     """
     Dump random batches from a list of image paths and labels:
-        
+
     The list of files and labels should be in the same order e.g.
     filenames = ['class_1_img1', 'class_1_img2', 'class_2_img1']
     labels = [0, 0, 1]
@@ -33,28 +34,28 @@ def shuffle_data_and_labels_image_augmentation(filenames,
 
        filenames:
           List containing the path of the images
-       
+
        labels:
           List containing the labels (needs to be in EXACT same order as filenames)
-          
+
        data_shape:
           Samples shape saved in the tf-record
-          
+
        data_type:
           tf data type(https://www.tensorflow.org/versions/r0.12/resources/dims_types#data_types)
-     
+
        batch_size:
           Size of the batch
-          
+
        epochs:
            Number of epochs to be batched
-       
+
        buffer_size:
             Size of the shuffle bucket
 
        gray_scale:
           Convert to gray scale?
-          
+
        output_shape:
           If set, will randomly crop the image given the output shape
 
@@ -70,12 +71,15 @@ def shuffle_data_and_labels_image_augmentation(filenames,
        random_saturation:
            Adjust the saturation of an RGB image by a random factor (https://www.tensorflow.org/api_docs/python/tf/image/random_saturation)
 
+       random_rotate:
+           Randomly rotate face images between -5 and 5 degrees
+
        per_image_normalization:
            Linearly scales image to have zero mean and unit norm.
 
        extension:
            If None, will load files using `tf.image.decode..` if set to `hdf5`, will load with `bob.io.base.load`
-     
+
     """
 
     dataset = create_dataset_from_path_augmentation(
@@ -89,6 +93,7 @@ def shuffle_data_and_labels_image_augmentation(filenames,
         random_brightness=random_brightness,
         random_contrast=random_contrast,
         random_saturation=random_saturation,
+        random_rotate=random_rotate,
         per_image_normalization=per_image_normalization,
         extension=extension)
 
@@ -108,27 +113,28 @@ def create_dataset_from_path_augmentation(filenames,
                                           random_brightness=False,
                                           random_contrast=False,
                                           random_saturation=False,
+                                          random_rotate=False,
                                           per_image_normalization=True,
                                           extension=None):
     """
     Create dataset from a list of tf-record files
-    
+
     **Parameters**
-    
+
        filenames:
           List containing the path of the images
-       
+
        labels:
           List containing the labels (needs to be in EXACT same order as filenames)
-          
+
        data_shape:
           Samples shape saved in the tf-record
-          
+
        data_type:
           tf data type(https://www.tensorflow.org/versions/r0.12/resources/dims_types#data_types)
-          
+
        feature:
-    
+
     """
 
     parser = partial(
@@ -141,10 +147,11 @@ def create_dataset_from_path_augmentation(filenames,
         random_brightness=random_brightness,
         random_contrast=random_contrast,
         random_saturation=random_saturation,
+        random_rotate=random_rotate,
         per_image_normalization=per_image_normalization,
         extension=extension)
 
-    dataset = tf.contrib.data.Dataset.from_tensor_slices((filenames, labels))
+    dataset = tf.data.Dataset.from_tensor_slices((filenames, labels))
     dataset = dataset.map(parser)
     return dataset
 
@@ -159,6 +166,7 @@ def image_augmentation_parser(filename,
                               random_brightness=False,
                               random_contrast=False,
                               random_saturation=False,
+                              random_rotate=False,
                               per_image_normalization=True,
                               extension=None):
     """
@@ -180,6 +188,7 @@ def image_augmentation_parser(filename,
         random_brightness=random_brightness,
         random_contrast=random_contrast,
         random_saturation=random_saturation,
+        random_rotate=random_rotate,
         per_image_normalization=per_image_normalization)
 
     label = tf.cast(label, tf.int64)

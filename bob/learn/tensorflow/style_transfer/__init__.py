@@ -1,12 +1,4 @@
-from .Chopra import chopra
-from .LightCNN9 import light_cnn9
-from .Dummy import dummy
-from .MLP import mlp
-from .InceptionResnetV2 import inception_resnet_v2, inception_resnet_v2_batch_norm
-from .InceptionResnetV1 import inception_resnet_v1, inception_resnet_v1_batch_norm
-from . import SimpleCNN
-from .Vgg import vgg_19, vgg_16
-
+from .neural_transfer import compute_features, compute_gram 
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):
@@ -25,10 +17,6 @@ def __appropriate__(*args):
 
 
 __appropriate__(
-    chopra,
-    light_cnn9,
-    dummy,
-    mlp,
 )
 
 __all__ = [_ for _ in dir() if not _.startswith('_')]

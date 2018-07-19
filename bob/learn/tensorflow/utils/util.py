@@ -19,7 +19,7 @@ def compute_euclidean_distance(x, y):
 
 
 def load_mnist(perc_train=0.9):
-
+    numpy.random.seed(0)
     import bob.db.mnist
     db = bob.db.mnist.Database()
     raw_data = db.data()
@@ -40,8 +40,8 @@ def load_mnist(perc_train=0.9):
     train_data = data[0:n_train, :].astype("float32") * 0.00390625
     train_labels = labels[0:n_train]
 
-    validation_data = data[n_train:n_train + n_validation, :].astype(
-        "float32") * 0.00390625
+    validation_data = data[n_train:n_train +
+                           n_validation, :].astype("float32") * 0.00390625
     validation_labels = labels[n_train:n_train + n_validation]
 
     return train_data, train_labels, validation_data, validation_labels
@@ -215,8 +215,7 @@ def compute_embedding_accuracy_tensors(embedding, labels, num=None):
     # sample)
     predictions = predict_using_tensors(embedding, labels, num=num)
     matching = [
-        tf.equal(p, l)
-        for p, l in zip(
+        tf.equal(p, l) for p, l in zip(
             tf.unstack(predictions, num=num), tf.unstack(labels, num=num))
     ]
 

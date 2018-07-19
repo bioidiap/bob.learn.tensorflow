@@ -33,8 +33,9 @@ def mean_cross_entropy_loss(logits, labels, add_regularization_losses=True):
         if add_regularization_losses:
             regularization_losses = tf.get_collection(
                 tf.GraphKeys.REGULARIZATION_LOSSES)
-                
-            total_loss = tf.add_n([cross_loss] + regularization_losses, name="total_loss")
+
+            total_loss = tf.add_n(
+                [cross_loss] + regularization_losses, name="total_loss")
             return total_loss
         else:
             return cross_loss

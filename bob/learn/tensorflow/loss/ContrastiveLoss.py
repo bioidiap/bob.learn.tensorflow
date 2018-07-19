@@ -68,15 +68,13 @@ def contrastive_loss(left_embedding,
             loss = tf.reduce_mean(loss, name="total_loss_raw")
             tf.summary.scalar('loss_raw', loss)
             tf.add_to_collection(tf.GraphKeys.LOSSES, loss)
-            
+
             ## Appending the regularization loss
             #regularization_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
             #loss = tf.add_n([loss] + regularization_losses, name="total_loss")
-            
-            
+
         tf.summary.scalar('loss', loss)
         tf.summary.scalar('between_class', between_class_loss)
         tf.summary.scalar('within_class', within_class_loss)
 
         return loss
-

@@ -71,4 +71,3 @@ class MaxOut(base.Layer):
         outputs.set_shape(shape)
 
         return outputs
-

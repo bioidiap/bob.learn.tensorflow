@@ -179,4 +179,3 @@ class Siamese(estimator.Estimator):
             model_dir=model_dir,
             params=params,
             config=config)
-

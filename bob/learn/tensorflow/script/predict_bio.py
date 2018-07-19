@@ -9,10 +9,11 @@ import sys
 import logging
 import click
 from bob.extension.scripts.click_helper import (
-    verbosity_option, ConfigCommand, ResourceOption)
+    verbosity_option, ConfigCommand, ResourceOption, log_parameters)
 from multiprocessing import Pool
 from collections import defaultdict
 import numpy as np
+import tensorflow as tf
 from bob.io.base import create_directories_safe
 from bob.bio.base.utils import save
 from bob.bio.base.tools.grid import indices
@@ -57,27 +58,99 @@ def save_predictions(pool, output_dir, key, pred_buffer):
     pool.apply_async(save, (np.mean(pred_buffer[key], axis=0), outpath))
 
 
-@click.command(entry_point_group='bob.learn.tensorflow.config',
-               cls=ConfigCommand)
-@click.option('--estimator', '-e', required=True, cls=ResourceOption,
-              entry_point_group='bob.learn.tensorflow.estimator')
-@click.option('--database', '-d', required=True, cls=ResourceOption,
-              entry_point_group='bob.bio.database')
-@click.option('--biofiles', required=True, cls=ResourceOption,
-              help='You can only provide this through config files.')
-@click.option('--bio-predict-input-fn', required=True, cls=ResourceOption,
-              entry_point_group='bob.learn.tensorflow.biogenerator_input')
-@click.option('--output-dir', '-o', required=True, cls=ResourceOption)
-@click.option('--load-data', cls=ResourceOption,
-              entry_point_group='bob.learn.tensorflow.load_data')
-@click.option('--hooks', cls=ResourceOption, multiple=True,
-              entry_point_group='bob.learn.tensorflow.hook')
-@click.option('--predict-keys', '-k', multiple=True, default=None,
-              cls=ResourceOption)
-@click.option('--checkpoint-path', cls=ResourceOption)
-@click.option('--multiple-samples', is_flag=True, cls=ResourceOption)
-@click.option('--array', '-t', type=click.INT, default=1, cls=ResourceOption)
-@click.option('--force', '-f', is_flag=True, cls=ResourceOption)
+@click.command(
+    entry_point_group='bob.learn.tensorflow.config', cls=ConfigCommand)
+@click.option(
+    '--estimator',
+    '-e',
+    required=True,
+    cls=ResourceOption,
+    entry_point_group='bob.learn.tensorflow.estimator',
+    help='The estimator that will be evaluated.')
+@click.option(
+    '--database',
+    '-d',
+    required=True,
+    cls=ResourceOption,
+    entry_point_group='bob.bio.database',
+    help='A bio database. Its original_directory must point to the correct '
+    'path.')
+@click.option(
+    '--biofiles',
+    required=True,
+    cls=ResourceOption,
+    help='The list of the bio files. You can only provide this through config '
+    'files.')
+@click.option(
+    '--bio-predict-input-fn',
+    required=True,
+    cls=ResourceOption,
+    entry_point_group='bob.learn.tensorflow.biogenerator_input',
+    help='A callable with the signature of '
+    '``input_fn = bio_predict_input_fn(generator, output_types, output_shapes)``'
+    ' The inputs are documented in :any:`tf.data.Dataset.from_generator`'
+    ' and the output should be a function with no arguments and is passed'
+    ' to :any:`tf.estimator.Estimator.predict`.')
+@click.option(
+    '--output-dir',
+    '-o',
+    required=True,
+    cls=ResourceOption,
+    help='The directory to save the predictions.')
+@click.option(
+    '--load-data',
+    cls=ResourceOption,
+    entry_point_group='bob.learn.tensorflow.load_data',
+    help='A callable with the signature of '
+    '``data = load_data(database, biofile)``. '
+    ':any:`bob.bio.base.read_original_data` is used by default.')
+@click.option(
+    '--hooks',
+    cls=ResourceOption,
+    multiple=True,
+    entry_point_group='bob.learn.tensorflow.hook',
+    help='List of SessionRunHook subclass instances.')
+@click.option(
+    '--predict-keys',
+    '-k',
+    multiple=True,
+    default=None,
+    cls=ResourceOption,
+    help='List of `str`, name of the keys to predict. It is used if the '
+    '`EstimatorSpec.predictions` is a `dict`. If `predict_keys` is used '
+    'then rest of the predictions will be filtered from the dictionary. '
+    'If `None`, returns all.')
+@click.option(
+    '--checkpoint-path',
+    '-c',
+    cls=ResourceOption,
+    help='Path of a specific checkpoint to predict. If `None`, the '
+    'latest checkpoint in `model_dir` is used. This can also '
+    'be a folder which contains a "checkpoint" file where the '
+    'latest checkpoint from inside this file will be used as '
+    'checkpoint_path.')
+@click.option(
+    '--multiple-samples',
+    '-m',
+    is_flag=True,
+    cls=ResourceOption,
+    help='If provided, it assumes that the db interface returns '
+    'several samples from a biofile. This option can be used '
+    'when you are working with')
+@click.option(
+    '--array',
+    '-t',
+    type=click.INT,
+    default=1,
+    cls=ResourceOption,
+    help='Use this option alongside gridtk to submit this script as '
+    'an array job.')
+@click.option(
+    '--force',
+    '-f',
+    is_flag=True,
+    cls=ResourceOption,
+    help='Whether to overwrite existing predictions.')
 @verbosity_option(cls=ResourceOption)
 def predict_bio(estimator, database, biofiles, bio_predict_input_fn,
                 output_dir, load_data, hooks, predict_keys, checkpoint_path,
@@ -86,61 +159,6 @@ def predict_bio(estimator, database, biofiles, bio_predict_input_fn,
 
     This script works with bob.bio.base databases. This script works with
     tensorflow 1.4 and above.
-
-    \b
-    Parameters
-    ----------
-    estimator : tf.estimator.Estimator
-        The estimator that will be trained. Can be a
-        ``bob.learn.tensorflow.estimator`` entry point or a path to a Python
-        file which contains a variable named `estimator`.
-    database : :any:`bob.bio.base.database.BioDatabase`
-        A bio database. Its original_directory must point to the correct path.
-    biofiles : [:any:`bob.bio.base.database.BioFile`]
-        The list of the bio files.
-    bio_predict_input_fn : callable
-        A callable with the signature of
-        ``input_fn = bio_predict_input_fn(generator, output_types, output_shapes)``
-        The inputs are documented in :any:`tf.data.Dataset.from_generator` and
-        the output should be a function with no arguments and is passed to
-        :any:`tf.estimator.Estimator.predict`.
-    output_dir : str
-        The directory to save the predictions.
-    load_data : callable, optional
-        A callable with the signature of
-        ``data = load_data(database, biofile)``.
-        :any:`bob.bio.base.read_original_data` is used by default.
-    hooks : [tf.train.SessionRunHook], optional
-        List of SessionRunHook subclass instances. Used for callbacks inside
-        the training loop. Can be a ``bob.learn.tensorflow.hook`` entry point
-        or a path to a Python file which contains a variable named `hooks`.
-    predict_keys : [str] or None, optional
-        List of `str`, name of the keys to predict. It is used if the
-        `EstimatorSpec.predictions` is a `dict`. If `predict_keys` is used then
-        rest of the predictions will be filtered from the dictionary. If
-        `None`, returns all.
-    checkpoint_path : str, optional
-        Path of a specific checkpoint to predict. If `None`, the latest
-        checkpoint in `model_dir` is used.
-    multiple_samples : bool, optional
-        If provided, it assumes that the db interface returns several samples
-        from a biofile. This option can be used when you are working with
-        sequences.
-    force : bool, optional
-        Whether to overwrite existing predictions.
-    array : int, optional
-        Use this option alongside gridtk to submit this script as an array job.
-    verbose : int, optional
-        Increases verbosity (see help for --verbose).
-
-    \b
-    [CONFIG]...            Configuration files. It is possible to pass one or
-                           several Python files (or names of
-                           ``bob.learn.tensorflow.config`` entry points or
-                           module names) which contain the parameters listed
-                           above as Python variables. The options through the
-                           command-line (see below) will override the values of
-                           configuration files.
 
     An example configuration for a trained model and its evaluation could be::
 
@@ -173,31 +191,19 @@ def predict_bio(estimator, database, biofiles, bio_predict_input_fn,
                 return {'data': images, 'keys': keys}, labels
             return input_fn
     """
-    logger.debug('estimator: %s', estimator)
-    logger.debug('database: %s', database)
-    logger.debug('len(biofiles): %s', len(biofiles))
-    logger.debug('bio_predict_input_fn: %s', bio_predict_input_fn)
-    logger.debug('output_dir: %s', output_dir)
-    logger.debug('load_data: %s', load_data)
-    logger.debug('hooks: %s', hooks)
-    logger.debug('predict_keys: %s', predict_keys)
-    logger.debug('checkpoint_path: %s', checkpoint_path)
-    logger.debug('multiple_samples: %s', multiple_samples)
-    logger.debug('array: %s', array)
-    logger.debug('force: %s', force)
-    logger.debug('kwargs: %s', kwargs)
+    log_parameters(logger, ignore=('biofiles',))
+    logger.debug("len(biofiles): %d", len(biofiles))
 
     assert len(biofiles), "biofiles are empty!"
 
-    if array is not None:
-        logger.info("array: %d", array)
     if array > 1:
         start, end = indices(biofiles, array)
         biofiles = biofiles[start:end]
 
     # filter the existing files
-    paths = [make_output_path(output_dir, f.make_path("", ""))
-             for f in biofiles]
+    paths = [
+        make_output_path(output_dir, f.make_path("", "")) for f in biofiles
+    ]
     indexes = non_existing_files(paths, force)
     biofiles = [biofiles[i] for i in indexes]
 
@@ -216,6 +222,11 @@ def predict_bio(estimator, database, biofiles, bio_predict_input_fn,
                                             generator.output_shapes)
 
     if checkpoint_path:
+        if os.path.isdir(checkpoint_path):
+            ckpt = tf.train.get_checkpoint_state(estimator.model_dir)
+            if ckpt and ckpt.model_checkpoint_path:
+                checkpoint_path = ckpt.model_checkpoint_path
+
         logger.info("Restoring the model from %s", checkpoint_path)
 
     predictions = estimator.predict(

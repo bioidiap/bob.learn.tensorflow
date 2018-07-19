@@ -8,23 +8,44 @@ import tensorflow as tf
 from bob.learn.tensorflow.utils.hooks import EarlyStopException
 import logging
 import click
-from bob.extension.scripts.click_helper import (
-    verbosity_option, ConfigCommand, ResourceOption)
+from bob.extension.scripts.click_helper import (verbosity_option,
+                                                ConfigCommand, ResourceOption)
 
 logger = logging.getLogger(__name__)
 
 
-@click.command(entry_point_group='bob.learn.tensorflow.config',
-               cls=ConfigCommand)
-@click.option('--estimator', '-e', required=True, cls=ResourceOption,
-              entry_point_group='bob.learn.tensorflow.estimator')
-@click.option('--train-spec', '-it', required=True, cls=ResourceOption,
-              entry_point_group='bob.learn.tensorflow.trainspec')
-@click.option('--eval-spec', '-ie', required=True, cls=ResourceOption,
-              entry_point_group='bob.learn.tensorflow.evalspec')
-@click.option('--exit-ok-exceptions', cls=ResourceOption, multiple=True,
-              default=(EarlyStopException,), show_default=True,
-              entry_point_group='bob.learn.tensorflow.exception')
+@click.command(
+    entry_point_group='bob.learn.tensorflow.config', cls=ConfigCommand)
+@click.option(
+    '--estimator',
+    '-e',
+    required=True,
+    cls=ResourceOption,
+    entry_point_group='bob.learn.tensorflow.estimator',
+    help='The estimator that will be trained and evaluated.')
+@click.option(
+    '--train-spec',
+    '-it',
+    required=True,
+    cls=ResourceOption,
+    entry_point_group='bob.learn.tensorflow.trainspec',
+    help='See :any:`tf.estimator.Estimator.train_and_evaluate`.')
+@click.option(
+    '--eval-spec',
+    '-ie',
+    required=True,
+    cls=ResourceOption,
+    entry_point_group='bob.learn.tensorflow.evalspec',
+    help='See :any:`tf.estimator.Estimator.train_and_evaluate`.')
+@click.option(
+    '--exit-ok-exceptions',
+    cls=ResourceOption,
+    multiple=True,
+    default=(EarlyStopException, ),
+    show_default=True,
+    entry_point_group='bob.learn.tensorflow.exception',
+    help='A list of exceptions to exit properly if they occur. If nothing is '
+         'provided, the EarlyStopException is handled by default.')
 @verbosity_option(cls=ResourceOption)
 def train_and_evaluate(estimator, train_spec, eval_spec, exit_ok_exceptions,
                        **kwargs):
@@ -35,32 +56,6 @@ def train_and_evaluate(estimator, train_spec, eval_spec, exit_ok_exceptions,
     https://www.tensorflow.org/api_docs/python/tf/estimator/TrainSpec
     https://www.tensorflow.org/api_docs/python/tf/estimator/EvalSpec
     for more details.
-
-    \b
-    Parameters
-    ----------
-    estimator : tf.estimator.Estimator
-        The estimator that will be trained. Can be a
-        ``bob.learn.tensorflow.estimator`` entry point or a path to a Python
-        file which contains a variable named `estimator`.
-    train_spec : tf.estimator.TrainSpec
-        See :any:`tf.estimator.Estimator.train_and_evaluate`.
-    eval_spec : tf.estimator.EvalSpec
-        See :any:`tf.estimator.Estimator.train_and_evaluate`.
-    exit_ok_exceptions : [Exception], optional
-        A list of exceptions to exit properly if they occur. If nothing is
-        provided, the EarlyStopException is handled by default.
-    verbose : int, optional
-        Increases verbosity (see help for --verbose).
-
-    \b
-    [CONFIG]...            Configuration files. It is possible to pass one or
-                           several Python files (or names of
-                           ``bob.learn.tensorflow.config`` entry points or
-                           module names) which contain the parameters listed
-                           above as Python variables. The options through the
-                           command-line (see below) will override the values of
-                           configuration files.
     """
     logger.debug('estimator: %s', estimator)
     logger.debug('train_spec: %s', train_spec)

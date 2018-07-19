@@ -67,7 +67,7 @@ def input_fn(mode, batch_size=1):
             'convert_to_records.py first to convert the MNIST data to '
             'TFRecord file format.')
 
-    dataset = tf.contrib.data.TFRecordDataset(tfrecords_files)
+    dataset = tf.data.TFRecordDataset(tfrecords_files)
 
     # For training, repeat the dataset forever
     if mode == tf.estimator.ModeKeys.TRAIN:
@@ -75,7 +75,7 @@ def input_fn(mode, batch_size=1):
 
     # Map example_parser over dataset, and batch results by up to batch_size
     dataset = dataset.map(
-        example_parser, num_threads=1, output_buffer_size=batch_size)
+        example_parser, num_parallel_calls=1).prefetch(batch_size)
     dataset = dataset.batch(batch_size)
     images, labels, keys = dataset.make_one_shot_iterator().get_next()
 

@@ -13,7 +13,7 @@ import click
 import tensorflow as tf
 from bob.io.base import create_directories_safe
 from bob.extension.scripts.click_helper import (
-    verbosity_option, ConfigCommand, ResourceOption)
+    verbosity_option, ConfigCommand, ResourceOption, log_parameters)
 
 logger = logging.getLogger(__name__)
 
@@ -73,52 +73,55 @@ def _bytes2human(n, format='%(value).1f %(symbol)s', symbols='customary'):
     return format % dict(symbol=symbols[0], value=n)
 
 
-@click.command(entry_point_group='bob.learn.tensorflow.config',
-               cls=ConfigCommand)
-@click.option('--samples', required=True, cls=ResourceOption)
-@click.option('--reader', required=True, cls=ResourceOption)
-@click.option('--output', '-o', required=True, cls=ResourceOption)
-@click.option('--shuffle', is_flag=True, cls=ResourceOption)
-@click.option('--allow-failures', is_flag=True, cls=ResourceOption)
-@click.option('--multiple-samples', is_flag=True, cls=ResourceOption)
-@click.option('--size-estimate', is_flag=True, cls=ResourceOption)
+@click.command(
+    entry_point_group='bob.learn.tensorflow.config', cls=ConfigCommand)
+@click.option(
+    '--samples',
+    required=True,
+    cls=ResourceOption,
+    help='A list of all samples that you want to write in the '
+    'tfrecords file. Whatever is inside this list is passed to '
+    'the reader.')
+@click.option(
+    '--reader',
+    required=True,
+    cls=ResourceOption,
+    help='a function with the signature of ``data, label, key = '
+    'reader(sample)`` which takes a sample and returns the '
+    'loaded data, the label of the data, and a key which is '
+    'unique for every sample.')
+@click.option(
+    '--output',
+    '-o',
+    required=True,
+    cls=ResourceOption,
+    help='Name of the output file.')
+@click.option(
+    '--shuffle',
+    is_flag=True,
+    cls=ResourceOption,
+    help='If provided, it will shuffle the samples.')
+@click.option(
+    '--allow-failures',
+    is_flag=True,
+    cls=ResourceOption,
+    help='If provided, the samples which fail to load are ignored.')
+@click.option(
+    '--multiple-samples',
+    is_flag=True,
+    cls=ResourceOption,
+    help='If provided, it means that the data provided by reader contains '
+    'multiple samples with same label and path.')
+@click.option(
+    '--size-estimate',
+    is_flag=True,
+    cls=ResourceOption,
+    help='If given, will print the estimated file size instead of creating '
+    'the final tfrecord file.')
 @verbosity_option(cls=ResourceOption)
 def db_to_tfrecords(samples, reader, output, shuffle, allow_failures,
                     multiple_samples, size_estimate, **kwargs):
     """Converts Bio and PAD datasets to TFRecords file formats.
-
-    \b
-    Parameters
-    ----------
-    samples : list
-        A list of all samples that you want to write in the tfrecords file.
-        Whatever is inside this list is passed to the reader.
-    reader : callable
-        a function with the signature of ``data, label, key = reader(sample)``
-        which takes a sample and returns the loaded data, the label of the
-        data, and a key which is unique for every sample.
-    output : str
-        Name of the output file.
-    shuffle : bool, optional
-        If provided, it will shuffle the samples.
-    allow_failures : bool, optional
-        If provided, the samples which fail to load are ignored.
-    multiple_samples : bool, optional
-        If provided, it means that the data provided by reader contains
-        multiple samples with same label and path.
-    size_estimate : bool, optional
-        Description
-    verbose : int, optional
-        Increases verbosity (see help for --verbose).
-
-    \b
-    [CONFIG]...            Configuration files. It is possible to pass one or
-                           several Python files (or names of
-                           ``bob.learn.tensorflow.config`` entry points or
-                           module names) which contain the parameters listed
-                           above as Python variables. The options through the
-                           command-line (see below) will override the values of
-                           configuration files.
 
     The best way to use this script is to send it to the io-big queue if you
     are at Idiap::
@@ -167,14 +170,8 @@ def db_to_tfrecords(samples, reader, output, shuffle, allow_failures,
             key = biofile.path
             return (data, label, key)
     """
-    logger.debug('samples: %s', samples)
-    logger.debug('reader: %s', reader)
-    logger.debug('output: %s', output)
-    logger.debug('shuffle: %s', shuffle)
-    logger.debug('allow_failures: %s', allow_failures)
-    logger.debug('multiple_samples: %s', multiple_samples)
-    logger.debug('size_estimate: %s', size_estimate)
-    logger.debug('kwargs: %s', kwargs)
+    log_parameters(logger, ignore=('samples',))
+    logger.debug("len(samples): %d", len(samples))
 
     if size_estimate:
         output = tempfile.NamedTemporaryFile(suffix='.tfrecords').name
@@ -211,7 +208,10 @@ def db_to_tfrecords(samples, reader, output, shuffle, allow_failures,
             if multiple_samples:
                 for sample in data:
                     total_size += write_a_sample(
-                        writer, sample, label, key,
+                        writer,
+                        sample,
+                        label,
+                        key,
                         size_estimate=size_estimate)
                     sample_count += 1
             else:

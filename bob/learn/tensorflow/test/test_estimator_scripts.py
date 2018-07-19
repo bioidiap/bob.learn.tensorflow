@@ -1,6 +1,7 @@
 from __future__ import print_function
 import os
 import shutil
+from glob import glob
 from tempfile import mkdtemp
 from click.testing import CliRunner
 from bob.io.base.test_utils import datafile
@@ -101,8 +102,8 @@ def _create_tfrecord(test_dir):
         f2.write(f.read().replace('TEST_DIR', test_dir))
     output = os.path.join(test_dir, 'dev.tfrecords')
     runner = CliRunner()
-    result = runner.invoke(db_to_tfrecords, args=[
-        dummy_tfrecord_config, '--output', output])
+    result = runner.invoke(
+        db_to_tfrecords, args=[dummy_tfrecord_config, '--output', output])
     assert result.exit_code == 0, '%s\n%s\n%s' % (
         result.exc_info, result.output, result.exception)
     return output
@@ -122,7 +123,7 @@ def _create_checkpoint(tmpdir, model_dir, dummy_tfrecord):
         result.exc_info, result.output, result.exception)
 
 
-def _eval(tmpdir, model_dir, dummy_tfrecord):
+def _eval(tmpdir, model_dir, dummy_tfrecord, extra_args=[]):
     config = CONFIG % {
         'model_dir': model_dir,
         'tfrecord_filenames': dummy_tfrecord
@@ -131,7 +132,7 @@ def _eval(tmpdir, model_dir, dummy_tfrecord):
     with open(config_path, 'w') as f:
         f.write(config)
     runner = CliRunner()
-    result = runner.invoke(eval_script, args=[config_path])
+    result = runner.invoke(eval_script, args=[config_path] + extra_args)
     assert result.exit_code == 0, '%s\n%s\n%s' % (
         result.exc_info, result.output, result.exception)
 
@@ -173,6 +174,38 @@ def test_eval():
 
         print('Train and evaluate a dummy network')
         _train_and_evaluate(tmpdir, model_dir, dummy_tfrecord)
+
+    finally:
+        try:
+            shutil.rmtree(tmpdir)
+        except Exception:
+            pass
+
+
+def test_eval_keep_n_model():
+    tmpdir = mkdtemp(prefix='bob_')
+    try:
+        model_dir = os.path.join(tmpdir, 'model_dir')
+        eval_dir = os.path.join(model_dir, 'eval')
+
+        print('\nCreating a dummy tfrecord')
+        dummy_tfrecord = _create_tfrecord(tmpdir)
+
+        print('Training a dummy network')
+        _create_checkpoint(tmpdir, model_dir, dummy_tfrecord)
+
+        print('Evaluating a dummy network')
+        _eval(tmpdir, model_dir, dummy_tfrecord, ['-K', '1'])
+
+        evaluated_path = os.path.join(eval_dir, 'evaluated')
+        assert os.path.exists(evaluated_path), evaluated_path
+        with open(evaluated_path) as f:
+            doc = f.read()
+
+        assert '1 ' in doc, doc
+        assert '200 ' in doc, doc
+        assert len(glob('{}/model.ckpt-*'.format(eval_dir))) == 3, \
+            os.listdir(eval_dir)
 
     finally:
         try:
