@@ -16,28 +16,28 @@ logger = logging.getLogger("bob.learn")
 
 
 class Logits(estimator.Estimator):
-    """
-    NN estimator with `Cross entropy loss <https://www.tensorflow.org/api_docs/python/tf/nn/softmax_cross_entropy_with_logits>`_ in the hot-encoded layer :py:class:`bob.learn.tensorflow.estimators.Logits`.
+    """Logits estimator.
+
+    NN estimator with `Cross entropy loss
+    <https://www.tensorflow.org/api_docs/python/tf/nn/softmax_cross_entropy_with_logits>`_
+    in the hot-encoded layer
+    :py:class:`bob.learn.tensorflow.estimators.Logits`.
 
     The architecture function should follow the following pattern::
 
-      ```
       def my_beautiful_architecture(placeholder, **kwargs):
 
         end_points = dict()
         graph = convXX(placeholder)
         end_points['conv'] = graph
-      
+
       return graph, end_points
-      ```
 
 
     The **loss** function should follow the following pattern::
 
-      ```
       def my_beautiful_loss(logits, labels, **kwargs):
         return loss_set_of_ops(logits, labels)
-      ```
 
 
     Attributes
@@ -74,14 +74,14 @@ class Logits(estimator.Estimator):
 
       extra_checkpoint: dict
         In case you want to use other model to initialize some variables.
-
         This argument should be in the following format::
-        ```
-        extra_checkpoint = {"checkpoint_path": <YOUR_CHECKPOINT>,\
-                            "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),\
-                            "trainable_variables": [<LIST OF VARIABLES OR SCOPES THAT YOU WANT TO RETRAIN>]\
-                            }
-        ```
+
+          extra_checkpoint = {
+            "checkpoint_path": <YOUR_CHECKPOINT>,
+            "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),
+            "trainable_variables": [<LIST OF VARIABLES OR SCOPES THAT YOU WANT TO RETRAIN>]
+          }
+
       apply_moving_averages: bool
         Apply exponential moving average in the training variables and in the loss.
         https://www.tensorflow.org/api_docs/python/tf/train/ExponentialMovingAverage
@@ -238,71 +238,16 @@ class Logits(estimator.Estimator):
 
 
 class LogitsCenterLoss(estimator.Estimator):
-    """
-    NN estimator with `Cross entropy loss <https://www.tensorflow.org/api_docs/python/tf/nn/softmax_cross_entropy_with_logits>`_ in the hot-encoded layer :py:class:`bob.learn.tensorflow.estimators.Logits` plus the center loss implemented in: "Wen, Yandong, et al. "A discriminative feature learning approach for deep face recognition." European Conference on Computer Vision. Springer, Cham, 2016."
+    """Logits estimator with center loss.
 
+    NN estimator with `Cross entropy loss
+    <https://www.tensorflow.org/api_docs/python/tf/nn/softmax_cross_entropy_with_logits>`_
+    in the hot-encoded layer :py:class:`bob.learn.tensorflow.estimators.Logits`
+    plus the center loss implemented in: "Wen, Yandong, et al. "A
+    discriminative feature learning approach for deep face recognition."
+    European Conference on Computer Vision. Springer, Cham, 2016."
 
-    The **architecture** function should follow the following pattern::
-
-      ```
-      def my_beautiful_function(placeholder):
-
-        end_points = dict()
-        graph = convXX(placeholder)
-        end_points['conv'] = graph
-      
-      return graph, end_points
-      ```
-
-    **Parameters**
-      architecture:
-         Pointer to a function that builds the graph.
-
-      optimizer:
-         One of the tensorflow solvers
-         (https://www.tensorflow.org/api_guides/python/train)
-         - tf.train.GradientDescentOptimizer
-         - tf.train.AdagradOptimizer
-         - ....
-
-      config:
-
-      n_classes:
-         Number of classes of your problem. The logits will be appended in this
-         class
-
-      loss_op:
-         Pointer to a function that computes the loss.
-
-      embedding_validation:
-         Run the validation using embeddings?? [default: False]
-
-      model_dir:
-        Model path
-
-      validation_batch_size:
-        Size of the batch for validation. This value is used when the
-        validation with embeddings is used. This is a hack.
-
-      params:
-        Extra params for the model function (please see
-        https://www.tensorflow.org/extend/estimators for more info)
-
-      extra_checkpoint: dict
-        In case you want to use other model to initialize some variables.
-
-        This argument should be in the following format::
-        ```
-        extra_checkpoint = {"checkpoint_path": <YOUR_CHECKPOINT>,\
-                            "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),\
-                            "trainable_variables": [<LIST OF VARIABLES OR SCOPES THAT YOU WANT TO RETRAIN>]\
-                            }
-        ```
-      apply_moving_averages: bool
-        Apply exponential moving average in the training variables and in the loss.
-        https://www.tensorflow.org/api_docs/python/tf/train/ExponentialMovingAverage
-        By default the decay for the variable averages is 0.9999 and for the loss is 0.9
-
+    See :any:`Logits` for the description of parameters.
     """
 
     def __init__(self,

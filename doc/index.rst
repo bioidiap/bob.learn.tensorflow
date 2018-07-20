@@ -18,7 +18,6 @@ Users Guide
    user_guide.rst
    style_transfer.rst
    transfer_learning.rst
-   references
 
 Reference Manual
 ================
