@@ -20,8 +20,8 @@ data API is here to help you build complex and efficient input pipelines to
 your model.
 
 
-Face recognition example
-========================
+Face recognition example using bob.db databases
+===============================================
 
 Here is a quick code example to build a simple convolutional neural network
 (CNN) for recognizing faces from the ATNT database.
@@ -37,6 +37,8 @@ Here is a quick code example to build a simple convolutional neural network
     >>> import tensorflow as tf
 
 2. Define the inputs:
+
+.. _input_fn:
 
 .. doctest::
 
@@ -104,7 +106,7 @@ Here is a quick code example to build a simple convolutional neural network
     ...     input_fn=train_input_fn, max_steps=50, hooks=hooks)
     >>> eval_spec = tf.estimator.EvalSpec(input_fn=eval_input_fn)
 
-3. Define the estimator:
+3. Define the architecture:
 
 .. doctest::
 
@@ -139,8 +141,18 @@ Here is a quick code example to build a simple convolutional neural network
     ...         endpoints[name] = net
     ...
     ...     return net, endpoints
-    ...
-    ...
+    
+
+.. warning ::
+
+ Practical advice: use `tf.contrib.slim` to craft your CNNs.
+ Although Tensorflow's documentation recomend the usage of `tf.layers` and `tf.keras`, in our experience `slim` has better defaults, probably because the guys from Google use them more often.
+
+
+4. Define the estimator:
+
+.. doctest::
+
     >>> estimator = Logits(
     ...     architecture,
     ...     optimizer=tf.train.GradientDescentOptimizer(1e-4),
@@ -150,7 +162,7 @@ Here is a quick code example to build a simple convolutional neural network
     ...     validation_batch_size=8,
     ... )  # doctest: +SKIP
 
-4. Train and evaluate the model:
+5. Train and evaluate the model:
 
 .. doctest::
 
@@ -163,6 +175,13 @@ and estimators. Let's summarize them.
 
 Data pipeline
 -------------
+
+There are several ways to provide data to Tensorflow graphs.
+In this section we provide some examples on how to make the bridge between `bob.db` databases
+and tensorflow `input_fn`.
+
+The BioGenerator input pipeline
+*******************************
 
 The :any:`bob.learn.tensorflow.dataset.bio.BioGenerator` class can be used to
 convert any database of bob (not just bob.bio.base's databases) to a
@@ -181,12 +200,147 @@ crop, mean normalization, random flip, ...) in the ``transform`` function.
 Once these transformations are applied on your data, you can easily cache them
 to disk for faster reading of data in your training.
 
+
+Input pipeline with TFRecords
+*****************************
+
+An optimized way to provide data to Tensorflow graphs is using tfrecords.
+In this `link <http://warmspringwinds.github.io/tensorflow/tf-slim/2016/12/21/tfrecords-guide/>`_ you have a very nice guide on how TFRecord works.
+
+In `bob.learn.tensorflow` we provide the tool `bob tf db_to_tfrecords` that converts `bob.db` databases in TFRecords. Type the snippet bellow for help::
+
+  $ ./bin/bob tf db_to_tfrecords --help
+
+
+To generate a tfrecord for our `Face recognition example using bob.db databases`_ example use the following snippet.
+
+.. doctest::
+
+    >>> from bob.bio.base.utils import read_original_data
+    >>> database = bob.db.atnt.Database()
+
+    >>> groups = 'world'
+
+    >>> CLIENT_IDS = (str(f.client_id) for f in database.objects(groups=groups))
+    >>> CLIENT_IDS = list(set(CLIENT_IDS))
+    >>> CLIENT_IDS = dict(zip(CLIENT_IDS, range(len(CLIENT_IDS))))
+
+    >>> def file_to_label(f):
+    ...     return CLIENT_IDS[str(f.client_id)]
+
+    >>> def reader(biofile):
+    ...     data = read_original_data(biofile, database.original_directory,database.original_extension)
+    ...     label = file_to_label(biofile)
+    ...     key = biofile.path
+    ...     return (data, label, key)
+
+
+After saving this snippet in a python file (let's say `tfrec.py`) run the following command ::
+
+ $ bob tf db_to_tfrecords tfrec.py -o atnt.tfrecord
+
+Once this is done you can replace the `input_fn`_ defined above by the snippet bellow. 
+
+.. doctest::
+
+  >>>
+  >>> from bob.learn.tensorflow.dataset.tfrecords import shuffle_data_and_labels_image_augmentation
+  >>>
+  >>> tfrecords_filename = ['atnt.tfrecord']
+  >>> data_shape = (112, 92 , 3)
+  >>> data_type = tf.uint8
+  >>> batch_size = 16
+  >>> epochs = 1
+  >>>
+  >>> def train_input_fn():
+  ...     return shuffle_data_and_labels_image_augmentation(
+  ...                tfrecords_filename,
+  ...                data_shape,
+  ...                data_type,
+  ...                batch_size,
+  ...                epochs=epochs)
+
+
 The Estimator
 -------------
 
 The estimators can also be customized using different architectures, loss
 functions, and optimizers.
 
+   In this package we have crafted 4 types of estimators.
 
+   - Logits: `Cross entropy loss <https://www.tensorflow.org/api_docs/python/tf/nn/softmax_cross_entropy_with_logits>`_ in the hot-encoded layer :py:class:`bob.learn.tensorflow.estimators.Logits`
+   - LogitsCenterLoss: `Cross entropy loss <https://www.tensorflow.org/api_docs/python/tf/nn/softmax_cross_entropy_with_logits>`_ PLUS the `center loss <https://ydwen.github.io/papers/WenECCV16.pdf>`_ in the hot-encoded layer :py:class:`bob.learn.tensorflow.estimators.LogitsCenterLoss`
+   - Siamese: Siamese network estimator :py:class:`bob.learn.tensorflow.estimators.Siamese`
+   - Triplet: Triplet network estimator :py:class:`bob.learn.tensorflow.estimators.Triplet`
 
 .. _tensorflow: https://www.tensorflow.org/
+
+
+Style Transfer
+==============
+
+We have implemented the style transfer strategy from::
+
+    Gatys, Leon A., Alexander S. Ecker, and Matthias Bethge. "A neural algorithm of artistic style." arXiv preprint arXiv:1508.06576 (2015).
+
+
+Check as the usage possibilities with the command::
+
+ $ bob tf style_transfer --help
+
+
+Here we have an example on how to do a style transfer using VGG 19 trained with the image net
+
+.. doctest::
+
+    >>> from bob.learn.tensorflow.network import vgg_19
+    >>> # --architecture
+    >>> architecture = vgg_19
+
+    >>> import numpy
+
+    >>> # YOU CAN DOWNLOAD THE CHECKPOINTS FROM HERE 
+    >>> # https://github.com/tensorflow/models/tree/master/research/slim#pre-trained-models
+    >>> checkpoint_dir = "[DOWNLOAD_YOUR_MODEL]"
+
+    >>> # --style-end-points and -- content-end-points
+    >>> content_end_points = ['vgg_19/conv4/conv4_2', 'vgg_19/conv5/conv5_2']
+    >>> style_end_points = ['vgg_19/conv1/conv1_2', 
+    ...                 'vgg_19/conv2/conv2_1',
+    ...                 'vgg_19/conv3/conv3_1',
+    ...                 'vgg_19/conv4/conv4_1',
+    ...                 'vgg_19/conv5/conv5_1'
+    ...                ]
+
+    >>> # Transfering variables
+    >>> scopes = {"vgg_19/":"vgg_19/"}
+    
+    >>> # Set if images using
+    >>> style_image_paths = ["vincent_van_gogh.jpg"]
+    
+    >>> # Functions used to preprocess the input signal and 
+    >>> # --preprocess-fn and --un-preprocess-fn
+    >>> # Taken from VGG19
+    >>> def mean_norm(tensor):
+    ...     return tensor - numpy.array([ 123.68 ,  116.779,  103.939])
+
+    >>> def un_mean_norm(tensor):
+    ...     return tensor + numpy.array([ 123.68 ,  116.779,  103.939])
+
+    >>> preprocess_fn = mean_norm
+
+    >>> un_preprocess_fn = un_mean_norm
+
+
+Here we use an image from Angelina Jolie using Van Gogh style as an example::
+ 
+   $ bob tf style_transfer angelina.jpg angelina_output.jpg vgg19_example.py -i 10.
+
+.. image:: img/angelina.jpg
+   :width: 35%
+.. image:: img/vincent_van_gogh.jpg
+   :width: 27%
+.. image:: img/angelina_output.jpg
+   :width: 35%
+

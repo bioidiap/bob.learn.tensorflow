@@ -66,12 +66,15 @@ class Triplet(estimator.Estimator):
 
       extra_checkpoint: dict
         In case you want to use other model to initialize some variables.
-        This argument should be in the following format
-        extra_checkpoint = {
-            "checkpoint_path": <YOUR_CHECKPOINT>,
-            "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),
-            "trainable_variables": [<LIST OF VARIABLES OR SCOPES THAT YOU WANT TO TRAIN>]
+
+        This argument should be in the following format::
+        ```
+        extra_checkpoint = {\
+            "checkpoint_path": <YOUR_CHECKPOINT>,\
+            "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),\
+            "trainable_variables": [<LIST OF VARIABLES OR SCOPES THAT YOU WANT TO TRAIN>]\
         }
+        ```
     """
 
     def __init__(self,

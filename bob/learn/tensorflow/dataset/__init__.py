@@ -274,7 +274,7 @@ def blocks_tensorflow(images, block_size):
 
     Parameters
     ----------
-    images : :any:`tf.Tensor`
+    images : `tf.Tensor`
         The input color images. It is assumed that the image has a shape of
         [?, H, W, C].
     block_size : (int, int)
@@ -282,7 +282,7 @@ def blocks_tensorflow(images, block_size):
 
     Returns
     -------
-    blocks : :any:`tf.Tensor`
+    blocks : `tf.Tensor`
         All the blocks in the batch dimension. The output will be of
         size [?, block_size[0], block_size[1], C].
     n_blocks : int
