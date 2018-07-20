@@ -28,7 +28,7 @@ else:
     extensions.append('sphinx.ext.pngmath')
 
 # Be picky about warnings
-nitpicky = False
+nitpicky = True
 keep_warnings = True
 
 # Ignores stuff we can't easily resolve on other project's sphinx manuals

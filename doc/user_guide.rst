@@ -10,7 +10,7 @@ familiarity with it before continuing. We recommend reading at least the
 following pages:
 
 * https://www.tensorflow.org/get_started
-* https://www.tensorflow.org/programmers_guide
+* https://www.tensorflow.org/guide/
 * https://www.tensorflow.org/programmers_guide/estimators
 * https://www.tensorflow.org/programmers_guide/datasets
 
@@ -27,6 +27,7 @@ Here is a quick code example to build a simple convolutional neural network
 (CNN) for recognizing faces from the ATNT database.
 
 1. Let's do some imports:
+*************************
 
 .. doctest::
 
@@ -37,6 +38,7 @@ Here is a quick code example to build a simple convolutional neural network
     >>> import tensorflow as tf
 
 2. Define the inputs:
+*********************
 
 .. _input_fn:
 
@@ -107,9 +109,11 @@ Here is a quick code example to build a simple convolutional neural network
     >>> eval_spec = tf.estimator.EvalSpec(input_fn=eval_input_fn)
 
 3. Define the architecture:
+***************************
 
 .. doctest::
 
+    >>> import tensorflow.contrib.slim as slim
     >>> def architecture(data, mode, **kwargs):
     ...     endpoints = {}
     ...     training = mode == tf.estimator.ModeKeys.TRAIN
@@ -117,26 +121,26 @@ Here is a quick code example to build a simple convolutional neural network
     ...     with tf.variable_scope('CNN'):
     ...
     ...         name = 'conv'
-    ...         net = tf.layers.conv2d(data, filters=32, kernel_size=(
+    ...         net = slim.conv2d(data, filters=32, kernel_size=(
     ...             5, 5), strides=2, padding='same', activation=tf.nn.relu, name=name)
     ...         endpoints[name] = net
     ...
     ...         name = 'pool'
-    ...         net = tf.layers.max_pooling2d(net, pool_size=(
+    ...         net = slim.max_pool2d(net, pool_size=(
     ...             2, 2), strides=1, padding='same', name=name)
     ...         endpoints[name] = net
     ...
     ...         name = 'pool-flat'
-    ...         net = tf.layers.flatten(net, name=name)
+    ...         net = slim.flatten(net, name=name)
     ...         endpoints[name] = net
     ...
     ...         name = 'dense'
-    ...         net = tf.layers.dense(
+    ...         net = slim.fully_connected(
     ...             net, units=128, activation=tf.nn.relu, name=name)
     ...         endpoints[name] = net
     ...
     ...         name = 'dropout'
-    ...         net = tf.layers.dropout(
+    ...         net = slim.dropout(
     ...             inputs=net, rate=0.4, training=training)
     ...         endpoints[name] = net
     ...
@@ -146,10 +150,14 @@ Here is a quick code example to build a simple convolutional neural network
 .. warning ::
 
  Practical advice: use `tf.contrib.slim` to craft your CNNs.
- Although Tensorflow's documentation recomend the usage of `tf.layers` and `tf.keras`, in our experience `slim` has better defaults, probably because the guys from Google use them more often.
+ Although Tensorflow's documentation recommend the usage of `tf.layers` and `tf.keras`, in our experience `slim` has better defaults, probably because the guys from Google use them more often.
 
 
-4. Define the estimator:
+4. Estimator:
+************************
+
+Explicitly triggering the estimator
+...................................
 
 .. doctest::
 
@@ -161,20 +169,27 @@ Here is a quick code example to build a simple convolutional neural network
     ...     embedding_validation=True,
     ...     validation_batch_size=8,
     ... )  # doctest: +SKIP
-
-5. Train and evaluate the model:
-
-.. doctest::
-
     >>> tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)  # doctest: +SKIP
 
 
-There are important concepts in this package about how to build input pipelines
-and estimators. Let's summarize them.
+    
+Triggering the estimator via command line
+..........................................
+
+In the example above we explicitly triggered the training and validation via `tf.estimator.train`.
+We provide command line scripts that does that for you.
+
+Check the command bellow fro training::
+
+ $ bob tf train --help
+
+and to evaluate::
+
+ $ bob tf eval --help
 
 
 Data pipeline
--------------
+=============
 
 There are several ways to provide data to Tensorflow graphs.
 In this section we provide some examples on how to make the bridge between `bob.db` databases
@@ -262,12 +277,9 @@ Once this is done you can replace the `input_fn`_ defined above by the snippet b
 
 
 The Estimator
--------------
+=============
 
-The estimators can also be customized using different architectures, loss
-functions, and optimizers.
-
-   In this package we have crafted 4 types of estimators.
+In this package we have crafted 4 types of estimators.
 
    - Logits: `Cross entropy loss <https://www.tensorflow.org/api_docs/python/tf/nn/softmax_cross_entropy_with_logits>`_ in the hot-encoded layer :py:class:`bob.learn.tensorflow.estimators.Logits`
    - LogitsCenterLoss: `Cross entropy loss <https://www.tensorflow.org/api_docs/python/tf/nn/softmax_cross_entropy_with_logits>`_ PLUS the `center loss <https://ydwen.github.io/papers/WenECCV16.pdf>`_ in the hot-encoded layer :py:class:`bob.learn.tensorflow.estimators.LogitsCenterLoss`

@@ -12,7 +12,7 @@ import numpy
 # -- checkpoint-dir
 # YOU CAN DOWNLOAD THE CHECKPOINTS FROM HERE 
 # https://github.com/tensorflow/models/tree/master/research/slim#pre-trained-models
-checkpoint_dir = "/idiap/user/tpereira/gitlab/bob/bob.learn.tensorflow/vgg_19.ckpt"
+checkpoint_dir = "/PATH-TO/vgg_19.ckpt"
 
 # --style-end-points and -- content-end-points
 content_end_points = ['vgg_19/conv4/conv4_2', 'vgg_19/conv5/conv5_2']
@@ -26,9 +26,7 @@ style_end_points = ['vgg_19/conv1/conv1_2',
 
 scopes = {"vgg_19/":"vgg_19/"}
 
-style_image_paths = ["/idiap/user/tpereira/gitlab/bob/bob.learn.tensorflow/bob/learn/tensorflow/configs/style_transfer/vincent_van_gogh.jpg"]
-
-#                     "/idiap/user/tpereira/gitlab/bob/bob.learn.tensorflow/bob/learn/tensorflow/configs/style_transfer/vincent_van_gogh2.jpg"]
+style_image_paths = ["/PATH/TO/vincent_van_gogh.jpg"]
 
 
 # --preprocess-fn and --un-preprocess-fn

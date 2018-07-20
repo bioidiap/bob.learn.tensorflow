@@ -1,1 +1,3 @@
 py:class list
+py:exc ValueError
+py:class tensorflow.python.estimator.estimator.Estimator

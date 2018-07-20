@@ -30,7 +30,7 @@ Architectures
     bob.learn.tensorflow.network.inception_resnet_v1
     bob.learn.tensorflow.network.inception_resnet_v2_batch_norm
     bob.learn.tensorflow.network.inception_resnet_v1_batch_norm
-    bob.learn.tensorflow.network.SimpleCNN
+    bob.learn.tensorflow.network.SimpleCNN.base_architecture
     bob.learn.tensorflow.network.vgg_19
     bob.learn.tensorflow.network.vgg_16
 
@@ -61,5 +61,6 @@ Detailed Information
 .. automodule:: bob.learn.tensorflow.dataset.triplet_image
 .. automodule:: bob.learn.tensorflow.dataset.tfrecords
 .. automodule:: bob.learn.tensorflow.network
+.. automodule:: bob.learn.tensorflow.network.SimpleCNN
 .. automodule:: bob.learn.tensorflow.utils
 .. automodule:: bob.learn.tensorflow.utils.util

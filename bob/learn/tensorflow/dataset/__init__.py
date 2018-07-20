@@ -334,20 +334,27 @@ def all_patches(image, label, key, size):
 
     Parameters
     ----------
-    image
+    image:
         The image should be channels_last format and already batched.
-    label
+
+    label:
         The label for the image
-    key
+
+    key:
         The key for the image
-    size : (int, int)
+
+    size: (int, int)
         The height and width of the blocks.
 
     Returns
     -------
-    (blocks, label, key)
-        The non-overlapping blocks of size from image and labels and keys are
-        repeated.
+    blocks:
+       The non-overlapping blocks of size from image and labels and keys are
+       repeated.
+
+    label:
+
+    key:
     """
     blocks, n_blocks = blocks_tensorflow(image, size)
     # duplicate label and key as n_blocks
