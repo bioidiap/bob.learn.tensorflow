@@ -207,8 +207,15 @@ def predict_using_tensors(embedding, labels, num=None):
 
 def compute_embedding_accuracy_tensors(embedding, labels, num=None):
     """
-    Compute the accuracy through exhaustive comparisons between the embeddings
-    using tensors
+    Compute the accuracy in a closed-set
+    
+    **Parameters**
+
+    embeddings: `tf.Tensor`
+      Set of embeddings
+
+    labels: `tf.Tensor`
+      Correspondent labels
     """
 
     # Fitting the main diagonal with infs (removing comparisons with the same
@@ -224,7 +231,15 @@ def compute_embedding_accuracy_tensors(embedding, labels, num=None):
 
 def compute_embedding_accuracy(embedding, labels):
     """
-    Compute the accuracy through exhaustive comparisons between the embeddings
+    Compute the accuracy in a closed-set
+    
+    **Parameters**
+
+    embeddings: :any:`numpy.array`
+      Set of embeddings
+
+    labels: :any:`numpy.array`
+      Correspondent labels
     """
 
     from scipy.spatial.distance import cdist
@@ -273,13 +288,13 @@ def to_channels_last(image):
 
     Parameters
     ----------
-    image : :any:`tf.Tensor`
+    image : `tf.Tensor`
         At least a 3 dimensional image. If the dimension is more than 3, the
         last 3 dimensions are assumed to be [C, H, W].
 
     Returns
     -------
-    image : :any:`tf.Tensor`
+    image : `tf.Tensor`
         The image in [..., H, W, C] format.
 
     Raises
@@ -303,13 +318,13 @@ def to_channels_first(image):
 
     Parameters
     ----------
-    image : :any:`tf.Tensor`
+    image : `tf.Tensor`
         At least a 3 dimensional image. If the dimension is more than 3, the
         last 3 dimensions are assumed to be [H, W, C].
 
     Returns
     -------
-    image : :any:`tf.Tensor`
+    image : `tf.Tensor`
         The image in [..., C, H, W] format.
 
     Raises

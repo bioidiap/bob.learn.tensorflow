@@ -17,25 +17,29 @@ def get_trainable_variables(extra_checkpoint,
                             mode=tf.estimator.ModeKeys.TRAIN):
     """
     Given the extra_checkpoint dictionary provided to the estimator,
-    extract the content of "trainable_variables" e.
+    extract the content of "trainable_variables".
 
-    If trainable_variables is not provided, all end points are trainable by default.
+    If trainable_variables is not provided, all end points are trainable by
+    default.
     If trainable_variables==[], all end points are NOT trainable.
-    If trainable_variables contains some end_points, ONLY these endpoints will be trainable.
+    If trainable_variables contains some end_points, ONLY these endpoints will
+    be trainable.
 
-    Parameters
+    Attributes
     ----------
-    extra_checkpoint : dict
-      The `extra_checkpoint dictionary provided to the estimator
-    mode
+
+    extra_checkpoint: dict
+      The extra_checkpoint dictionary provided to the estimator
+
+    mode:
         The estimator mode. TRAIN, EVAL, and PREDICT. If not TRAIN, None is
         returned.
 
     Returns
     -------
-    Returns `None` if `trainable_variables` is not in extra_checkpoint;
-    otherwise returns the content of `extra_checkpoint
 
+    Returns `None` if **trainable_variables** is not in extra_checkpoint;
+    otherwise returns the content of extra_checkpoint .
     """
     if mode != tf.estimator.ModeKeys.TRAIN:
         return None

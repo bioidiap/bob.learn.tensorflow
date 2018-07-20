@@ -13,72 +13,13 @@ logger = logging.getLogger("bob.learn")
 
 
 class Siamese(estimator.Estimator):
-    """
-    NN estimator for Siamese networks
+    """NN estimator for Siamese Networks.
+    Proposed in: "Chopra, Sumit, Raia Hadsell, and Yann LeCun. "Learning a
+    similarity metric discriminatively, with application to face verification."
+    Computer Vision and Pattern Recognition, 2005. CVPR 2005. IEEE Computer
+    Society Conference on. Vol. 1. IEEE, 2005."
 
-    The **architecture** function should follow the following pattern:
-
-      def my_beautiful_function(placeholder):
-
-          end_points = dict()
-          graph = convXX(placeholder)
-          end_points['conv'] = graph
-          ....
-          return graph, end_points
-
-    The **loss** function should follow the following pattern:
-
-    def my_beautiful_loss(logits, labels):
-       return loss_set_of_ops(logits, labels)
-
-
-        extra_checkpoint = {"checkpoint_path":model_dir,
-                            "scopes": dict({"Dummy/": "Dummy/"}),
-                            "trainable_variables": [<LIST OF VARIABLES OR SCOPES THAT YOU WANT TO TRAIN>]
-                           }
-
-
-
-
-    **Parameters**
-      architecture:
-         Pointer to a function that builds the graph.
-
-      optimizer:
-         One of the tensorflow solvers (https://www.tensorflow.org/api_guides/python/train)
-         - tf.train.GradientDescentOptimizer
-         - tf.train.AdagradOptimizer
-         - ....
-
-      config:
-
-      loss_op:
-         Pointer to a function that computes the loss.
-
-      embedding_validation:
-         Run the validation using embeddings?? [default: False]
-
-      model_dir:
-        Model path
-
-      validation_batch_size:
-        Size of the batch for validation. This value is used when the
-        validation with embeddings is used. This is a hack.
-
-
-      params:
-        Extra params for the model function
-        (please see https://www.tensorflow.org/extend/estimators for more info)
-        
-      extra_checkpoint: dict
-        In case you want to use other model to initialize some variables.
-        This argument should be in the following format
-        extra_checkpoint = {
-            "checkpoint_path": <YOUR_CHECKPOINT>,
-            "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),
-            "trainable_variables": [<LIST OF VARIABLES OR SCOPES THAT YOU WANT TO TRAIN>]
-        }
-        
+    See :any:`Logits` for the description of parameters.
     """
 
     def __init__(self,

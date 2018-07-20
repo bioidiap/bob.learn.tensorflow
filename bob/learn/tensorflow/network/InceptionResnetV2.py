@@ -219,26 +219,35 @@ def inception_resnet_v2_batch_norm(inputs,
 
     **Parameters**:
 
-      inputs: a 4-D tensor of size [batch_size, height, width, 3].
+      inputs:
+        4-D tensor of size [batch_size, height, width, 3].
 
-      num_classes: number of predicted classes.
+      num_classes:
+        number of predicted classes.
 
-      is_training: whether is training or not.
+      is_training:
+        whether is training or not.
 
-      dropout_keep_prob: float, the fraction to keep before final layer.
+      dropout_keep_prob: float
+        the fraction to keep before final layer.
 
-      reuse: whether or not the network and its variables should be reused. To be
+      reuse:
+        whether or not the network and its variables should be reused. To be
         able to reuse 'scope' must be given.
 
-      scope: Optional variable_scope.
+      scope:
+        Optional variable_scope.
 
       trainable_variables: list
         List of variables to be trainable=True
 
     **Returns**:
 
-      logits: the logits outputs of the model.
-      end_points: the set of end_points from the inception model.
+      logits:
+        the logits outputs of the model.
+
+      end_points:
+        the set of end_points from the inception model.
     """
 
     batch_norm_params = {
@@ -283,26 +292,35 @@ def inception_resnet_v2(inputs,
     Parameters
     ----------
 
-      inputs: a 4-D tensor of size [batch_size, height, width, 3].
+      inputs:
+        4-D tensor of size [batch_size, height, width, 3].
 
-      num_classes: number of predicted classes.
+      num_classes:
+        number of predicted classes.
 
-      is_training: whether is training or not.
+      is_training:
+        whether is training or not.
 
-      dropout_keep_prob: float, the fraction to keep before final layer.
+      dropout_keep_prob: float
+        the fraction to keep before final layer.
 
-      reuse: whether or not the network and its variables should be reused. To be
+      reuse:
+        whether or not the network and its variables should be reused. To be
         able to reuse 'scope' must be given.
 
-      scope: Optional variable_scope.
+      scope:
+        Optional variable_scope.
 
-      trainable_variables: list
+      trainable_variables: :any:`list`
         List of variables to be trainable=True
 
     Returns
     -------
-      logits: the logits outputs of the model.
-      end_points: the set of end_points from the inception model.
+      logits:
+        the logits outputs of the model.
+
+      end_points:
+        the set of end_points from the inception model.
     """
     end_points = {}
 

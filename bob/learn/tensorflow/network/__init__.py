@@ -29,6 +29,9 @@ __appropriate__(
     light_cnn9,
     dummy,
     mlp,
+    inception_resnet_v2, inception_resnet_v2_batch_norm,
+    inception_resnet_v1, inception_resnet_v1_batch_norm,
+    SimpleCNN, vgg_19, vgg_16
 )
 
 __all__ = [_ for _ in dir() if not _.startswith('_')]

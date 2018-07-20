@@ -14,64 +14,13 @@ logger = logging.getLogger("bob.learn")
 
 
 class Triplet(estimator.Estimator):
-    """
-    NN estimator for Triplet networks
+    """NN estimator for Triplet networks.
 
-    Schroff, Florian, Dmitry Kalenichenko, and James Philbin.
-    "Facenet: A unified embedding for face recognition and clustering." Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition. 2015.
+    Schroff, Florian, Dmitry Kalenichenko, and James Philbin. "Facenet: A
+    unified embedding for face recognition and clustering." Proceedings of the
+    IEEE Conference on Computer Vision and Pattern Recognition. 2015.
 
-    The **architecture** function should follow the following pattern:
-
-      def my_beautiful_function(placeholder):
-
-          end_points = dict()
-          graph = convXX(placeholder)
-          end_points['conv'] = graph
-          ....
-          return graph, end_points
-
-    The **loss** function should follow the following pattern:
-
-    def my_beautiful_loss(logits, labels):
-       return loss_set_of_ops(logits, labels)
-
-
-    **Parameters**
-      architecture:
-         Pointer to a function that builds the graph.
-
-      optimizer:
-         One of the tensorflow solvers (https://www.tensorflow.org/api_guides/python/train)
-         - tf.train.GradientDescentOptimizer
-         - tf.train.AdagradOptimizer
-         - ....
-
-      config:
-
-      n_classes:
-         Number of classes of your problem. The logits will be appended in this class
-
-      loss_op:
-         Pointer to a function that computes the loss.
-
-      embedding_validation:
-         Run the validation using embeddings?? [default: False]
-
-      model_dir:
-        Model path
-
-      validation_batch_size:
-        Size of the batch for validation. This value is used when the
-        validation with embeddings is used. This is a hack.
-
-      extra_checkpoint: dict
-        In case you want to use other model to initialize some variables.
-        This argument should be in the following format
-        extra_checkpoint = {
-            "checkpoint_path": <YOUR_CHECKPOINT>,
-            "scopes": dict({"<SOURCE_SCOPE>/": "<TARGET_SCOPE>/"}),
-            "trainable_variables": [<LIST OF VARIABLES OR SCOPES THAT YOU WANT TO TRAIN>]
-        }
+    See :any:`Logits` for the description of parameters.
     """
 
     def __init__(self,

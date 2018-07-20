@@ -1,36 +1,66 @@
 .. vim: set fileencoding=utf-8 :
-.. Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
-.. Tue 28 Aug 2012 18:09:40 CEST
 
-.. _py_api:
+.. _bob.learn.tensorflow.py_api:
 
 ============
  Python API
 ============
 
 
+Estimators
+==========
+
+.. autosummary::
+    bob.learn.tensorflow.estimators.Logits
+    bob.learn.tensorflow.estimators.LogitsCenterLoss
+    bob.learn.tensorflow.estimators.Triplet
+    bob.learn.tensorflow.estimators.Siamese
+
+
+
 Architectures
--------------
+=============
+
+.. autosummary::
+    bob.learn.tensorflow.network.chopra
+    bob.learn.tensorflow.network.light_cnn9
+    bob.learn.tensorflow.network.dummy
+    bob.learn.tensorflow.network.mlp
+    bob.learn.tensorflow.network.inception_resnet_v2
+    bob.learn.tensorflow.network.inception_resnet_v1
+    bob.learn.tensorflow.network.inception_resnet_v2_batch_norm
+    bob.learn.tensorflow.network.inception_resnet_v1_batch_norm
+    bob.learn.tensorflow.network.SimpleCNN.base_architecture
+    bob.learn.tensorflow.network.vgg_19
+    bob.learn.tensorflow.network.vgg_16
 
 
-Trainers
---------
+Data
+====
 
-Learning rate
--------------
+.. autosummary::
+    bob.learn.tensorflow.dataset.bio.BioGenerator
+    bob.learn.tensorflow.dataset.image.shuffle_data_and_labels_image_augmentation
+    bob.learn.tensorflow.dataset.siamese_image.shuffle_data_and_labels_image_augmentation
+    bob.learn.tensorflow.dataset.triplet_image.shuffle_data_and_labels_image_augmentation
+    bob.learn.tensorflow.dataset.tfrecords.shuffle_data_and_labels_image_augmentation
+    bob.learn.tensorflow.dataset.tfrecords.shuffle_data_and_labels
+    bob.learn.tensorflow.utils.util.to_channels_last
+    bob.learn.tensorflow.utils.util.to_channels_first
 
-Data Shufflers
---------------
-
-
-Analizers
----------
-
-
-Loss
-----
-
-
+ 
 Detailed Information
---------------------
+====================
 
+.. automodule:: bob.learn.tensorflow
+.. automodule:: bob.learn.tensorflow.estimators
+.. automodule:: bob.learn.tensorflow.dataset
+.. automodule:: bob.learn.tensorflow.dataset.bio
+.. automodule:: bob.learn.tensorflow.dataset.image
+.. automodule:: bob.learn.tensorflow.dataset.siamese_image
+.. automodule:: bob.learn.tensorflow.dataset.triplet_image
+.. automodule:: bob.learn.tensorflow.dataset.tfrecords
+.. automodule:: bob.learn.tensorflow.network
+.. automodule:: bob.learn.tensorflow.network.SimpleCNN
+.. automodule:: bob.learn.tensorflow.utils
+.. automodule:: bob.learn.tensorflow.utils.util

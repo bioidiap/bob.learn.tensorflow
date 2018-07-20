@@ -274,7 +274,7 @@ def blocks_tensorflow(images, block_size):
 
     Parameters
     ----------
-    images : :any:`tf.Tensor`
+    images : `tf.Tensor`
         The input color images. It is assumed that the image has a shape of
         [?, H, W, C].
     block_size : (int, int)
@@ -282,7 +282,7 @@ def blocks_tensorflow(images, block_size):
 
     Returns
     -------
-    blocks : :any:`tf.Tensor`
+    blocks : `tf.Tensor`
         All the blocks in the batch dimension. The output will be of
         size [?, block_size[0], block_size[1], C].
     n_blocks : int
@@ -334,20 +334,27 @@ def all_patches(image, label, key, size):
 
     Parameters
     ----------
-    image
+    image:
         The image should be channels_last format and already batched.
-    label
+
+    label:
         The label for the image
-    key
+
+    key:
         The key for the image
-    size : (int, int)
+
+    size: (int, int)
         The height and width of the blocks.
 
     Returns
     -------
-    (blocks, label, key)
-        The non-overlapping blocks of size from image and labels and keys are
-        repeated.
+    blocks:
+       The non-overlapping blocks of size from image and labels and keys are
+       repeated.
+
+    label:
+
+    key:
     """
     blocks, n_blocks = blocks_tensorflow(image, size)
     # duplicate label and key as n_blocks
