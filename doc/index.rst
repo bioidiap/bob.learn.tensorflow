@@ -16,6 +16,8 @@ Users Guide
    :maxdepth: 2
 
    user_guide.rst
+   style_transfer.rst
+   transfer_learning.rst
    references
 
 Reference Manual
