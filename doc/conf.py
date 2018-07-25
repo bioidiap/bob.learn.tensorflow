@@ -17,7 +17,8 @@ extensions = [
     'sphinx.ext.todo', 'sphinx.ext.coverage', 'sphinx.ext.ifconfig',
     'sphinx.ext.autodoc', 'sphinx.ext.autosummary', 'sphinx.ext.doctest',
     'sphinx.ext.graphviz', 'sphinx.ext.intersphinx', 'sphinx.ext.napoleon',
-    'sphinx.ext.viewcode', 'matplotlib.sphinxext.plot_directive'
+    'sphinx.ext.viewcode', 'matplotlib.sphinxext.plot_directive',
+    'sphinx.ext.mathjax'
 ]
 
 import sphinx
