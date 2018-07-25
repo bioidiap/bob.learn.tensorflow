@@ -22,10 +22,10 @@ def content_loss(noises, content_features):
     Parameters
     ----------
 
-     noises: list
+     noises: :any:`list`
         A list of tf.Tensor containing all the noises convolved        
 
-     content_features: list
+     content_features: :any:`list`
         A list of numpy.array containing all the content_features convolved
 
     """
@@ -43,18 +43,18 @@ def linear_gram_style_loss(noises, gram_style_features):
 
     Gatys, Leon A., Alexander S. Ecker, and Matthias Bethge. "A neural algorithm of artistic style." arXiv preprint arXiv:1508.06576 (2015).
 
-    For a given noise signal :math:`n`, content image :math:`c` and convolved with the DCNN :math:`\phi` until the layer :math:`l` the STYLE loss is defined as:
+    For a given noise signal :math:`n`, content image :math:`c` and convolved with the DCNN :math:`\phi` until the layer :math:`l` the STYLE loss is defined as
 
-    :math:`L(n,c) = \sum_{l=?}^{?}\frac{({\phi^l(n)^T*\phi^l(n) - \phi^l(c)^T*\phi^l(c)})^2}{N*M}`
+    :math:`L(n,c) = \\sum_{l=?}^{?}\\frac{({\phi^l(n)^T*\\phi^l(n) - \\phi^l(c)^T*\\phi^l(c)})^2}{N*M}`
 
 
     Parameters
     ----------
 
-     noises: list
+     noises: :any:`list`
         A list of tf.Tensor containing all the noises convolved
 
-     gram_style_features: list
+     gram_style_features: :any:`list`
         A list of numpy.array containing all the content_features convolved
 
     """
@@ -76,7 +76,7 @@ def denoising_loss(noise):
     Parameters
     ----------
 
-       noise: tf.Tensor
+       noise:
           Input noise
 
     """

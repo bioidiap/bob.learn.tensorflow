@@ -1,4 +1,4 @@
-from .neural_transfer import compute_features, compute_gram 
+from .neural_transfer import compute_features, compute_gram, do_style_transfer
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):
