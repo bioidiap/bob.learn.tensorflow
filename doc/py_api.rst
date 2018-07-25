@@ -48,6 +48,30 @@ Data
     bob.learn.tensorflow.utils.util.to_channels_last
     bob.learn.tensorflow.utils.util.to_channels_first
 
+
+Style Transfer
+==============
+
+.. autosummary::
+    bob.learn.tensorflow.style_transfer.do_style_transfer
+
+
+Losses
+======
+
+.. autosummary::
+    bob.learn.tensorflow.loss.mean_cross_entropy_loss
+    bob.learn.tensorflow.loss.mean_cross_entropy_center_loss
+    bob.learn.tensorflow.loss.contrastive_loss
+    bob.learn.tensorflow.loss.triplet_loss
+    bob.learn.tensorflow.loss.triplet_average_loss
+    bob.learn.tensorflow.loss.triplet_fisher_loss
+    bob.learn.tensorflow.loss.linear_gram_style_loss
+    bob.learn.tensorflow.loss.content_loss
+    bob.learn.tensorflow.loss.denoising_loss
+
+
+
  
 Detailed Information
 ====================
@@ -64,3 +88,5 @@ Detailed Information
 .. automodule:: bob.learn.tensorflow.network.SimpleCNN
 .. automodule:: bob.learn.tensorflow.utils
 .. automodule:: bob.learn.tensorflow.utils.util
+.. automodule:: bob.learn.tensorflow.style_transfer
+.. automodule:: bob.learn.tensorflow.loss
