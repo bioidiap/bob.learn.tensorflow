@@ -27,7 +27,6 @@ def test_embedding_accuracy():
 
     data = numpy.vstack((class_a, class_b))
     labels = numpy.concatenate((labels_a, labels_b))
-
     assert compute_embedding_accuracy(data, labels) == 1.
 
     # Adding noise
@@ -51,7 +50,9 @@ def test_embedding_accuracy_tensors():
 
     class_b = numpy.random.normal(
         loc=10, scale=0.1, size=(samples_per_class, 2))
-    labels_b = numpy.ones(samples_per_class)
+    class_b = numpy.vstack((class_b, numpy.array([0,0.])))# Adding outlier
+    labels_b = numpy.ones(samples_per_class + 1)
+    
 
     data = numpy.vstack((class_a, class_b))
     labels = numpy.concatenate((labels_a, labels_b))
@@ -61,4 +62,4 @@ def test_embedding_accuracy_tensors():
 
     sess = tf.Session()
     accuracy = sess.run(compute_embedding_accuracy_tensors(data, labels))
-    assert accuracy == 1.
+    assert abs(accuracy-7/11.) < 10e-3

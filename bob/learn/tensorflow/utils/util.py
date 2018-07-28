@@ -226,7 +226,7 @@ def compute_embedding_accuracy_tensors(embedding, labels, num=None):
             tf.unstack(predictions, num=num), tf.unstack(labels, num=num))
     ]
 
-    return tf.reduce_sum(tf.cast(matching, tf.uint8)) / len(predictions)
+    return tf.reduce_sum(tf.cast(matching, tf.float32)) / len(predictions)
 
 
 def compute_embedding_accuracy(embedding, labels):
