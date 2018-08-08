@@ -3,9 +3,10 @@ import shutil
 import pkg_resources
 import tempfile
 from click.testing import CliRunner
-
-from bob.learn.tensorflow.script.db_to_tfrecords import db_to_tfrecords
-
+import bob.io.base
+from bob.learn.tensorflow.script.db_to_tfrecords import db_to_tfrecords, describe_tf_record
+from bob.learn.tensorflow.utils import load_mnist, create_mnist_tfrecord
+ 
 regenerate_reference = False
 
 dummy_config = pkg_resources.resource_filename(
@@ -47,3 +48,24 @@ def test_db_to_tfrecords_size_estimate():
 
     finally:
         shutil.rmtree(test_dir)
+
+
+def test_tfrecord_counter():
+    tfrecord_train = "./tf-train-test/train_mnist.tfrecord"
+    shape = (3136,) # I'm saving the thing as float
+    batch_size = 1000
+
+    try:
+        train_data, train_labels, validation_data, validation_labels = load_mnist()
+        bob.io.base.create_directories_safe(os.path.dirname(tfrecord_train))
+        create_mnist_tfrecord(
+            tfrecord_train, train_data, train_labels, n_samples=6000)
+
+        n_samples, n_labels = describe_tf_record(os.path.dirname(tfrecord_train), shape, batch_size)
+        
+        assert n_samples == 6000
+        assert n_labels == 10
+
+    finally:
+        shutil.rmtree(os.path.dirname(tfrecord_train))
+

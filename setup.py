@@ -52,11 +52,12 @@ setup(
         'bob.learn.tensorflow.cli': [
             'compute_statistics = bob.learn.tensorflow.script.compute_statistics:compute_statistics',
             'db_to_tfrecords = bob.learn.tensorflow.script.db_to_tfrecords:db_to_tfrecords',
+            'describe_tfrecord = bob.learn.tensorflow.script.db_to_tfrecords:describe_tfrecord',
             'eval = bob.learn.tensorflow.script.eval:eval',
             'predict_bio = bob.learn.tensorflow.script.predict_bio:predict_bio',
             'train = bob.learn.tensorflow.script.train:train',
             'train_and_evaluate = bob.learn.tensorflow.script.train_and_evaluate:train_and_evaluate',
-            'style_transfer = bob.learn.tensorflow.script.style_transfer:style_transfer'
+            'style_transfer = bob.learn.tensorflow.script.style_transfer:style_transfer',
         ],
     },
 
