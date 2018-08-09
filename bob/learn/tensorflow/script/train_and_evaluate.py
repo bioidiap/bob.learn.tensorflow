@@ -45,7 +45,7 @@ logger = logging.getLogger(__name__)
     show_default=True,
     entry_point_group='bob.learn.tensorflow.exception',
     help='A list of exceptions to exit properly if they occur. If nothing is '
-         'provided, the EarlyStopException is handled by default.')
+    'provided, the EarlyStopException is handled by default.')
 @verbosity_option(cls=ResourceOption)
 def train_and_evaluate(estimator, train_spec, eval_spec, exit_ok_exceptions,
                        **kwargs):

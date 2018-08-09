@@ -191,7 +191,7 @@ def predict_bio(estimator, database, biofiles, bio_predict_input_fn,
                 return {'data': images, 'keys': keys}, labels
             return input_fn
     """
-    log_parameters(logger, ignore=('biofiles',))
+    log_parameters(logger, ignore=('biofiles', ))
     logger.debug("len(biofiles): %d", len(biofiles))
 
     assert len(biofiles), "biofiles are empty!"
