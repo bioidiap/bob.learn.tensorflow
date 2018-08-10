@@ -10,6 +10,7 @@ from bob.learn.tensorflow.network import inception_resnet_v2, inception_resnet_v
 
 def test_inceptionv2():
 
+    tf.reset_default_graph()
     # Testing WITHOUT batch norm
     inputs = tf.placeholder(tf.float32, shape=(1, 160, 160, 1))
     graph, _ = inception_resnet_v2(inputs)
@@ -29,6 +30,7 @@ def test_inceptionv2():
 
 def test_inceptionv2_adaptation():
 
+    tf.reset_default_graph()
     for n, trainable_variables in [
         (490, None),
         (0, []),
@@ -47,10 +49,13 @@ def test_inceptionv2_adaptation():
         l = len(tf.trainable_variables())
         assert l == n, (l, n)
         tf.reset_default_graph()
+    tf.reset_default_graph()
+    assert len(tf.global_variables()) == 0
 
 
 def test_inceptionv1():
 
+    tf.reset_default_graph()
     # Testing WITHOUT batch norm
     inputs = tf.placeholder(tf.float32, shape=(1, 160, 160, 1))
     graph, _ = inception_resnet_v1(inputs)
@@ -69,6 +74,7 @@ def test_inceptionv1():
 
 
 def test_vgg():
+    tf.reset_default_graph()
     # Testing VGG19 Training mode
     inputs = tf.placeholder(tf.float32, shape=(1, 224, 224, 3))
     graph, _ = vgg_19(inputs)
