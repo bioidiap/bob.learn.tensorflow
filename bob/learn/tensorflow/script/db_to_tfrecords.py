@@ -14,6 +14,9 @@ import tensorflow as tf
 from bob.io.base import create_directories_safe
 from bob.extension.scripts.click_helper import (
     verbosity_option, ConfigCommand, ResourceOption, log_parameters)
+import numpy
+from bob.learn.tensorflow.dataset.tfrecords import describe_tf_record
+
 
 logger = logging.getLogger(__name__)
 
@@ -230,3 +233,39 @@ def db_to_tfrecords(samples, reader, output, shuffle, allow_failures,
             pass
     click.echo("The total size of the tfrecords file will be roughly "
                "{} bytes".format(_bytes2human(total_size)))
+               
+
+@click.command()
+@click.argument(
+    'tf-record-path',
+    nargs=1)
+@click.argument(
+    'shape',
+    type=int,
+    nargs=-1
+    )
+@click.option(
+    '--batch-size',
+    help='Batch size',
+    show_default=True,
+    required=True,
+    default=1000
+    ) 
+@verbosity_option(cls=ResourceOption)
+def describe_tfrecord(tf_record_path, shape, batch_size, **kwargs):
+    '''
+    Very often you have a tf-record file, or a set of them, and you have no idea
+    how many samples you have there.
+    Even worse, you have no idea how many classes you have.
+    
+    This click command will solve this thing for you by doing the following::
+    
+        $ %(prog)s <tf-record-path> 182 182 3
+    
+    '''
+    n_samples, n_labels = describe_tf_record(tf_record_path, shape, batch_size)
+    click.echo("#############################################")
+    click.echo("Number of samples {0}".format(n_samples))
+    click.echo("Number of labels {0}".format(n_labels))
+    click.echo("#############################################")
+
