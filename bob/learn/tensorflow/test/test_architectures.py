@@ -22,7 +22,7 @@ def test_inceptionv2():
     # Testing WITH batch norm
     inputs = tf.placeholder(tf.float32, shape=(1, 160, 160, 1))
     graph, _ = inception_resnet_v2_batch_norm(inputs)
-    assert len(tf.trainable_variables()) == 900
+    assert len(tf.trainable_variables()) == 490, len(tf.trainable_variables())
 
     tf.reset_default_graph()
     assert len(tf.global_variables()) == 0
