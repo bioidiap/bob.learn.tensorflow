@@ -59,7 +59,7 @@ def compute_statistics(database, biofiles, load_data, multiple_samples,
         groups = ['dev']
         biofiles = database.all_files(groups)
     """
-    log_parameters(logger, ignore=('biofiles',))
+    log_parameters(logger, ignore=('biofiles', ))
     logger.debug("len(biofiles): %d", len(biofiles))
 
     assert len(biofiles), "biofiles are empty!"

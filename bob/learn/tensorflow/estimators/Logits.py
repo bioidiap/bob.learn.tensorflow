@@ -122,7 +122,8 @@ class Logits(estimator.Estimator):
                 self.extra_checkpoint, mode=mode)
             prelogits = self.architecture(
                 data, mode=mode, trainable_variables=trainable_variables)[0]
-            logits = append_logits(prelogits, n_classes)
+            logits = append_logits(
+                prelogits, n_classes, trainable_variables=trainable_variables)
 
             if self.embedding_validation and mode != tf.estimator.ModeKeys.TRAIN:
 

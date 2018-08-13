@@ -173,7 +173,7 @@ def db_to_tfrecords(samples, reader, output, shuffle, allow_failures,
             key = biofile.path
             return (data, label, key)
     """
-    log_parameters(logger, ignore=('samples',))
+    log_parameters(logger, ignore=('samples', ))
     logger.debug("len(samples): %d", len(samples))
 
     if size_estimate:
