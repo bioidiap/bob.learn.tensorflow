@@ -54,6 +54,7 @@ def get_trainable_variables(extra_checkpoint,
 from .Logits import Logits, LogitsCenterLoss
 from .Siamese import Siamese
 from .Triplet import Triplet
+from .Regressor import Regressor
 
 
 # gets sphinx autodoc done right - don't remove it
@@ -72,5 +73,5 @@ def __appropriate__(*args):
         obj.__module__ = __name__
 
 
-__appropriate__(Logits, LogitsCenterLoss, Siamese, Triplet)
+__appropriate__(Logits, LogitsCenterLoss, Siamese, Triplet, Regressor)
 __all__ = [_ for _ in dir() if not _.startswith('_')]

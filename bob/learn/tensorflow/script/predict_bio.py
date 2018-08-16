@@ -87,7 +87,7 @@ def save_predictions(pool, output_dir, key, pred_buffer):
     cls=ResourceOption,
     entry_point_group='bob.learn.tensorflow.biogenerator_input',
     help='A callable with the signature of '
-    '``input_fn = bio_predict_input_fn(generator, output_types, output_shapes)``'
+    '`input_fn = bio_predict_input_fn(generator, output_types, output_shapes)`'
     ' The inputs are documented in :any:`tf.data.Dataset.from_generator`'
     ' and the output should be a function with no arguments and is passed'
     ' to :any:`tf.estimator.Estimator.predict`.')

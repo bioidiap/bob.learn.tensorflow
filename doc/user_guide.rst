@@ -33,6 +33,11 @@ the data pipeline in more detail.
 1. Let's do some imports:
 *************************
 
+.. testsetup::
+
+    import tempfile
+    temp_dir = model_dir = tempfile.mkdtemp()
+
 .. doctest::
 
     >>> from bob.learn.tensorflow.dataset.bio import BioGenerator
@@ -87,9 +92,9 @@ the data pipeline in more detail.
     ...         return (image, label, key)
     ...
     ...     dataset = dataset.map(transform)
-    ...     dataset = dataset.cache('/path/to/cache')
+    ...     dataset = dataset.cache(temp_dir)
     ...     if mode == tf.estimator.ModeKeys.TRAIN:
-    ...         dataset = dataset.repeat()
+    ...         dataset = dataset.repeat(1)
     ...     dataset = dataset.batch(8)
     ...
     ...     data, label, key = dataset.make_one_shot_iterator().get_next()
@@ -125,27 +130,26 @@ the data pipeline in more detail.
     ...     with tf.variable_scope('CNN'):
     ...
     ...         name = 'conv'
-    ...         net = slim.conv2d(data, filters=32, kernel_size=(
-    ...             5, 5), strides=2, padding='same', activation=tf.nn.relu, name=name)
+    ...         net = slim.conv2d(data, 32, kernel_size=(
+    ...             5, 5), stride=2, padding='SAME', activation_fn=tf.nn.relu, scope=name)
     ...         endpoints[name] = net
     ...
     ...         name = 'pool'
-    ...         net = slim.max_pool2d(net, pool_size=(
-    ...             2, 2), strides=1, padding='same', name=name)
+    ...         net = slim.max_pool2d(net, (2, 2),
+    ...             stride=1, padding='SAME', scope=name)
     ...         endpoints[name] = net
     ...
     ...         name = 'pool-flat'
-    ...         net = slim.flatten(net, name=name)
+    ...         net = slim.flatten(net, scope=name)
     ...         endpoints[name] = net
     ...
     ...         name = 'dense'
-    ...         net = slim.fully_connected(
-    ...             net, units=128, activation=tf.nn.relu, name=name)
+    ...         net = slim.fully_connected(net, 128, scope=name)
     ...         endpoints[name] = net
     ...
     ...         name = 'dropout'
     ...         net = slim.dropout(
-    ...             inputs=net, rate=0.4, training=training)
+    ...             inputs=net, keep_prob=0.4, is_training=training)
     ...         endpoints[name] = net
     ...
     ...     return net, endpoints
@@ -175,8 +179,9 @@ Explicitly triggering the estimator
     ...     n_classes=20,  # the number of identities in the world set of ATNT database
     ...     embedding_validation=True,
     ...     validation_batch_size=8,
-    ... )  # doctest: +SKIP
-    >>> tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)  # doctest: +SKIP
+    ...     model_dir=model_dir,
+    ... )
+    >>> tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
 
 
 
@@ -292,6 +297,10 @@ bellow.
     ...                batch_size,
     ...                epochs=epochs)
 
+.. testcleanup::
+
+    import shutil
+    shutil.rmtree(model_dir, True)
 
 The Estimator
 =============

@@ -110,7 +110,7 @@ class Logits(estimator.Estimator):
         self.embedding_validation = embedding_validation
         self.extra_checkpoint = extra_checkpoint
 
-        def _model_fn(features, labels, mode, params, config):
+        def _model_fn(features, labels, mode, config):
 
             check_features(features)
             data = features['data']
@@ -171,6 +171,12 @@ class Logits(estimator.Estimator):
 
             # restore the model from an extra_checkpoint
             if extra_checkpoint is not None:
+                if 'Logits/' not in extra_checkpoint["scopes"]:
+                    logger.warning(
+                        '"Logits/" (which are automatically added by this '
+                        'Logits class are not in the scopes of '
+                        'extra_checkpoint). Did you mean to restore the '
+                        'Logits variables as well?')
                 tf.train.init_from_checkpoint(
                     ckpt_dir_or_file=extra_checkpoint["checkpoint_path"],
                     assignment_map=extra_checkpoint["scopes"],
@@ -209,9 +215,8 @@ class Logits(estimator.Estimator):
                     variable_averages_op, loss_averages_op)
 
                 # Log accuracy and loss
+                tf.summary.scalar('accuracy', accuracy[1])
                 with tf.name_scope('train_metrics'):
-                    tf.summary.scalar('accuracy', accuracy[1])
-                    tf.summary.scalar('loss', self.loss)
                     for l in tf.get_collection(tf.GraphKeys.LOSSES):
                         tf.summary.scalar(l.op.name + "_averaged",
                                           loss_averages.average(l))

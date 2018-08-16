@@ -69,10 +69,14 @@ def save_n_best_models(train_dir, save_dir, evaluated_file,
 
     # 2. create the checkpoint file
     with open(os.path.join(save_dir, 'checkpoint'), 'wt') as f:
-        for i, global_step in enumerate(best_models):
-            if i == 0:
-                f.write('model_checkpoint_path: "model.ckpt-{}"\n'.format(
-                    global_step))
+        if not len(best_models):
+            return
+        the_best_global_step = list(best_models)[0]
+        f.write('model_checkpoint_path: "model.ckpt-{}"\n'.format(
+            the_best_global_step))
+        # reverse the models before saving since the last ones in checkpoints
+        # are usually more important. This aligns with the bob tf trim script.
+        for i, global_step in enumerate(reversed(best_models)):
             f.write('all_model_checkpoint_paths: "model.ckpt-{}"\n'.format(
                 global_step))
 
@@ -187,9 +191,6 @@ def eval(estimator, eval_input_fn, hooks, run_once, eval_interval_secs, name,
                         evaluated_steps_count = new_evaluated_count
                         wait_interval_count = 0
 
-
-
-
             # Save the best N models into the eval directory
             save_n_best_models(estimator.model_dir, eval_dir, evaluated_file,
                                keep_n_best_models, sort_by)
@@ -197,7 +198,7 @@ def eval(estimator, eval_input_fn, hooks, run_once, eval_interval_secs, name,
         ckpt = tf.train.get_checkpoint_state(estimator.model_dir)
         if (not ckpt) or (not ckpt.model_checkpoint_path):
             if max_wait_intervals > 0:
-                wait_interval_count+=1
+                wait_interval_count += 1
                 if wait_interval_count > max_wait_intervals:
                     break
             time.sleep(eval_interval_secs)

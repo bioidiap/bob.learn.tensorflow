@@ -14,7 +14,8 @@ def create_conv_layer(inputs,
                       pool_size,
                       pool_strides,
                       add_batch_norm=False,
-                      trainable_variables=None):
+                      trainable_variables=None,
+                      use_bias_with_batch_norm=True):
     bn_axis = 1 if data_format.lower() == 'channels_first' else 3
     training = mode == tf.estimator.ModeKeys.TRAIN
 
@@ -32,14 +33,17 @@ def create_conv_layer(inputs,
         padding="same",
         activation=activation,
         data_format=data_format,
-        trainable=trainable)
+        trainable=trainable,
+        use_bias=((not add_batch_norm) or use_bias_with_batch_norm),
+    )
     endpoints[name] = conv
 
     if add_batch_norm:
         name = 'bn{}'.format(number)
         trainable = is_trainable(name, trainable_variables)
         bn = tf.layers.batch_normalization(
-            conv, axis=bn_axis, training=training, trainable=trainable)
+            conv, axis=bn_axis, training=training, trainable=trainable,
+            scale=use_bias_with_batch_norm)
         endpoints[name] = bn
 
         name = 'activation{}'.format(number)
@@ -66,6 +70,7 @@ def base_architecture(input_layer,
                       data_format,
                       add_batch_norm=False,
                       trainable_variables=None,
+                      use_bias_with_batch_norm=True,
                       **kwargs):
     training = mode == tf.estimator.ModeKeys.TRAIN
     # Keep track of all the endpoints
@@ -86,7 +91,9 @@ def base_architecture(input_layer,
         pool_size=(2, 2),
         pool_strides=2,
         add_batch_norm=add_batch_norm,
-        trainable_variables=trainable_variables)
+        trainable_variables=trainable_variables,
+        use_bias_with_batch_norm=use_bias_with_batch_norm,
+    )
 
     # Convolutional Layer #2
     # Computes 64 features using a kernerl_size filter.
@@ -102,7 +109,9 @@ def base_architecture(input_layer,
         pool_size=(2, 2),
         pool_strides=2,
         add_batch_norm=add_batch_norm,
-        trainable_variables=trainable_variables)
+        trainable_variables=trainable_variables,
+        use_bias_with_batch_norm=use_bias_with_batch_norm,
+    )
 
     # Flatten tensor into a batch of vectors
     pool2_flat = tf.layers.flatten(pool2)
@@ -121,14 +130,17 @@ def base_architecture(input_layer,
         inputs=pool2_flat,
         units=1024,
         activation=activation,
-        trainable=trainable)
+        trainable=trainable,
+        use_bias=((not add_batch_norm) or use_bias_with_batch_norm),
+    )
     endpoints[name] = dense
 
     if add_batch_norm:
         name = 'bn{}'.format(3)
         trainable = is_trainable(name, trainable_variables)
         bn = tf.layers.batch_normalization(
-            dense, axis=1, training=training, trainable=trainable)
+            dense, axis=1, training=training, trainable=trainable,
+            scale=use_bias_with_batch_norm)
         endpoints[name] = bn
 
         name = 'activation{}'.format(3)

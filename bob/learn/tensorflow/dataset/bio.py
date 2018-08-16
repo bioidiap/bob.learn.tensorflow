@@ -123,4 +123,4 @@ class BioGenerator(object):
             else:
                 yield (data, label, key)
         self.epoch += 1
-        logger.info("Elapsed %d epochs", self.epoch)
+        logger.info("Elapsed %d epoch(s)", self.epoch)

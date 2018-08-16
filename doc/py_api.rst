@@ -15,6 +15,7 @@ Estimators
     bob.learn.tensorflow.estimators.LogitsCenterLoss
     bob.learn.tensorflow.estimators.Triplet
     bob.learn.tensorflow.estimators.Siamese
+    bob.learn.tensorflow.estimators.Regressor
 
 
 
@@ -72,7 +73,7 @@ Losses
 
 
 
- 
+
 Detailed Information
 ====================
 
