@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Evaluates networks using Tensorflow estimators.
+"""Deletes extra tensorflow checkpoints.
 """
 from __future__ import absolute_import
 from __future__ import division
