@@ -1,10 +1,11 @@
 from .InceptionResnetV2 import inception_resnet_v2_batch_norm
+from .InceptionResnetV1 import inception_resnet_v1_batch_norm
 from .SimpleCNN import base_architecture as simplecnn_arch
 import numpy as np
 import tensorflow as tf
 
 
-def architecture(faces, mode, **kwargs):
+def architecture(faces, mode, face_arch='InceptionResnetV2', **kwargs):
     # construct patches inside the model
     ksizes = strides = [1, 28, 28, 1]
     rates = [1, 1, 1, 1]
@@ -17,7 +18,9 @@ def architecture(faces, mode, **kwargs):
         'kernerl_size': (3, 3),
         'data_format': 'channels_last',
         'add_batch_norm': True,
+        'use_bias_with_batch_norm': False,
     }
+    simplecnn_kwargs.update(kwargs)
     endpoints = {}
     # construct simplecnn from patches
     for i in range(n_blocks):
@@ -35,12 +38,16 @@ def architecture(faces, mode, **kwargs):
     # average the embeddings of patches
     simplecnn_embeddings /= n_blocks
 
-    # construct inception_resnet_v2 from faces
-    incresv2_embeddings, temp = inception_resnet_v2_batch_norm(
-        faces, mode=mode)
+    # construct inception_resnet_v1 or 2 from faces
+    if face_arch == 'InceptionResnetV2':
+        face_embeddings, temp = inception_resnet_v2_batch_norm(
+            faces, mode=mode, **kwargs)
+    elif face_arch == 'InceptionResnetV1':
+        face_embeddings, temp = inception_resnet_v1_batch_norm(
+            faces, mode=mode, **kwargs)
     endpoints.update(temp)
 
-    embeddings = tf.concat([simplecnn_embeddings, incresv2_embeddings], 1)
+    embeddings = tf.concat([simplecnn_embeddings, face_embeddings], 1)
 
     endpoints['final_embeddings'] = embeddings
 
@@ -60,8 +67,9 @@ def model_fn(features, labels, mode, params, config):
     apply_moving_averages = params.get('apply_moving_averages', True)
     n_classes = params.get('n_classes', 2)
     add_histograms = params.get('add_histograms')
+    face_arch = params.get('face_arch', 'InceptionResnetV2')
 
-    embeddings, _ = architecture(faces, mode)
+    embeddings, _ = architecture(faces, mode, face_arch=face_arch)
 
     # Logits layer
     logits = tf.layers.dense(inputs=embeddings, units=n_classes, name='logits')

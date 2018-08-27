@@ -400,7 +400,7 @@ def describe_tf_record(tf_record_path, shape, batch_size=1):
 
     Parameters
     ----------
-    
+
     tf_record_path: str
       Base path containing your tf-record files
 
@@ -433,22 +433,22 @@ def describe_tf_record(tf_record_path, shape, batch_size=1):
 
     # Define a reader and read the next record
     reader = tf.TFRecordReader()
-    
+
     _, serialized_example = reader.read(filename_queue)
-    
+
     # Decode the record read by the reader
     features = tf.parse_single_example(serialized_example, features=feature)
-    
+
     # Convert the image data from string back to the numbers
     image = tf.decode_raw(features['data'], tf.uint8)
-        
+
     # Cast label data into int32
     label = tf.cast(features['label'], tf.int64)
     img_name = tf.cast(features['key'], tf.string)
-    
+
     # Reshape image data into the original shape
-    image = tf.reshape(image, shape)        
-    
+    image = tf.reshape(image, shape)
+
     # Getting the batches in order
     data_ph, label_ph, img_name_ph = tf.train.batch([image, label, img_name], batch_size=batch_size,
                      capacity=1000, num_threads=5, name="shuffle_batch")
@@ -476,7 +476,7 @@ def describe_tf_record(tf_record_path, shape, batch_size=1):
 
     except tf.errors.OutOfRangeError:
         pass
-        
+
     thread_pool.request_stop()
     return counter, len(labels)
 

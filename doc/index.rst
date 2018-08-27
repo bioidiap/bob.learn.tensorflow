@@ -15,9 +15,10 @@ Users Guide
 .. toctree::
    :maxdepth: 2
 
-   user_guide.rst
-   style_transfer.rst
-   transfer_learning.rst
+   user_guide
+   regression
+   style_transfer
+   transfer_learning
 
 Reference Manual
 ================
