@@ -65,9 +65,9 @@ def create_conv_layer(inputs,
 
 
 def base_architecture(input_layer,
-                      mode,
-                      kernerl_size,
-                      data_format,
+                      mode=tf.estimator.ModeKeys.TRAIN,
+                      kernerl_size=(3, 3),
+                      data_format='channels_last',
                       add_batch_norm=False,
                       trainable_variables=None,
                       use_bias_with_batch_norm=True,
@@ -155,6 +155,14 @@ def base_architecture(input_layer,
     endpoints['dropout'] = dropout
 
     return dropout, endpoints
+
+
+def new_architecture(*args, add_batch_norm=True,
+                     use_bias_with_batch_norm=False, reuse=False, **kwargs):
+    kwargs.update({'add_batch_norm': add_batch_norm,
+                   'use_bias_with_batch_norm': use_bias_with_batch_norm})
+    with tf.variable_scope('SimpleCNN', reuse=reuse):
+        return base_architecture(*args, **kwargs)
 
 
 def architecture(input_layer,
