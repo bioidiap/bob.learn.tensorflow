@@ -247,7 +247,8 @@ def predict_bio(estimator, database, biofiles, bio_predict_input_fn,
             # key is in bytes format in Python 3
             if sys.version_info >= (3, ):
                 key = key.decode(errors='replace')
-            prob = pred.get('probabilities', pred.get('embeddings'))
+            prob = pred.get('probabilities', pred.get('embeddings', pred.get('predictions')))
+            assert prob is not None
             pred_buffer[key].append(prob)
             if i == 0:
                 last_key = key
