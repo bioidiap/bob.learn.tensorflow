@@ -157,12 +157,26 @@ def base_architecture(input_layer,
     return dropout, endpoints
 
 
-def new_architecture(*args, add_batch_norm=True,
-                     use_bias_with_batch_norm=False, reuse=False, **kwargs):
-    kwargs.update({'add_batch_norm': add_batch_norm,
-                   'use_bias_with_batch_norm': use_bias_with_batch_norm})
+def new_architecture(
+        input_layer,
+        mode=tf.estimator.ModeKeys.TRAIN,
+        kernerl_size=(3, 3),
+        data_format='channels_last',
+        add_batch_norm=True,
+        trainable_variables=None,
+        use_bias_with_batch_norm=False,
+        reuse=False,
+        **kwargs):
     with tf.variable_scope('SimpleCNN', reuse=reuse):
-        return base_architecture(*args, **kwargs)
+        return base_architecture(
+            input_layer=input_layer,
+            mode=mode,
+            kernerl_size=kernerl_size,
+            data_format=data_format,
+            add_batch_norm=add_batch_norm,
+            trainable_variables=trainable_variables,
+            use_bias_with_batch_norm=use_bias_with_batch_norm,
+            **kwargs)
 
 
 def architecture(input_layer,
