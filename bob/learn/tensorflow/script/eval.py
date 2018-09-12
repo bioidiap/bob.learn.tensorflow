@@ -215,13 +215,17 @@ def eval(estimator, eval_input_fn, hooks, run_once, eval_interval_secs, name,
                 continue
 
             # Evaluate
-            evaluations = estimator.evaluate(
-                input_fn=eval_input_fn,
-                steps=None,
-                hooks=hooks,
-                checkpoint_path=checkpoint_path,
-                name=name,
-            )
+            try:
+                evaluations = estimator.evaluate(
+                    input_fn=eval_input_fn,
+                    steps=None,
+                    hooks=hooks,
+                    checkpoint_path=checkpoint_path,
+                    name=name,
+                )
+            # if the model gets deleted before we can evaluate it
+            except tf.errors.NotFoundError:
+                break
 
             str_evaluations = append_evaluated_file(evaluated_file,
                                                     evaluations)
