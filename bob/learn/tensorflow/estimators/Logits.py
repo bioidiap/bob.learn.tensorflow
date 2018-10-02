@@ -215,8 +215,8 @@ class Logits(estimator.Estimator):
                     variable_averages_op, loss_averages_op)
 
                 # Log accuracy and loss
-                tf.summary.scalar('accuracy', accuracy[1])
                 with tf.name_scope('train_metrics'):
+                    tf.summary.scalar('accuracy', accuracy[1])
                     for l in tf.get_collection(tf.GraphKeys.LOSSES):
                         tf.summary.scalar(l.op.name + "_averaged",
                                           loss_averages.average(l))
