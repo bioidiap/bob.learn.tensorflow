@@ -169,7 +169,7 @@ def test_eval():
         with open(evaluated_path) as f:
             doc = f.read()
 
-        assert '1' in doc, doc
+        assert '0' in doc, doc
         assert '200' in doc, doc
 
         print('Train and evaluate a dummy network')
@@ -201,8 +201,7 @@ def test_eval_keep_n_model():
         assert os.path.exists(evaluated_path), evaluated_path
         with open(evaluated_path) as f:
             doc = f.read()
-
-        assert '1 ' in doc, doc
+        assert '0 ' in doc, doc
         assert '200 ' in doc, doc
         assert len(glob('{}/model.ckpt-*'.format(eval_dir))) == 3, \
             os.listdir(eval_dir)
