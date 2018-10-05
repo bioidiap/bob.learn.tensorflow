@@ -20,7 +20,7 @@ def test_early_stopping_linear_classifier():
 
     hooks = [
         EarlyStopping(
-            'linear/head/metrics/accuracy/value', min_delta=0.001, patience=1),
+            'linear/metrics/accuracy/total', min_delta=0.001, patience=1),
     ]
 
     train_spec = tf.estimator.TrainSpec(input_fn=train_input_fn)
