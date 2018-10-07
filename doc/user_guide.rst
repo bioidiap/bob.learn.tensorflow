@@ -171,7 +171,7 @@ Explicitly triggering the estimator
 ...................................
 
 .. doctest::
-
+    +SKIP
     >>> estimator = Logits(
     ...     architecture,
     ...     optimizer=tf.train.GradientDescentOptimizer(1e-4),
@@ -182,7 +182,7 @@ Explicitly triggering the estimator
     ...     model_dir=model_dir,
     ... )
     >>> tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
-
+    
 
 
 Triggering the estimator via command line
