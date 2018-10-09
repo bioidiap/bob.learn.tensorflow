@@ -69,7 +69,7 @@ setup(
         'Framework :: Bob',
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
-        'License :: OSI Approved ::  BSD License',
+        'License :: OSI Approved ::  BSD',
         'Natural Language :: English',
         'Programming Language :: Python',
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
