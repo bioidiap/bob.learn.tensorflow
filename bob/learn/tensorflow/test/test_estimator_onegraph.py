@@ -213,3 +213,86 @@ def run_logitstrainer_mnist(trainer, augmentation=False):
     # Cleaning up
     tf.reset_default_graph()
     assert len(tf.global_variables()) == 0
+
+
+def test_moving_average_trainer():
+    # define a fixed input data
+    # train the same network with the same initialization
+    # evaluate it
+    # did it change? no -> good
+    # train it again with moving average
+    # Is it different? yes -> good
+
+    no_moving_average = {'accuracy': 0.856, 'loss': 0.55705935, 'global_step': 188}
+    with_moving_average = {'accuracy': 0.052, 'loss': 2.718809, 'global_step': 188}
+
+    try:
+        # Creating tf records for mnist
+        train_data, train_labels, validation_data, validation_labels = load_mnist()
+        create_mnist_tfrecord(
+            tfrecord_train, train_data, train_labels, n_samples=6000)
+        create_mnist_tfrecord(
+            tfrecord_validation,
+            validation_data,
+            validation_labels,
+            n_samples=validation_batch_size)
+
+        def input_fn():
+            return batch_data_and_labels(
+                tfrecord_train,
+                data_shape,
+                data_type,
+                batch_size,
+                epochs=1)
+
+        def input_fn_validation():
+            return batch_data_and_labels(
+                tfrecord_validation,
+                data_shape,
+                data_type,
+                validation_batch_size,
+                epochs=1)
+
+        def architecture(input, **kwargs):
+            slim = tf.contrib.slim
+            end_points = dict()
+            graph = slim.flatten(input, scope='flatten1')
+            end_points['flatten1'] = graph
+            return graph, end_points
+
+        run_config = reproducible.set_seed(183, 183)[1]
+        run_config = run_config.replace(save_checkpoints_steps=2000)
+
+        def _estimator(apply_moving_averages):
+            return Logits(
+                architecture,
+                tf.train.GradientDescentOptimizer(1e-1),
+                tf.losses.sparse_softmax_cross_entropy,
+                10,
+                config=run_config,
+                apply_moving_averages=apply_moving_averages,
+            )
+
+        def _evaluate(estimator, oracle):
+            try:
+                estimator.train(input_fn)
+                evaluations = estimator.evaluate(input_fn_validation)
+            finally:
+                shutil.rmtree(estimator.model_dir, ignore_errors=True)
+            for k in ('accuracy', 'loss', 'global_step'):
+                assert numpy.allclose(evaluations[k], oracle[k]), evaluations
+
+        estimator = _estimator(False)
+        _evaluate(estimator, no_moving_average)
+
+        # same as above with moving average
+        estimator = _estimator(True)
+        _evaluate(estimator, with_moving_average)
+
+    finally:
+        try:
+            os.unlink(tfrecord_train)
+            os.unlink(tfrecord_validation)
+            shutil.rmtree(model_dir, ignore_errors=True)
+        except Exception:
+            pass
