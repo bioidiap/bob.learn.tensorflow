@@ -221,7 +221,7 @@ def test_moving_average_trainer():
     # evaluate it
     # did it change? no -> good
     # train it again with moving average
-    # Is it different? yes -> good
+    # Is it different from no moving average? yes -> good
 
     no_moving_average = {'accuracy': 0.856, 'loss': 0.55705935, 'global_step': 188}
     with_moving_average = {'accuracy': 0.052, 'loss': 2.718809, 'global_step': 188}
@@ -269,6 +269,7 @@ def test_moving_average_trainer():
                 tf.train.GradientDescentOptimizer(1e-1),
                 tf.losses.sparse_softmax_cross_entropy,
                 10,
+                model_dir=model_dir,
                 config=run_config,
                 apply_moving_averages=apply_moving_averages,
             )

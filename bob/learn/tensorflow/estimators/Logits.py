@@ -210,7 +210,7 @@ class Logits(estimator.Estimator):
                         self.loss, global_step=global_step),
                     loss_averages_op)
 
-                # Get the moving average saver after optimizer.optimize is
+                # Get the moving average saver after optimizer.minimize is
                 # called
                 if apply_moving_averages:
                     self.saver = self.optimizer.swapping_saver()
