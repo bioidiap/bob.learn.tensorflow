@@ -1,4 +1,5 @@
 from . import check_features, get_trainable_variables
+from .Logits import moving_average_scaffold
 from bob.learn.tensorflow.network.utils import append_logits
 from tensorflow.python.estimator import estimator
 import tensorflow as tf
@@ -120,10 +121,10 @@ class Regressor(estimator.Estimator):
                 # Get the moving average saver after optimizer.minimize is
                 # called
                 if apply_moving_averages:
-                    self.saver = self.optimizer.swapping_saver()
-                    self.scaffold = tf.train.Scaffold(saver=self.saver)
+                    self.saver, self.scaffold = moving_average_scaffold(
+                        self.optimizer, config)
                 else:
-                    self.scaffold = None
+                    self.saver, self.scaffold = None, None
 
                 # Log rmse and loss
                 with tf.name_scope('train_metrics'):

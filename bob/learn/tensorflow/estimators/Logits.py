@@ -207,16 +207,15 @@ class Logits(estimator.Estimator):
 
                 train_op = tf.group(
                     self.optimizer.minimize(
-                        self.loss, global_step=global_step),
-                    loss_averages_op)
+                        self.loss, global_step=global_step), loss_averages_op)
 
                 # Get the moving average saver after optimizer.minimize is
                 # called
                 if apply_moving_averages:
-                    self.saver = self.optimizer.swapping_saver()
-                    self.scaffold = tf.train.Scaffold(saver=self.saver)
+                    self.saver, self.scaffold = moving_average_scaffold(
+                        self.optimizer, config)
                 else:
-                    self.scaffold = None
+                    self.saver, self.scaffold = None, None
 
                 # Log accuracy and loss
                 with tf.name_scope('train_metrics'):
@@ -420,3 +419,14 @@ class LogitsCenterLoss(estimator.Estimator):
 
         super(LogitsCenterLoss, self).__init__(
             model_fn=_model_fn, model_dir=model_dir, config=config)
+
+
+def moving_average_scaffold(optimizer, config):
+    max_to_keep = 5 if config is None else config.keep_checkpoint_max
+    keep_checkpoint_every_n_hours = 10000.0 if config is None else \
+        config.keep_checkpoint_every_n_hours
+    saver = optimizer.swapping_saver(
+        max_to_keep=max_to_keep,
+        keep_checkpoint_every_n_hours=keep_checkpoint_every_n_hours)
+    scaffold = tf.train.Scaffold(saver=saver)
+    return saver, scaffold

@@ -39,6 +39,8 @@ def test_logitstrainer():
     try:
         embedding_validation = False
         _, run_config, _, _, _ = reproducible.set_seed()
+        run_config = run_config.replace(
+            keep_checkpoint_max=10, save_checkpoints_steps=100, save_checkpoints_secs=None)
         trainer = Logits(
             model_dir=model_dir,
             architecture=dummy,
@@ -223,8 +225,10 @@ def test_moving_average_trainer():
     # train it again with moving average
     # Is it different from no moving average? yes -> good
 
-    no_moving_average = {'accuracy': 0.856, 'loss': 0.55705935, 'global_step': 188}
-    with_moving_average = {'accuracy': 0.052, 'loss': 2.718809, 'global_step': 188}
+    no_moving_average = {'accuracy': 0.856,
+                         'loss': 0.55705935, 'global_step': 188}
+    with_moving_average = {'accuracy': 0.052,
+                           'loss': 2.718809, 'global_step': 188}
 
     try:
         # Creating tf records for mnist
@@ -290,6 +294,34 @@ def test_moving_average_trainer():
         estimator = _estimator(True)
         _evaluate(estimator, with_moving_average)
 
+    finally:
+        try:
+            os.unlink(tfrecord_train)
+            os.unlink(tfrecord_validation)
+            shutil.rmtree(model_dir, ignore_errors=True)
+        except Exception:
+            pass
+
+
+def test_saver_with_moving_average():
+    try:
+        _, run_config, _, _, _ = reproducible.set_seed()
+        run_config = run_config.replace(
+            keep_checkpoint_max=10, save_checkpoints_steps=100,
+            save_checkpoints_secs=None)
+        estimator = Logits(
+            model_dir=model_dir,
+            architecture=dummy,
+            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+            n_classes=10,
+            loss_op=mean_cross_entropy_loss,
+            embedding_validation=False,
+            validation_batch_size=validation_batch_size,
+            config=run_config)
+        run_logitstrainer_mnist(estimator, augmentation=True)
+        ckpt = tf.train.get_checkpoint_state(estimator.model_dir)
+        assert ckpt, "Failed to get any checkpoint!"
+        assert len(ckpt.all_model_checkpoint_paths) == 10, ckpt.all_model_checkpoint_paths
     finally:
         try:
             os.unlink(tfrecord_train)
