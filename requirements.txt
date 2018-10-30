@@ -17,4 +17,5 @@ bob.db.mnist
 bob.db.atnt
 gridtk
 bob.bio.base
+numpy
 scipy

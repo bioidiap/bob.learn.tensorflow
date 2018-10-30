@@ -30,13 +30,13 @@ class BioGenerator(object):
         ``data = load_data(database, biofile)``.
         :any:`bob.bio.base.read_original_data` is wrapped to be used by
         default.
-    multiple_samples : bool, optional
+    multiple_samples : :obj:`bool`, optional
         If true, it assumes that the bio database's samples actually contain
         multiple samples. This is useful for when you want to for example treat
         video databases as image databases.
     output_types : (object, object, object)
         The types of the returned samples.
-    output_shapes : (tf.TensorShape, tf.TensorShape, tf.TensorShape)
+    output_shapes : ``(tf.TensorShape, tf.TensorShape, tf.TensorShape)``
         The shapes of the returned samples.
     """
 

@@ -21,7 +21,7 @@ def compute_features(input_image, architecture, checkpoint_dir, target_end_point
     Parameters
     ----------
 
-    input_image: numpy.array
+    input_image: :any:`numpy.array`
         Input image in the format WxHxC
 
     architecture:
@@ -77,7 +77,7 @@ def compute_gram(features):
     Parameters
     ----------
 
-    features: numpy.array
+    features: :any:`numpy.array`
       Convolved features in the format NxWxHxC
 
     """
@@ -90,7 +90,7 @@ def compute_gram(features):
     return grams
 
 
-def do_style_transfer(content_image, style_images, 
+def do_style_transfer(content_image, style_images,
                       architecture, checkpoint_dir, scopes,
                       content_end_points, style_end_points,
                       preprocess_fn=None, un_preprocess_fn=None, pure_noise=False,
@@ -105,7 +105,7 @@ def do_style_transfer(content_image, style_images,
     Parameters
     ----------
 
-    content_image: numpy.array
+    content_image: :any:`numpy.array`
        Content image in the Bob format (C x W x H)
 
     style_images: :any:`list`
@@ -128,7 +128,7 @@ def do_style_transfer(content_image, style_images,
 
     preprocess_fn:
        Preprocess function. Pointer to a function that preprocess the INPUT signal
-    
+
     unpreprocess_fn:
        Un preprocess function. Pointer to a function that preprocess the OUTPUT signal
 
@@ -138,7 +138,7 @@ def do_style_transfer(content_image, style_images,
 
     iterations:
        Number of iterations to generate the image
-    
+
     learning_rate:
        Adam learning rate
 
@@ -147,7 +147,7 @@ def do_style_transfer(content_image, style_images,
 
     style_weight:
        Weight of the style loss
-    
+
     denoise_weight:
        Weight denoising loss
     """
@@ -178,10 +178,10 @@ def do_style_transfer(content_image, style_images,
                                         content_end_points, preprocess_fn)
 
     # Base style features
-    logger.info("Computing style features")  
+    logger.info("Computing style features")
     style_grams = []
     for image in style_images:
-        style_features = compute_features(image, architecture, checkpoint_dir, 
+        style_features = compute_features(image, architecture, checkpoint_dir,
                                           style_end_points, preprocess_fn)
         style_grams.append(compute_gram(style_features))
 
@@ -206,7 +206,7 @@ def do_style_transfer(content_image, style_images,
         # Computing style_loss
         style_gram_noises = []
         s_loss = 0
-   
+
         for grams_per_image in style_grams:
 
             for c in style_end_points:
@@ -227,7 +227,7 @@ def do_style_transfer(content_image, style_images,
 
         tf.contrib.framework.init_from_checkpoint(tf.train.latest_checkpoint(checkpoint_dir) if os.path.isdir(checkpoint_dir) else checkpoint_dir, scopes)
         # Training
-        with tf.Session() as sess: 
+        with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
 
             for i in range(iterations):
@@ -258,7 +258,7 @@ def do_style_transfer(content_image, style_images,
                 else:
                     normalized_style_image_yuv = bob.ip.color.rgb_to_yuv(bob.ip.color.gray_to_rgb(bob.ip.color.rgb_to_gray(normalized_style_image)))
                     content_image_yuv = bob.ip.color.rgb_to_yuv(bob.io.base.load(content_image_path))
-                
+
                 output_image = numpy.zeros(shape=content_image_yuv.shape, dtype="uint8")
                 output_image[0,:,:] = normalized_style_image_yuv[0,:,:]
                 output_image[1,:,:] = content_image_yuv[1,:,:]

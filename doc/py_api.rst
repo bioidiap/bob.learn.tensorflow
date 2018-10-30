@@ -31,7 +31,7 @@ Architectures
     bob.learn.tensorflow.network.inception_resnet_v1
     bob.learn.tensorflow.network.inception_resnet_v2_batch_norm
     bob.learn.tensorflow.network.inception_resnet_v1_batch_norm
-    bob.learn.tensorflow.network.SimpleCNN.base_architecture
+    bob.learn.tensorflow.network.SimpleCNN.slim_architecture
     bob.learn.tensorflow.network.vgg_19
     bob.learn.tensorflow.network.vgg_16
 
