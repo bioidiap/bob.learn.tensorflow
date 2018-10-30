@@ -225,10 +225,11 @@ def test_moving_average_trainer():
     # train it again with moving average
     # Is it different from no moving average? yes -> good
 
-    no_moving_average = {'accuracy': 0.856,
-                         'loss': 0.55705935, 'global_step': 188}
-    with_moving_average = {'accuracy': 0.052,
-                           'loss': 2.718809, 'global_step': 188}
+    no_moving_average = {'accuracy': 0.128, 'loss': 5.3208413, 'global_step': 188}
+    with_moving_average = {'accuracy': 0.14,
+                           'loss': 2.3772557, 'global_step': 188}
+    resume_moving_average = {'accuracy': 0.172,
+                             'loss': 2.2985911, 'global_step': 376}
 
     try:
         # Creating tf records for mnist
@@ -257,12 +258,8 @@ def test_moving_average_trainer():
                 validation_batch_size,
                 epochs=1)
 
-        def architecture(input, **kwargs):
-            slim = tf.contrib.slim
-            end_points = dict()
-            graph = slim.flatten(input, scope='flatten1')
-            end_points['flatten1'] = graph
-            return graph, end_points
+        from bob.learn.tensorflow.network.SimpleCNN import (
+            new_architecture as architecture)
 
         run_config = reproducible.set_seed(183, 183)[1]
         run_config = run_config.replace(save_checkpoints_steps=2000)
@@ -278,21 +275,29 @@ def test_moving_average_trainer():
                 apply_moving_averages=apply_moving_averages,
             )
 
-        def _evaluate(estimator, oracle):
+        def _evaluate(estimator, oracle, delete=True):
             try:
                 estimator.train(input_fn)
                 evaluations = estimator.evaluate(input_fn_validation)
             finally:
-                shutil.rmtree(estimator.model_dir, ignore_errors=True)
+                if delete:
+                    shutil.rmtree(estimator.model_dir, ignore_errors=True)
             for k in ('accuracy', 'loss', 'global_step'):
-                assert numpy.allclose(evaluations[k], oracle[k]), evaluations
+                assert numpy.allclose(evaluations[k], oracle[k]), \
+                    (k, evaluations, oracle)
 
         estimator = _estimator(False)
-        _evaluate(estimator, no_moving_average)
+        _evaluate(estimator, no_moving_average, delete=True)
 
         # same as above with moving average
         estimator = _estimator(True)
-        _evaluate(estimator, with_moving_average)
+        _evaluate(estimator, with_moving_average, delete=False)
+
+        # Can it resume training?
+        del estimator
+        tf.reset_default_graph()
+        estimator = _estimator(True)
+        _evaluate(estimator, resume_moving_average, delete=True)
 
     finally:
         try:
@@ -321,7 +326,8 @@ def test_saver_with_moving_average():
         run_logitstrainer_mnist(estimator, augmentation=True)
         ckpt = tf.train.get_checkpoint_state(estimator.model_dir)
         assert ckpt, "Failed to get any checkpoint!"
-        assert len(ckpt.all_model_checkpoint_paths) == 10, ckpt.all_model_checkpoint_paths
+        assert len(
+            ckpt.all_model_checkpoint_paths) == 10, ckpt.all_model_checkpoint_paths
     finally:
         try:
             os.unlink(tfrecord_train)
