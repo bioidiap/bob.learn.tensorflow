@@ -57,8 +57,13 @@ def save_n_best_models(train_dir, save_dir, evaluated_file,
             dst = os.path.join(save_dir, os.path.basename(path))
             if os.path.isfile(dst):
                 continue
-            logger.info("Copying `%s' over to `%s'", path, dst)
-            shutil.copy(path, dst)
+            try:
+                shutil.copy(path, dst)
+                logger.info("Copied `%s' over to `%s'", path, dst)
+            except OSError:
+                logger.warning(
+                    "Failed to copy `%s' over to `%s'", path, dst,
+                    exc_info=True)
 
     # create a checkpoint file indicating to the best existing model:
     # 1. filter non-existing models first
@@ -224,7 +229,7 @@ def eval(estimator, eval_input_fn, hooks, run_once, eval_interval_secs, name,
                     name=name,
                 )
             # if the model gets deleted before we can evaluate it
-            except tf.errors.NotFoundError:
+            except (tf.errors.NotFoundError, ValueError):
                 break
 
             str_evaluations = append_evaluated_file(evaluated_file,
