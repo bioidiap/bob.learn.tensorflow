@@ -103,12 +103,18 @@ class Logits(estimator.Estimator):
                  add_histograms=None):
 
         self.architecture = architecture
-        self.optimizer = optimizer
         self.n_classes = n_classes
         self.loss_op = loss_op
         self.loss = None
         self.embedding_validation = embedding_validation
         self.extra_checkpoint = extra_checkpoint
+
+        if apply_moving_averages:
+            logger.info("Encapsulating the optimizer with "
+                        "the MovingAverageOptimizer")
+            optimizer = tf.contrib.opt.MovingAverageOptimizer(optimizer)
+
+        self.optimizer = optimizer
 
         def _model_fn(features, labels, mode, config):
 
@@ -184,20 +190,10 @@ class Logits(estimator.Estimator):
 
             global_step = tf.train.get_or_create_global_step()
 
-            # Compute the moving average of all individual losses and the
-            # total loss.
-            if apply_moving_averages:
-                variable_averages = tf.train.ExponentialMovingAverage(
-                    0.9999, global_step)
-                variable_averages_op = variable_averages.apply(
-                    tf.trainable_variables())
-            else:
-                variable_averages_op = tf.no_op(name='noop')
-
             # Some layer like tf.layers.batch_norm need this:
             update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 
-            with tf.control_dependencies([variable_averages_op] + update_ops):
+            with tf.control_dependencies(update_ops):
 
                 # Calculate Loss
                 self.loss = self.loss_op(logits=logits, labels=labels)
@@ -211,12 +207,19 @@ class Logits(estimator.Estimator):
 
                 train_op = tf.group(
                     self.optimizer.minimize(
-                        self.loss, global_step=global_step),
-                    variable_averages_op, loss_averages_op)
+                        self.loss, global_step=global_step), loss_averages_op)
+
+                # Get the moving average saver after optimizer.minimize is
+                # called
+                if apply_moving_averages:
+                    self.saver, self.scaffold = moving_average_scaffold(
+                        self.optimizer, config)
+                else:
+                    self.saver, self.scaffold = None, None
 
                 # Log accuracy and loss
-                tf.summary.scalar('accuracy', accuracy[1])
                 with tf.name_scope('train_metrics'):
+                    tf.summary.scalar('accuracy', accuracy[1])
                     for l in tf.get_collection(tf.GraphKeys.LOSSES):
                         tf.summary.scalar(l.op.name + "_averaged",
                                           loss_averages.average(l))
@@ -234,7 +237,8 @@ class Logits(estimator.Estimator):
                 predictions=predictions,
                 loss=self.loss,
                 train_op=train_op,
-                eval_metric_ops=metrics)
+                eval_metric_ops=metrics,
+                scaffold=self.scaffold)
 
         super(Logits, self).__init__(
             model_fn=_model_fn,
@@ -415,3 +419,14 @@ class LogitsCenterLoss(estimator.Estimator):
 
         super(LogitsCenterLoss, self).__init__(
             model_fn=_model_fn, model_dir=model_dir, config=config)
+
+
+def moving_average_scaffold(optimizer, config):
+    max_to_keep = 5 if config is None else config.keep_checkpoint_max
+    keep_checkpoint_every_n_hours = 10000.0 if config is None else \
+        config.keep_checkpoint_every_n_hours
+    saver = optimizer.swapping_saver(
+        max_to_keep=max_to_keep,
+        keep_checkpoint_every_n_hours=keep_checkpoint_every_n_hours)
+    scaffold = tf.train.Scaffold(saver=saver)
+    return saver, scaffold

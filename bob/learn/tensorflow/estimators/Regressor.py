@@ -1,4 +1,5 @@
 from . import check_features, get_trainable_variables
+from .Logits import moving_average_scaffold
 from bob.learn.tensorflow.network.utils import append_logits
 from tensorflow.python.estimator import estimator
 import tensorflow as tf
@@ -24,10 +25,16 @@ class Regressor(estimator.Estimator):
             add_histograms=None,
     ):
         self.architecture = architecture
-        self.optimizer = optimizer
         self.label_dimension = label_dimension
         self.loss_op = loss_op
         self.add_regularization_losses = add_regularization_losses
+
+        if apply_moving_averages:
+            logger.info("Encapsulating the optimizer with "
+                        "the MovingAverageOptimizer")
+            optimizer = tf.contrib.opt.MovingAverageOptimizer(optimizer)
+
+        self.optimizer = optimizer
 
         def _model_fn(features, labels, mode, config):
 
@@ -90,20 +97,10 @@ class Regressor(estimator.Estimator):
 
             global_step = tf.train.get_or_create_global_step()
 
-            # Compute the moving average of all individual losses and the
-            # total loss.
-            if apply_moving_averages:
-                variable_averages = tf.train.ExponentialMovingAverage(
-                    0.9999, global_step)
-                variable_averages_op = variable_averages.apply(
-                    tf.trainable_variables())
-            else:
-                variable_averages_op = tf.no_op(name='noop')
-
             # Some layer like tf.layers.batch_norm need this:
             update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 
-            with tf.control_dependencies([variable_averages_op] + update_ops):
+            with tf.control_dependencies(update_ops):
 
                 # Calculate Loss
                 self.loss = self._get_loss(
@@ -119,11 +116,19 @@ class Regressor(estimator.Estimator):
                 train_op = tf.group(
                     self.optimizer.minimize(
                         self.loss, global_step=global_step),
-                    variable_averages_op, loss_averages_op)
+                    loss_averages_op)
+
+                # Get the moving average saver after optimizer.minimize is
+                # called
+                if apply_moving_averages:
+                    self.saver, self.scaffold = moving_average_scaffold(
+                        self.optimizer, config)
+                else:
+                    self.saver, self.scaffold = None, None
 
                 # Log rmse and loss
-                tf.summary.scalar('rmse', rmse[1])
                 with tf.name_scope('train_metrics'):
+                    tf.summary.scalar('rmse', rmse[1])
                     for l in tf.get_collection(tf.GraphKeys.LOSSES):
                         tf.summary.scalar(l.op.name + "_averaged",
                                           loss_averages.average(l))
@@ -141,7 +146,8 @@ class Regressor(estimator.Estimator):
                 predictions=predictions,
                 loss=self.loss,
                 train_op=train_op,
-                eval_metric_ops=metrics)
+                eval_metric_ops=metrics,
+                scaffold=self.scaffold)
 
         super(Regressor, self).__init__(
             model_fn=_model_fn,

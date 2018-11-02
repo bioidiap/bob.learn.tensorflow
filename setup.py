@@ -50,15 +50,16 @@ setup(
 
         # bob tf scripts
         'bob.learn.tensorflow.cli': [
+            'cache_dataset = bob.learn.tensorflow.script.cache_dataset:cache_dataset',
             'compute_statistics = bob.learn.tensorflow.script.compute_statistics:compute_statistics',
             'db_to_tfrecords = bob.learn.tensorflow.script.db_to_tfrecords:db_to_tfrecords',
             'describe_tfrecord = bob.learn.tensorflow.script.db_to_tfrecords:describe_tfrecord',
             'eval = bob.learn.tensorflow.script.eval:eval',
-            'trim = bob.learn.tensorflow.script.trim:trim',
             'predict_bio = bob.learn.tensorflow.script.predict_bio:predict_bio',
+            'style_transfer = bob.learn.tensorflow.script.style_transfer:style_transfer',
             'train = bob.learn.tensorflow.script.train:train',
             'train_and_evaluate = bob.learn.tensorflow.script.train_and_evaluate:train_and_evaluate',
-            'style_transfer = bob.learn.tensorflow.script.style_transfer:style_transfer',
+            'trim = bob.learn.tensorflow.script.trim:trim',
         ],
     },
 

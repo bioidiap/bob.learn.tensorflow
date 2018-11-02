@@ -1,3 +1,63 @@
+"""
+The network using keras (same as new_architecture function below)::
+
+    from tensorflow.python.keras import *
+    from tensorflow.python.keras.layers import *
+    simplecnn = Sequential([
+        Conv2D(32,(3,3),padding='same',use_bias=False, input_shape=(28,28,3)),
+        BatchNormalization(scale=False),
+        Activation('relu'),
+        MaxPool2D(padding='same'),
+        Conv2D(64,(3,3),padding='same',use_bias=False),
+        BatchNormalization(scale=False),
+        Activation('relu'),
+        MaxPool2D(padding='same'),
+        Flatten(),
+        Dense(1024, use_bias=False),
+        BatchNormalization(scale=False),
+        Activation('relu'),
+        Dropout(rate=0.4),
+        Dense(2),
+    ])
+    simplecnn.summary()
+    _________________________________________________________________
+    Layer (type)                 Output Shape              Param #
+    =================================================================
+    conv2d_1 (Conv2D)            (None, 28, 28, 32)        864
+    _________________________________________________________________
+    batch_normalization_1 (Batch (None, 28, 28, 32)        96
+    _________________________________________________________________
+    activation_1 (Activation)    (None, 28, 28, 32)        0
+    _________________________________________________________________
+    max_pooling2d_1 (MaxPooling2 (None, 14, 14, 32)        0
+    _________________________________________________________________
+    conv2d_2 (Conv2D)            (None, 14, 14, 64)        18432
+    _________________________________________________________________
+    batch_normalization_2 (Batch (None, 14, 14, 64)        192
+    _________________________________________________________________
+    activation_2 (Activation)    (None, 14, 14, 64)        0
+    _________________________________________________________________
+    max_pooling2d_2 (MaxPooling2 (None, 7, 7, 64)          0
+    _________________________________________________________________
+    flatten_1 (Flatten)          (None, 3136)              0
+    _________________________________________________________________
+    dense_1 (Dense)              (None, 1024)              3211264
+    _________________________________________________________________
+    batch_normalization_3 (Batch (None, 1024)              3072
+    _________________________________________________________________
+    activation_3 (Activation)    (None, 1024)              0
+    _________________________________________________________________
+    dropout_1 (Dropout)          (None, 1024)              0
+    _________________________________________________________________
+    dense_2 (Dense)              (None, 2)                 2050
+    =================================================================
+    Total params: 3,235,970
+    Trainable params: 3,233,730
+    Non-trainable params: 2,240
+    _________________________________________________________________
+"""
+
+
 import collections
 import tensorflow as tf
 from .utils import is_trainable
@@ -177,6 +237,92 @@ def new_architecture(
             trainable_variables=trainable_variables,
             use_bias_with_batch_norm=use_bias_with_batch_norm,
             **kwargs)
+
+
+def slim_architecture(
+        input_layer,
+        mode=tf.estimator.ModeKeys.TRAIN,
+        kernerl_size=(3, 3),
+        data_format='channels_last',
+        add_batch_norm=True,
+        trainable_variables=None,
+        use_bias_with_batch_norm=False,
+        reuse=False,
+        **kwargs):
+    if data_format != 'channels_last':
+        raise ValueError("Only channels_last data_format is implemented!")
+    if (not add_batch_norm) or use_bias_with_batch_norm:
+        raise NotImplementedError()
+    slim = tf.contrib.slim
+    batch_norm_params = {
+        # Decay for the moving averages.
+        'decay': 0.995,
+        # epsilon to prevent 0s in variance.
+        'epsilon': 0.001,
+        # force in-place updates of mean and variance estimates
+        'updates_collections': None,
+    }
+
+    weight_decay = 5e-5
+    end_points = {}
+    with slim.arg_scope(
+        [slim.conv2d, slim.fully_connected],
+            weights_initializer=tf.truncated_normal_initializer(stddev=0.1),
+            weights_regularizer=slim.l2_regularizer(weight_decay),
+            normalizer_fn=slim.batch_norm,
+            normalizer_params=batch_norm_params):
+        with tf.variable_scope('SimpleCNN', reuse=reuse):
+
+            initializer = tf.contrib.layers.xavier_initializer()
+            name = 'conv1'
+            trainable = is_trainable(name, trainable_variables)
+            graph = slim.conv2d(
+                input_layer,
+                32, kernerl_size,
+                activation_fn=tf.nn.relu,
+                stride=1,
+                scope=name,
+                weights_initializer=initializer,
+                trainable=trainable)
+            end_points[name] = graph
+
+            graph = slim.max_pool2d(graph, [2, 2], scope='pool1')
+            end_points['pool1'] = graph
+
+            name = 'conv2'
+            trainable = is_trainable(name, trainable_variables)
+            graph = slim.conv2d(
+                graph,
+                64, kernerl_size,
+                activation_fn=tf.nn.relu,
+                stride=1,
+                scope=name,
+                weights_initializer=initializer,
+                trainable=trainable)
+            end_points[name] = graph
+
+            graph = slim.max_pool2d(graph, [2, 2], scope='pool2')
+            end_points['pool2'] = graph
+
+            graph = slim.flatten(graph, scope='flatten')
+            end_points['flatten'] = graph
+
+            name = 'dense'
+            trainable = is_trainable(name, trainable_variables)
+            graph = slim.fully_connected(
+                graph,
+                1024,
+                weights_initializer=initializer,
+                activation_fn=tf.nn.relu,
+                scope=name,
+                trainable=trainable)
+            end_points[name] = graph
+
+            name = 'dropout'
+            graph = slim.dropout(graph, 0.6, scope='Dropout')
+            end_points[name] = graph
+
+    return graph, end_points
 
 
 def architecture(input_layer,

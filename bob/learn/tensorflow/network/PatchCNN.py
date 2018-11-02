@@ -35,6 +35,114 @@ The architecture is:
 | FC-3         | 1 x 1/1       | 1 x 1 x 2     |
 +--------------+---------------+---------------+
 
+```
+from tensorflow.python.keras import *
+from tensorflow.python.keras.layers import *
+patch = Sequential([
+    Conv2D(50, (5, 5), padding='same', use_bias=False, input_shape=(96,96,3)),
+    BatchNormalization(scale=False),
+    Activation('relu'),
+    MaxPool2D(padding='same'),
+
+    Conv2D(100, (3, 3), padding='same', use_bias=False, input_shape=(96,96,3)),
+    BatchNormalization(scale=False),
+    Activation('relu'),
+    MaxPool2D(padding='same'),
+
+    Conv2D(150, (3, 3), padding='same', use_bias=False, input_shape=(96,96,3)),
+    BatchNormalization(scale=False),
+    Activation('relu'),
+    MaxPool2D(pool_size=3, strides=2, padding='same'),
+
+    Conv2D(200, (3, 3), padding='same', use_bias=False, input_shape=(96,96,3)),
+    BatchNormalization(scale=False),
+    Activation('relu'),
+    MaxPool2D(padding='same'),
+
+    Conv2D(250, (3, 3), padding='same', use_bias=False, input_shape=(96,96,3)),
+    BatchNormalization(scale=False),
+    Activation('relu'),
+    MaxPool2D(padding='same'),
+
+    Flatten(),
+    Dense(1000, use_bias=False),
+    BatchNormalization(scale=False),
+    Activation('relu'),
+    Dropout(rate=0.5),
+
+    Dense(400, use_bias=False),
+    BatchNormalization(scale=False),
+    Activation('relu'),
+
+    Dense(2),
+])
+patch.summary()
+```
+_________________________________________________________________
+Layer (type)                 Output Shape              Param #
+=================================================================
+conv2d_1 (Conv2D)            (None, 96, 96, 50)        3750
+_________________________________________________________________
+batch_normalization_1 (Batch (None, 96, 96, 50)        150
+_________________________________________________________________
+activation_1 (Activation)    (None, 96, 96, 50)        0
+_________________________________________________________________
+max_pooling2d_1 (MaxPooling2 (None, 48, 48, 50)        0
+_________________________________________________________________
+conv2d_2 (Conv2D)            (None, 48, 48, 100)       45000
+_________________________________________________________________
+batch_normalization_2 (Batch (None, 48, 48, 100)       300
+_________________________________________________________________
+activation_2 (Activation)    (None, 48, 48, 100)       0
+_________________________________________________________________
+max_pooling2d_2 (MaxPooling2 (None, 24, 24, 100)       0
+_________________________________________________________________
+conv2d_3 (Conv2D)            (None, 24, 24, 150)       135000
+_________________________________________________________________
+batch_normalization_3 (Batch (None, 24, 24, 150)       450
+_________________________________________________________________
+activation_3 (Activation)    (None, 24, 24, 150)       0
+_________________________________________________________________
+max_pooling2d_3 (MaxPooling2 (None, 12, 12, 150)       0
+_________________________________________________________________
+conv2d_4 (Conv2D)            (None, 12, 12, 200)       270000
+_________________________________________________________________
+batch_normalization_4 (Batch (None, 12, 12, 200)       600
+_________________________________________________________________
+activation_4 (Activation)    (None, 12, 12, 200)       0
+_________________________________________________________________
+max_pooling2d_4 (MaxPooling2 (None, 6, 6, 200)         0
+_________________________________________________________________
+conv2d_5 (Conv2D)            (None, 6, 6, 250)         450000
+_________________________________________________________________
+batch_normalization_5 (Batch (None, 6, 6, 250)         750
+_________________________________________________________________
+activation_5 (Activation)    (None, 6, 6, 250)         0
+_________________________________________________________________
+max_pooling2d_5 (MaxPooling2 (None, 3, 3, 250)         0
+_________________________________________________________________
+flatten_1 (Flatten)          (None, 2250)              0
+_________________________________________________________________
+dense_1 (Dense)              (None, 1000)              2250000
+_________________________________________________________________
+batch_normalization_6 (Batch (None, 1000)              3000
+_________________________________________________________________
+activation_6 (Activation)    (None, 1000)              0
+_________________________________________________________________
+dropout_1 (Dropout)          (None, 1000)              0
+_________________________________________________________________
+dense_2 (Dense)              (None, 400)               400000
+_________________________________________________________________
+batch_normalization_7 (Batch (None, 400)               1200
+_________________________________________________________________
+activation_7 (Activation)    (None, 400)               0
+_________________________________________________________________
+dense_3 (Dense)              (None, 2)                 802
+=================================================================
+Total params: 3,561,002
+Trainable params: 3,556,702
+Non-trainable params: 4,300
+_________________________________________________________________
 """
 
 from __future__ import absolute_import

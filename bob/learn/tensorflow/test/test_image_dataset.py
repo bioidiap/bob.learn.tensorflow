@@ -38,7 +38,8 @@ def test_logitstrainer_images():
             n_classes=10,
             loss_op=mean_cross_entropy_loss,
             embedding_validation=embedding_validation,
-            validation_batch_size=validation_batch_size)
+            validation_batch_size=validation_batch_size,
+            apply_moving_averages=False)
         run_logitstrainer_images(trainer)
     finally:
         try:
@@ -94,12 +95,8 @@ def run_logitstrainer_images(trainer):
 
     trainer.train(input_fn, steps=steps, hooks=hooks)
 
-    if not trainer.embedding_validation:
-        acc = trainer.evaluate(input_fn_validation)
-        assert acc['accuracy'] > 0.30
-    else:
-        acc = trainer.evaluate(input_fn_validation)
-        assert acc['accuracy'] > 0.30
+    acc = trainer.evaluate(input_fn_validation)
+    assert acc['accuracy'] > 0.30, acc['accuracy']
 
     # Cleaning up
     tf.reset_default_graph()
