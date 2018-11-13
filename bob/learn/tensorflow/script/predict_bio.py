@@ -18,6 +18,10 @@ from bob.io.base import create_directories_safe
 from bob.bio.base.utils import save
 from bob.bio.base.tools.grid import indices
 from bob.learn.tensorflow.dataset.bio import BioGenerator
+try:
+    import bob.bio.video
+except ModuleNotFoundError:
+    pass
 
 logger = logging.getLogger(__name__)
 
@@ -51,11 +55,18 @@ def non_existing_files(paths, force=False):
             yield i
 
 
-def save_predictions(pool, output_dir, key, pred_buffer):
+def save_predictions(pool, output_dir, key, pred_buffer, video_container):
     outpath = make_output_path(output_dir, key)
     create_directories_safe(os.path.dirname(outpath))
     logger.debug("Saving predictions for %s", key)
-    pool.apply_async(save, (np.mean(pred_buffer[key], axis=0), outpath))
+    if video_container:
+        fc = bob.bio.video.FrameContainer()
+        for i, v in enumerate(pred_buffer[key]):
+            fc.add(i, v)
+        data = fc
+    else:
+        data = np.mean(pred_buffer[key], axis=0)
+    pool.apply_async(save, (data, outpath))
 
 
 @click.command(
@@ -136,7 +147,7 @@ def save_predictions(pool, output_dir, key, pred_buffer):
     cls=ResourceOption,
     help='If provided, it assumes that the db interface returns '
     'several samples from a biofile. This option can be used '
-    'when you are working with')
+    'when you are working with videos.')
 @click.option(
     '--array',
     '-t',
@@ -151,10 +162,17 @@ def save_predictions(pool, output_dir, key, pred_buffer):
     is_flag=True,
     cls=ResourceOption,
     help='Whether to overwrite existing predictions.')
+@click.option(
+    '--video-container',
+    '-vc',
+    is_flag=True,
+    cls=ResourceOption,
+    help='If provided, the predictions will be written in FrameContainers from'
+    ' bob.bio.video. You need to install bob.bio.video as well.')
 @verbosity_option(cls=ResourceOption)
 def predict_bio(estimator, database, biofiles, bio_predict_input_fn,
                 output_dir, load_data, hooks, predict_keys, checkpoint_path,
-                multiple_samples, array, force, **kwargs):
+                multiple_samples, array, force, video_container, **kwargs):
     """Saves predictions or embeddings of tf.estimators.
 
     This script works with bob.bio.base databases. This script works with
@@ -193,6 +211,13 @@ def predict_bio(estimator, database, biofiles, bio_predict_input_fn,
     """
     log_parameters(logger, ignore=('biofiles', ))
     logger.debug("len(biofiles): %d", len(biofiles))
+
+    if video_container:
+        try:
+            import bob.bio.video
+        except ModuleNotFoundError:
+            raise click.ClickException(
+                'Could not import bob.bio.video. Have you installed it?')
 
     assert len(biofiles), "biofiles are empty!"
 
@@ -247,7 +272,8 @@ def predict_bio(estimator, database, biofiles, bio_predict_input_fn,
             # key is in bytes format in Python 3
             if sys.version_info >= (3, ):
                 key = key.decode(errors='replace')
-            prob = pred.get('probabilities', pred.get('embeddings', pred.get('predictions')))
+            prob = pred.get('probabilities', pred.get(
+                'embeddings', pred.get('predictions')))
             assert prob is not None
             pred_buffer[key].append(prob)
             if i == 0:
@@ -255,10 +281,11 @@ def predict_bio(estimator, database, biofiles, bio_predict_input_fn,
             if last_key == key:
                 continue
             else:
-                save_predictions(pool, output_dir, last_key, pred_buffer)
+                save_predictions(
+                    pool, output_dir, last_key, pred_buffer, video_container)
                 last_key = key
         # save the final returned key as well:
-        save_predictions(pool, output_dir, key, pred_buffer)
+        save_predictions(pool, output_dir, key, pred_buffer, video_container)
     finally:
         pool.close()
         pool.join()
