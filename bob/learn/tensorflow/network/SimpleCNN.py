@@ -271,7 +271,9 @@ def slim_architecture(
             weights_regularizer=slim.l2_regularizer(weight_decay),
             normalizer_fn=slim.batch_norm,
             normalizer_params=batch_norm_params):
-        with tf.variable_scope('SimpleCNN', reuse=reuse):
+        with tf.variable_scope('SimpleCNN', reuse=reuse), slim.arg_scope(
+            [slim.batch_norm, slim.dropout],
+                is_training=mode == tf.estimator.ModeKeys.TRAIN):
 
             initializer = tf.contrib.layers.xavier_initializer()
             name = 'conv1'
