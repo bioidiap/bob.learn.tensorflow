@@ -181,7 +181,8 @@ def shuffle_data_and_labels_image_augmentation(tfrecord_filenames,
                                                random_contrast=False,
                                                random_saturation=False,
                                                random_rotate=False,
-                                               per_image_normalization=True):
+                                               per_image_normalization=True,
+                                               fixed_batch_size=False):
     """
     Dump random batches from a list of tf-record files and applies some image augmentation
 
@@ -229,6 +230,9 @@ def shuffle_data_and_labels_image_augmentation(tfrecord_filenames,
       per_image_normalization:
            Linearly scales image to have zero mean and unit norm.
 
+      fixed_batch_size:
+           If True, the last remaining batch that has smaller size than `batch_size' will be dropped.
+
     """
 
     dataset = create_dataset_from_records_with_augmentation(
@@ -244,7 +248,13 @@ def shuffle_data_and_labels_image_augmentation(tfrecord_filenames,
         random_rotate=random_rotate,
         per_image_normalization=per_image_normalization)
 
-    dataset = dataset.shuffle(buffer_size).batch(batch_size).repeat(epochs)
+    # dataset = dataset.shuffle(buffer_size).batch(batch_size).repeat(epochs)
+    dataset = dataset.shuffle(buffer_size)
+    if fixed_batch_size:
+        dataset = dataset.apply(tf.contrib.data.batch_and_drop_remainder(batch_size))
+    else:
+        dataset = dataset.batch(batch_size)
+    dataset = dataset.repeat(epochs)
 
     data, labels, key = dataset.make_one_shot_iterator().get_next()
 
@@ -348,7 +358,8 @@ def batch_data_and_labels_image_augmentation(tfrecord_filenames,
                                              random_contrast=False,
                                              random_saturation=False,
                                              random_rotate=False,
-                                             per_image_normalization=True):
+                                             per_image_normalization=True,
+                                             fixed_batch_size=False):
     """
     Dump in order batches from a list of tf-record files
 
@@ -369,6 +380,9 @@ def batch_data_and_labels_image_augmentation(tfrecord_filenames,
        epochs:
            Number of epochs to be batched
 
+      fixed_batch_size:
+           If True, the last remaining batch that has smaller size than `batch_size' will be dropped.
+
     """
 
     dataset = create_dataset_from_records_with_augmentation(
@@ -384,7 +398,12 @@ def batch_data_and_labels_image_augmentation(tfrecord_filenames,
         random_rotate=random_rotate,
         per_image_normalization=per_image_normalization)
 
-    dataset = dataset.batch(batch_size).repeat(epochs)
+    # dataset = dataset.batch(batch_size).repeat(epochs)
+    if fixed_batch_size:
+        dataset = dataset.apply(tf.contrib.data.batch_and_drop_remainder(batch_size))
+    else:
+        dataset = dataset.batch(batch_size)
+    dataset = dataset.repeat(epochs)
 
     data, labels, key = dataset.make_one_shot_iterator().get_next()
     features = dict()
