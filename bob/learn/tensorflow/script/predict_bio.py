@@ -251,10 +251,11 @@ def generic_predict(estimator, predict_input_fn, output_dir, predict_keys=None,
                     checkpoint_path=None, hooks=None, video_container=False):
     # if the checkpoint_path is a directory, pick the latest checkpoint from
     # that directory
-    if checkpoint_path and os.path.isdir(checkpoint_path):
-        ckpt = tf.train.get_checkpoint_state(checkpoint_path)
-        if ckpt and ckpt.model_checkpoint_path:
-            checkpoint_path = ckpt.model_checkpoint_path
+    if checkpoint_path:
+        if os.path.isdir(checkpoint_path):
+            ckpt = tf.train.get_checkpoint_state(checkpoint_path)
+            if ckpt and ckpt.model_checkpoint_path:
+                checkpoint_path = ckpt.model_checkpoint_path
 
         logger.info("Restoring the model from %s", checkpoint_path)
 
