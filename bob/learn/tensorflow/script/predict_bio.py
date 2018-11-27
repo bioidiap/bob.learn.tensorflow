@@ -206,18 +206,11 @@ def predict_bio(estimator, database, biofiles, bio_predict_input_fn,
                 dataset = dataset.batch(10**3)
                 images, labels, keys = dataset.make_one_shot_iterator().get_next()
 
-                return {'data': images, 'keys': keys}, labels
+                return {'data': images, 'key': keys}, labels
             return input_fn
     """
     log_parameters(logger, ignore=('biofiles', ))
     logger.debug("len(biofiles): %d", len(biofiles))
-
-    if video_container:
-        try:
-            import bob.bio.video
-        except ModuleNotFoundError:
-            raise click.ClickException(
-                'Could not import bob.bio.video. Have you installed it?')
 
     assert len(biofiles), "biofiles are empty!"
 
@@ -246,11 +239,22 @@ def predict_bio(estimator, database, biofiles, bio_predict_input_fn,
     predict_input_fn = bio_predict_input_fn(generator, generator.output_types,
                                             generator.output_shapes)
 
-    if checkpoint_path:
-        if os.path.isdir(checkpoint_path):
-            ckpt = tf.train.get_checkpoint_state(estimator.model_dir)
-            if ckpt and ckpt.model_checkpoint_path:
-                checkpoint_path = ckpt.model_checkpoint_path
+    logger.info("Saving the predictions of %d files in %s", len(generator),
+                output_dir)
+    generic_predict(
+        estimator, predict_input_fn, output_dir, predict_keys=predict_keys,
+        checkpoint_path=checkpoint_path, hooks=hooks,
+        video_container=video_container)
+
+
+def generic_predict(estimator, predict_input_fn, output_dir, predict_keys=None,
+                    checkpoint_path=None, hooks=None, video_container=False):
+    # if the checkpoint_path is a directory, pick the latest checkpoint from
+    # that directory
+    if checkpoint_path and os.path.isdir(checkpoint_path):
+        ckpt = tf.train.get_checkpoint_state(checkpoint_path)
+        if ckpt and ckpt.model_checkpoint_path:
+            checkpoint_path = ckpt.model_checkpoint_path
 
         logger.info("Restoring the model from %s", checkpoint_path)
 
@@ -261,8 +265,12 @@ def predict_bio(estimator, database, biofiles, bio_predict_input_fn,
         checkpoint_path=checkpoint_path,
     )
 
-    logger.info("Saving the predictions of %d files in %s", len(generator),
-                output_dir)
+    if video_container:
+        try:
+            import bob.bio.video
+        except ModuleNotFoundError:
+            raise click.ClickException(
+                'Could not import bob.bio.video. Have you installed it?')
 
     pool = Pool()
     try:

@@ -1,4 +1,3 @@
-import os
 from bob.bio.base.test.dummy.database import database
 from bob.bio.base.utils import read_original_data
 

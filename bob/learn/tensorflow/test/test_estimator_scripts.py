@@ -4,12 +4,15 @@ import shutil
 from glob import glob
 from tempfile import mkdtemp
 from click.testing import CliRunner
+from bob.extension.scripts.click_helper import assert_click_runner_result
 from bob.io.base.test_utils import datafile
 
 from bob.learn.tensorflow.script.db_to_tfrecords import db_to_tfrecords
 from bob.learn.tensorflow.script.train import train
 from bob.learn.tensorflow.script.eval import eval as eval_script
 from bob.learn.tensorflow.script.train_and_evaluate import train_and_evaluate
+from bob.learn.tensorflow.script.predict_bio import predict_bio
+
 
 dummy_tfrecord_config = datafile('dummy_verify_config.py', __name__)
 CONFIG = '''
@@ -93,6 +96,25 @@ def model_fn(features, labels, mode, params, config):
 
 
 estimator = tf.estimator.Estimator(model_fn=model_fn, model_dir=model_dir)
+
+
+# predict bio config options:
+
+from bob.bio.base.test.dummy.database import database
+biofiles = database.all_files(['dev'])
+
+def bio_predict_input_fn(generator, output_types, output_shapes):
+    def input_fn():
+        dataset = tf.data.Dataset.from_generator(
+            generator, output_types, output_shapes)
+        # apply all kinds of transformations here, process the data
+        # even further if you want.
+        dataset = dataset.prefetch(1)
+        dataset = dataset.batch(10**3)
+        images, labels, keys = dataset.make_one_shot_iterator().get_next()
+
+        return {'data': images, 'key': keys}, labels
+    return input_fn
 '''
 
 
@@ -104,8 +126,7 @@ def _create_tfrecord(test_dir):
     runner = CliRunner()
     result = runner.invoke(
         db_to_tfrecords, args=[dummy_tfrecord_config, '--output', output])
-    assert result.exit_code == 0, '%s\n%s\n%s' % (
-        result.exc_info, result.output, result.exception)
+    assert_click_runner_result(result)
     return output
 
 
@@ -119,8 +140,7 @@ def _create_checkpoint(tmpdir, model_dir, dummy_tfrecord):
         f.write(config)
     runner = CliRunner()
     result = runner.invoke(train, args=[config_path])
-    assert result.exit_code == 0, '%s\n%s\n%s' % (
-        result.exc_info, result.output, result.exception)
+    assert_click_runner_result(result)
 
 
 def _eval(tmpdir, model_dir, dummy_tfrecord, extra_args=[]):
@@ -133,8 +153,7 @@ def _eval(tmpdir, model_dir, dummy_tfrecord, extra_args=[]):
         f.write(config)
     runner = CliRunner()
     result = runner.invoke(eval_script, args=[config_path] + extra_args)
-    assert result.exit_code == 0, '%s\n%s\n%s' % (
-        result.exc_info, result.output, result.exception)
+    assert_click_runner_result(result)
 
 
 def _train_and_evaluate(tmpdir, model_dir, dummy_tfrecord):
@@ -147,6 +166,18 @@ def _train_and_evaluate(tmpdir, model_dir, dummy_tfrecord):
         f.write(config)
     runner = CliRunner()
     runner.invoke(train_and_evaluate, args=[config_path])
+
+
+def _predict_bio(tmpdir, model_dir, dummy_tfrecord, extra_options=tuple()):
+    config = CONFIG % {
+        'model_dir': model_dir,
+        'tfrecord_filenames': dummy_tfrecord
+    }
+    config_path = os.path.join(tmpdir, 'train_config.py')
+    with open(config_path, 'w') as f:
+        f.write(config)
+    runner = CliRunner()
+    return runner.invoke(predict_bio, args=[config_path] + list(extra_options))
 
 
 def test_eval():
@@ -205,6 +236,53 @@ def test_eval_keep_n_model():
         assert '200 ' in doc, doc
         assert len(glob('{}/model.ckpt-*'.format(eval_dir))) == 3, \
             os.listdir(eval_dir)
+
+    finally:
+        try:
+            shutil.rmtree(tmpdir)
+        except Exception:
+            pass
+
+
+def test_predict_bio():
+    tmpdir = mkdtemp(prefix='bob_')
+    try:
+        model_dir = os.path.join(tmpdir, 'model_dir')
+
+        dummy_tfrecord = _create_tfrecord(tmpdir)
+        _create_checkpoint(tmpdir, model_dir, dummy_tfrecord)
+
+        # Run predict_bio
+        result = _predict_bio(
+            tmpdir, model_dir, dummy_tfrecord, ['-o', tmpdir, '-vvv'])
+        assert_click_runner_result(result)
+
+    finally:
+        try:
+            shutil.rmtree(tmpdir)
+        except Exception:
+            pass
+
+
+def test_predict_bio_empty_eval():
+    tmpdir = mkdtemp(prefix='bob_')
+    try:
+        model_dir = os.path.join(tmpdir, 'model_dir')
+        eval_dir = os.path.join(model_dir, 'eval')
+
+        dummy_tfrecord = _create_tfrecord(tmpdir)
+        _create_checkpoint(tmpdir, model_dir, dummy_tfrecord)
+
+        # Make an empty eval folder
+        os.makedirs(eval_dir)
+        open(os.path.join(eval_dir, 'checkpoint'), 'w')
+
+        # Run predict_bio
+        result = _predict_bio(
+            tmpdir, model_dir, dummy_tfrecord,
+            ['-o', tmpdir, '-c', eval_dir, '-vvv'])
+        # the command should fail when the checkpoint path is empty
+        assert_click_runner_result(result, -1)
 
     finally:
         try:
