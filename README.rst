@@ -4,7 +4,7 @@
 
 
 .. image:: http://img.shields.io/badge/docs-stable-yellow.png
-   :target: http://beatubulatest.lab.idiap.ch/private/docs/bob/bob.learn.tensorflow/stable/index.html
+   :target: https://www.idiap.ch/software/bob/docs/bob/bob.learn.tensorflow/stable/index.html
 .. image:: http://img.shields.io/badge/docs-latest-orange.png
    :target: http://beatubulatest.lab.idiap.ch/private/docs/bob/bob.learn.tensorflow/master/index.html
 .. image:: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/badges/master/build.svg
