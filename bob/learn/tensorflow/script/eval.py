@@ -143,6 +143,7 @@ def append_evaluated_file(path, evaluations):
     cls=ResourceOption,
     default=False,
     show_default=True,
+    is_flag=True,
     help='If given, the model will be evaluated only once.')
 @click.option(
     '--eval-interval-secs',
@@ -174,9 +175,15 @@ def append_evaluated_file(path, evaluations):
     default=-1,
     show_default=True,
     help='If given, the maximum number of intervals waiting for new training checkpoint.')
+@click.option(
+    '--force-re-run',
+    is_flag=True,
+    default=False,
+    help='A debugging flag. Do not use!')
 @verbosity_option(cls=ResourceOption)
 def eval(estimator, eval_input_fn, hooks, run_once, eval_interval_secs, name,
-         keep_n_best_models, sort_by, max_wait_intervals, **kwargs):
+         keep_n_best_models, sort_by, max_wait_intervals, force_re_run,
+         **kwargs):
     """Evaluates networks using Tensorflow estimators."""
     log_parameters(logger)
 
@@ -220,7 +227,7 @@ def eval(estimator, eval_input_fn, hooks, run_once, eval_interval_secs, name,
                 print('Failed to find global_step for checkpoint_path {}, '
                       'skipping ...'.format(checkpoint_path))
                 continue
-            if global_step in evaluated_steps:
+            if global_step in evaluated_steps and not force_re_run:
                 continue
 
             # copy over the checkpoint before evaluating since it might
