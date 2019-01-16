@@ -6,11 +6,11 @@ from click.testing import CliRunner
 import bob.io.base
 from bob.learn.tensorflow.script.db_to_tfrecords import db_to_tfrecords, describe_tf_record
 from bob.learn.tensorflow.utils import load_mnist, create_mnist_tfrecord
- 
+
 regenerate_reference = False
 
 dummy_config = pkg_resources.resource_filename(
-    'bob.learn.tensorflow', 'test/data/dummy_verify_config.py')
+    'bob.learn.tensorflow', 'test/data/tfrecord_config.py')
 
 
 def test_db_to_tfrecords():
@@ -62,7 +62,7 @@ def test_tfrecord_counter():
             tfrecord_train, train_data, train_labels, n_samples=6000)
 
         n_samples, n_labels = describe_tf_record(os.path.dirname(tfrecord_train), shape, batch_size)
-        
+
         assert n_samples == 6000
         assert n_labels == 10
 
