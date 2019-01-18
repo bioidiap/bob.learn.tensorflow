@@ -22,6 +22,20 @@ from bob.io.base import create_directories_safe
 logger = logging.getLogger(__name__)
 
 
+def copy_one_step(train_dir, global_step, save_dir):
+    for path in glob('{}/model.ckpt-{}.*'.format(train_dir, global_step)):
+        dst = os.path.join(save_dir, os.path.basename(path))
+        if os.path.isfile(dst):
+            continue
+        try:
+            shutil.copy(path, dst)
+            logger.info("Copied `%s' over to `%s'", path, dst)
+        except OSError:
+            logger.warning(
+                "Failed to copy `%s' over to `%s'", path, dst,
+                exc_info=True)
+
+
 def save_n_best_models(train_dir, save_dir, evaluated_file,
                        keep_n_best_models, sort_by):
     create_directories_safe(save_dir)
@@ -53,17 +67,7 @@ def save_n_best_models(train_dir, save_dir, evaluated_file,
 
     # copy over the best models if not already there
     for global_step in best_models:
-        for path in glob('{}/model.ckpt-{}.*'.format(train_dir, global_step)):
-            dst = os.path.join(save_dir, os.path.basename(path))
-            if os.path.isfile(dst):
-                continue
-            try:
-                shutil.copy(path, dst)
-                logger.info("Copied `%s' over to `%s'", path, dst)
-            except OSError:
-                logger.warning(
-                    "Failed to copy `%s' over to `%s'", path, dst,
-                    exc_info=True)
+        copy_one_step(train_dir, global_step, save_dir)
 
     # create a checkpoint file indicating to the best existing model:
     # 1. filter non-existing models first
@@ -139,6 +143,7 @@ def append_evaluated_file(path, evaluations):
     cls=ResourceOption,
     default=False,
     show_default=True,
+    is_flag=True,
     help='If given, the model will be evaluated only once.')
 @click.option(
     '--eval-interval-secs',
@@ -170,9 +175,15 @@ def append_evaluated_file(path, evaluations):
     default=-1,
     show_default=True,
     help='If given, the maximum number of intervals waiting for new training checkpoint.')
+@click.option(
+    '--force-re-run',
+    is_flag=True,
+    default=False,
+    help='A debugging flag. Do not use!')
 @verbosity_option(cls=ResourceOption)
 def eval(estimator, eval_input_fn, hooks, run_once, eval_interval_secs, name,
-         keep_n_best_models, sort_by, max_wait_intervals, **kwargs):
+         keep_n_best_models, sort_by, max_wait_intervals, force_re_run,
+         **kwargs):
     """Evaluates networks using Tensorflow estimators."""
     log_parameters(logger)
 
@@ -216,8 +227,12 @@ def eval(estimator, eval_input_fn, hooks, run_once, eval_interval_secs, name,
                 print('Failed to find global_step for checkpoint_path {}, '
                       'skipping ...'.format(checkpoint_path))
                 continue
-            if global_step in evaluated_steps:
+            if global_step in evaluated_steps and not force_re_run:
                 continue
+
+            # copy over the checkpoint before evaluating since it might
+            # disappear after evaluation.
+            copy_one_step(estimator.model_dir, global_step, eval_dir)
 
             # Evaluate
             try:

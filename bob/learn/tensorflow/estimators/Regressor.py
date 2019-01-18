@@ -100,7 +100,7 @@ class Regressor(estimator.Estimator):
             # Some layer like tf.layers.batch_norm need this:
             update_ops = tf.get_collection(tf.GraphKeys.UPDATE_OPS)
 
-            with tf.control_dependencies(update_ops):
+            with tf.control_dependencies(update_ops), tf.name_scope('train'):
 
                 # Calculate Loss
                 self.loss = self._get_loss(
