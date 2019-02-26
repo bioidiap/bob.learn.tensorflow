@@ -22,7 +22,7 @@ from bob.io.base import create_directories_safe
 logger = logging.getLogger(__name__)
 
 
-def copy_one_step(train_dir, global_step, save_dir):
+def copy_one_step(train_dir, global_step, save_dir, fail_on_error=False):
     for path in glob('{}/model.ckpt-{}.*'.format(train_dir, global_step)):
         dst = os.path.join(save_dir, os.path.basename(path))
         if os.path.isfile(dst):
@@ -34,6 +34,8 @@ def copy_one_step(train_dir, global_step, save_dir):
             logger.warning(
                 "Failed to copy `%s' over to `%s'", path, dst,
                 exc_info=True)
+            if fail_on_error:
+                raise
 
 
 def save_n_best_models(train_dir, save_dir, evaluated_file,
@@ -255,7 +257,11 @@ def eval(estimator, eval_input_fn, hooks, run_once, eval_interval_secs, name,
 
             # copy over the checkpoint before evaluating since it might
             # disappear after evaluation.
-            copy_one_step(estimator.model_dir, global_step, eval_dir)
+            try:
+                copy_one_step(estimator.model_dir, global_step, eval_dir, fail_on_error=True)
+            except Exception:
+                # skip testing this checkpoint
+                continue
 
             # evaluate based on the just copied checkpoint_path
             checkpoint_path = checkpoint_path.replace(estimator.model_dir, eval_dir)
