@@ -19,3 +19,4 @@ gridtk
 bob.bio.base
 numpy
 scipy
+click >= 7

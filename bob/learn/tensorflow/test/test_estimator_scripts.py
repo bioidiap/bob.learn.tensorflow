@@ -186,7 +186,7 @@ def test_predict_bio_empty_eval():
             tmpdir, model_dir, tfrecord_path,
             ['-o', tmpdir, '-c', eval_dir, '-vvv'])
         # the command should fail when the checkpoint path is empty
-        assert_click_runner_result(result, -1)
+        assert_click_runner_result(result, 1)
 
     finally:
         try:

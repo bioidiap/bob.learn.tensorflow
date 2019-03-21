@@ -46,7 +46,7 @@ requirements:
     - scipy
     - six
     - {{ pin_compatible('click') }}
-    - {{ pin_compatible('click-plugins') }}      
+    - {{ pin_compatible('click-plugins') }}
     - tensorflow >=1.4
 
 test:
