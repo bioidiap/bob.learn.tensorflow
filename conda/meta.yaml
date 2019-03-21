@@ -37,12 +37,16 @@ requirements:
     - bob.db.atnt
     - bob.bio.base
     - bob.ip.color
+    - click {{ click }}
+    - click-plugins {{ click_plugins }}
   run:
     - python
     - setuptools
     - numpy
     - scipy
     - six
+    - {{ pin_compatible('click') }}
+    - {{ pin_compatible('click-plugins') }}
     - tensorflow >=1.4
 
 test:
@@ -50,13 +54,13 @@ test:
     - {{ name }}
   commands:
     - bob tf --help
-    - bob tf compute_statistics --help
-    - bob tf db_to_tfrecords --help
+    - bob tf compute-statistics --help
+    - bob tf db-to-tfrecords --help
     - bob tf eval --help
-    - bob tf predict_bio --help
-    - bob tf style_transfer --help
+    - bob tf predict-bio --help
+    - bob tf style-transfer --help
     - bob tf train --help
-    - bob tf train_and_evaluate --help
+    - bob tf train-and-evaluate --help
     - bob tf trim --help
     - nosetests --with-coverage --cover-package={{ name }} -sv {{ name }}
     - sphinx-build -aEW {{ project_dir }}/doc {{ project_dir }}/sphinx
