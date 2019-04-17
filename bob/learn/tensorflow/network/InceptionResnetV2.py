@@ -259,7 +259,6 @@ def inception_resnet_v2_batch_norm(inputs,
         'updates_collections': None,
     }
 
-    weight_decay = 5e-5
     with slim.arg_scope(
         [slim.conv2d, slim.fully_connected],
             weights_initializer=tf.truncated_normal_initializer(stddev=0.1),
