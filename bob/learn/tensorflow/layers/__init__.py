@@ -1,4 +1,4 @@
-from .Maxout import maxout
+from .Maxout import Maxout, maxout
 
 
 # gets sphinx autodoc done right - don't remove it
@@ -17,5 +17,8 @@ def __appropriate__(*args):
         obj.__module__ = __name__
 
 
-__appropriate__(maxout)
+__appropriate__(
+    Maxout,
+    maxout,
+)
 __all__ = [_ for _ in dir() if not _.startswith('_')]

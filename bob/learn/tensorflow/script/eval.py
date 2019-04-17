@@ -264,7 +264,8 @@ def eval(estimator, eval_input_fn, hooks, run_once, eval_interval_secs, name,
                 continue
 
             # evaluate based on the just copied checkpoint_path
-            checkpoint_path = checkpoint_path.replace(estimator.model_dir, eval_dir)
+            checkpoint_path = checkpoint_path.replace(estimator.model_dir, eval_dir + os.sep)
+            checkpoint_path = os.path.abspath(checkpoint_path)
             logger.debug("Evaluating the model from %s", checkpoint_path)
 
             # Evaluate
