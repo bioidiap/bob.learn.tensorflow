@@ -1,7 +1,8 @@
 from bob.bio.base.test.dummy.database import database
 from bob.bio.base.utils import read_original_data
+from bob.learn.tensorflow.dataset.generator import dataset_using_generator
 
-groups = ['dev']
+groups = ["dev"]
 
 samples = database.all_files(groups=groups)
 
@@ -15,8 +16,13 @@ def file_to_label(f):
 
 
 def reader(biofile):
-    data = read_original_data(biofile, database.original_directory,
-                              database.original_extension)
+    data = read_original_data(
+        biofile, database.original_directory, database.original_extension
+    )
     label = file_to_label(biofile)
     key = str(biofile.path).encode("utf-8")
     return (data, label, key)
+
+
+dataset = dataset_using_generator(samples, reader)
+datasets = [dataset]
