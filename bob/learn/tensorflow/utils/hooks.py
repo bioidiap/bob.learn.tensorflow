@@ -9,6 +9,21 @@ import time
 logger = logging.getLogger(__name__)
 
 
+class TensorSummary(tf.train.SessionRunHook):
+    """Adds the given (scalar) tensors to tensorboard summaries"""
+
+    def __init__(self, tensors, tensor_names=None, **kwargs):
+        super().__init__(**kwargs)
+        self.tensors = list(tensors)
+        if tensor_names is None:
+            tensor_names = [t.name for t in self.tensors]
+        self.tensor_names = list(tensor_names)
+
+    def begin(self):
+        for name, tensor in zip(self.tensor_names, self.tensors):
+            tf.summary.scalar(name, tensor)
+
+
 class LoggerHook(tf.train.SessionRunHook):
     """Logs loss and runtime."""
 
