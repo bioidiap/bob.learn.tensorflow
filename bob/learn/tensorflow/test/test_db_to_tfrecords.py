@@ -107,7 +107,7 @@ def test_datasets_to_tfrecords():
     runner = CliRunner()
     with runner.isolated_filesystem():
         output_path = './test'
-        args = (dummy_config, '--outputs', output_path)
+        args = (dummy_config, '--output', output_path)
         result = runner.invoke(
             datasets_to_tfrecords, args=args, standalone_mode=False)
         assert_click_runner_result(result)

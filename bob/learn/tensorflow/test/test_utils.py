@@ -3,8 +3,8 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 
 import numpy
-from bob.learn.tensorflow.utils import compute_embedding_accuracy, cdist,\
-     compute_embedding_accuracy_tensors, predict_using_tensors
+from bob.learn.tensorflow.utils import compute_embedding_accuracy, \
+     compute_embedding_accuracy_tensors
 
 import tensorflow as tf
 """
