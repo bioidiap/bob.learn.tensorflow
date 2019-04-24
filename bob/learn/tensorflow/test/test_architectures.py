@@ -5,7 +5,7 @@
 import tensorflow as tf
 from bob.learn.tensorflow.network import inception_resnet_v2, inception_resnet_v2_batch_norm,\
     inception_resnet_v1, inception_resnet_v1_batch_norm,\
-    vgg_19, vgg_16
+    vgg_19, vgg_16, mlp_with_batchnorm_and_dropout 
 
 
 def test_inceptionv2():
@@ -131,3 +131,19 @@ def test_vgg():
 
     tf.reset_default_graph()
     assert len(tf.global_variables()) == 0
+
+
+def test_mlp():
+
+    tf.reset_default_graph()
+    # Testing MLP Training mode
+    inputs = tf.placeholder(tf.float32, shape=(1, 10, 10, 3))
+    graph, _ = mlp_with_batchnorm_and_dropout(inputs, [6, 5])
+    assert len(tf.trainable_variables()) == 4
+
+    tf.reset_default_graph()
+    # Testing MLP Predicting mode
+    inputs = tf.placeholder(tf.float32, shape=(1, 10, 10, 3))
+    graph, _ = mlp_with_batchnorm_and_dropout(inputs, [6, 5], mode=tf.estimator.ModeKeys.PREDICT)
+    assert len(tf.trainable_variables()) == 0
+ 

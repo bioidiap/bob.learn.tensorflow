@@ -4,16 +4,19 @@
 
 import tensorflow as tf
 from bob.learn.tensorflow.network.utils import is_trainable
+
 slim = tf.contrib.slim
 
 
-def mlp(inputs,
-        output_shape,
-        hidden_layers=[10],
-        hidden_activation=tf.nn.tanh,
-        output_activation=None,
-        seed=10,
-        **kwargs):
+def mlp(
+    inputs,
+    output_shape,
+    hidden_layers=[10],
+    hidden_activation=tf.nn.tanh,
+    output_activation=None,
+    seed=10,
+    **kwargs
+):
     """An MLP is a representation of a Multi-Layer Perceptron.
 
     This implementation is feed-forward and fully-connected.
@@ -38,7 +41,8 @@ def mlp(inputs,
     """
 
     initializer = tf.contrib.layers.xavier_initializer(
-        uniform=False, dtype=tf.float32, seed=seed)
+        uniform=False, dtype=tf.float32, seed=seed
+    )
 
     graph = inputs
     for i in range(len(hidden_layers)):
@@ -49,26 +53,32 @@ def mlp(inputs,
             weights,
             weights_initializer=initializer,
             activation_fn=hidden_activation,
-            scope='fc_{0}'.format(i))
+            scope="fc_{0}".format(i),
+        )
 
     graph = slim.fully_connected(
         graph,
         output_shape,
         weights_initializer=initializer,
         activation_fn=output_activation,
-        scope='fc_output')
+        scope="fc_output",
+    )
 
     return graph
 
 
-def mlp_with_batchnorm_and_dropout(inputs,
-                                   fully_connected_layers,
-                                   mode=tf.estimator.ModeKeys.TRAIN,
-                                   trainable_variables=None,
-                                   **kwargs):
+def mlp_with_batchnorm_and_dropout(
+    inputs,
+    fully_connected_layers,
+    mode=tf.estimator.ModeKeys.TRAIN,
+    trainable_variables=None,
+    **kwargs
+):
 
     if trainable_variables is not None:
-        raise ValueError("The batch_norm layers selectable training is not implemented!")
+        raise ValueError(
+            "The batch_norm layers selectable training is not implemented!"
+        )
 
     end_points = {}
     net = slim.flatten(inputs)
@@ -77,12 +87,12 @@ def mlp_with_batchnorm_and_dropout(inputs,
     dropout_keep_prob = 0.5
     batch_norm_params = {
         # Decay for the moving averages.
-        'decay': 0.995,
+        "decay": 0.995,
         # epsilon to prevent 0s in variance.
-        'epsilon': 0.001,
+        "epsilon": 0.001,
         # force in-place updates of mean and variance estimates
-        'updates_collections': None,
-        'is_training': (mode == tf.estimator.ModeKeys.TRAIN),
+        "updates_collections": None,
+        "is_training": (mode == tf.estimator.ModeKeys.TRAIN),
     }
 
     with slim.arg_scope(
@@ -90,22 +100,27 @@ def mlp_with_batchnorm_and_dropout(inputs,
         weights_initializer=tf.truncated_normal_initializer(stddev=0.1),
         weights_regularizer=slim.l2_regularizer(weight_decay),
         normalizer_fn=slim.batch_norm,
-        normalizer_params=batch_norm_params
-    ), tf.name_scope('MLP'):
+        normalizer_params=batch_norm_params,
+    ), tf.name_scope("MLP"):
 
         # hidden layers
         for i, n in enumerate(fully_connected_layers):
-            name = 'fc_{:0d}'.format(i)
+            name = "fc_{:0d}".format(i)
             trainable = is_trainable(name, trainable_variables, mode=mode)
-            net = slim.fully_connected(net, n, scope=name, trainable=trainable)
-            end_points[name] = net
+            with slim.arg_scope(
+                [slim.batch_norm], is_training=trainable, trainable=trainable
+            ):
 
-            name = 'dropout_{:0d}'.format(i)
+                net = slim.fully_connected(net, n, scope=name, trainable=trainable)
+                end_points[name] = net
+
+            name = "dropout_{:0d}".format(i)
             net = slim.dropout(
                 net,
                 dropout_keep_prob,
                 is_training=(mode == tf.estimator.ModeKeys.TRAIN),
-                scope=name)
+                scope=name,
+            )
             end_points[name] = net
 
     return net, end_points

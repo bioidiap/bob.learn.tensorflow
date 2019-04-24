@@ -1,7 +1,7 @@
 from .Chopra import chopra
 from .LightCNN9 import light_cnn9
 from .Dummy import dummy
-from .MLP import mlp
+from .MLP import mlp, mlp_with_batchnorm_and_dropout
 from .InceptionResnetV2 import inception_resnet_v2, inception_resnet_v2_batch_norm
 from .InceptionResnetV1 import inception_resnet_v1, inception_resnet_v1_batch_norm
 from . import SimpleCNN
