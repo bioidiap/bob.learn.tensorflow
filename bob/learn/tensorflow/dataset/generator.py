@@ -29,7 +29,7 @@ class Generator:
     """
 
     def __init__(self, samples, reader, multiple_samples=False, **kwargs):
-        super(Generator, self).__init__(**kwargs)
+        super().__init__(**kwargs)
         self.reader = reader
         self.samples = list(samples)
         self.multiple_samples = multiple_samples
@@ -43,6 +43,7 @@ class Generator:
             except TypeError:
                 # if the data is a generator
                 dlk = six.next(dlk)
+        # Creating a "fake" dataset just to get the types and shapes
         dataset = tf.data.Dataset.from_tensors(dlk)
         self._output_types = dataset.output_types
         self._output_shapes = dataset.output_shapes

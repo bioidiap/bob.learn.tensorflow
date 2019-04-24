@@ -3,9 +3,11 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 
 import pkg_resources
+import numpy
 import tensorflow as tf
 from bob.learn.tensorflow.dataset.siamese_image import shuffle_data_and_labels_image_augmentation as siamese_batch
 from bob.learn.tensorflow.dataset.triplet_image import shuffle_data_and_labels_image_augmentation as triplet_batch
+from bob.learn.tensorflow.dataset.generator import dataset_using_generator
 
 data_shape = (250, 250, 3)
 output_shape = (50, 50)
@@ -76,3 +78,27 @@ def test_triplet_dataset():
         assert d['anchor'].shape == (2, 50, 50, 3)
         assert d['positive'].shape == (2, 50, 50, 3)
         assert d['negative'].shape == (2, 50, 50, 3)
+
+
+def test_dataset_using_generator():
+    
+    def reader(f):
+        key = 0
+        label = 0
+        yield {'data': f, 'key': key}, label
+
+    shape = (2, 2, 1)    
+    samples = [numpy.ones(shape, dtype="float32")*i for i in range(10)]
+    
+    with tf.Session() as session: 
+        dataset = dataset_using_generator(samples,\
+                                          reader,\
+                                          multiple_samples=True)
+        iterator = dataset.make_one_shot_iterator().get_next()
+        while True:
+            try:
+                sample = session.run(iterator)
+                assert sample[0]["data"].shape == shape
+            except tf.errors.OutOfRangeError:
+                break
+
