@@ -95,10 +95,11 @@ def test_dataset_using_generator():
                                           reader,\
                                           multiple_samples=True)
         iterator = dataset.make_one_shot_iterator().get_next()
-        while True:
+        for i in range(11):
             try:
-                sample = session.run(iterator)
+                sample = session.run(iterator)                
                 assert sample[0]["data"].shape == shape
+                assert numpy.allclose(sample[0]["data"], samples[i])
             except tf.errors.OutOfRangeError:
                 break
 
