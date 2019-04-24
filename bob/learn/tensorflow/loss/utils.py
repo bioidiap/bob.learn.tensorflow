@@ -1,7 +1,11 @@
+#!/usr/bin/env python
+# vim: set fileencoding=utf-8 :
+# @author: Amir Mohammadi <amir.mohammadi@idiap.ch>
+
 import tensorflow as tf
 
 
-def balanced_softmax_cross_entropy_loss_weights(labels, dtype):
+def balanced_softmax_cross_entropy_loss_weights(labels, dtype="float32"):
     """Computes weights that normalizes your loss per class.
 
     Labels must be a batch of one-hot encoded labels. The function takes labels and
@@ -82,7 +86,7 @@ def balanced_softmax_cross_entropy_loss_weights(labels, dtype):
     return weights
 
 
-def balanced_sigmoid_cross_entropy_loss_weights(labels, dtype):
+def balanced_sigmoid_cross_entropy_loss_weights(labels, dtype="float32"):
     """Computes weights that normalizes your loss per class.
 
     Labels must be a batch of binary labels. The function takes labels and
