@@ -30,7 +30,10 @@ def balanced_softmax_cross_entropy_loss_weights(labels, dtype="float32"):
 
     Examples
     --------
-    >>> labels = array([[1, 0, 0],
+    >>> import numpy
+    >>> import tensorflow as tf
+    >>> from bob.learn.tensorflow.loss import balanced_softmax_cross_entropy_loss_weights
+    >>> labels = numpy.array([[1, 0, 0],
     ...                 [1, 0, 0],
     ...                 [0, 0, 1],
     ...                 [0, 1, 0],
@@ -61,10 +64,11 @@ def balanced_softmax_cross_entropy_loss_weights(labels, dtype="float32"):
     ...                 [0, 1, 0],
     ...                 [1, 0, 0],
     ...                 [0, 0, 1],
-    ...                 [1, 0, 0]], dtype=int32)
-    >>> tf.reduce_sum(labels, axis=0)
+    ...                 [1, 0, 0]], dtype="int32")
+    >>> session = tf.Session() # Eager execution is also possible check https://www.tensorflow.org/guide/eager
+    >>> session.run(tf.reduce_sum(labels, axis=0))
     array([20,  5,  7], dtype=int32)
-    >>> balanced_softmax_cross_entropy_loss_weights(labels, dtype='float32')
+    >>> session.run(balanced_softmax_cross_entropy_loss_weights(labels, dtype='float32'))
     array([0.53333336, 0.53333336, 1.5238096 , 2.1333334 , 1.5238096 ,
            0.53333336, 0.53333336, 1.5238096 , 0.53333336, 0.53333336,
            0.53333336, 0.53333336, 0.53333336, 0.53333336, 2.1333334 ,
@@ -75,8 +79,8 @@ def balanced_softmax_cross_entropy_loss_weights(labels, dtype="float32"):
 
     You would use it like this:
 
-    >>> weights = balanced_softmax_cross_entropy_loss_weights(labels, dtype=logits.dtype)
-    >>> loss = tf.losses.softmax_cross_entropy(logits=logits, labels=labels, weights=weights)
+    >>> #weights = balanced_softmax_cross_entropy_loss_weights(labels, dtype=logits.dtype)
+    >>> #loss = tf.losses.softmax_cross_entropy(logits=logits, labels=labels, weights=weights)
     """
     shape = tf.cast(tf.shape(labels), dtype=dtype)
     batch_size, n_classes = shape[0], shape[1]
@@ -110,11 +114,15 @@ def balanced_sigmoid_cross_entropy_loss_weights(labels, dtype="float32"):
 
     Examples
     --------
-    >>> labels = array([1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1, 0,
-    ...                 1, 1, 0, 1, 1, 1, 0, 1, 0, 1], dtype=int32)
+    >>> import numpy
+    >>> import tensorflow as tf
+    >>> from bob.learn.tensorflow.loss import balanced_sigmoid_cross_entropy_loss_weights
+    >>> labels = numpy.array([1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1, 0,
+    ...                 1, 1, 0, 1, 1, 1, 0, 1, 0, 1], dtype="int32")
     >>> sum(labels), len(labels)
-    20, 32
-    >>> balanced_sigmoid_cross_entropy_loss_weights(labels, dtype='float32')
+    (20, 32)
+    >>> session = tf.Session() # Eager execution is also possible check https://www.tensorflow.org/guide/eager
+    >>> session.run(balanced_sigmoid_cross_entropy_loss_weights(labels, dtype='float32'))
     array([0.8      , 0.8      , 1.3333334, 1.3333334, 1.3333334, 0.8      ,
            0.8      , 1.3333334, 0.8      , 0.8      , 0.8      , 0.8      ,
            0.8      , 0.8      , 1.3333334, 0.8      , 1.3333334, 0.8      ,
@@ -124,8 +132,8 @@ def balanced_sigmoid_cross_entropy_loss_weights(labels, dtype="float32"):
 
     You would use it like this:
 
-    >>> weights = balanced_sigmoid_cross_entropy_loss_weights(labels, dtype=logits.dtype)
-    >>> loss = tf.losses.sigmoid_cross_entropy(logits=logits, labels=labels, weights=weights)
+    >>> #weights = balanced_sigmoid_cross_entropy_loss_weights(labels, dtype=logits.dtype)
+    >>> #loss = tf.losses.sigmoid_cross_entropy(logits=logits, labels=labels, weights=weights)
     """
     labels = tf.cast(labels, dtype='int32')
     batch_size = tf.cast(tf.shape(labels)[0], dtype=dtype)

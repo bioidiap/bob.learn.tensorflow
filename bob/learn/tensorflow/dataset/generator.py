@@ -84,6 +84,27 @@ class Generator:
 
 
 def dataset_using_generator(*args, **kwargs):
+    """
+    A generator class which wraps samples so that they can
+    be used with tf.data.Dataset.from_generator
+
+    Attributes
+    ----------
+
+     samples : [:obj:`object`]
+        A list of samples to be given to ``reader`` to load the data.
+
+     reader : :obj:`object`, optional
+        A callable with the signature of ``data, label, key = reader(sample)``
+        which takes a sample and loads it.
+
+     multiple_samples : :obj:`bool`, optional
+        If true, it assumes that the bio database's samples actually contain
+        multiple samples. This is useful for when you want to for example treat
+        video databases as image databases.
+     
+    """
+
     generator = Generator(*args, **kwargs)
     dataset = tf.data.Dataset.from_generator(
         generator, generator.output_types, generator.output_shapes
