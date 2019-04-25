@@ -18,6 +18,7 @@ from . import append_image_augmentation, DEFAULT_FEATURE
 logger = logging.getLogger(__name__)
 TFRECORDS_EXT = ".tfrecords"
 
+
 def tfrecord_name_and_json_name(output):
     output = normalize_tfrecords_path(output)
     json_output = output[: -len(TFRECORDS_EXT)] + ".json"
@@ -341,57 +342,56 @@ def shuffle_data_and_labels_image_augmentation(
     random_crop=False,
     drop_remainder=False,
 ):
-    """
-  Dump random batches from a list of tf-record files and applies some image augmentation
+    """Dump random batches from a list of tf-record files and applies some image augmentation
 
-  **Parameters**
+    Attributes
+    ----------
 
-     tfrecord_filenames:
+      tfrecord_filenames:
         List containing the tf-record paths
 
-     data_shape:
+      data_shape:
         Samples shape saved in the tf-record
 
-     data_type:
+      data_type:
         tf data type(https://www.tensorflow.org/versions/r0.12/resources/dims_types#data_types)
 
-     batch_size:
+      batch_size:
         Size of the batch
 
-     epochs:
-         Number of epochs to be batched
+      epochs:
+        Number of epochs to be batched
 
-     buffer_size:
-          Size of the shuffle bucket
+      buffer_size:
+        Size of the shuffle bucket
 
-     gray_scale:
+      gray_scale:
         Convert to gray scale?
 
-     output_shape:
+      output_shape:
         If set, will randomly crop the image given the output shape
 
-     random_flip:
+      random_flip:
         Randomly flip an image horizontally  (https://www.tensorflow.org/api_docs/python/tf/image/random_flip_left_right)
 
-     random_brightness:
-         Adjust the brightness of an RGB image by a random factor (https://www.tensorflow.org/api_docs/python/tf/image/random_brightness)
+      random_brightness:
+        Adjust the brightness of an RGB image by a random factor (https://www.tensorflow.org/api_docs/python/tf/image/random_brightness)
 
-     random_contrast:
-         Adjust the contrast of an RGB image by a random factor (https://www.tensorflow.org/api_docs/python/tf/image/random_contrast)
+      random_contrast:
+        Adjust the contrast of an RGB image by a random factor (https://www.tensorflow.org/api_docs/python/tf/image/random_contrast)
 
-     random_saturation:
-         Adjust the saturation of an RGB image by a random factor (https://www.tensorflow.org/api_docs/python/tf/image/random_saturation)
+      random_saturation:
+        Adjust the saturation of an RGB image by a random factor (https://www.tensorflow.org/api_docs/python/tf/image/random_saturation)
 
-     random_rotate:
-         Randomly rotate face images between -5 and 5 degrees
+      random_rotate:
+        Randomly rotate face images between -5 and 5 degrees
 
-     per_image_normalization:
-         Linearly scales image to have zero mean and unit norm.
+      per_image_normalization:
+        Linearly scales image to have zero mean and unit norm.
 
-     drop_remainder:
-         If True, the last remaining batch that has smaller size than `batch_size' will be dropped.
-
-  """
+      drop_remainder:
+        If True, the last remaining batch that has smaller size than batch_size will be dropped.
+    """
 
     dataset = create_dataset_from_records_with_augmentation(
         tfrecord_filenames,
@@ -516,29 +516,29 @@ def batch_data_and_labels_image_augmentation(
     drop_remainder=False,
 ):
     """
-  Dump in order batches from a list of tf-record files
+    Dump in order batches from a list of tf-record files
 
-  **Parameters**
+    Attributes
+    ----------
 
-     tfrecord_filenames:
-        List containing the tf-record paths
+       tfrecord_filenames:
+          List containing the tf-record paths
 
-     data_shape:
-        Samples shape saved in the tf-record
+       data_shape:
+          Samples shape saved in the tf-record
 
-     data_type:
-        tf data type(https://www.tensorflow.org/versions/r0.12/resources/dims_types#data_types)
+       data_type:
+          tf data type(https://www.tensorflow.org/versions/r0.12/resources/dims_types#data_types)
 
-     batch_size:
-        Size of the batch
+       batch_size:
+          Size of the batch
 
-     epochs:
-         Number of epochs to be batched
+       epochs:
+           Number of epochs to be batched
 
-     drop_remainder:
-         If True, the last remaining batch that has smaller size than `batch_size' will be dropped.
-
-  """
+       drop_remainder:
+           If True, the last remaining batch that has smaller size than batch_size will be dropped.
+    """
 
     dataset = create_dataset_from_records_with_augmentation(
         tfrecord_filenames,
