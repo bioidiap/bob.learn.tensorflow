@@ -46,20 +46,28 @@ setup(
         # main entry for bob tf cli
         'bob.cli': [
             'tf = bob.learn.tensorflow.script.tf:tf',
+            'keras = bob.learn.tensorflow.script.keras:keras',
         ],
 
         # bob tf scripts
         'bob.learn.tensorflow.cli': [
-            'cache_dataset = bob.learn.tensorflow.script.cache_dataset:cache_dataset',
-            'compute_statistics = bob.learn.tensorflow.script.compute_statistics:compute_statistics',
-            'db_to_tfrecords = bob.learn.tensorflow.script.db_to_tfrecords:db_to_tfrecords',
-            'describe_tfrecord = bob.learn.tensorflow.script.db_to_tfrecords:describe_tfrecord',
+            'cache-dataset = bob.learn.tensorflow.script.cache_dataset:cache_dataset',
+            'compute-statistics = bob.learn.tensorflow.script.compute_statistics:compute_statistics',
+            'datasets-to-tfrecords = bob.learn.tensorflow.script.db_to_tfrecords:datasets_to_tfrecords',
+            'db-to-tfrecords = bob.learn.tensorflow.script.db_to_tfrecords:db_to_tfrecords',
+            'describe-tfrecord = bob.learn.tensorflow.script.db_to_tfrecords:describe_tfrecord',
+            'distance-matrix = bob.learn.tensorflow.script.cgm:distance_matrix',
             'eval = bob.learn.tensorflow.script.eval:eval',
-            'predict_bio = bob.learn.tensorflow.script.predict_bio:predict_bio',
-            'style_transfer = bob.learn.tensorflow.script.style_transfer:style_transfer',
+            'predict = bob.learn.tensorflow.script.predict_bio:predict',
+            'predict-bio = bob.learn.tensorflow.script.predict_bio:predict_bio',
+            'style-transfer = bob.learn.tensorflow.script.style_transfer:style_transfer',
             'train = bob.learn.tensorflow.script.train:train',
-            'train_and_evaluate = bob.learn.tensorflow.script.train_and_evaluate:train_and_evaluate',
+            'train-and-evaluate = bob.learn.tensorflow.script.train_and_evaluate:train_and_evaluate',
             'trim = bob.learn.tensorflow.script.trim:trim',
+        ],
+        # bob keras scripts
+        'bob.learn.tensorflow.keras_cli': [
+            'fit = bob.learn.tensorflow.script.fit:fit',
         ],
     },
 

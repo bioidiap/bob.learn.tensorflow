@@ -27,6 +27,7 @@ Architectures
     bob.learn.tensorflow.network.light_cnn9
     bob.learn.tensorflow.network.dummy
     bob.learn.tensorflow.network.mlp
+    bob.learn.tensorflow.network.mlp_with_batchnorm_and_dropout
     bob.learn.tensorflow.network.inception_resnet_v2
     bob.learn.tensorflow.network.inception_resnet_v1
     bob.learn.tensorflow.network.inception_resnet_v2_batch_norm
@@ -46,6 +47,7 @@ Data
     bob.learn.tensorflow.dataset.triplet_image.shuffle_data_and_labels_image_augmentation
     bob.learn.tensorflow.dataset.tfrecords.shuffle_data_and_labels_image_augmentation
     bob.learn.tensorflow.dataset.tfrecords.shuffle_data_and_labels
+    bob.learn.tensorflow.dataset.generator.dataset_using_generator
     bob.learn.tensorflow.utils.util.to_channels_last
     bob.learn.tensorflow.utils.util.to_channels_first
 
@@ -70,6 +72,8 @@ Losses
     bob.learn.tensorflow.loss.linear_gram_style_loss
     bob.learn.tensorflow.loss.content_loss
     bob.learn.tensorflow.loss.denoising_loss
+    bob.learn.tensorflow.loss.balanced_softmax_cross_entropy_loss_weights
+    bob.learn.tensorflow.loss.balanced_sigmoid_cross_entropy_loss_weights
 
 
 

@@ -10,8 +10,9 @@ def append_logits(graph,
                   n_classes,
                   reuse=False,
                   l2_regularizer=5e-05,
-                  weights_std=0.1, trainable_variables=None):
-    trainable = is_trainable('Logits', trainable_variables)
+                  weights_std=0.1, trainable_variables=None,
+                  name='Logits'):
+    trainable = is_trainable(name, trainable_variables)
     return slim.fully_connected(
         graph,
         n_classes,
@@ -19,7 +20,7 @@ def append_logits(graph,
         weights_initializer=tf.truncated_normal_initializer(
             stddev=weights_std),
         weights_regularizer=slim.l2_regularizer(l2_regularizer),
-        scope='Logits',
+        scope=name,
         reuse=reuse,
         trainable=trainable,
     )

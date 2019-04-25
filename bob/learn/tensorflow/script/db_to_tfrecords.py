@@ -4,126 +4,90 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+import logging
+import os
 import random
 import tempfile
-import os
-import sys
-import logging
 import click
 import tensorflow as tf
-from bob.io.base import create_directories_safe
+from bob.io.base import create_directories_safe, HDF5File
 from bob.extension.scripts.click_helper import (
-    verbosity_option, ConfigCommand, ResourceOption, log_parameters)
-import numpy
-from bob.learn.tensorflow.dataset.tfrecords import describe_tf_record
+    verbosity_option,
+    ConfigCommand,
+    ResourceOption,
+    log_parameters,
+)
+from bob.learn.tensorflow.dataset.tfrecords import (
+    describe_tf_record,
+    write_a_sample,
+    normalize_tfrecords_path,
+    tfrecord_name_and_json_name,
+    dataset_to_tfrecord,
+)
+from bob.learn.tensorflow.utils import bytes2human
 
 
 logger = logging.getLogger(__name__)
 
 
-def bytes_feature(value):
-    return tf.train.Feature(bytes_list=tf.train.BytesList(value=[value]))
-
-
-def int64_feature(value):
-    return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
-
-
-def write_a_sample(writer, data, label, key, feature=None,
-                   size_estimate=False):
-    if feature is None:
-        feature = {
-            'data': bytes_feature(data.tostring()),
-            'label': int64_feature(label),
-            'key': bytes_feature(key)
-        }
-
-    example = tf.train.Example(features=tf.train.Features(feature=feature))
-    example = example.SerializeToString()
-    if not size_estimate:
-        writer.write(example)
-    return sys.getsizeof(example)
-
-
-def _bytes2human(n, format='%(value).1f %(symbol)s', symbols='customary'):
-    """Convert n bytes into a human readable string based on format.
-    From: https://code.activestate.com/recipes/578019-bytes-to-human-human-to-
-    bytes-converter/
-    Author: Giampaolo Rodola' <g.rodola [AT] gmail [DOT] com>
-    License: MIT
-    symbols can be either "customary", "customary_ext", "iec" or "iec_ext",
-    see: http://goo.gl/kTQMs
-    """
-    SYMBOLS = {
-        'customary': ('B', 'K', 'M', 'G', 'T', 'P', 'E', 'Z', 'Y'),
-        'customary_ext': ('byte', 'kilo', 'mega', 'giga', 'tera', 'peta',
-                          'exa', 'zetta', 'iotta'),
-        'iec': ('Bi', 'Ki', 'Mi', 'Gi', 'Ti', 'Pi', 'Ei', 'Zi', 'Yi'),
-        'iec_ext': ('byte', 'kibi', 'mebi', 'gibi', 'tebi', 'pebi', 'exbi',
-                    'zebi', 'yobi'),
-    }
-    n = int(n)
-    if n < 0:
-        raise ValueError("n < 0")
-    symbols = SYMBOLS[symbols]
-    prefix = {}
-    for i, s in enumerate(symbols[1:]):
-        prefix[s] = 1 << (i + 1) * 10
-    for symbol in reversed(symbols[1:]):
-        if n >= prefix[symbol]:
-            value = float(n) / prefix[symbol]
-            return format % locals()
-    return format % dict(symbol=symbols[0], value=n)
-
-
-@click.command(
-    entry_point_group='bob.learn.tensorflow.config', cls=ConfigCommand)
+@click.command(entry_point_group="bob.learn.tensorflow.config", cls=ConfigCommand)
 @click.option(
-    '--samples',
+    "--samples",
     required=True,
     cls=ResourceOption,
-    help='A list of all samples that you want to write in the '
-    'tfrecords file. Whatever is inside this list is passed to '
-    'the reader.')
+    help="A list of all samples that you want to write in the "
+    "tfrecords file. Whatever is inside this list is passed to "
+    "the reader.",
+)
 @click.option(
-    '--reader',
+    "--reader",
     required=True,
     cls=ResourceOption,
-    help='a function with the signature of ``data, label, key = '
-    'reader(sample)`` which takes a sample and returns the '
-    'loaded data, the label of the data, and a key which is '
-    'unique for every sample.')
+    help="a function with the signature of ``data, label, key = "
+    "reader(sample)`` which takes a sample and returns the "
+    "loaded data, the label of the data, and a key which is "
+    "unique for every sample.",
+)
 @click.option(
-    '--output',
-    '-o',
-    required=True,
-    cls=ResourceOption,
-    help='Name of the output file.')
+    "--output", "-o", required=True, cls=ResourceOption, help="Name of the output file."
+)
 @click.option(
-    '--shuffle',
+    "--shuffle",
     is_flag=True,
     cls=ResourceOption,
-    help='If provided, it will shuffle the samples.')
+    help="If provided, it will shuffle the samples.",
+)
 @click.option(
-    '--allow-failures',
+    "--allow-failures",
     is_flag=True,
     cls=ResourceOption,
-    help='If provided, the samples which fail to load are ignored.')
+    help="If provided, the samples which fail to load are ignored.",
+)
 @click.option(
-    '--multiple-samples',
+    "--multiple-samples",
     is_flag=True,
     cls=ResourceOption,
-    help='If provided, it means that the data provided by reader contains '
-    'multiple samples with same label and path.')
+    help="If provided, it means that the data provided by reader contains "
+    "multiple samples with same label and path.",
+)
 @click.option(
-    '--size-estimate',
+    "--size-estimate",
     is_flag=True,
     cls=ResourceOption,
-    help='If given, will print the estimated file size instead of creating '
-    'the final tfrecord file.')
+    help="If given, will print the estimated file size instead of creating "
+    "the final tfrecord file.",
+)
 @verbosity_option(cls=ResourceOption)
-def db_to_tfrecords(samples, reader, output, shuffle, allow_failures,
-                    multiple_samples, size_estimate, **kwargs):
+def db_to_tfrecords(
+    samples,
+    reader,
+    output,
+    shuffle,
+    allow_failures,
+    multiple_samples,
+    size_estimate,
+    **kwargs,
+):
     """Converts Bio and PAD datasets to TFRecords file formats.
 
     The best way to use this script is to send it to the io-big queue if you
@@ -173,14 +137,13 @@ def db_to_tfrecords(samples, reader, output, shuffle, allow_failures,
             key = biofile.path
             return (data, label, key)
     """
-    log_parameters(logger, ignore=('samples', ))
+    log_parameters(logger, ignore=("samples",))
     logger.debug("len(samples): %d", len(samples))
 
     if size_estimate:
-        output = tempfile.NamedTemporaryFile(suffix='.tfrecords').name
+        output = tempfile.NamedTemporaryFile(suffix=".tfrecords").name
 
-    if not output.endswith(".tfrecords"):
-        output += ".tfrecords"
+    output = normalize_tfrecords_path(output)
 
     if not size_estimate:
         logger.info("Writing samples to `{}'".format(output))
@@ -196,7 +159,7 @@ def db_to_tfrecords(samples, reader, output, shuffle, allow_failures,
             logger.info("Shuffling the samples before writing ...")
             random.shuffle(samples)
         for i, sample in enumerate(samples):
-            logger.info('Processing file %d out of %d', i + 1, n_samples)
+            logger.info("Processing file %d out of %d", i + 1, n_samples)
 
             data, label, key = reader(sample)
 
@@ -205,55 +168,43 @@ def db_to_tfrecords(samples, reader, output, shuffle, allow_failures,
                     logger.debug("... Skipping `{0}`.".format(sample))
                     continue
                 else:
-                    raise RuntimeError(
-                        "Reading failed for `{0}`".format(sample))
+                    raise RuntimeError("Reading failed for `{0}`".format(sample))
 
             if multiple_samples:
                 for sample in data:
                     total_size += write_a_sample(
-                        writer,
-                        sample,
-                        label,
-                        key,
-                        size_estimate=size_estimate)
+                        writer, sample, label, key, size_estimate=size_estimate
+                    )
                     sample_count += 1
             else:
                 total_size += write_a_sample(
-                    writer, data, label, key, size_estimate=size_estimate)
+                    writer, data, label, key, size_estimate=size_estimate
+                )
                 sample_count += 1
 
     if not size_estimate:
-        click.echo(
-            "Wrote {} samples into the tfrecords file.".format(sample_count))
+        click.echo("Wrote {} samples into the tfrecords file.".format(sample_count))
     else:
         # delete the empty tfrecords file
         try:
             os.remove(output)
         except Exception:
             pass
-    click.echo("The total size of the tfrecords file will be roughly "
-               "{} bytes".format(_bytes2human(total_size)))
+    click.echo(
+        "The total size of the tfrecords file will be roughly "
+        "{} bytes".format(bytes2human(total_size))
+    )
 
 
 @click.command()
-@click.argument(
-    'tf-record-path',
-    nargs=1)
-@click.argument(
-    'shape',
-    type=int,
-    nargs=-1
-)
+@click.argument("tf-record-path", nargs=1)
+@click.argument("shape", type=int, nargs=-1)
 @click.option(
-    '--batch-size',
-    help='Batch size',
-    show_default=True,
-    required=True,
-    default=1000
+    "--batch-size", help="Batch size", show_default=True, required=True, default=1000
 )
 @verbosity_option(cls=ResourceOption)
 def describe_tfrecord(tf_record_path, shape, batch_size, **kwargs):
-    '''
+    """
     Very often you have a tf-record file, or a set of them, and you have no
     idea how many samples you have there. Even worse, you have no idea how many
     classes you have.
@@ -262,9 +213,58 @@ def describe_tfrecord(tf_record_path, shape, batch_size, **kwargs):
 
         $ %(prog)s <tf-record-path> 182 182 3
 
-    '''
+    """
     n_samples, n_labels = describe_tf_record(tf_record_path, shape, batch_size)
     click.echo("#############################################")
     click.echo("Number of samples {0}".format(n_samples))
     click.echo("Number of labels {0}".format(n_labels))
     click.echo("#############################################")
+
+
+@click.command(entry_point_group="bob.learn.tensorflow.config", cls=ConfigCommand)
+@click.option(
+    "--dataset",
+    required=True,
+    cls=ResourceOption,
+    entry_point_group="bob.learn.tensorflow.dataset",
+    help="A tf.data.Dataset to be used.",
+)
+@click.option(
+    "--output", "-o", required=True, cls=ResourceOption, help="Name of the output file."
+)
+@click.option(
+    "--force",
+    "-f",
+    is_flag=True,
+    cls=ResourceOption,
+    help="Whether to overwrite existing files.",
+)
+@verbosity_option(cls=ResourceOption)
+def datasets_to_tfrecords(dataset, output, force, **kwargs):
+    """Converts tensorflow datasets into TFRecords.
+    Takes a list of datasets and outputs and writes each dataset into its output.
+    ``datasets`` and ``outputs`` variables must be lists.
+    You can convert the written TFRecord files back to datasets using
+    :any:`bob.learn.tensorflow.dataset.tfrecords.dataset_from_tfrecord`.
+
+    To use this script with SGE, change your dataset and output based on the SGE_TASK_ID
+    environment variable in your config file.
+    """
+    log_parameters(logger)
+
+    output, json_output = tfrecord_name_and_json_name(output)
+    if not force and os.path.isfile(output):
+        click.echo("Output file already exists: {}".format(output))
+        return
+
+    click.echo("Writing tfrecod to: {}".format(output))
+    with tf.Session() as sess:
+        os.makedirs(os.path.dirname(output), exist_ok=True)
+        try:
+            sess.run(dataset_to_tfrecord(dataset, output))
+        except Exception:
+            click.echo("Something failed. Deleting unfinished files.")
+            os.remove(output)
+            os.remove(json_output)
+            raise
+    click.echo("Successfully wrote all files.")

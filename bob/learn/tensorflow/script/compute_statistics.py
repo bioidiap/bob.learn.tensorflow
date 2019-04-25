@@ -15,7 +15,15 @@ logger = logging.getLogger(__name__)
 
 
 @click.command(
-    entry_point_group='bob.learn.tensorflow.config', cls=ConfigCommand)
+    entry_point_group='bob.learn.tensorflow.config', cls=ConfigCommand,
+    epilog="""\b
+An example configuration could be::
+    # define the database:
+    from bob.bio.base.test.dummy.database import database
+    groups = ['dev']
+    biofiles = database.all_files(groups)
+"""
+)
 @click.option(
     '--database',
     '-d',
@@ -50,14 +58,6 @@ def compute_statistics(database, biofiles, load_data, multiple_samples,
 
     This script works with bob.bio.base databases. It will load all the samples
     and print their mean.
-
-    An example configuration could be::
-
-        # define the database:
-        from bob.bio.base.test.dummy.database import database
-
-        groups = ['dev']
-        biofiles = database.all_files(groups)
     """
     log_parameters(logger, ignore=('biofiles', ))
     logger.debug("len(biofiles): %d", len(biofiles))

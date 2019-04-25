@@ -17,6 +17,10 @@ from .test_estimator_transfer import dummy_adapted
 
 import shutil
 
+# Fixing problem with MAC https://github.com/dmlc/xgboost/issues/1715
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
 tfrecord_train = "./train_mnist.tfrecord"
 tfrecord_validation = "./validation_mnist.tfrecord"
 model_dir = "./temp"

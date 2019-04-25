@@ -20,6 +20,9 @@ import numpy
 import shutil
 import os
 
+# Fixing problem with MAC https://github.com/dmlc/xgboost/issues/1715
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
 tfrecord_train = "./train_mnist.tfrecord"
 tfrecord_validation = "./validation_mnist.tfrecord"
 model_dir = "./temp"

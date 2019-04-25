@@ -18,6 +18,11 @@ from bob.learn.tensorflow.utils import reproducible
 import pkg_resources
 import shutil
 
+
+# Fixing problem with MAC https://github.com/dmlc/xgboost/issues/1715
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
 tfrecord_train = "./train_mnist.tfrecord"
 tfrecord_validation = "./validation_mnist.tfrecord"
 model_dir = "./temp"

@@ -19,9 +19,9 @@ def contrastive_loss(left_embedding,
     http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
 
     :math:`L = 0.5 * (1-Y) * D^2 + 0.5 * (Y) * {max(0, margin - D)}^2`
-    
+
     where, `0` are assign for pairs from the same class and `1` from pairs from different classes.
-    
+
 
     **Parameters**
 
@@ -65,15 +65,10 @@ def contrastive_loss(left_embedding,
 
         with tf.name_scope("total_loss"):
             loss = 0.5 * (within_class + between_class)
-            loss = tf.reduce_mean(loss, name="total_loss_raw")
-            tf.summary.scalar('loss_raw', loss)
+            loss = tf.reduce_mean(loss, name="contrastive_loss")
             tf.add_to_collection(tf.GraphKeys.LOSSES, loss)
 
-            ## Appending the regularization loss
-            #regularization_losses = tf.get_collection(tf.GraphKeys.REGULARIZATION_LOSSES)
-            #loss = tf.add_n([loss] + regularization_losses, name="total_loss")
-
-        tf.summary.scalar('loss', loss)
+        tf.summary.scalar('contrastive_loss', loss)
         tf.summary.scalar('between_class', between_class_loss)
         tf.summary.scalar('within_class', within_class_loss)
 
