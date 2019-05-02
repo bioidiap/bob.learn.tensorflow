@@ -16,6 +16,8 @@ Estimators
     bob.learn.tensorflow.estimators.Triplet
     bob.learn.tensorflow.estimators.Siamese
     bob.learn.tensorflow.estimators.Regressor
+    bob.learn.tensorflow.estimators.MovingAverageOptimizer
+    bob.learn.tensorflow.estimators.learning_rate_decay_fn
 
 
 
