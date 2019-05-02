@@ -344,7 +344,7 @@ def shuffle_data_and_labels_image_augmentation(
 ):
     """Dump random batches from a list of tf-record files and applies some image augmentation
 
-    Attributes
+    Parameters
     ----------
 
       tfrecord_filenames:
@@ -518,7 +518,7 @@ def batch_data_and_labels_image_augmentation(
     """
     Dump in order batches from a list of tf-record files
 
-    Attributes
+    Parameters
     ----------
 
        tfrecord_filenames:
