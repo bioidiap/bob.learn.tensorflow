@@ -15,17 +15,17 @@ def balanced_softmax_cross_entropy_loss_weights(labels, dtype="float32"):
 
     Parameters
     ----------
-    labels : tf.Tensor
+    labels : ``tf.Tensor``
         Labels of your current input. The shape must be [batch_size, n_classes]. If your
         labels are not one-hot encoded, you can use ``tf.one_hot`` to convert them first
         before giving them to this function.
-    dtype : dtype
+    dtype : ``tf.dtype``
         The dtype that weights will have. It should be float. Best is to provide
         logits.dtype as input.
 
     Returns
     -------
-    tf.Tensor
+    ``tf.Tensor``
         Computed weights that will cancel your dataset imbalance per batch.
 
     Examples
@@ -100,16 +100,16 @@ def balanced_sigmoid_cross_entropy_loss_weights(labels, dtype="float32"):
 
     Parameters
     ----------
-    labels : tf.Tensor
+    labels : ``tf.Tensor``
         Labels of your current input. The shape must be [batch_size] and values must be
         either 0 or 1.
-    dtype : dtype
+    dtype : ``tf.dtype``
         The dtype that weights will have. It should be float. Best is to provide
         logits.dtype as input.
 
     Returns
     -------
-    tf.Tensor
+    ``tf.Tensor``
         Computed weights that will cancel your dataset imbalance per batch.
 
     Examples

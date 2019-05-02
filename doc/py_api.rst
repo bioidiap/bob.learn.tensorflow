@@ -86,6 +86,7 @@ Detailed Information
 .. automodule:: bob.learn.tensorflow
 .. automodule:: bob.learn.tensorflow.estimators
 .. automodule:: bob.learn.tensorflow.dataset
+.. automodule:: bob.learn.tensorflow.dataset.generator
 .. automodule:: bob.learn.tensorflow.dataset.bio
 .. automodule:: bob.learn.tensorflow.dataset.image
 .. automodule:: bob.learn.tensorflow.dataset.siamese_image
