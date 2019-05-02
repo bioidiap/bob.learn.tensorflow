@@ -116,7 +116,7 @@ class Siamese(estimator.Estimator):
                     loss=self.loss,
                     global_step=tf.train.get_or_create_global_step(),
                     optimizer=self.optimizer,
-                    learning_rate=self.learning_rate,
+                    learning_rate=self.optimize_loss_learning_rate,
                 )
 
                 # add histograms summaries
