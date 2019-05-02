@@ -53,6 +53,7 @@ setup(
         'bob.learn.tensorflow.cli': [
             'cache-dataset = bob.learn.tensorflow.script.cache_dataset:cache_dataset',
             'compute-statistics = bob.learn.tensorflow.script.compute_statistics:compute_statistics',
+            'dataset-to-hdf5 = bob.learn.tensorflow.script.db_to_tfrecords:dataset_to_hdf5',
             'datasets-to-tfrecords = bob.learn.tensorflow.script.db_to_tfrecords:datasets_to_tfrecords',
             'db-to-tfrecords = bob.learn.tensorflow.script.db_to_tfrecords:db_to_tfrecords',
             'describe-tfrecord = bob.learn.tensorflow.script.db_to_tfrecords:describe_tfrecord',
