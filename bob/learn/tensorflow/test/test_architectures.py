@@ -100,6 +100,7 @@ def test_inceptionv1_adaptation():
 
 def test_vgg():
     tf.reset_default_graph()
+
     # Testing VGG19 Training mode
     inputs = tf.placeholder(tf.float32, shape=(1, 224, 224, 3))
     graph, _ = vgg_19(inputs)
@@ -116,10 +117,11 @@ def test_vgg():
     tf.reset_default_graph()
     assert len(tf.global_variables()) == 0
 
-   # Testing VGG 16 training mode
+
+    # Testing VGG 16 training mode
     inputs = tf.placeholder(tf.float32, shape=(1, 224, 224, 3))
     graph, _ = vgg_16(inputs)
-    assert len(tf.trainable_variables()) == 32
+    assert len(tf.trainable_variables()) == 30
 
     tf.reset_default_graph()
     assert len(tf.global_variables()) == 0
