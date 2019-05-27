@@ -1,4 +1,4 @@
-from .Base import Base
+from .Base import Base, normalize_checkpoint_path
 from .Generic import Generic
 from .Estimator import Estimator
 

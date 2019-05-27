@@ -6,15 +6,14 @@ import tensorflow as tf
 
 
 def check_features(features):
-    if not 'data' in features.keys() or not 'key' in features.keys():
+    if "data" not in features or "key" not in features:
         raise ValueError(
             "The input function needs to contain a dictionary with the keys `data` and `key` "
         )
     return True
 
 
-def get_trainable_variables(extra_checkpoint,
-                            mode=tf.estimator.ModeKeys.TRAIN):
+def get_trainable_variables(extra_checkpoint, mode=tf.estimator.ModeKeys.TRAIN):
     """
     Given the extra_checkpoint dictionary provided to the estimator,
     extract the content of "trainable_variables".
@@ -51,6 +50,7 @@ def get_trainable_variables(extra_checkpoint,
     return extra_checkpoint["trainable_variables"]
 
 
+from .utils import MovingAverageOptimizer, learning_rate_decay_fn
 from .Logits import Logits, LogitsCenterLoss
 from .Siamese import Siamese
 from .Triplet import Triplet
@@ -73,5 +73,7 @@ def __appropriate__(*args):
         obj.__module__ = __name__
 
 
-__appropriate__(Logits, LogitsCenterLoss, Siamese, Triplet, Regressor)
-__all__ = [_ for _ in dir() if not _.startswith('_')]
+__appropriate__(
+    Logits, LogitsCenterLoss, Siamese, Triplet, Regressor, MovingAverageOptimizer
+)
+__all__ = [_ for _ in dir() if not _.startswith("_")]

@@ -44,7 +44,7 @@ def dataset_to_tfrecord(dataset, output):
 
     Parameters
     ----------
-    dataset : tf.data.Dataset
+    dataset : ``tf.data.Dataset``
         The tf.data.Dataset that you want to write into a TFRecord file.
     output : str
         Path to the TFRecord file. Besides this file, a .json file is also created.
@@ -53,7 +53,7 @@ def dataset_to_tfrecord(dataset, output):
 
     Returns
     -------
-    tf.Operation
+    ``tf.Operation``
         A tf.Operation that, when run, writes contents of dataset to a file. When
         running in eager mode, calling this function will write the file. Otherwise, you
         have to call session.run() on the returned operation.
@@ -100,7 +100,7 @@ def dataset_from_tfrecord(tfrecord):
 
     Returns
     -------
-    tf.data.Dataset
+    ``tf.data.Dataset``
         A dataset that contains the data from the TFRecord file.
     """
     # these imports are needed so that eval can work
@@ -344,7 +344,7 @@ def shuffle_data_and_labels_image_augmentation(
 ):
     """Dump random batches from a list of tf-record files and applies some image augmentation
 
-    Attributes
+    Parameters
     ----------
 
       tfrecord_filenames:
@@ -468,7 +468,8 @@ def batch_data_and_labels(
     """
   Dump in order batches from a list of tf-record files
 
-  **Parameters**
+  Parameters
+  ----------
 
      tfrecord_filenames:
         List containing the tf-record paths
@@ -518,7 +519,7 @@ def batch_data_and_labels_image_augmentation(
     """
     Dump in order batches from a list of tf-record files
 
-    Attributes
+    Parameters
     ----------
 
        tfrecord_filenames:

@@ -16,6 +16,8 @@ Estimators
     bob.learn.tensorflow.estimators.Triplet
     bob.learn.tensorflow.estimators.Siamese
     bob.learn.tensorflow.estimators.Regressor
+    bob.learn.tensorflow.estimators.MovingAverageOptimizer
+    bob.learn.tensorflow.estimators.learning_rate_decay_fn
 
 
 
@@ -84,6 +86,7 @@ Detailed Information
 .. automodule:: bob.learn.tensorflow
 .. automodule:: bob.learn.tensorflow.estimators
 .. automodule:: bob.learn.tensorflow.dataset
+.. automodule:: bob.learn.tensorflow.dataset.generator
 .. automodule:: bob.learn.tensorflow.dataset.bio
 .. automodule:: bob.learn.tensorflow.dataset.image
 .. automodule:: bob.learn.tensorflow.dataset.siamese_image

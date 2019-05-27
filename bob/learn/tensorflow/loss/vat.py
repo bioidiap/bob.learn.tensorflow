@@ -103,6 +103,8 @@ class VATLoss:
         NotImplementedError
             If self.method is not ``vat`` or ``vatent``.
         """
+        if mode != tf.estimator.ModeKeys.TRAIN:
+            return 0.
         architecture = partial(architecture, reuse=True)
         with tf.variable_scope(tf.get_variable_scope(), reuse=True):
             vat_loss = self.virtual_adversarial_loss(features, logits, architecture, mode)
