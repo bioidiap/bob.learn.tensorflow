@@ -1,12 +1,16 @@
-'''Helps training reproducible networks.
-'''
+"""Helps training reproducible networks.
+"""
 import os
 import random as rn
 import numpy as np
 import tensorflow as tf
+from tensorflow.core.protobuf import rewriter_config_pb2
 
 
-def set_seed(seed=0, python_hash_seed=0, log_device_placement=False):
+def set_seed(
+    seed=0, python_hash_seed=0, log_device_placement=False, allow_soft_placement=False,
+    arithmetic_optimization=None,
+):
     """Sets the seeds in python, numpy, and tensorflow in order to help
     training reproducible networks.
 
@@ -38,7 +42,7 @@ def set_seed(seed=0, python_hash_seed=0, log_device_placement=False):
     # See these references for further details:
     # https://docs.python.org/3.4/using/cmdline.html#envvar-PYTHONHASHSEED
     # https://github.com/fchollet/keras/issues/2280#issuecomment-306959926
-    os.environ['PYTHONHASHSEED'] = '{}'.format(python_hash_seed)
+    os.environ["PYTHONHASHSEED"] = "{}".format(python_hash_seed)
 
     # The below is necessary for starting Numpy generated random numbers
     # in a well-defined initial state.
@@ -56,7 +60,13 @@ def set_seed(seed=0, python_hash_seed=0, log_device_placement=False):
     session_config = tf.ConfigProto(
         intra_op_parallelism_threads=1,
         inter_op_parallelism_threads=1,
-        log_device_placement=log_device_placement)
+        log_device_placement=log_device_placement,
+        allow_soft_placement=allow_soft_placement,
+    )
+
+    if arithmetic_optimization == 'off':
+        off = rewriter_config_pb2.RewriterConfig.OFF
+        session_config.graph_options.rewrite_options.arithmetic_optimization = off
 
     # The below tf.set_random_seed() will make random number generation
     # in the TensorFlow backend have a well-defined initial state.
