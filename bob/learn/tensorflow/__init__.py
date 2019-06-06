@@ -1,7 +1,3 @@
-import logging
-logging.getLogger("tensorflow").setLevel(logging.WARNING)
-
-
 def get_config():
     """
     Returns a string containing the configuration information.
