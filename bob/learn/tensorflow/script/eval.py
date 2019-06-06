@@ -167,7 +167,7 @@ def append_evaluated_file(path, evaluations):
     '-K',
     type=click.INT,
     cls=ResourceOption,
-    default=0,
+    default=1,
     show_default=True,
     help='If more than 0, will keep the best N models in the evaluation folder'
 )
