@@ -3,6 +3,7 @@ from .ContrastiveLoss import contrastive_loss
 from .TripletLoss import triplet_loss, triplet_average_loss, triplet_fisher_loss
 from .StyleLoss import linear_gram_style_loss, content_loss, denoising_loss
 from .vat import VATLoss
+from .pixel_wise import PixelWise
 from .utils import *
 
 
@@ -22,7 +23,14 @@ def __appropriate__(*args):
         obj.__module__ = __name__
 
 
-__appropriate__(mean_cross_entropy_loss, mean_cross_entropy_center_loss,
-                contrastive_loss, triplet_loss, triplet_average_loss,
-                triplet_fisher_loss)
-__all__ = [_ for _ in dir() if not _.startswith('_')]
+__appropriate__(
+    mean_cross_entropy_loss,
+    mean_cross_entropy_center_loss,
+    contrastive_loss,
+    triplet_loss,
+    triplet_average_loss,
+    triplet_fisher_loss,
+    VATLoss,
+    PixelWise,
+)
+__all__ = [_ for _ in dir() if not _.startswith("_")]
