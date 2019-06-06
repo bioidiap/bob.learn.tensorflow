@@ -43,6 +43,7 @@ def cache_dataset(input_fn, mode, **kwargs):
     kwargs = {}
     if is_argument_available('cache_only', input_fn):
         kwargs['cache_only'] = True
+        logger.info("cache_only as True will be passed to input_fn.")
 
     # call the input function manually
     with tf.Session() as sess:
