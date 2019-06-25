@@ -163,6 +163,7 @@ def do_style_transfer(content_image, style_images,
 
     # Reshaping to NxWxHxC and converting to the tensorflow format
     # content
+    original_image = content_image
     content_image = bob.io.image.to_matplotlib(content_image).astype("float32")
     content_image = numpy.reshape(content_image, wise_shape(content_image.shape))
 
@@ -253,11 +254,12 @@ def do_style_transfer(content_image, style_images,
                 if normalized_style_image.shape[0] == 1:
                     normalized_style_image_yuv = bob.ip.color.rgb_to_yuv(bob.ip.color.gray_to_rgb(normalized_style_image[0,:,:]))
                     # Loading the content image and clipping from 0-255 in case is in another scale
-                    scaled_content_image = normalize4save(bob.io.base.load(content_image_path).astype("float32")).astype("float64")
+                    #scaled_content_image = normalize4save(bob.io.base.load(content_image_path).astype("float32")).astype("float64")
+                    scaled_content_image = original_image.astype("float64")
                     content_image_yuv = bob.ip.color.rgb_to_yuv(bob.ip.color.gray_to_rgb(scaled_content_image))
                 else:
                     normalized_style_image_yuv = bob.ip.color.rgb_to_yuv(bob.ip.color.gray_to_rgb(bob.ip.color.rgb_to_gray(normalized_style_image)))
-                    content_image_yuv = bob.ip.color.rgb_to_yuv(bob.io.base.load(content_image_path))
+                    content_image_yuv = bob.ip.color.rgb_to_yuv(original_image)
 
                 output_image = numpy.zeros(shape=content_image_yuv.shape, dtype="uint8")
                 output_image[0,:,:] = normalized_style_image_yuv[0,:,:]

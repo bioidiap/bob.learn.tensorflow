@@ -5,6 +5,7 @@
 import logging
 import tensorflow as tf
 logger = logging.getLogger("bob.learn.tensorflow")
+import functools
 
 
 def content_loss(noises, content_features):
@@ -33,7 +34,7 @@ def content_loss(noises, content_features):
     content_losses = []
     for n,c in zip(noises, content_features):
         content_losses.append((2 * tf.nn.l2_loss(n - c) / c.size))
-    return reduce(tf.add, content_losses)
+    return functools.reduce(tf.add, content_losses)
 
      
 def linear_gram_style_loss(noises, gram_style_features):
@@ -63,7 +64,7 @@ def linear_gram_style_loss(noises, gram_style_features):
     for n,s in zip(noises, gram_style_features):
         style_losses.append((2 * tf.nn.l2_loss(n - s)) / s.size)
 
-    return reduce(tf.add, style_losses)
+    return functools.reduce(tf.add, style_losses)
 
 
 
@@ -82,7 +83,7 @@ def denoising_loss(noise):
     """
     def _tensor_size(tensor):
         from operator import mul
-        return reduce(mul, (d.value for d in tensor.get_shape()), 1)
+        return functools.reduce(mul, (d.value for d in tensor.get_shape()), 1)
 
     shape = noise.get_shape().as_list()
 
