@@ -49,7 +49,7 @@ logger = logging.getLogger(__name__)
               help='Number of iterations to generate the image',
               default=1000)
 @click.option('--learning_rate',
-              '-i',
+              '-r',
               type=click.types.FLOAT,
               help='Learning rate.',
               default=1.)
