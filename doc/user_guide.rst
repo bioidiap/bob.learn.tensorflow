@@ -181,7 +181,7 @@ Explicitly triggering the estimator
     ...     validation_batch_size=8,
     ...     model_dir=model_dir,
     ... )
-    >>> tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec)
+    >>> tf.estimator.train_and_evaluate(estimator, train_spec, eval_spec) # doctest: +SKIP
     ({'accuracy':...
 
 

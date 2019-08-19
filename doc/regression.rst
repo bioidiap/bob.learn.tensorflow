@@ -109,13 +109,13 @@ The Boston Housing Prices dataset
 
 .. doctest::
 
-    >>> estimator.train(train_input_fn) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+    >>> estimator.train(train_input_fn) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE +SKIP
     <bob.learn.tensorflow.estimators.Regressor ...
 
-    >>> 'rmse' in estimator.evaluate(eval_input_fn)
+    >>> 'rmse' in estimator.evaluate(eval_input_fn) # doctest: +SKIP
     True
 
-    >>> list(estimator.predict(eval_input_fn)) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE
+    >>> list(estimator.predict(eval_input_fn)) # doctest: +ELLIPSIS, +NORMALIZE_WHITESPACE  +SKIP
     [...
 
 .. testcleanup::
