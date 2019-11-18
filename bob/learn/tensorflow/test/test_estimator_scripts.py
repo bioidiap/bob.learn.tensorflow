@@ -12,6 +12,7 @@ from bob.learn.tensorflow.script.train import train
 from bob.learn.tensorflow.script.eval import eval as eval_script
 from bob.learn.tensorflow.script.train_and_evaluate import train_and_evaluate
 from bob.learn.tensorflow.script.predict_bio import predict_bio
+from nose.plugins.attrib import attr
 
 
 db_to_tfrecords_config = datafile('db_to_tfrecords_config.py', __name__)
@@ -83,7 +84,7 @@ def _predict_bio(tmpdir, model_dir, tfrecord_path, extra_options=tuple()):
         predict_bio,
         args=[config_path, input_predict_bio_config] + list(extra_options))
 
-
+@attr('slow')
 def test_eval():
     tmpdir = mkdtemp(prefix='bob_')
     try:
@@ -116,7 +117,7 @@ def test_eval():
         except Exception:
             pass
 
-
+@attr('slow')
 def test_eval_keep_n_model():
     tmpdir = mkdtemp(prefix='bob_')
     try:
@@ -147,7 +148,7 @@ def test_eval_keep_n_model():
         except Exception:
             pass
 
-
+@attr('slow')
 def test_predict_bio():
     tmpdir = mkdtemp(prefix='bob_')
     try:
@@ -167,7 +168,7 @@ def test_predict_bio():
         except Exception:
             pass
 
-
+@attr('slow')
 def test_predict_bio_empty_eval():
     tmpdir = mkdtemp(prefix='bob_')
     try:

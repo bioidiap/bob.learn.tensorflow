@@ -2,6 +2,7 @@
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 
+from nose.plugins.attrib import attr
 import tensorflow as tf
 
 from bob.learn.tensorflow.network import dummy
@@ -76,7 +77,7 @@ filenames = [
 ]
 labels = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
-
+@attr('slow')
 def test_triplet_estimator():
     # Trainer logits
     try:
@@ -94,7 +95,7 @@ def test_triplet_estimator():
         except Exception:
             pass
 
-
+@attr('slow')
 def test_triplettrainer_transfer():
     def logits_input_fn():
         return single_batch(

@@ -2,6 +2,7 @@
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 
+from nose.plugins.attrib import attr
 import tensorflow as tf
 
 from bob.learn.tensorflow.network import dummy
@@ -36,7 +37,7 @@ epochs = 6
 steps = 5000
 reproducible.set_seed()
 
-
+@attr('slow')
 def test_logitstrainer():
     # Trainer logits
     try:
@@ -62,7 +63,7 @@ def test_logitstrainer():
         except Exception:
             pass
 
-
+@attr('slow')
 def test_logitstrainer_embedding():
     try:
         embedding_validation = True
@@ -86,7 +87,7 @@ def test_logitstrainer_embedding():
         except Exception:
             pass
 
-
+@attr('slow')
 def test_logitstrainer_centerloss():
     try:
         embedding_validation = False
@@ -123,7 +124,7 @@ def test_logitstrainer_centerloss():
         except Exception:
             pass
 
-
+@attr('slow')
 def test_logitstrainer_centerloss_embedding():
     try:
         embedding_validation = True
@@ -219,7 +220,7 @@ def run_logitstrainer_mnist(trainer, augmentation=False):
     tf.reset_default_graph()
     assert len(tf.global_variables()) == 0
 
-
+@attr('slow')
 def test_moving_average_trainer():
     # define a fixed input data
     # train the same network with the same initialization
@@ -305,7 +306,7 @@ def test_moving_average_trainer():
         except Exception:
             pass
 
-
+@attr('slow')
 def test_saver_with_moving_average():
     try:
         _, run_config, _, _, _ = reproducible.set_seed()

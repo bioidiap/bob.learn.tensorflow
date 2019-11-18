@@ -1,9 +1,10 @@
+from nose.plugins.attrib import attr
 from bob.learn.tensorflow.estimators import Regressor
 from tensorflow import keras
 import tensorflow as tf
 import tensorflow.contrib.slim as slim
 
-
+@attr('slow')
 def test_regressor():
 
     boston_housing = keras.datasets.boston_housing

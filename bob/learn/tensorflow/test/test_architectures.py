@@ -2,12 +2,13 @@
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 
+from nose.plugins.attrib import attr
 import tensorflow as tf
 from bob.learn.tensorflow.network import inception_resnet_v2, inception_resnet_v2_batch_norm,\
     inception_resnet_v1, inception_resnet_v1_batch_norm,\
     vgg_19, vgg_16, mlp_with_batchnorm_and_dropout 
 
-
+@attr('slow')
 def test_inceptionv2():
 
     tf.reset_default_graph()
@@ -27,7 +28,7 @@ def test_inceptionv2():
     tf.reset_default_graph()
     assert len(tf.global_variables()) == 0
 
-
+@attr('slow')
 def test_inceptionv2_adaptation():
 
     tf.reset_default_graph()
@@ -52,7 +53,7 @@ def test_inceptionv2_adaptation():
     tf.reset_default_graph()
     assert len(tf.global_variables()) == 0
 
-
+@attr('slow')
 def test_inceptionv1():
 
     tf.reset_default_graph()
@@ -72,7 +73,7 @@ def test_inceptionv1():
     tf.reset_default_graph()
     assert len(tf.global_variables()) == 0
 
-
+@attr('slow')
 def test_inceptionv1_adaptation():
 
     tf.reset_default_graph()

@@ -2,6 +2,7 @@
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 
+from nose.plugins.attrib import attr
 import tensorflow as tf
 
 from bob.learn.tensorflow.network import dummy
@@ -78,7 +79,7 @@ filenames = [
 ]
 labels = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
-
+@attr('slow')
 def test_siamesetrainer():
     # Trainer logits
     try:
@@ -102,7 +103,7 @@ def test_siamesetrainer():
         except Exception:
             pass
 
-
+@attr('slow')
 def test_siamesetrainer_transfer():
     def logits_input_fn():
         return single_batch(
@@ -157,7 +158,7 @@ def test_siamesetrainer_transfer():
         except Exception:
             pass
 
-
+@attr('slow')
 def test_siamesetrainer_transfer_extraparams():
     def logits_input_fn():
         return single_batch(
