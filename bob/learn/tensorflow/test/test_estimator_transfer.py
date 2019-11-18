@@ -2,6 +2,7 @@
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 
+from nose.plugins.attrib import attr
 import tensorflow as tf
 
 from bob.learn.tensorflow.network import dummy
@@ -80,7 +81,7 @@ def dummy_adapted(inputs,
 
     return graph, end_points
 
-
+@attr('slow')
 def test_logitstrainer():
     # Trainer logits
     try:
@@ -130,7 +131,7 @@ def test_logitstrainer():
         except Exception:
             pass
 
-
+@attr('slow')
 def test_logitstrainer_center_loss():
     # Trainer logits
     try:
