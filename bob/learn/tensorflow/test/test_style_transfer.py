@@ -18,6 +18,7 @@ from .test_estimator_onegraph import run_logitstrainer_mnist
 from bob.learn.tensorflow.estimators import Logits
 from bob.learn.tensorflow.network import dummy
 from bob.learn.tensorflow.script.style_transfer import style_transfer
+from nose.plugins.attrib import attr
 
 dummy_config = datafile('style_transfer.py', __name__)
 CONFIG = '''
@@ -46,7 +47,7 @@ batch_size = 32
 epochs = 1
 steps = 100
 
-
+@attr('slow')
 def test_style_transfer():
     with open(dummy_config, 'w') as f:
         f.write(CONFIG)

@@ -6,9 +6,11 @@ from bob.learn.tensorflow.utils.hooks import EarlyStopping, EarlyStopException
 import nose
 import tensorflow as tf
 import shutil
+from nose.plugins.attrib import attr
 
 
 @nose.tools.raises(EarlyStopException)
+@attr('slow')
 def test_early_stopping_linear_classifier():
     config = read_config_files([
         datafile('mnist_input_fn.py', __name__),
@@ -34,6 +36,7 @@ def test_early_stopping_linear_classifier():
 
 
 @nose.tools.raises(EarlyStopException)
+@attr('slow')
 def test_early_stopping_logit_trainer():
     config = read_config_files([
         datafile('mnist_input_fn.py', __name__),
