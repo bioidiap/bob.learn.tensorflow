@@ -12,6 +12,7 @@ import pkg_resources
 
 from bob.learn.tensorflow.utils.hooks import LoggerHookEstimator
 from bob.learn.tensorflow.loss import mean_cross_entropy_loss
+from nose.plugins.attrib import attr
 
 import shutil
 import os
@@ -26,7 +27,7 @@ validation_batch_size = 250
 epochs = 1
 steps = 5000
 
-
+@attr('slow')
 def test_logitstrainer_images():
     # Trainer logits
     try:

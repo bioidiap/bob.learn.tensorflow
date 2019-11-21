@@ -36,7 +36,8 @@ The Boston Housing Prices dataset
 .. doctest::
 
     >>> boston_housing = keras.datasets.boston_housing
-    >>> (train_data, train_labels), (test_data, test_labels) = boston_housing.load_data()
+    >>> print("doctest s**t"); (train_data, train_labels), (test_data, test_labels) = boston_housing.load_data() # doctest: +ELLIPSIS
+    doc...
     >>> print("Training set: {}".format(train_data.shape))
     Training set: (404, 13)
     >>> print("Testing set:  {}".format(test_data.shape))
