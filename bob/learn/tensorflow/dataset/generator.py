@@ -1,5 +1,5 @@
 import six
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import logging
 
 logger = logging.getLogger(__name__)
@@ -45,8 +45,8 @@ class Generator:
                 dlk = six.next(dlk)
         # Creating a "fake" dataset just to get the types and shapes
         dataset = tf.data.Dataset.from_tensors(dlk)
-        self._output_types = dataset.output_types
-        self._output_shapes = dataset.output_shapes
+        self._output_types = tf.data.get_output_types(dataset)
+        self._output_shapes = tf.data.get_output_shapes(dataset)
 
         logger.info(
             "Initializing a dataset with %d %s and %s types and %s shapes",

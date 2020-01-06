@@ -9,7 +9,7 @@ import os
 import random
 import tempfile
 import click
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from bob.io.base import create_directories_safe, HDF5File
 from bob.extension.scripts.click_helper import (
     verbosity_option,
