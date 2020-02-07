@@ -2,19 +2,21 @@ import tensorflow as tf
 import tensorflow.contrib.slim as slim
 
 
-def append_logits(graph,
-                  n_classes,
-                  reuse=False,
-                  l2_regularizer=5e-05,
-                  weights_std=0.1, trainable_variables=None,
-                  name='Logits'):
+def append_logits(
+    graph,
+    n_classes,
+    reuse=False,
+    l2_regularizer=5e-05,
+    weights_std=0.1,
+    trainable_variables=None,
+    name="Logits",
+):
     trainable = is_trainable(name, trainable_variables)
     return slim.fully_connected(
         graph,
         n_classes,
         activation_fn=None,
-        weights_initializer=tf.truncated_normal_initializer(
-            stddev=weights_std),
+        weights_initializer=tf.truncated_normal_initializer(stddev=weights_std),
         weights_regularizer=slim.l2_regularizer(l2_regularizer),
         scope=name,
         reuse=reuse,
@@ -47,4 +49,3 @@ def is_trainable(name, trainable_variables, mode=tf.estimator.ModeKeys.TRAIN):
 
     # Here is my choice to shutdown the whole scope
     return name in trainable_variables
-

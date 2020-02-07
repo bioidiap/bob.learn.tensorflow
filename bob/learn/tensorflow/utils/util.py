@@ -35,6 +35,35 @@ def compute_euclidean_distance(x, y):
         return d
 
 
+def pdist_safe(A, metric="sqeuclidean"):
+    if metric != "sqeuclidean":
+        raise NotImplementedError()
+    r = tf.reduce_sum(A * A, 1)
+    r = tf.reshape(r, [-1, 1])
+    D = r - 2 * tf.matmul(A, A, transpose_b=True) + tf.transpose(r)
+    return D
+
+
+def cdist(A, B, metric="sqeuclidean"):
+    if metric != "sqeuclidean":
+        raise NotImplementedError()
+    M1, M2 = tf.shape(A)[0], tf.shape(B)[0]
+    # code from https://stackoverflow.com/a/43839605/1286165
+    p1 = tf.matmul(
+        tf.expand_dims(tf.reduce_sum(tf.square(A), 1), 1), tf.ones(shape=(1, M2))
+    )
+    p2 = tf.transpose(
+        tf.matmul(
+            tf.reshape(tf.reduce_sum(tf.square(B), 1), shape=[-1, 1]),
+            tf.ones(shape=(M1, 1)),
+            transpose_b=True,
+        )
+    )
+
+    D = tf.add(p1, p2) - 2 * tf.matmul(A, B, transpose_b=True)
+    return D
+
+
 def load_mnist(perc_train=0.9):
     numpy.random.seed(0)
     import bob.db.mnist
@@ -184,7 +213,7 @@ def pdist(A):
     Compute a pairwise euclidean distance in the same fashion
     as in scipy.spation.distance.pdist
     """
-    with tf.variable_scope("Pairwisedistance"):
+    with tf.name_scope("Pairwisedistance"):
         ones_1 = tf.reshape(tf.cast(tf.ones_like(A), tf.float32)[:, 0], [1, -1])
         p1 = tf.matmul(tf.expand_dims(tf.reduce_sum(tf.square(A), 1), 1), ones_1)
 
@@ -406,9 +435,7 @@ def bytes2human(n, format="%(value).1f %(symbol)s", symbols="customary"):
     return format % dict(symbol=symbols[0], value=n)
 
 
-def random_choice_no_replacement(
-    one_dim_input, num_indices_to_drop=3, sort=False
-):
+def random_choice_no_replacement(one_dim_input, num_indices_to_drop=3, sort=False):
     """Similar to np.random.choice with no replacement.
     Code from https://stackoverflow.com/a/54755281/1286165
     """
