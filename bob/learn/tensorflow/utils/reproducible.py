@@ -9,7 +9,7 @@ from tensorflow.core.protobuf import rewriter_config_pb2
 
 def set_seed(
     seed=0, python_hash_seed=0, log_device_placement=False, allow_soft_placement=False,
-    arithmetic_optimization=None,
+    arithmetic_optimization=None, allow_growth=None,
 ):
     """Sets the seeds in python, numpy, and tensorflow in order to help
     training reproducible networks.
@@ -67,6 +67,10 @@ def set_seed(
     if arithmetic_optimization == 'off':
         off = rewriter_config_pb2.RewriterConfig.OFF
         session_config.graph_options.rewrite_options.arithmetic_optimization = off
+
+    if allow_growth is not None:
+        session_config.gpu_options.allow_growth = allow_growth
+        session_config.gpu_options.per_process_gpu_memory_fraction = 0.8
 
     # The below tf.set_random_seed() will make random number generation
     # in the TensorFlow backend have a well-defined initial state.
