@@ -197,3 +197,25 @@ def image_augmentation_parser(filename,
     features['key'] = filename
 
     return features, label
+
+
+def load_pngs(img_path, img_shape):
+    """Read png files using tensorflow API
+    You must know the shape of the image beforehand to use this function.
+
+    Parameters
+    ----------
+    img_path : str
+        Path to the image
+    img_shape : list
+        A list or tuple that contains image's shape in channels_last format
+
+    Returns
+    -------
+    object
+        The loaded png file
+    """
+    img_raw = tf.read_file(img_path)
+    img_tensor = tf.image.decode_png(img_raw, channels=img_shape[-1])
+    img_final = tf.reshape(img_tensor, img_shape)
+    return img_final
