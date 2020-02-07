@@ -1,4 +1,3 @@
-import six
 import tensorflow as tf
 import random
 import logging
@@ -39,14 +38,21 @@ class Generator:
         self.epoch = 0
         self.shuffle_on_epoch_end = shuffle_on_epoch_end
 
-        # load one data to get its type and shape
-        dlk = self.reader(self.samples[0])
-        if self.multiple_samples:
+        # load samples until one of them is not empty
+        # this data is used to get the type and shape
+        for sample in self.samples:
             try:
-                dlk = dlk[0]
-            except TypeError:
-                # if the data is a generator
-                dlk = six.next(dlk)
+                dlk = self.reader(sample)
+                if self.multiple_samples:
+                    try:
+                        dlk = dlk[0]
+                    except TypeError:
+                        # if the data is a generator
+                        dlk = next(dlk)
+            except StopIteration:
+                continue
+            else:
+                break
         # Creating a "fake" dataset just to get the types and shapes
         dataset = tf.data.Dataset.from_tensors(dlk)
         self._output_types = dataset.output_types
