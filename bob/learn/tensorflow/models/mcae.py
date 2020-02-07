@@ -32,11 +32,8 @@ class ConvEncoder(tf.keras.Model):
         l2_kw = get_l2_kw(weight_decay)
         layers = []
         for i, (filters, kernel_size, strides, padding) in enumerate(encoder_layers):
-            pad_kw = {}
-            # if i == 0:
-            #     pad_kw["input_shape"] = input_shape
             pad = tf.keras.layers.ZeroPadding2D(
-                padding=padding, data_format=data_format, name=f"pad_{i}", **pad_kw
+                padding=padding, data_format=data_format, name=f"pad_{i}"
             )
             conv = tf.keras.layers.Conv2D(
                 filters,
@@ -75,17 +72,13 @@ class ConvDecoder(tf.keras.Model):
         l2_kw = get_l2_kw(weight_decay)
         layers = []
         for i, (filters, kernel_size, strides, cropping) in enumerate(decoder_layers):
-            dconv_kw = {}
-            dconv_kw.update(l2_kw)
-            # if i == 0:
-            #     dconv_kw["input_shape"] = embedding_shape
             dconv = tf.keras.layers.Conv2DTranspose(
                 filters,
                 kernel_size,
                 strides=strides,
                 data_format=data_format,
                 name=f"dconv_{i}",
-                **dconv_kw,
+                **l2_kw,
             )
             crop = tf.keras.layers.Cropping2D(
                 cropping=cropping, data_format=data_format, name=f"crop_{i}"
