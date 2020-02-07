@@ -36,6 +36,10 @@ class ConvBlock(tf.keras.Model):
 
         axis = -1 if data_format == "channels_last" else 1
         inter_filter = num_filters * 4
+        self.num_filters = num_filters
+        self.bottleneck = bottleneck
+        self.dropout_rate = dropout_rate
+
         self.norm1 = tf.keras.layers.BatchNormalization(axis=axis, name="norm1")
         if self.bottleneck:
             self.relu1 = tf.keras.layers.Activation("relu", name="relu1")
@@ -52,10 +56,10 @@ class ConvBlock(tf.keras.Model):
             self.norm2 = tf.keras.layers.BatchNormalization(axis=axis, name="norm2")
 
         self.relu2 = tf.keras.layers.Activation("relu", name="relu2")
-        # don't forget to set use_bias=False when using batchnorm
         self.conv2_pad = tf.keras.layers.ZeroPadding2D(
             padding=1, data_format=data_format, name="conv2_pad"
         )
+        # don't forget to set use_bias=False when using batchnorm
         self.conv2 = tf.keras.layers.Conv2D(
             num_filters,
             (3, 3),
@@ -109,6 +113,9 @@ class DenseBlock(tf.keras.Model):
     ):
         super().__init__(**kwargs)
         self.num_layers = num_layers
+        self.growth_rate = growth_rate
+        self.bottleneck = bottleneck
+        self.dropout_rate = dropout_rate
         self.axis = -1 if data_format == "channels_last" else 1
 
         self.blocks = []
@@ -127,7 +134,9 @@ class DenseBlock(tf.keras.Model):
     def call(self, x, training=None):
         for i in range(int(self.num_layers)):
             output = self.blocks[i](x, training=training)
-            x = tf.concat([x, output], axis=self.axis)
+            x = tf.keras.layers.Concatenate(axis=self.axis, name=f"concat_{i+1}")(
+                [x, output]
+            )
 
         return x
 
@@ -139,14 +148,12 @@ class TransitionBlock(tf.keras.Model):
         num_filters: number of filters passed to a convolutional layer.
         data_format: "channels_first" or "channels_last"
         weight_decay: weight decay
-        dropout_rate: dropout rate.
     """
 
-    def __init__(
-        self, num_filters, data_format, weight_decay=1e-4, dropout_rate=0, **kwargs
-    ):
+    def __init__(self, num_filters, data_format, weight_decay=1e-4, **kwargs):
         super().__init__(**kwargs)
         axis = -1 if data_format == "channels_last" else 1
+        self.num_filters = num_filters
 
         self.norm = tf.keras.layers.BatchNormalization(axis=axis, name="norm")
         self.relu = tf.keras.layers.Activation("relu", name="relu")
@@ -309,11 +316,11 @@ class DenseNet(tf.keras.Model):
             self.dense_blocks.append(
                 DenseBlock(
                     self.num_layers_in_each_block[i],
-                    self.growth_rate,
-                    self.data_format,
-                    self.bottleneck,
-                    self.weight_decay,
-                    self.dropout_rate,
+                    growth_rate=self.growth_rate,
+                    data_format=self.data_format,
+                    bottleneck=self.bottleneck,
+                    weight_decay=self.weight_decay,
+                    dropout_rate=self.dropout_rate,
                     name=f"dense_block_{i+1}",
                 )
             )
@@ -321,9 +328,8 @@ class DenseNet(tf.keras.Model):
                 self.transition_blocks.append(
                     TransitionBlock(
                         num_filters_after_each_block[i + 1],
-                        self.data_format,
-                        self.weight_decay,
-                        self.dropout_rate,
+                        data_format=self.data_format,
+                        weight_decay=self.weight_decay,
                         name=f"transition_block_{i+1}",
                     )
                 )
@@ -440,3 +446,37 @@ class DeepPixBiS(tf.keras.Model):
             except TypeError:
                 x = l(x)
         return x
+
+
+if __name__ == "__main__":
+    import pkg_resources
+    from tabulate import tabulate
+    from bob.learn.tensorflow.utils import model_summary
+
+    def print_model(inputs, outputs):
+        model = tf.keras.Model(inputs, outputs)
+        rows = model_summary(model, do_print=True)
+        del rows[-2]
+        print(tabulate(rows, headers="firstrow", tablefmt="latex"))
+
+    # inputs = tf.keras.Input((224, 224, 3), name="input")
+    # model = densenet161(weights=None)
+    # outputs = model.call(inputs)
+    # print_model(inputs, outputs)
+
+    # inputs = tf.keras.Input((56, 56, 96))
+    # outputs = model.dense_blocks[0].call(inputs)
+    # print_model(inputs, outputs)
+
+    # inputs = tf.keras.Input((56, 56, 96))
+    # outputs = model.dense_blocks[0].blocks[0].call(inputs)
+    # print_model(inputs, outputs)
+
+    # inputs = tf.keras.Input((56, 56, 384))
+    # outputs = model.transition_blocks[0].call(inputs)
+    # print_model(inputs, outputs)
+
+    inputs = tf.keras.Input((224, 224, 3), name="input")
+    model = DeepPixBiS()
+    outputs = model.call(inputs)
+    print_model(inputs, outputs)
