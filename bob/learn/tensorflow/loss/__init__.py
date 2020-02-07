@@ -4,6 +4,9 @@ from .TripletLoss import triplet_loss, triplet_average_loss, triplet_fisher_loss
 from .StyleLoss import linear_gram_style_loss, content_loss, denoising_loss
 from .vat import VATLoss
 from .pixel_wise import PixelWise
+from .center_loss import CenterLoss
+from .mmd import *
+from .pairwise_confusion import total_pairwise_confusion
 from .utils import *
 
 
