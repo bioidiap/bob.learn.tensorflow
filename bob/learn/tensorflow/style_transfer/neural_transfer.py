@@ -57,10 +57,7 @@ def compute_features(input_image, architecture, checkpoint_dir, target_end_point
             saver.restore(sess, checkpoint_dir)
 
         #content_feature = sess.run(end_points[CONTENT_END_POINTS], feed_dict={input_image: content_image})
-        features = []
-        for ep in target_end_points:
-            feature = sess.run(end_points[ep], feed_dict={input_pl: input_image})
-            features.append(feature)
+        features = sess.run([end_points[ep] for ep in target_end_points], feed_dict={input_pl: input_image})
 
     # Killing the graph
     tf.reset_default_graph()
@@ -95,7 +92,7 @@ def do_style_transfer(content_image, style_images,
                       content_end_points, style_end_points,
                       preprocess_fn=None, un_preprocess_fn=None, pure_noise=False,
                       iterations=1000, learning_rate=0.1,
-                      content_weight=5., style_weight=500., denoise_weight=500.):
+                      content_weight=5., style_weight=500., denoise_weight=500., start_from="noise"):
 
     """
     Trains neural style transfer using the approach presented in:
@@ -192,8 +189,16 @@ def do_style_transfer(content_image, style_images,
         tf.set_random_seed(0)
 
         # Random noise
-        noise = tf.Variable(tf.random_normal(shape=content_image.shape),
-                            trainable=True) * 0.256
+        if start_from == "noise":
+            starting_image = tf.random_normal(shape=content_image.shape) * 0.256
+        elif start_from == "content":
+            starting_image = preprocess_fn(content_image)
+        elif start_from == "style":
+            starting_image = preprocess_fn(style_images[0])
+        else:
+            raise ValueError(f"Unknown starting image: {start_from}")
+
+        noise = tf.Variable(starting_image, dtype="float32", trainable=True)
         _, end_points = architecture(noise,
                                       mode=tf.estimator.ModeKeys.PREDICT,
                                       trainable_variables=[])

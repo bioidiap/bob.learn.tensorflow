@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 @click.option('--style-image-paths',
               cls=ResourceOption,
               required=True,
-              multiple=True,              
+              multiple=True,
               entry_point_group='bob.learn.tensorflow.style_images',
               help='List of images that encodes the style.')
 @click.option('--architecture',
@@ -95,13 +95,21 @@ logger = logging.getLogger(__name__)
               cls=ResourceOption,
               entry_point_group='bob.learn.tensorflow.preprocess_fn',
               help='Un preprocess function. Pointer to a function that preprocess the OUTPUT signal')
+@click.option(
+  '--start-from',
+  '-sf',
+  cls=ResourceOption,
+  default="noise",
+  type=click.Choice(["noise", "content", "style"]),
+  help="Starts from this image for reconstruction",
+)
 @verbosity_option(cls=ResourceOption)
 def style_transfer(content_image_path, output_path, style_image_paths,
                    architecture, checkpoint_dir,
                    iterations, learning_rate,
                    content_weight, style_weight, denoise_weight, content_end_points,
-                   style_end_points, scopes, pure_noise, preprocess_fn, 
-                   un_preprocess_fn, **kwargs):
+                   style_end_points, scopes, pure_noise, preprocess_fn,
+                   un_preprocess_fn, start_from, **kwargs):
     """
      Trains neural style transfer using the approach presented in:
 
@@ -112,7 +120,7 @@ def style_transfer(content_image_path, output_path, style_image_paths,
     If you want run a style transfer using InceptionV2 as basis, use the following template
 
     Below follow a CONFIG template
-    
+
     CONFIG.PY
     ```
 
@@ -159,7 +167,7 @@ def style_transfer(content_image_path, output_path, style_image_paths,
                             "STYLE_2.png"]
 
     ```
- 
+
     Then run::
 
        $ bob tf style <content-image> <output-image> CONFIG.py
@@ -178,14 +186,14 @@ def style_transfer(content_image_path, output_path, style_image_paths,
     for path in style_image_paths:
         style_images.append(bob.io.base.load(path))
 
-    output = do_style_transfer(content_image, style_images, 
+    output = do_style_transfer(content_image, style_images,
                                architecture, checkpoint_dir, scopes,
                                content_end_points, style_end_points,
                                preprocess_fn=preprocess_fn, un_preprocess_fn=un_preprocess_fn,
                                pure_noise=pure_noise,
                                iterations=iterations, learning_rate=learning_rate,
                                content_weight=content_weight, style_weight=style_weight,
-                               denoise_weight=denoise_weight)
+                               denoise_weight=denoise_weight, start_from=start_from)
 
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
     bob.io.base.save(output, output_path)
-
