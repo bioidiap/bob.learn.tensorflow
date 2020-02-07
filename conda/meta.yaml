@@ -44,7 +44,6 @@ requirements:
     - setuptools
     - numpy
     - scipy
-    - six
     - {{ pin_compatible('click') }}
     - {{ pin_compatible('click-plugins') }}
     - tensorflow >=1.4
