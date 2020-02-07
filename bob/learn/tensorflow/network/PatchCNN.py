@@ -44,22 +44,22 @@ patch = Sequential([
     Activation('relu'),
     MaxPool2D(padding='same'),
 
-    Conv2D(100, (3, 3), padding='same', use_bias=False, input_shape=(96,96,3)),
+    Conv2D(100, (3, 3), padding='same', use_bias=False),
     BatchNormalization(scale=False),
     Activation('relu'),
     MaxPool2D(padding='same'),
 
-    Conv2D(150, (3, 3), padding='same', use_bias=False, input_shape=(96,96,3)),
+    Conv2D(150, (3, 3), padding='same', use_bias=False),
     BatchNormalization(scale=False),
     Activation('relu'),
     MaxPool2D(pool_size=3, strides=2, padding='same'),
 
-    Conv2D(200, (3, 3), padding='same', use_bias=False, input_shape=(96,96,3)),
+    Conv2D(200, (3, 3), padding='same', use_bias=False),
     BatchNormalization(scale=False),
     Activation('relu'),
     MaxPool2D(padding='same'),
 
-    Conv2D(250, (3, 3), padding='same', use_bias=False, input_shape=(96,96,3)),
+    Conv2D(250, (3, 3), padding='same', use_bias=False),
     BatchNormalization(scale=False),
     Activation('relu'),
     MaxPool2D(padding='same'),
@@ -388,6 +388,7 @@ def model_fn(features, labels, mode, params=None, config=None):
         return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
     # Calculate Loss (for both TRAIN and EVAL modes)
+    labels = tf.cast(labels, dtype="int32")
     loss = tf.losses.sparse_softmax_cross_entropy(logits=logits, labels=labels)
     # Add the regularization terms to the loss
     if regularization_rate:

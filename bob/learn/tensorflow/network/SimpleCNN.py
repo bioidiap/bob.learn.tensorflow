@@ -401,6 +401,9 @@ def model_fn(features, labels, mode, params=None, config=None):
     if mode == tf.estimator.ModeKeys.PREDICT:
         return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
+    # convert labels to the expected int32 format
+    labels = tf.cast(labels, dtype="int32")
+
     accuracy = tf.metrics.accuracy(
         labels=labels, predictions=predictions["classes"])
     metrics = {'accuracy': accuracy}
