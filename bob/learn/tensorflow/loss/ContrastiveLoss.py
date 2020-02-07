@@ -4,9 +4,7 @@
 
 import logging
 import tensorflow as tf
-from bob.learn.tensorflow.utils import (
-    compute_euclidean_distance,
-)
+from bob.learn.tensorflow.utils import compute_euclidean_distance
 
 logger = logging.getLogger(__name__)
 

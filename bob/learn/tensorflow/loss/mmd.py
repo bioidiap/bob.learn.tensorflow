@@ -2,6 +2,8 @@ import tensorflow as tf
 
 
 def compute_kernel(x, y):
+    """Gaussian kernel.
+    """
     x_size = tf.shape(x)[0]
     y_size = tf.shape(y)[0]
     dim = tf.shape(x)[1]
@@ -17,6 +19,9 @@ def compute_kernel(x, y):
 
 
 def mmd(x, y):
+    """Maximum Mean Discrepancy with Gaussian kernel.
+    See: https://stats.stackexchange.com/a/276618/49433
+    """
     x_kernel = compute_kernel(x, x)
     y_kernel = compute_kernel(y, y)
     xy_kernel = compute_kernel(x, y)
