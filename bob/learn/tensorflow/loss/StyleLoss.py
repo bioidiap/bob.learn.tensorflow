@@ -5,7 +5,7 @@
 import logging
 import tensorflow as tf
 import functools
-logger = logging.getLogger("bob.learn.tensorflow")
+logger = logging.getLogger(__name__)
 
 
 def content_loss(noises, content_features):

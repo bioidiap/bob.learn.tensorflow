@@ -4,7 +4,7 @@
 
 import logging
 import tensorflow as tf
-logger = logging.getLogger("bob.learn.tensorflow")
+logger = logging.getLogger(__name__)
 
 slim = tf.contrib.slim
 

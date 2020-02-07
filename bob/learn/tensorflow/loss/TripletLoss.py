@@ -3,7 +3,7 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 
 import logging
-logger = logging.getLogger("bob.learn.tensorflow")
+logger = logging.getLogger(__name__)
 import tensorflow as tf
 
 from bob.learn.tensorflow.utils import compute_euclidean_distance
