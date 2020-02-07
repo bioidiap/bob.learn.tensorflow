@@ -4,8 +4,8 @@
 
 import logging
 import tensorflow as tf
-logger = logging.getLogger("bob.learn.tensorflow")
 import functools
+logger = logging.getLogger("bob.learn.tensorflow")
 
 
 def content_loss(noises, content_features):
@@ -24,7 +24,7 @@ def content_loss(noises, content_features):
     ----------
 
      noises: :any:`list`
-        A list of tf.Tensor containing all the noises convolved        
+        A list of tf.Tensor containing all the noises convolved
 
      content_features: :any:`list`
         A list of numpy.array containing all the content_features convolved
@@ -36,7 +36,7 @@ def content_loss(noises, content_features):
         content_losses.append((2 * tf.nn.l2_loss(n - c) / c.size))
     return functools.reduce(tf.add, content_losses)
 
-     
+
 def linear_gram_style_loss(noises, gram_style_features):
     """
 
@@ -89,7 +89,7 @@ def denoising_loss(noise):
 
     noise_y_size = _tensor_size(noise[:,1:,:,:])
     noise_x_size = _tensor_size(noise[:,:,1:,:])
-    denoise_loss = 2 * ( (tf.nn.l2_loss(noise[:,1:,:,:] - noise[:,:shape[1]-1,:,:]) / noise_y_size) + 
+    denoise_loss = 2 * ( (tf.nn.l2_loss(noise[:,1:,:,:] - noise[:,:shape[1]-1,:,:]) / noise_y_size) +
                     (tf.nn.l2_loss(noise[:,:,1:,:] - noise[:,:,:shape[2]-1,:]) / noise_x_size))
 
     return denoise_loss
