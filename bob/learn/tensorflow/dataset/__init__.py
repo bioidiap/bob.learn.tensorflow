@@ -86,10 +86,10 @@ def append_image_augmentation(
     tf.set_random_seed(0)
 
     if output_shape is not None:
+        assert len(output_shape) == 2
         if random_crop:
             image = tf.random_crop(image, size=list(output_shape) + [3])
         else:
-            assert len(output_shape) == 2
             image = tf.image.resize_image_with_crop_or_pad(
                 image, output_shape[0], output_shape[1]
             )
@@ -114,6 +114,19 @@ def append_image_augmentation(
             image, gamma=tf.random.uniform(shape=[], minval=0.85, maxval=1.15)
         )
         image = tf.clip_by_value(image, 0, 1)
+
+    if random_rotate:
+        # from https://stackoverflow.com/a/53855704/1286165
+        degree = 0.08726646259971647  # math.pi * 5 /180
+        random_angles = tf.random.uniform(shape=(1,), minval=-degree, maxval=degree)
+        image = tf.contrib.image.transform(
+            image,
+            tf.contrib.image.angles_to_projective_transforms(
+                random_angles,
+                tf.cast(tf.shape(image)[-3], tf.float32),
+                tf.cast(tf.shape(image)[-2], tf.float32),
+            ),
+        )
 
     if gray_scale:
         image = tf.image.rgb_to_grayscale(image, name="rgb_to_gray")
