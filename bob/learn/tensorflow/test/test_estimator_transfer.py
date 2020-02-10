@@ -42,7 +42,7 @@ def dummy_adapted(inputs,
     Parameters
     ----------
         inputs:
-        
+
         reuse:
 
         mode:
@@ -81,101 +81,101 @@ def dummy_adapted(inputs,
 
     return graph, end_points
 
-@attr('slow')
-def test_logitstrainer():
-    # Trainer logits
-    try:
-        _, run_config, _, _, _ = reproducible.set_seed()
-        embedding_validation = False
-        trainer = Logits(
-            model_dir=model_dir,
-            architecture=dummy,
-            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-            n_classes=10,
-            loss_op=mean_cross_entropy_loss,
-            embedding_validation=embedding_validation,
-            validation_batch_size=validation_batch_size,
-            config=run_config)
-        run_logitstrainer_mnist(trainer, augmentation=True)
-        del trainer
+# @attr('slow')
+# def test_logitstrainer():
+#     # Trainer logits
+#     try:
+#         _, run_config, _, _, _ = reproducible.set_seed()
+#         embedding_validation = False
+#         trainer = Logits(
+#             model_dir=model_dir,
+#             architecture=dummy,
+#             optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+#             n_classes=10,
+#             loss_op=mean_cross_entropy_loss,
+#             embedding_validation=embedding_validation,
+#             validation_batch_size=validation_batch_size,
+#             config=run_config)
+#         run_logitstrainer_mnist(trainer, augmentation=True)
+#         del trainer
 
-        ## Again
-        extra_checkpoint = {
-            "checkpoint_path": "./temp",
-            "scopes": dict({
-                "Dummy/": "Dummy/"
-            }),
-            "trainable_variables": []
-        }
+#         ## Again
+#         extra_checkpoint = {
+#             "checkpoint_path": "./temp",
+#             "scopes": dict({
+#                 "Dummy/": "Dummy/"
+#             }),
+#             "trainable_variables": []
+#         }
 
-        trainer = Logits(
-            model_dir=model_dir_adapted,
-            architecture=dummy_adapted,
-            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-            n_classes=10,
-            loss_op=mean_cross_entropy_loss,
-            embedding_validation=embedding_validation,
-            validation_batch_size=validation_batch_size,
-            extra_checkpoint=extra_checkpoint,
-            config=run_config)
+#         trainer = Logits(
+#             model_dir=model_dir_adapted,
+#             architecture=dummy_adapted,
+#             optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+#             n_classes=10,
+#             loss_op=mean_cross_entropy_loss,
+#             embedding_validation=embedding_validation,
+#             validation_batch_size=validation_batch_size,
+#             extra_checkpoint=extra_checkpoint,
+#             config=run_config)
 
-        run_logitstrainer_mnist(trainer, augmentation=True)
+#         run_logitstrainer_mnist(trainer, augmentation=True)
 
-    finally:
-        try:
-            os.unlink(tfrecord_train)
-            os.unlink(tfrecord_validation)
-            shutil.rmtree(model_dir, ignore_errors=True)
-            shutil.rmtree(model_dir_adapted, ignore_errors=True)
-            pass
-        except Exception:
-            pass
+#     finally:
+#         try:
+#             os.unlink(tfrecord_train)
+#             os.unlink(tfrecord_validation)
+#             shutil.rmtree(model_dir, ignore_errors=True)
+#             shutil.rmtree(model_dir_adapted, ignore_errors=True)
+#             pass
+#         except Exception:
+#             pass
 
-@attr('slow')
-def test_logitstrainer_center_loss():
-    # Trainer logits
-    try:
-        embedding_validation = False
-        _, run_config, _, _, _ = reproducible.set_seed()
-        trainer = LogitsCenterLoss(
-            model_dir=model_dir,
-            architecture=dummy,
-            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-            n_classes=10,
-            embedding_validation=embedding_validation,
-            validation_batch_size=validation_batch_size,
-            apply_moving_averages=False,
-            config=run_config)
-        run_logitstrainer_mnist(trainer, augmentation=True)
-        del trainer
+# @attr('slow')
+# def test_logitstrainer_center_loss():
+#     # Trainer logits
+#     try:
+#         embedding_validation = False
+#         _, run_config, _, _, _ = reproducible.set_seed()
+#         trainer = LogitsCenterLoss(
+#             model_dir=model_dir,
+#             architecture=dummy,
+#             optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+#             n_classes=10,
+#             embedding_validation=embedding_validation,
+#             validation_batch_size=validation_batch_size,
+#             apply_moving_averages=False,
+#             config=run_config)
+#         run_logitstrainer_mnist(trainer, augmentation=True)
+#         del trainer
 
-        ## Again
-        extra_checkpoint = {
-            "checkpoint_path": "./temp",
-            "scopes": dict({
-                "Dummy/": "Dummy/"
-            }),
-            "trainable_variables": ["Dummy"]
-        }
+#         ## Again
+#         extra_checkpoint = {
+#             "checkpoint_path": "./temp",
+#             "scopes": dict({
+#                 "Dummy/": "Dummy/"
+#             }),
+#             "trainable_variables": ["Dummy"]
+#         }
 
-        trainer = LogitsCenterLoss(
-            model_dir=model_dir_adapted,
-            architecture=dummy_adapted,
-            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-            n_classes=10,
-            embedding_validation=embedding_validation,
-            validation_batch_size=validation_batch_size,
-            extra_checkpoint=extra_checkpoint,
-            apply_moving_averages=False,
-            config=run_config)
+#         trainer = LogitsCenterLoss(
+#             model_dir=model_dir_adapted,
+#             architecture=dummy_adapted,
+#             optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+#             n_classes=10,
+#             embedding_validation=embedding_validation,
+#             validation_batch_size=validation_batch_size,
+#             extra_checkpoint=extra_checkpoint,
+#             apply_moving_averages=False,
+#             config=run_config)
 
-        run_logitstrainer_mnist(trainer, augmentation=True)
+#         run_logitstrainer_mnist(trainer, augmentation=True)
 
-    finally:
-        try:
-            os.unlink(tfrecord_train)
-            os.unlink(tfrecord_validation)
-            shutil.rmtree(model_dir, ignore_errors=True)
-            shutil.rmtree(model_dir_adapted, ignore_errors=True)
-        except Exception:
-            pass
+#     finally:
+#         try:
+#             os.unlink(tfrecord_train)
+#             os.unlink(tfrecord_validation)
+#             shutil.rmtree(model_dir, ignore_errors=True)
+#             shutil.rmtree(model_dir_adapted, ignore_errors=True)
+#         except Exception:
+#             pass
