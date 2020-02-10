@@ -1,3 +1,10 @@
+"""Patch-based CNN used for face PAD in:
+Y. Atoum, Y. Liu, A. Jourabloo, and X. Liu, “Face anti-spoofing using patch and
+depth-based CNNs,” in 2017 IEEE International Joint Conference on Biometrics (IJCB),
+Denver, CO, 2017, pp. 319–328.
+"""
+
+
 import tensorflow as tf
 
 

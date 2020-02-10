@@ -1,8 +1,5 @@
 """Densely Connected Convolutional Networks.
-
-Reference [
-Densely Connected Convolutional Networks](https://arxiv.org/abs/1608.06993)
-
+Reference [Densely Connected Convolutional Networks](https://arxiv.org/abs/1608.06993)
 """
 
 import tensorflow as tf
