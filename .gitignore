@@ -12,3 +12,5 @@ develop-eggs
 sphinx
 dist
 temp/
+build/
+record.txt
