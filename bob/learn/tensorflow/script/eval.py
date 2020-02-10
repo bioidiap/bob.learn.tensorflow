@@ -7,7 +7,6 @@ from __future__ import print_function
 import click
 import logging
 import os
-import six
 import shutil
 import sys
 import tensorflow as tf
@@ -117,7 +116,7 @@ def read_evaluated_file(path):
 
 def append_evaluated_file(path, evaluations):
     str_evaluations = ', '.join(
-        '%s = %s' % (k, v) for k, v in sorted(six.iteritems(evaluations)))
+        '%s = %s' % (k, v) for k, v in sorted(evaluations.items()))
     with open(path, 'a') as f:
         f.write('{} {}\n'.format(evaluations['global_step'], str_evaluations))
     return str_evaluations
@@ -167,7 +166,7 @@ def append_evaluated_file(path, evaluations):
     '-K',
     type=click.INT,
     cls=ResourceOption,
-    default=0,
+    default=1,
     show_default=True,
     help='If more than 0, will keep the best N models in the evaluation folder'
 )
@@ -227,6 +226,7 @@ def eval(estimator, eval_input_fn, hooks, run_once, eval_interval_secs, name,
                     if new_evaluated_count == evaluated_steps_count:
                         wait_interval_count += 1
                         if wait_interval_count > max_wait_intervals:
+                            click.echo("Reached maximum wait interval!")
                             break
                     else:
                         evaluated_steps_count = new_evaluated_count

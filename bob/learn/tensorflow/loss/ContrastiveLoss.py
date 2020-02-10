@@ -3,16 +3,13 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 
 import logging
-logger = logging.getLogger("bob.learn.tensorflow")
 import tensorflow as tf
-
 from bob.learn.tensorflow.utils import compute_euclidean_distance
 
+logger = logging.getLogger(__name__)
 
-def contrastive_loss(left_embedding,
-                     right_embedding,
-                     labels,
-                     contrastive_margin=2.0):
+
+def contrastive_loss(left_embedding, right_embedding, labels, contrastive_margin=2.0):
     """
     Compute the contrastive loss as in
 
@@ -49,18 +46,16 @@ def contrastive_loss(left_embedding,
 
         with tf.name_scope("within_class"):
             one = tf.constant(1.0)
-            within_class = tf.multiply(one - labels,
-                                       tf.square(d))  # (1-Y)*(d^2)
-            within_class_loss = tf.reduce_mean(
-                within_class, name="within_class")
+            within_class = tf.multiply(one - labels, tf.square(d))  # (1-Y)*(d^2)
+            within_class_loss = tf.reduce_mean(within_class, name="within_class")
             tf.add_to_collection(tf.GraphKeys.LOSSES, within_class_loss)
 
         with tf.name_scope("between_class"):
             max_part = tf.square(tf.maximum(contrastive_margin - d, 0))
             between_class = tf.multiply(
-                labels, max_part)  # (Y) * max((margin - d)^2, 0)
-            between_class_loss = tf.reduce_mean(
-                between_class, name="between_class")
+                labels, max_part
+            )  # (Y) * max((margin - d)^2, 0)
+            between_class_loss = tf.reduce_mean(between_class, name="between_class")
             tf.add_to_collection(tf.GraphKeys.LOSSES, between_class_loss)
 
         with tf.name_scope("total_loss"):
@@ -68,8 +63,8 @@ def contrastive_loss(left_embedding,
             loss = tf.reduce_mean(loss, name="contrastive_loss")
             tf.add_to_collection(tf.GraphKeys.LOSSES, loss)
 
-        tf.summary.scalar('contrastive_loss', loss)
-        tf.summary.scalar('between_class', between_class_loss)
-        tf.summary.scalar('within_class', within_class_loss)
+        tf.summary.scalar("contrastive_loss", loss)
+        tf.summary.scalar("between_class", between_class_loss)
+        tf.summary.scalar("within_class", within_class_loss)
 
         return loss

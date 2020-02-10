@@ -79,141 +79,141 @@ filenames = [
 ]
 labels = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
-@attr('slow')
-def test_siamesetrainer():
-    # Trainer logits
-    try:
+# @attr('slow')
+# def test_siamesetrainer():
+#     # Trainer logits
+#     try:
 
-        # Setting seed
-        session_config, run_config, _, _, _ = reproducible.set_seed()
-        run_config = run_config.replace(save_checkpoints_steps=500)
+#         # Setting seed
+#         session_config, run_config, _, _, _ = reproducible.set_seed()
+#         run_config = run_config.replace(save_checkpoints_steps=500)
 
-        trainer = Siamese(
-            model_dir=model_dir,
-            architecture=dummy,
-            config=run_config,
-            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-            loss_op=contrastive_loss,
-            validation_batch_size=validation_batch_size)
-        run_siamesetrainer(trainer)
-    finally:
-        try:
-            shutil.rmtree(model_dir, ignore_errors=True)
-            # pass
-        except Exception:
-            pass
+#         trainer = Siamese(
+#             model_dir=model_dir,
+#             architecture=dummy,
+#             config=run_config,
+#             optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+#             loss_op=contrastive_loss,
+#             validation_batch_size=validation_batch_size)
+#         run_siamesetrainer(trainer)
+#     finally:
+#         try:
+#             shutil.rmtree(model_dir, ignore_errors=True)
+#             # pass
+#         except Exception:
+#             pass
 
-@attr('slow')
-def test_siamesetrainer_transfer():
-    def logits_input_fn():
-        return single_batch(
-            filenames,
-            labels,
-            data_shape,
-            data_type,
-            batch_size,
-            epochs=epochs,
-            output_shape=output_shape)
+# @attr('slow')
+# def test_siamesetrainer_transfer():
+#     def logits_input_fn():
+#         return single_batch(
+#             filenames,
+#             labels,
+#             data_shape,
+#             data_type,
+#             batch_size,
+#             epochs=epochs,
+#             output_shape=output_shape)
 
-    # Trainer logits first than siamese
-    try:
-        # Setting seed
-        session_config, run_config, _, _, _ = reproducible.set_seed()
-        run_config = run_config.replace(save_checkpoints_steps=500)
+#     # Trainer logits first than siamese
+#     try:
+#         # Setting seed
+#         session_config, run_config, _, _, _ = reproducible.set_seed()
+#         run_config = run_config.replace(save_checkpoints_steps=500)
 
-        extra_checkpoint = {
-            "checkpoint_path": model_dir,
-            "scopes": dict({
-                "Dummy/": "Dummy/"
-            }),
-            "trainable_variables": []
-        }
+#         extra_checkpoint = {
+#             "checkpoint_path": model_dir,
+#             "scopes": dict({
+#                 "Dummy/": "Dummy/"
+#             }),
+#             "trainable_variables": []
+#         }
 
-        # LOGISTS
-        logits_trainer = Logits(
-            model_dir=model_dir,
-            architecture=dummy,
-            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-            n_classes=2,
-            config=run_config,
-            loss_op=mean_cross_entropy_loss,
-            embedding_validation=False,
-            validation_batch_size=validation_batch_size)
-        logits_trainer.train(logits_input_fn, steps=steps)
+#         # LOGISTS
+#         logits_trainer = Logits(
+#             model_dir=model_dir,
+#             architecture=dummy,
+#             optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+#             n_classes=2,
+#             config=run_config,
+#             loss_op=mean_cross_entropy_loss,
+#             embedding_validation=False,
+#             validation_batch_size=validation_batch_size)
+#         logits_trainer.train(logits_input_fn, steps=steps)
 
-        # NOW THE FUCKING SIAMESE
-        trainer = Siamese(
-            model_dir=model_dir_adapted,
-            architecture=dummy_adapted,
-            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-            config=run_config,
-            loss_op=contrastive_loss,
-            validation_batch_size=validation_batch_size,
-            extra_checkpoint=extra_checkpoint)
-        run_siamesetrainer(trainer)
-    finally:
-        try:
-            shutil.rmtree(model_dir, ignore_errors=True)
-            shutil.rmtree(model_dir_adapted, ignore_errors=True)
-        except Exception:
-            pass
+#         # NOW THE FUCKING SIAMESE
+#         trainer = Siamese(
+#             model_dir=model_dir_adapted,
+#             architecture=dummy_adapted,
+#             optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+#             config=run_config,
+#             loss_op=contrastive_loss,
+#             validation_batch_size=validation_batch_size,
+#             extra_checkpoint=extra_checkpoint)
+#         run_siamesetrainer(trainer)
+#     finally:
+#         try:
+#             shutil.rmtree(model_dir, ignore_errors=True)
+#             shutil.rmtree(model_dir_adapted, ignore_errors=True)
+#         except Exception:
+#             pass
 
-@attr('slow')
-def test_siamesetrainer_transfer_extraparams():
-    def logits_input_fn():
-        return single_batch(
-            filenames,
-            labels,
-            data_shape,
-            data_type,
-            batch_size,
-            epochs=epochs,
-            output_shape=output_shape)
+# @attr('slow')
+# def test_siamesetrainer_transfer_extraparams():
+#     def logits_input_fn():
+#         return single_batch(
+#             filenames,
+#             labels,
+#             data_shape,
+#             data_type,
+#             batch_size,
+#             epochs=epochs,
+#             output_shape=output_shape)
 
-    # Trainer logits first than siamese
-    try:
+#     # Trainer logits first than siamese
+#     try:
 
-        extra_checkpoint = {
-            "checkpoint_path": model_dir,
-            "scopes": dict({
-                "Dummy/": "Dummy/"
-            }),
-            "trainable_variables": ["Dummy"]
-        }
+#         extra_checkpoint = {
+#             "checkpoint_path": model_dir,
+#             "scopes": dict({
+#                 "Dummy/": "Dummy/"
+#             }),
+#             "trainable_variables": ["Dummy"]
+#         }
 
-        # Setting seed
-        session_config, run_config, _, _, _ = reproducible.set_seed()
-        run_config = run_config.replace(save_checkpoints_steps=500)
+#         # Setting seed
+#         session_config, run_config, _, _, _ = reproducible.set_seed()
+#         run_config = run_config.replace(save_checkpoints_steps=500)
 
-        # LOGISTS
-        logits_trainer = Logits(
-            model_dir=model_dir,
-            architecture=dummy,
-            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-            n_classes=2,
-            config=run_config,
-            loss_op=mean_cross_entropy_loss,
-            embedding_validation=False,
-            validation_batch_size=validation_batch_size)
+#         # LOGISTS
+#         logits_trainer = Logits(
+#             model_dir=model_dir,
+#             architecture=dummy,
+#             optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+#             n_classes=2,
+#             config=run_config,
+#             loss_op=mean_cross_entropy_loss,
+#             embedding_validation=False,
+#             validation_batch_size=validation_batch_size)
 
-        logits_trainer.train(logits_input_fn, steps=steps)
+#         logits_trainer.train(logits_input_fn, steps=steps)
 
-        # NOW THE FUCKING SIAMESE
-        trainer = Siamese(
-            model_dir=model_dir_adapted,
-            architecture=dummy_adapted,
-            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-            loss_op=contrastive_loss,
-            config=run_config,
-            validation_batch_size=validation_batch_size,
-            extra_checkpoint=extra_checkpoint)
-        run_siamesetrainer(trainer)
-    finally:
-        try:
-            shutil.rmtree(model_dir, ignore_errors=True)
-            shutil.rmtree(model_dir_adapted, ignore_errors=True)
-        except Exception:
-            pass
+#         # NOW THE FUCKING SIAMESE
+#         trainer = Siamese(
+#             model_dir=model_dir_adapted,
+#             architecture=dummy_adapted,
+#             optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+#             loss_op=contrastive_loss,
+#             config=run_config,
+#             validation_batch_size=validation_batch_size,
+#             extra_checkpoint=extra_checkpoint)
+#         run_siamesetrainer(trainer)
+#     finally:
+#         try:
+#             shutil.rmtree(model_dir, ignore_errors=True)
+#             shutil.rmtree(model_dir_adapted, ignore_errors=True)
+#         except Exception:
+#             pass
 
 
 def run_siamesetrainer(trainer):

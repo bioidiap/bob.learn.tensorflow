@@ -77,73 +77,73 @@ filenames = [
 ]
 labels = [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1]
 
-@attr('slow')
-def test_triplet_estimator():
-    # Trainer logits
-    try:
-        trainer = Triplet(
-            model_dir=model_dir,
-            architecture=dummy,
-            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-            loss_op=triplet_loss,
-            validation_batch_size=validation_batch_size)
-        run_triplet_estimator(trainer)
-    finally:
-        try:
-            shutil.rmtree(model_dir, ignore_errors=True)
-            # pass
-        except Exception:
-            pass
+# @attr('slow')
+# def test_triplet_estimator():
+#     # Trainer logits
+#     try:
+#         trainer = Triplet(
+#             model_dir=model_dir,
+#             architecture=dummy,
+#             optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+#             loss_op=triplet_loss,
+#             validation_batch_size=validation_batch_size)
+#         run_triplet_estimator(trainer)
+#     finally:
+#         try:
+#             shutil.rmtree(model_dir, ignore_errors=True)
+#             # pass
+#         except Exception:
+#             pass
 
-@attr('slow')
-def test_triplettrainer_transfer():
-    def logits_input_fn():
-        return single_batch(
-            filenames,
-            labels,
-            data_shape,
-            data_type,
-            batch_size,
-            epochs=epochs,
-            output_shape=output_shape)
+# @attr('slow')
+# def test_triplettrainer_transfer():
+#     def logits_input_fn():
+#         return single_batch(
+#             filenames,
+#             labels,
+#             data_shape,
+#             data_type,
+#             batch_size,
+#             epochs=epochs,
+#             output_shape=output_shape)
 
-    # Trainer logits first than siamese
-    try:
+#     # Trainer logits first than siamese
+#     try:
 
-        extra_checkpoint = {
-            "checkpoint_path": model_dir,
-            "scopes": dict({
-                "Dummy/": "Dummy/"
-            }),
-            "trainable_variables": []
-        }
+#         extra_checkpoint = {
+#             "checkpoint_path": model_dir,
+#             "scopes": dict({
+#                 "Dummy/": "Dummy/"
+#             }),
+#             "trainable_variables": []
+#         }
 
-        # LOGISTS
-        logits_trainer = Logits(
-            model_dir=model_dir,
-            architecture=dummy,
-            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-            n_classes=2,
-            loss_op=mean_cross_entropy_loss,
-            embedding_validation=False,
-            validation_batch_size=validation_batch_size)
-        logits_trainer.train(logits_input_fn, steps=steps)
+#         # LOGISTS
+#         logits_trainer = Logits(
+#             model_dir=model_dir,
+#             architecture=dummy,
+#             optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+#             n_classes=2,
+#             loss_op=mean_cross_entropy_loss,
+#             embedding_validation=False,
+#             validation_batch_size=validation_batch_size)
+#         logits_trainer.train(logits_input_fn, steps=steps)
 
-        # NOW THE FUCKING SIAMESE
-        trainer = Triplet(
-            model_dir=model_dir_adapted,
-            architecture=dummy_adapted,
-            optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-            loss_op=triplet_loss,
-            validation_batch_size=validation_batch_size,
-            extra_checkpoint=extra_checkpoint)
-        run_triplet_estimator(trainer)
-    finally:
-        try:
-            shutil.rmtree(model_dir, ignore_errors=True)
-            shutil.rmtree(model_dir_adapted, ignore_errors=True)
-        except Exception:
-            pass
+#         # NOW THE FUCKING SIAMESE
+#         trainer = Triplet(
+#             model_dir=model_dir_adapted,
+#             architecture=dummy_adapted,
+#             optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+#             loss_op=triplet_loss,
+#             validation_batch_size=validation_batch_size,
+#             extra_checkpoint=extra_checkpoint)
+#         run_triplet_estimator(trainer)
+#     finally:
+#         try:
+#             shutil.rmtree(model_dir, ignore_errors=True)
+#             shutil.rmtree(model_dir_adapted, ignore_errors=True)
+#         except Exception:
+#             pass
 
 
 def run_triplet_estimator(trainer):

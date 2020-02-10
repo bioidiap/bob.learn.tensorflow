@@ -25,7 +25,7 @@ CONFIG = '''
 from bob.learn.tensorflow.network import dummy
 architecture = dummy
 import pkg_resources
-     
+
 checkpoint_dir = "./temp/"
 
 style_end_points = ["conv1"]
@@ -47,34 +47,34 @@ batch_size = 32
 epochs = 1
 steps = 100
 
-@attr('slow')
-def test_style_transfer():
-    with open(dummy_config, 'w') as f:
-        f.write(CONFIG)
+# @attr('slow')
+# def test_style_transfer():
+#     with open(dummy_config, 'w') as f:
+#         f.write(CONFIG)
 
-    # Trainer logits
+#     # Trainer logits
 
-    # CREATING FAKE MODEL USING MNIST
-    _, run_config,_,_,_ = reproducible.set_seed() 
-    trainer = Logits(
-        model_dir=model_dir,
-        architecture=dummy,
-        optimizer=tf.train.GradientDescentOptimizer(learning_rate),
-        n_classes=10,
-        loss_op=mean_cross_entropy_loss,
-        config=run_config)
-    run_logitstrainer_mnist(trainer)
+#     # CREATING FAKE MODEL USING MNIST
+#     _, run_config,_,_,_ = reproducible.set_seed()
+#     trainer = Logits(
+#         model_dir=model_dir,
+#         architecture=dummy,
+#         optimizer=tf.train.GradientDescentOptimizer(learning_rate),
+#         n_classes=10,
+#         loss_op=mean_cross_entropy_loss,
+#         config=run_config)
+#     run_logitstrainer_mnist(trainer)
 
-    # Style transfer using this fake model
-    runner = CliRunner()
-    result = runner.invoke(style_transfer,
-                           args=[pkg_resources.resource_filename( __name__, 'data/dummy_image_database/m301_01_p01_i0_0_GRAY.png'),
-                               output_style_image, dummy_config])
+#     # Style transfer using this fake model
+#     runner = CliRunner()
+#     result = runner.invoke(style_transfer,
+#                            args=[pkg_resources.resource_filename( __name__, 'data/dummy_image_database/m301_01_p01_i0_0_GRAY.png'),
+#                                output_style_image, dummy_config])
 
-    try:
-        os.unlink(dummy_config)
-        shutil.rmtree(model_dir, ignore_errors=True)
-    except Exception:
-        pass
-    
+#     try:
+#         os.unlink(dummy_config)
+#         shutil.rmtree(model_dir, ignore_errors=True)
+#     except Exception:
+#         pass
+
 

@@ -4,7 +4,7 @@
 
 import logging
 import tensorflow as tf
-logger = logging.getLogger("bob.learn.tensorflow")
+logger = logging.getLogger(__name__)
 
 slim = tf.contrib.slim
 
@@ -13,12 +13,12 @@ def mean_cross_entropy_loss(logits, labels, add_regularization_losses=True):
     """
     Simple CrossEntropy loss.
     Basically it wrapps the function tf.nn.sparse_softmax_cross_entropy_with_logits.
-    
+
     **Parameters**
       logits:
       labels:
       add_regularization_losses: Regulize the loss???
-    
+
     """
 
     with tf.variable_scope('cross_entropy_loss'):
@@ -50,7 +50,7 @@ def mean_cross_entropy_center_loss(logits,
     """
     Implementation of the CrossEntropy + Center Loss from the paper
     "A Discriminative Feature Learning Approach for Deep Face Recognition"(http://ydwen.github.io/papers/WenECCV16.pdf)
-    
+
     **Parameters**
       logits:
       prelogits:
@@ -67,7 +67,7 @@ def mean_cross_entropy_center_loss(logits,
                 logits=logits, labels=labels),
             name="cross_entropy_loss")
         tf.add_to_collection(tf.GraphKeys.LOSSES, cross_loss)
-        tf.summary.scalar('cross_entropy_loss', cross_loss)
+        tf.summary.scalar('loss_cross_entropy', cross_loss)
 
     # Appending center loss
     with tf.variable_scope('center_loss'):
@@ -79,14 +79,14 @@ def mean_cross_entropy_center_loss(logits,
             initializer=tf.constant_initializer(0),
             trainable=False)
 
-        #label = tf.reshape(labels, [-1])
+        # label = tf.reshape(labels, [-1])
         centers_batch = tf.gather(centers, labels)
         diff = (1 - alpha) * (centers_batch - prelogits)
         centers = tf.scatter_sub(centers, labels, diff)
         center_loss = tf.reduce_mean(tf.square(prelogits - centers_batch))
         tf.add_to_collection(tf.GraphKeys.REGULARIZATION_LOSSES,
                              center_loss * factor)
-        tf.summary.scalar('center_loss', center_loss)
+        tf.summary.scalar('loss_center', center_loss)
 
     # Adding the regularizers in the loss
     with tf.variable_scope('total_loss'):
@@ -95,7 +95,7 @@ def mean_cross_entropy_center_loss(logits,
         total_loss = tf.add_n(
             [cross_loss] + regularization_losses, name="total_loss")
         tf.add_to_collection(tf.GraphKeys.LOSSES, total_loss)
-        tf.summary.scalar('total_loss', total_loss)
+        tf.summary.scalar('loss_total', total_loss)
 
     loss = dict()
     loss['loss'] = total_loss
