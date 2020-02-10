@@ -97,7 +97,7 @@ def dataset_from_tfrecord(tfrecord, num_parallel_reads=None):
     tfrecord : str or list
         Path to the TFRecord file. Pass a list if you are sure several tfrecords need
         the same map function.
-    num_parallel_reads: (Optional.)
+    num_parallel_reads: int
         A `tf.int64` scalar representing the number of files to read in parallel.
         Defaults to reading files sequentially.
 
