@@ -3,7 +3,7 @@
 .. Thu 30 Jan 08:46:53 2014 CET
 
 
-.. image:: https://img.shields.io/badge/docs-available-orage.svg
+.. image:: https://img.shields.io/badge/docs-available-orange.svg
    :target: https://www.idiap.ch/software/bob/docs/bob/bob.learn.tensorflow/master/index.html
 .. image:: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/badges/master/pipeline.svg
    :target: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/commits/master
