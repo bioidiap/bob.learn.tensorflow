@@ -16,9 +16,6 @@ Users Guide
    :maxdepth: 2
 
    user_guide
-   regression
-   style_transfer
-   transfer_learning
 
 Reference Manual
 ================
