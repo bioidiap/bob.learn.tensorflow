@@ -59,6 +59,5 @@ def test_embedding_accuracy_tensors():
     data = tf.convert_to_tensor(data.astype("float32"))
     labels = tf.convert_to_tensor(labels.astype("int64"))
 
-    sess = tf.Session()
-    accuracy = sess.run(compute_embedding_accuracy_tensors(data, labels))
+    accuracy = compute_embedding_accuracy_tensors(data, labels)
     assert accuracy == 1.
