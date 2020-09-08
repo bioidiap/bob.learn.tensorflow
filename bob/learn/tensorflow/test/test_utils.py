@@ -8,6 +8,7 @@ import tensorflow as tf
 from bob.learn.tensorflow.utils import compute_embedding_accuracy
 from bob.learn.tensorflow.utils import compute_embedding_accuracy_tensors
 
+
 """
 Some unit tests for the datashuffler
 """

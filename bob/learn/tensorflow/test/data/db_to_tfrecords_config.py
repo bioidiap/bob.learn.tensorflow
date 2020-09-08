@@ -1,5 +1,3 @@
-from bob.bio.base.test.dummy.database import database
-from bob.bio.base.utils import read_original_data
 from bob.learn.tensorflow.dataset.generator import dataset_using_generator
 
 groups = ["dev"]
