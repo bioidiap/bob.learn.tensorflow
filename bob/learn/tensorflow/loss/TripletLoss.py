@@ -4,10 +4,11 @@
 
 import logging
 
-logger = logging.getLogger(__name__)
 import tensorflow as tf
 
 from bob.learn.tensorflow.utils import compute_euclidean_distance
+
+logger = logging.getLogger(__name__)
 
 
 def triplet_loss(anchor_embedding, positive_embedding, negative_embedding, margin=5.0):

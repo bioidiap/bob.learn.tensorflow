@@ -169,12 +169,11 @@ There are several ways to provide data to Tensorflow graphs. In this section we
 provide some examples on how to make the bridge between `bob.db` databases and
 tensorflow `input_fn`.
 
-The BioGenerator input pipeline
+The Generator input pipeline
 *******************************
 
-The :any:`bob.learn.tensorflow.dataset.bio.BioGenerator` class can be used to
-convert any database of bob (not just bob.bio.base's databases) to a
-``tf.data.Dataset`` instance.
+The :any:`bob.learn.tensorflow.dataset.Generator` class can be used to convert any
+database of bob to a ``tf.data.Dataset`` instance.
 
 While building the input pipeline, you can manipulate your data in two
 sections:
@@ -284,4 +283,3 @@ In this package we have crafted 4 types of estimators.
      :py:class:`bob.learn.tensorflow.estimators.Triplet`
 
 .. _tensorflow: https://www.tensorflow.org/
-

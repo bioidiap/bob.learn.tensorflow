@@ -5,10 +5,8 @@
 import numpy
 import tensorflow as tf
 
-from bob.learn.tensorflow.loss import \
-    balanced_sigmoid_cross_entropy_loss_weights
-from bob.learn.tensorflow.loss import \
-    balanced_softmax_cross_entropy_loss_weights
+from bob.learn.tensorflow.loss import balanced_sigmoid_cross_entropy_loss_weights
+from bob.learn.tensorflow.loss import balanced_softmax_cross_entropy_loss_weights
 
 
 def test_balanced_softmax_cross_entropy_loss_weights():

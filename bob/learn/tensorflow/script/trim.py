@@ -59,9 +59,7 @@ $ bob tf trim -vvrK 2 ~/my_models
 """
 )
 @click.argument(
-    "root_dirs",
-    nargs=-1,
-    type=click.Path(exists=True, file_okay=False, dir_okay=True),
+    "root_dirs", nargs=-1, type=click.Path(exists=True, file_okay=False, dir_okay=True),
 )
 @click.option(
     "--keep-last-n-models",

@@ -4,8 +4,17 @@
 import glob
 import os
 import sys
+import time
 
 import pkg_resources
+
+# The theme to use for HTML and HTML Help pages.  See the documentation for
+# a list of builtin themes.
+import sphinx_rtd_theme
+
+# For inter-documentation mapping:
+from bob.extension.utils import link_documentation
+from bob.extension.utils import load_requirements
 
 # -- General configuration -----------------------------------------------------
 
@@ -76,7 +85,6 @@ master_doc = "index"
 
 # General information about the project.
 project = u"bob.learn.tensorflow"
-import time
 
 copyright = u"%s, Idiap Research Institute" % time.strftime("%Y")
 
@@ -134,9 +142,6 @@ owner = [u"Idiap Research Institute"]
 
 # -- Options for HTML output ---------------------------------------------------
 
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
-import sphinx_rtd_theme
 
 html_theme = "sphinx_rtd_theme"
 
@@ -234,9 +239,6 @@ autodoc_default_flags = [
     "show-inheritance",
 ]
 
-# For inter-documentation mapping:
-from bob.extension.utils import link_documentation
-from bob.extension.utils import load_requirements
 
 sphinx_requirements = "extra-intersphinx.txt"
 if os.path.exists(sphinx_requirements):
