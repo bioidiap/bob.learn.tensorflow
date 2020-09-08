@@ -6,8 +6,6 @@ import logging
 import tensorflow as tf
 logger = logging.getLogger(__name__)
 
-slim = tf.contrib.slim
-
 
 def mean_cross_entropy_loss(logits, labels, add_regularization_losses=True):
     """

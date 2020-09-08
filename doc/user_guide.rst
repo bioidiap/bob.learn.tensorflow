@@ -45,7 +45,6 @@ the data pipeline in more detail.
     >>> from bob.learn.tensorflow.estimators import Logits
     >>> import bob.db.atnt
     >>> import tensorflow as tf
-    >>> import tensorflow.contrib.slim as slim
 
 2. Define the inputs:
 *********************
@@ -124,44 +123,7 @@ the data pipeline in more detail.
 .. doctest::
 
     >>> def architecture(data, mode, **kwargs):
-    ...     endpoints = {}
-    ...     training = mode == tf.estimator.ModeKeys.TRAIN
-    ...
-    ...     with tf.variable_scope('CNN'):
-    ...
-    ...         name = 'conv'
-    ...         net = slim.conv2d(data, 32, kernel_size=(
-    ...             5, 5), stride=2, padding='SAME', activation_fn=tf.nn.relu, scope=name)
-    ...         endpoints[name] = net
-    ...
-    ...         name = 'pool'
-    ...         net = slim.max_pool2d(net, (2, 2),
-    ...             stride=1, padding='SAME', scope=name)
-    ...         endpoints[name] = net
-    ...
-    ...         name = 'pool-flat'
-    ...         net = slim.flatten(net, scope=name)
-    ...         endpoints[name] = net
-    ...
-    ...         name = 'dense'
-    ...         net = slim.fully_connected(net, 128, scope=name)
-    ...         endpoints[name] = net
-    ...
-    ...         name = 'dropout'
-    ...         net = slim.dropout(
-    ...             inputs=net, keep_prob=0.4, is_training=training)
-    ...         endpoints[name] = net
-    ...
-    ...     return net, endpoints
-
-
-.. important ::
-
-    Practical advice: use ``tf.contrib.slim`` to craft your CNNs. Although
-    Tensorflow's documentation recommend the usage of ``tf.layers`` and
-    ``tf.keras``, in our experience ``slim`` has better defaults and is more
-    integrated with tensorflow's framework (compared to ``tf.keras``),
-    probably because it is used more often internally at Google.
+    ...     pass
 
 
 4. Estimator:
