@@ -1,9 +1,35 @@
 import tensorflow.keras.backend as K
-from .network import is_trainable
 import tensorflow as tf
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def is_trainable(name, trainable_variables, mode=tf.estimator.ModeKeys.TRAIN):
+    """
+    Check if a variable is trainable or not
+
+    Parameters
+    ----------
+
+    name: str
+       Layer name
+
+    trainable_variables: list
+       List containing the variables or scopes to be trained.
+       If None, the variable/scope is trained
+    """
+
+    # if mode is not training, so we shutdown
+    if mode != tf.estimator.ModeKeys.TRAIN:
+        return False
+
+    # If None, we train by default
+    if trainable_variables is None:
+        return True
+
+    # Here is my choice to shutdown the whole scope
+    return name in trainable_variables
 
 
 def keras_channels_index():
