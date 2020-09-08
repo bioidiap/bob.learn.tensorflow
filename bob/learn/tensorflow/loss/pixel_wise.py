@@ -1,9 +1,8 @@
-from ..dataset import tf_repeat
-from .utils import (
-    balanced_softmax_cross_entropy_loss_weights,
-    balanced_sigmoid_cross_entropy_loss_weights,
-)
 import tensorflow as tf
+
+from ..dataset import tf_repeat
+from .utils import balanced_sigmoid_cross_entropy_loss_weights
+from .utils import balanced_softmax_cross_entropy_loss_weights
 
 
 class PixelWise:

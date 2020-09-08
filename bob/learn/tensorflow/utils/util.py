@@ -3,12 +3,13 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 # @date: Wed 11 May 2016 09:39:36 CEST
 
+import inspect
+import logging
+
 import numpy
 import tensorflow as tf
 from tensorflow.python.client import device_lib
 from tensorflow.python.framework import function
-import inspect
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -123,8 +124,9 @@ def create_mnist_tfrecord(tfrecords_filename, data, labels, n_samples=6000):
 def compute_eer(
     data_train, labels_train, data_validation, labels_validation, n_classes
 ):
-    import bob.measure
     from scipy.spatial.distance import cosine
+
+    import bob.measure
 
     # Creating client models
     models = []
@@ -190,6 +192,7 @@ def compute_accuracy(
 def debug_embbeding(image, architecture, embbeding_dim=2, feature_layer="fc3"):
     """"""
     import tensorflow as tf
+
     from bob.learn.tensorflow.utils.session import Session
 
     session = Session.instance(new=False).session
@@ -287,7 +290,8 @@ def compute_embedding_accuracy(embedding, labels):
       Correspondent labels
     """
 
-    from scipy.spatial.distance import pdist, squareform
+    from scipy.spatial.distance import pdist
+    from scipy.spatial.distance import squareform
 
     distances = squareform(pdist(embedding))
 

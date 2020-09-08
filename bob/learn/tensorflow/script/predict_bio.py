@@ -4,22 +4,23 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
+import logging
 import os
 import sys
-import logging
-import click
-from bob.extension.scripts.click_helper import (
-    verbosity_option,
-    ConfigCommand,
-    ResourceOption,
-    log_parameters,
-)
 from collections import defaultdict
+
+import click
 import numpy as np
 import tensorflow as tf
-from bob.io.base import create_directories_safe
-from bob.bio.base.utils import save
+
 from bob.bio.base.tools.grid import indices
+from bob.bio.base.utils import save
+from bob.extension.scripts.click_helper import ConfigCommand
+from bob.extension.scripts.click_helper import ResourceOption
+from bob.extension.scripts.click_helper import log_parameters
+from bob.extension.scripts.click_helper import verbosity_option
+from bob.io.base import create_directories_safe
 from bob.learn.tensorflow.dataset.bio import BioGenerator
 
 try:

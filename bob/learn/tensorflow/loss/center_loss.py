@@ -1,5 +1,6 @@
 import tensorflow as tf
 
+
 # TODO(amir): replace parent class with tf.Module in tensorflow 1.14 and above.
 # * pass ``name`` to parent class
 # * replace get_variable with tf.Variable

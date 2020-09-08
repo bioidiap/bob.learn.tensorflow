@@ -2,9 +2,10 @@
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 
-import pkg_resources
 import numpy
+import pkg_resources
 import tensorflow as tf
+
 from bob.learn.tensorflow.dataset.generator import dataset_using_generator
 
 data_shape = (250, 250, 3)

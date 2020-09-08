@@ -1,6 +1,7 @@
+import tensorflow as tf
+
 from bob.learn.tensorflow.dataset.bio import BioGenerator
 from bob.learn.tensorflow.utils import to_channels_last
-import tensorflow as tf
 
 batch_size = 2
 epochs = 2

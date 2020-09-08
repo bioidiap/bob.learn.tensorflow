@@ -4,15 +4,16 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
 import logging
+
 import click
 import numpy as np
-from bob.extension.scripts.click_helper import (
-    verbosity_option,
-    ConfigCommand,
-    ResourceOption,
-    log_parameters,
-)
+
+from bob.extension.scripts.click_helper import ConfigCommand
+from bob.extension.scripts.click_helper import ResourceOption
+from bob.extension.scripts.click_helper import log_parameters
+from bob.extension.scripts.click_helper import verbosity_option
 from bob.learn.tensorflow.dataset.bio import BioGenerator
 
 logger = logging.getLogger(__name__)

@@ -3,6 +3,7 @@ Reference [Densely Connected Convolutional Networks](https://arxiv.org/abs/1608.
 """
 
 import tensorflow as tf
+
 from bob.extension import rc
 
 l2 = tf.keras.regularizers.l2
@@ -448,6 +449,7 @@ class DeepPixBiS(tf.keras.Model):
 if __name__ == "__main__":
     import pkg_resources
     from tabulate import tabulate
+
     from bob.learn.tensorflow.utils import model_summary
 
     def print_model(inputs, outputs):

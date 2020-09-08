@@ -62,6 +62,7 @@ def AlexNet_simplified(name="AlexNet", **kwargs):
 
 if __name__ == "__main__":
     import pkg_resources
+
     from bob.learn.tensorflow.utils import model_summary
 
     model = AlexNet_simplified()

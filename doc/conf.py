@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 
+import glob
 import os
 import sys
-import glob
-import pkg_resources
 
+import pkg_resources
 
 # -- General configuration -----------------------------------------------------
 
@@ -235,7 +235,8 @@ autodoc_default_flags = [
 ]
 
 # For inter-documentation mapping:
-from bob.extension.utils import link_documentation, load_requirements
+from bob.extension.utils import link_documentation
+from bob.extension.utils import load_requirements
 
 sphinx_requirements = "extra-intersphinx.txt"
 if os.path.exists(sphinx_requirements):

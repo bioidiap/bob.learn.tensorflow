@@ -4,12 +4,16 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-import click
+
+import glob
 import logging
 import os
-import glob
+
+import click
 import tensorflow as tf
-from bob.extension.scripts.click_helper import verbosity_option, log_parameters
+
+from bob.extension.scripts.click_helper import log_parameters
+from bob.extension.scripts.click_helper import verbosity_option
 
 logger = logging.getLogger(__name__)
 

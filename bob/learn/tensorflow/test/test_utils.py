@@ -3,12 +3,10 @@
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 
 import numpy
-from bob.learn.tensorflow.utils import (
-    compute_embedding_accuracy,
-    compute_embedding_accuracy_tensors,
-)
-
 import tensorflow as tf
+
+from bob.learn.tensorflow.utils import compute_embedding_accuracy
+from bob.learn.tensorflow.utils import compute_embedding_accuracy_tensors
 
 """
 Some unit tests for the datashuffler

@@ -4,21 +4,19 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
 import logging
 import os
+
 import click
 import tensorflow as tf
-from bob.extension.scripts.click_helper import (
-    verbosity_option,
-    ConfigCommand,
-    ResourceOption,
-    log_parameters,
-)
-from bob.learn.tensorflow.dataset.tfrecords import (
-    tfrecord_name_and_json_name,
-    dataset_to_tfrecord,
-)
 
+from bob.extension.scripts.click_helper import ConfigCommand
+from bob.extension.scripts.click_helper import ResourceOption
+from bob.extension.scripts.click_helper import log_parameters
+from bob.extension.scripts.click_helper import verbosity_option
+from bob.learn.tensorflow.dataset.tfrecords import dataset_to_tfrecord
+from bob.learn.tensorflow.dataset.tfrecords import tfrecord_name_and_json_name
 
 logger = logging.getLogger(__name__)
 

@@ -4,15 +4,14 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from functools import partial
 import json
 import logging
 import os
+from functools import partial
 
 import tensorflow as tf
 
 from . import DEFAULT_FEATURE
-
 
 logger = logging.getLogger(__name__)
 TFRECORDS_EXT = ".tfrecords"

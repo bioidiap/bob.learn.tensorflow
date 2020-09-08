@@ -1,8 +1,7 @@
 import tensorflow as tf
-from bob.learn.tensorflow.dataset.tfrecords import (
-    shuffle_data_and_labels,
-    batch_data_and_labels,
-)
+
+from bob.learn.tensorflow.dataset.tfrecords import batch_data_and_labels
+from bob.learn.tensorflow.dataset.tfrecords import shuffle_data_and_labels
 
 tfrecord_filenames = ["%(tfrecord_filenames)s"]
 data_shape = (1, 112, 92)  # size of atnt images

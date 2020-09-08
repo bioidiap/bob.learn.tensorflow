@@ -3,13 +3,13 @@
 # Andre Anjos <andre.anjos@idiap.ch>
 # Mon 16 Apr 08:18:08 2012 CEST
 
+from setuptools import dist
 from setuptools import setup
-
-from setuptools import setup, dist
 
 dist.Distribution(dict(setup_requires=["bob.extension"]))
 
-from bob.extension.utils import load_requirements, find_packages
+from bob.extension.utils import find_packages
+from bob.extension.utils import load_requirements
 
 install_requires = load_requirements()
 

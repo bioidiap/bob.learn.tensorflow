@@ -23,8 +23,9 @@
 # SOFTWARE.
 
 
-import tensorflow as tf
 from functools import partial
+
+import tensorflow as tf
 
 
 def get_normalized_vector(d):

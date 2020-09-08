@@ -1,6 +1,8 @@
-import tensorflow as tf
-import numpy
 import os
+
+import numpy
+import tensorflow as tf
+
 import bob.io.base
 
 DEFAULT_FEATURE = {
