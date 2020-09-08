@@ -1,4 +1,5 @@
 import tensorflow as tf
+
 from bob.bio.base.test.dummy.database import database
 
 biofiles = database.all_files(["dev"])

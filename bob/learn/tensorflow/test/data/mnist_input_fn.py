@@ -1,5 +1,6 @@
-from bob.db.mnist import Database
 import tensorflow as tf
+
+from bob.db.mnist import Database
 
 database = Database()
 

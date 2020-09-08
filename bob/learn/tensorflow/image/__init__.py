@@ -1,4 +1,6 @@
-from .filter import gaussian_kernel, GaussianFilter
+from .filter import GaussianFilter
+from .filter import gaussian_kernel
+
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):

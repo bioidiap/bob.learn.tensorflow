@@ -4,15 +4,16 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-import tensorflow as tf
-from bob.learn.tensorflow.utils.hooks import EarlyStopException
+
 import logging
+
 import click
-from bob.extension.scripts.click_helper import (
-    verbosity_option,
-    ConfigCommand,
-    ResourceOption,
-)
+import tensorflow as tf
+
+from bob.extension.scripts.click_helper import ConfigCommand
+from bob.extension.scripts.click_helper import ResourceOption
+from bob.extension.scripts.click_helper import verbosity_option
+from bob.learn.tensorflow.utils.hooks import EarlyStopException
 
 logger = logging.getLogger(__name__)
 

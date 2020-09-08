@@ -1,16 +1,19 @@
 import os
 import shutil
-import pkg_resources
 import tempfile
-import tensorflow as tf
+
 import numpy as np
+import pkg_resources
+import tensorflow as tf
 from click.testing import CliRunner
-from bob.io.base import create_directories_safe
-from bob.learn.tensorflow.script.db_to_tfrecords import datasets_to_tfrecords
-from bob.learn.tensorflow.utils import load_mnist, create_mnist_tfrecord
-from bob.extension.scripts.click_helper import assert_click_runner_result
+
 from bob.extension.config import load
+from bob.extension.scripts.click_helper import assert_click_runner_result
+from bob.io.base import create_directories_safe
 from bob.learn.tensorflow.dataset.tfrecords import dataset_from_tfrecord
+from bob.learn.tensorflow.script.db_to_tfrecords import datasets_to_tfrecords
+from bob.learn.tensorflow.utils import create_mnist_tfrecord
+from bob.learn.tensorflow.utils import load_mnist
 
 regenerate_reference = False
 

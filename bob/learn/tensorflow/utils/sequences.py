@@ -1,10 +1,12 @@
 from __future__ import division
+
 import numpy
 from keras.utils import Sequence
 
-# documentation imports
-from bob.dap.base.database import PadDatabase, PadFile
 from bob.bio.base.preprocessor import Preprocessor
+# documentation imports
+from bob.dap.base.database import PadDatabase
+from bob.dap.base.database import PadFile
 
 
 class PadSequence(Sequence):

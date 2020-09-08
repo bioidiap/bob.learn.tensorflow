@@ -144,6 +144,7 @@ def GoogLeNet(*, num_classes=1000, name="GoogLeNet", **kwargs):
 if __name__ == "__main__":
     import pkg_resources
     from tabulate import tabulate
+
     from bob.learn.tensorflow.utils import model_summary
 
     inputs = tf.keras.Input((28, 28, 192), name="input")

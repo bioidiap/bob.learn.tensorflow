@@ -1,24 +1,23 @@
 # -*- coding: utf-8 -*-
 """Inception-ResNet-V2 MultiScale-Inception-ResNet-V2 models for Keras.
 """
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import (
-    Activation,
-    BatchNormalization,
-    Concatenate,
-    Conv2D,
-    Dense,
-    Dropout,
-    Input,
-    Lambda,
-    MaxPool2D,
-    AvgPool2D,
-    GlobalAvgPool2D,
-    GlobalMaxPool2D,
-)
-from tensorflow.keras import backend as K
-import tensorflow as tf
 import logging
+
+import tensorflow as tf
+from tensorflow.keras import backend as K
+from tensorflow.keras.layers import Activation
+from tensorflow.keras.layers import AvgPool2D
+from tensorflow.keras.layers import BatchNormalization
+from tensorflow.keras.layers import Concatenate
+from tensorflow.keras.layers import Conv2D
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dropout
+from tensorflow.keras.layers import GlobalAvgPool2D
+from tensorflow.keras.layers import GlobalMaxPool2D
+from tensorflow.keras.layers import Input
+from tensorflow.keras.layers import Lambda
+from tensorflow.keras.layers import MaxPool2D
+from tensorflow.keras.models import Model
 
 logger = logging.getLogger(__name__)
 
@@ -696,6 +695,7 @@ def MultiScaleInceptionResNetV2(
 if __name__ == "__main__":
     import pkg_resources
     from tabulate import tabulate
+
     from bob.learn.tensorflow.utils import model_summary
 
     def print_model(inputs, outputs, name=None):

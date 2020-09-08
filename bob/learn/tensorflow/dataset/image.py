@@ -2,9 +2,12 @@
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 
-import tensorflow as tf
 from functools import partial
-from . import append_image_augmentation, from_filename_to_tensor
+
+import tensorflow as tf
+
+from . import append_image_augmentation
+from . import from_filename_to_tensor
 
 
 def shuffle_data_and_labels_image_augmentation(

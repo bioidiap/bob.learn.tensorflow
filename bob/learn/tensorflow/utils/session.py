@@ -4,8 +4,9 @@
 # @date: Wed 11 May 2016 09:39:36 CEST
 
 import tensorflow as tf
-from .singleton import Singleton
 from tensorflow.python import debug as tf_debug
+
+from .singleton import Singleton
 
 
 @Singleton

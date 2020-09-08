@@ -1,6 +1,7 @@
-import tensorflow as tf
-import random
 import logging
+import random
+
+import tensorflow as tf
 
 logger = logging.getLogger(__name__)
 

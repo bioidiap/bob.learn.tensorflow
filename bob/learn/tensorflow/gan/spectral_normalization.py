@@ -29,7 +29,8 @@ import re
 
 from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import ops
-from tensorflow.python.keras.engine import base_layer_utils as keras_base_layer_utils
+from tensorflow.python.keras.engine import \
+    base_layer_utils as keras_base_layer_utils
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import init_ops
 from tensorflow.python.ops import math_ops

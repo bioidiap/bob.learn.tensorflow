@@ -4,15 +4,17 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
 import logging
+
 import click
 import tensorflow as tf
-from bob.extension.scripts.click_helper import (
-    verbosity_option,
-    ConfigCommand,
-    ResourceOption,
-    log_parameters,
-)
+
+from bob.extension.scripts.click_helper import ConfigCommand
+from bob.extension.scripts.click_helper import ResourceOption
+from bob.extension.scripts.click_helper import log_parameters
+from bob.extension.scripts.click_helper import verbosity_option
+
 from ..utils import is_argument_available
 
 logger = logging.getLogger(__name__)

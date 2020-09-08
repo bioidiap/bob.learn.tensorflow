@@ -4,23 +4,26 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-import click
+
 import logging
 import os
 import shutil
 import sys
-import tensorflow as tf
 import time
+from collections import OrderedDict
+from collections import defaultdict
 from glob import glob
-from collections import defaultdict, OrderedDict
-from ..utils.eval import get_global_step
-from bob.extension.scripts.click_helper import (
-    verbosity_option,
-    ConfigCommand,
-    ResourceOption,
-    log_parameters,
-)
+
+import click
+import tensorflow as tf
+
+from bob.extension.scripts.click_helper import ConfigCommand
+from bob.extension.scripts.click_helper import ResourceOption
+from bob.extension.scripts.click_helper import log_parameters
+from bob.extension.scripts.click_helper import verbosity_option
 from bob.io.base import create_directories_safe
+
+from ..utils.eval import get_global_step
 
 logger = logging.getLogger(__name__)
 

@@ -2,12 +2,13 @@
 # vim: set fileencoding=utf-8 :
 # @author: Tiago de Freitas Pereira <tiago.pereira@idiap.ch>
 
-import tensorflow as tf
 import numpy
-from bob.learn.tensorflow.loss import (
-    balanced_softmax_cross_entropy_loss_weights,
-    balanced_sigmoid_cross_entropy_loss_weights,
-)
+import tensorflow as tf
+
+from bob.learn.tensorflow.loss import \
+    balanced_sigmoid_cross_entropy_loss_weights
+from bob.learn.tensorflow.loss import \
+    balanced_softmax_cross_entropy_loss_weights
 
 
 def test_balanced_softmax_cross_entropy_loss_weights():

@@ -1,5 +1,7 @@
 import tensorflow as tf
-from ..utils import pdist_safe, upper_triangle
+
+from ..utils import pdist_safe
+from ..utils import upper_triangle
 
 
 def total_pairwise_confusion(prelogits, name=None):
