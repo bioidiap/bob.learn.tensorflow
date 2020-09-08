@@ -19,5 +19,5 @@ def get_global_step(path):
     global_step : int
         The global step number.
     """
-    checkpoint_reader = tf.train.NewCheckpointReader(path)
-    return checkpoint_reader.get_tensor(tf.GraphKeys.GLOBAL_STEP)
+    checkpoint_reader = tf.compat.v1.train.NewCheckpointReader(path)
+    return checkpoint_reader.get_tensor(tf.compat.v1.GraphKeys.GLOBAL_STEP)

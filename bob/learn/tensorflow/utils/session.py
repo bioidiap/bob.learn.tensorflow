@@ -15,11 +15,11 @@ class Session(object):
     """
 
     def __init__(self, debug=False):
-        config = tf.ConfigProto(
+        config = tf.compat.v1.ConfigProto(
             log_device_placement=False,
             allow_soft_placement=True,
-            gpu_options=tf.GPUOptions(per_process_gpu_memory_fraction=0.5))
+            gpu_options=tf.compat.v1.GPUOptions(per_process_gpu_memory_fraction=0.5))
         config.gpu_options.allow_growth = True
-        self.session = tf.Session()
+        self.session = tf.compat.v1.Session()
         if debug:
             self.session = tf_debug.LocalCLIDebugWrapperSession(self.session)

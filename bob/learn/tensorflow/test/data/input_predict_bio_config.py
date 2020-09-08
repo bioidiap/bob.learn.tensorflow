@@ -11,7 +11,7 @@ def bio_predict_input_fn(generator, output_types, output_shapes):
         # even further if you want.
         dataset = dataset.prefetch(1)
         dataset = dataset.batch(10**3)
-        images, labels, keys = dataset.make_one_shot_iterator().get_next()
+        images, labels, keys = tf.compat.v1.data.make_one_shot_iterator(dataset).get_next()
 
         return {'data': images, 'key': keys}, labels
     return input_fn

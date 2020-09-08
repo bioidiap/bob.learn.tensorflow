@@ -8,8 +8,8 @@ def relativistic_discriminator_loss(
     real_weights=1.0,
     generated_weights=1.0,
     scope=None,
-    loss_collection=tf.GraphKeys.LOSSES,
-    reduction=tf.losses.Reduction.SUM_BY_NONZERO_WEIGHTS,
+    loss_collection=tf.compat.v1.GraphKeys.LOSSES,
+    reduction=tf.compat.v1.losses.Reduction.SUM_BY_NONZERO_WEIGHTS,
     add_summaries=False,
 ):
     """Relativistic (average) loss
@@ -34,7 +34,7 @@ def relativistic_discriminator_loss(
   Returns:
     A loss Tensor. The shape depends on `reduction`.
   """
-    with tf.name_scope(
+    with tf.compat.v1.name_scope(
         scope,
         "discriminator_relativistic_loss",
         (
@@ -47,13 +47,13 @@ def relativistic_discriminator_loss(
     ) as scope:
 
         real_logit = discriminator_real_outputs - tf.reduce_mean(
-            discriminator_gen_outputs
+            input_tensor=discriminator_gen_outputs
         )
         fake_logit = discriminator_gen_outputs - tf.reduce_mean(
-            discriminator_real_outputs
+            input_tensor=discriminator_real_outputs
         )
 
-        loss_on_real = tf.losses.sigmoid_cross_entropy(
+        loss_on_real = tf.compat.v1.losses.sigmoid_cross_entropy(
             tf.ones_like(real_logit),
             real_logit,
             real_weights,
@@ -62,7 +62,7 @@ def relativistic_discriminator_loss(
             loss_collection=None,
             reduction=reduction,
         )
-        loss_on_generated = tf.losses.sigmoid_cross_entropy(
+        loss_on_generated = tf.compat.v1.losses.sigmoid_cross_entropy(
             tf.zeros_like(fake_logit),
             fake_logit,
             generated_weights,
@@ -72,12 +72,12 @@ def relativistic_discriminator_loss(
         )
 
         loss = loss_on_real + loss_on_generated
-        tf.losses.add_loss(loss, loss_collection)
+        tf.compat.v1.losses.add_loss(loss, loss_collection)
 
         if add_summaries:
-            tf.summary.scalar("discriminator_gen_relativistic_loss", loss_on_generated)
-            tf.summary.scalar("discriminator_real_relativistic_loss", loss_on_real)
-            tf.summary.scalar("discriminator_relativistic_loss", loss)
+            tf.compat.v1.summary.scalar("discriminator_gen_relativistic_loss", loss_on_generated)
+            tf.compat.v1.summary.scalar("discriminator_real_relativistic_loss", loss_on_real)
+            tf.compat.v1.summary.scalar("discriminator_relativistic_loss", loss)
 
     return loss
 
@@ -89,8 +89,8 @@ def relativistic_generator_loss(
     real_weights=1.0,
     generated_weights=1.0,
     scope=None,
-    loss_collection=tf.GraphKeys.LOSSES,
-    reduction=tf.losses.Reduction.SUM_BY_NONZERO_WEIGHTS,
+    loss_collection=tf.compat.v1.GraphKeys.LOSSES,
+    reduction=tf.compat.v1.losses.Reduction.SUM_BY_NONZERO_WEIGHTS,
     add_summaries=False,
     confusion_labels=False,
 ):
@@ -116,7 +116,7 @@ def relativistic_generator_loss(
   Returns:
     A loss Tensor. The shape depends on `reduction`.
   """
-    with tf.name_scope(
+    with tf.compat.v1.name_scope(
         scope,
         "generator_relativistic_loss",
         (
@@ -129,10 +129,10 @@ def relativistic_generator_loss(
     ) as scope:
 
         real_logit = discriminator_real_outputs - tf.reduce_mean(
-            discriminator_gen_outputs
+            input_tensor=discriminator_gen_outputs
         )
         fake_logit = discriminator_gen_outputs - tf.reduce_mean(
-            discriminator_real_outputs
+            input_tensor=discriminator_real_outputs
         )
 
         if confusion_labels:
@@ -142,7 +142,7 @@ def relativistic_generator_loss(
             real_labels = tf.zeros_like(real_logit)
             fake_labels = tf.ones_like(fake_logit)
 
-        loss_on_real = tf.losses.sigmoid_cross_entropy(
+        loss_on_real = tf.compat.v1.losses.sigmoid_cross_entropy(
             real_labels,
             real_logit,
             real_weights,
@@ -151,7 +151,7 @@ def relativistic_generator_loss(
             loss_collection=None,
             reduction=reduction,
         )
-        loss_on_generated = tf.losses.sigmoid_cross_entropy(
+        loss_on_generated = tf.compat.v1.losses.sigmoid_cross_entropy(
             fake_labels,
             fake_logit,
             generated_weights,
@@ -161,11 +161,11 @@ def relativistic_generator_loss(
         )
 
         loss = loss_on_real + loss_on_generated
-        tf.losses.add_loss(loss, loss_collection)
+        tf.compat.v1.losses.add_loss(loss, loss_collection)
 
         if add_summaries:
-            tf.summary.scalar("generator_gen_relativistic_loss", loss_on_generated)
-            tf.summary.scalar("generator_real_relativistic_loss", loss_on_real)
-            tf.summary.scalar("generator_relativistic_loss", loss)
+            tf.compat.v1.summary.scalar("generator_gen_relativistic_loss", loss_on_generated)
+            tf.compat.v1.summary.scalar("generator_real_relativistic_loss", loss_on_real)
+            tf.compat.v1.summary.scalar("generator_relativistic_loss", loss)
 
     return loss

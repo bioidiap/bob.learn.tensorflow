@@ -82,11 +82,11 @@ def balanced_softmax_cross_entropy_loss_weights(labels, dtype="float32"):
     >>> #weights = balanced_softmax_cross_entropy_loss_weights(labels, dtype=logits.dtype)
     >>> #loss = tf.losses.softmax_cross_entropy(logits=logits, labels=labels, weights=weights)
     """
-    shape = tf.cast(tf.shape(labels), dtype=dtype)
+    shape = tf.cast(tf.shape(input=labels), dtype=dtype)
     batch_size, n_classes = shape[0], shape[1]
-    weights = tf.cast(tf.reduce_sum(labels, axis=0), dtype=dtype)
+    weights = tf.cast(tf.reduce_sum(input_tensor=labels, axis=0), dtype=dtype)
     weights = batch_size / weights / n_classes
-    weights = tf.gather(weights, tf.argmax(labels, axis=1))
+    weights = tf.gather(weights, tf.argmax(input=labels, axis=1))
     return weights
 
 
@@ -136,9 +136,9 @@ def balanced_sigmoid_cross_entropy_loss_weights(labels, dtype="float32"):
     >>> #loss = tf.losses.sigmoid_cross_entropy(logits=logits, labels=labels, weights=weights)
     """
     labels = tf.cast(labels, dtype='int32')
-    batch_size = tf.cast(tf.shape(labels)[0], dtype=dtype)
-    weights = tf.cast(tf.reduce_sum(labels), dtype=dtype)
-    weights = tf.convert_to_tensor([batch_size - weights, weights])
+    batch_size = tf.cast(tf.shape(input=labels)[0], dtype=dtype)
+    weights = tf.cast(tf.reduce_sum(input_tensor=labels), dtype=dtype)
+    weights = tf.convert_to_tensor(value=[batch_size - weights, weights])
     weights = batch_size / weights / 2
     weights = tf.gather(weights, labels)
     return weights

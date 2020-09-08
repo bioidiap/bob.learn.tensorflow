@@ -22,21 +22,21 @@ dummy_config = pkg_resources.resource_filename(
 def compare_datasets(ds1, ds2, sess=None):
     if tf.executing_eagerly():
         for values1, values2 in zip(ds1, ds2):
-            values1 = tf.contrib.framework.nest.flatten(values1)
-            values2 = tf.contrib.framework.nest.flatten(values2)
+            values1 = tf.nest.flatten(values1)
+            values2 = tf.nest.flatten(values2)
             for v1, v2 in zip(values1, values2):
-                if not tf.reduce_all(tf.math.equal(v1, v2)):
+                if not tf.reduce_all(input_tensor=tf.math.equal(v1, v2)):
                     return False
     else:
-        ds1 = ds1.make_one_shot_iterator().get_next()
-        ds2 = ds2.make_one_shot_iterator().get_next()
+        ds1 = tf.compat.v1.data.make_one_shot_iterator(ds1).get_next()
+        ds2 = tf.compat.v1.data.make_one_shot_iterator(ds2).get_next()
         while True:
             try:
                 values1, values2 = sess.run([ds1, ds2])
             except tf.errors.OutOfRangeError:
                 break
-            values1 = tf.contrib.framework.nest.flatten(values1)
-            values2 = tf.contrib.framework.nest.flatten(values2)
+            values1 = tf.nest.flatten(values1)
+            values2 = tf.nest.flatten(values2)
             for v1, v2 in zip(values1, values2):
                 v1, v2 = np.asarray(v1), np.asarray(v2)
                 if not np.all(v1 == v2):
@@ -112,7 +112,7 @@ def test_datasets_to_tfrecords():
             datasets_to_tfrecords, args=args, standalone_mode=False)
         assert_click_runner_result(result)
         # read back the tfrecod
-        with tf.Session() as sess:
+        with tf.compat.v1.Session() as sess:
             dataset2 = dataset_from_tfrecord(output_path)
             dataset1 = load(
                 [dummy_config], attribute_name='dataset', entry_point_group='bob')

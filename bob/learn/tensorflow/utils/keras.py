@@ -91,10 +91,10 @@ def restore_model_variables_from_checkpoint(
     model, checkpoint, session=None, normalizer=None
 ):
     if session is None:
-        session = tf.keras.backend.get_session()
+        session = tf.compat.v1.keras.backend.get_session()
 
     var_list = _create_var_map(model.variables, normalizer=normalizer)
-    saver = tf.train.Saver(var_list=var_list)
+    saver = tf.compat.v1.train.Saver(var_list=var_list)
     ckpt_state = tf.train.get_checkpoint_state(checkpoint)
     logger.info("Loading checkpoint %s", ckpt_state.model_checkpoint_path)
     saver.restore(session, ckpt_state.model_checkpoint_path)
@@ -102,7 +102,7 @@ def restore_model_variables_from_checkpoint(
 
 def initialize_model_from_checkpoint(model, checkpoint, normalizer=None):
     assignment_map = _create_var_map(model.variables, normalizer=normalizer)
-    tf.train.init_from_checkpoint(checkpoint, assignment_map=assignment_map)
+    tf.compat.v1.train.init_from_checkpoint(checkpoint, assignment_map=assignment_map)
 
 
 def model_summary(model, do_print=False):

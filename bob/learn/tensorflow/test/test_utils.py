@@ -56,8 +56,8 @@ def test_embedding_accuracy_tensors():
     data = numpy.vstack((class_a, class_b))
     labels = numpy.concatenate((labels_a, labels_b))
 
-    data = tf.convert_to_tensor(data.astype("float32"))
-    labels = tf.convert_to_tensor(labels.astype("int64"))
+    data = tf.convert_to_tensor(value=data.astype("float32"))
+    labels = tf.convert_to_tensor(value=labels.astype("int64"))
 
     accuracy = compute_embedding_accuracy_tensors(data, labels)
     assert accuracy == 1.

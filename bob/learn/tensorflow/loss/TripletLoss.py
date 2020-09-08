@@ -38,7 +38,7 @@ def triplet_loss(anchor_embedding,
 
     """
 
-    with tf.name_scope("triplet_loss"):
+    with tf.compat.v1.name_scope("triplet_loss"):
         # Normalize
         anchor_embedding = tf.nn.l2_normalize(
             anchor_embedding, 1, 1e-10, name="anchor")
@@ -48,28 +48,28 @@ def triplet_loss(anchor_embedding,
             negative_embedding, 1, 1e-10, name="negative")
 
         d_positive = tf.reduce_sum(
-            tf.square(tf.subtract(anchor_embedding, positive_embedding)), 1)
+            input_tensor=tf.square(tf.subtract(anchor_embedding, positive_embedding)), axis=1)
         d_negative = tf.reduce_sum(
-            tf.square(tf.subtract(anchor_embedding, negative_embedding)), 1)
+            input_tensor=tf.square(tf.subtract(anchor_embedding, negative_embedding)), axis=1)
 
         basic_loss = tf.add(tf.subtract(d_positive, d_negative), margin)
 
-        with tf.name_scope("TripletLoss"):
+        with tf.compat.v1.name_scope("TripletLoss"):
             # Between
-            between_class_loss = tf.reduce_mean(d_negative)
-            tf.summary.scalar('loss_between_class', between_class_loss)
-            tf.add_to_collection(tf.GraphKeys.LOSSES, between_class_loss)
+            between_class_loss = tf.reduce_mean(input_tensor=d_negative)
+            tf.compat.v1.summary.scalar('loss_between_class', between_class_loss)
+            tf.compat.v1.add_to_collection(tf.compat.v1.GraphKeys.LOSSES, between_class_loss)
 
             # Within
-            within_class_loss = tf.reduce_mean(d_positive)
-            tf.summary.scalar('loss_within_class', within_class_loss)
-            tf.add_to_collection(tf.GraphKeys.LOSSES, within_class_loss)
+            within_class_loss = tf.reduce_mean(input_tensor=d_positive)
+            tf.compat.v1.summary.scalar('loss_within_class', within_class_loss)
+            tf.compat.v1.add_to_collection(tf.compat.v1.GraphKeys.LOSSES, within_class_loss)
 
             # Total loss
             loss = tf.reduce_mean(
-                tf.maximum(basic_loss, 0.0), 0, name="total_loss")
-            tf.add_to_collection(tf.GraphKeys.LOSSES, loss)
-            tf.summary.scalar('loss_triplet', loss)
+                input_tensor=tf.maximum(basic_loss, 0.0), axis=0, name="total_loss")
+            tf.compat.v1.add_to_collection(tf.compat.v1.GraphKeys.LOSSES, loss)
+            tf.compat.v1.summary.scalar('loss_triplet', loss)
 
         return loss
 
@@ -77,7 +77,7 @@ def triplet_loss(anchor_embedding,
 def triplet_fisher_loss(anchor_embedding, positive_embedding,
                         negative_embedding):
 
-    with tf.name_scope("triplet_loss"):
+    with tf.compat.v1.name_scope("triplet_loss"):
         # Normalize
         anchor_embedding = tf.nn.l2_normalize(
             anchor_embedding, 1, 1e-10, name="anchor")
@@ -86,9 +86,9 @@ def triplet_fisher_loss(anchor_embedding, positive_embedding,
         negative_embedding = tf.nn.l2_normalize(
             negative_embedding, 1, 1e-10, name="negative")
 
-        average_class = tf.reduce_mean(anchor_embedding, 0)
-        average_total = tf.div(tf.add(tf.reduce_mean(anchor_embedding, axis=0),\
-                        tf.reduce_mean(negative_embedding, axis=0)), 2)
+        average_class = tf.reduce_mean(input_tensor=anchor_embedding, axis=0)
+        average_total = tf.compat.v1.div(tf.add(tf.reduce_mean(input_tensor=anchor_embedding, axis=0),\
+                        tf.reduce_mean(input_tensor=negative_embedding, axis=0)), 2)
 
         length = anchor_embedding.get_shape().as_list()[0]
         dim = anchor_embedding.get_shape().as_list()[1]
@@ -121,9 +121,9 @@ def triplet_fisher_loss(anchor_embedding, positive_embedding,
         # Sw = tf.trace(Sw)
         # Sb = tf.trace(Sb)
         #loss = tf.trace(tf.div(Sb, Sw))
-        loss = tf.trace(tf.div(Sw, Sb), name=tf.GraphKeys.LOSSES)
+        loss = tf.linalg.trace(tf.compat.v1.div(Sw, Sb), name=tf.compat.v1.GraphKeys.LOSSES)
 
-        return loss, tf.trace(Sb), tf.trace(Sw)
+        return loss, tf.linalg.trace(Sb), tf.linalg.trace(Sw)
 
 
 def triplet_average_loss(anchor_embedding,
@@ -155,7 +155,7 @@ def triplet_average_loss(anchor_embedding,
 
     """
 
-    with tf.name_scope("triplet_loss"):
+    with tf.compat.v1.name_scope("triplet_loss"):
         # Normalize
         anchor_embedding = tf.nn.l2_normalize(
             anchor_embedding, 1, 1e-10, name="anchor")
@@ -164,17 +164,17 @@ def triplet_average_loss(anchor_embedding,
         negative_embedding = tf.nn.l2_normalize(
             negative_embedding, 1, 1e-10, name="negative")
 
-        anchor_mean = tf.reduce_mean(anchor_embedding, 0)
+        anchor_mean = tf.reduce_mean(input_tensor=anchor_embedding, axis=0)
 
         d_positive = tf.reduce_sum(
-            tf.square(tf.subtract(anchor_mean, positive_embedding)), 1)
+            input_tensor=tf.square(tf.subtract(anchor_mean, positive_embedding)), axis=1)
         d_negative = tf.reduce_sum(
-            tf.square(tf.subtract(anchor_mean, negative_embedding)), 1)
+            input_tensor=tf.square(tf.subtract(anchor_mean, negative_embedding)), axis=1)
 
         basic_loss = tf.add(tf.subtract(d_positive, d_negative), margin)
         loss = tf.reduce_mean(
-            tf.maximum(basic_loss, 0.0), 0, name=tf.GraphKeys.LOSSES)
+            input_tensor=tf.maximum(basic_loss, 0.0), axis=0, name=tf.compat.v1.GraphKeys.LOSSES)
 
-        return loss, tf.reduce_mean(d_negative), tf.reduce_mean(d_positive)
+        return loss, tf.reduce_mean(input_tensor=d_negative), tf.reduce_mean(input_tensor=d_positive)
 
 

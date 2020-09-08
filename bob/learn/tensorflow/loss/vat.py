@@ -28,27 +28,27 @@ from functools import partial
 
 
 def get_normalized_vector(d):
-    d /= (1e-12 + tf.reduce_max(tf.abs(d), list(range(1, len(d.get_shape()))), keepdims=True))
-    d /= tf.sqrt(1e-6 + tf.reduce_sum(tf.pow(d, 2.0), list(range(1, len(d.get_shape()))), keepdims=True))
+    d /= (1e-12 + tf.reduce_max(input_tensor=tf.abs(d), axis=list(range(1, len(d.get_shape()))), keepdims=True))
+    d /= tf.sqrt(1e-6 + tf.reduce_sum(input_tensor=tf.pow(d, 2.0), axis=list(range(1, len(d.get_shape()))), keepdims=True))
     return d
 
 
 def logsoftmax(x):
-    xdev = x - tf.reduce_max(x, 1, keepdims=True)
-    lsm = xdev - tf.log(tf.reduce_sum(tf.exp(xdev), 1, keepdims=True))
+    xdev = x - tf.reduce_max(input_tensor=x, axis=1, keepdims=True)
+    lsm = xdev - tf.math.log(tf.reduce_sum(input_tensor=tf.exp(xdev), axis=1, keepdims=True))
     return lsm
 
 
 def kl_divergence_with_logit(q_logit, p_logit):
     q = tf.nn.softmax(q_logit)
-    qlogq = tf.reduce_mean(tf.reduce_sum(q * logsoftmax(q_logit), 1))
-    qlogp = tf.reduce_mean(tf.reduce_sum(q * logsoftmax(p_logit), 1))
+    qlogq = tf.reduce_mean(input_tensor=tf.reduce_sum(input_tensor=q * logsoftmax(q_logit), axis=1))
+    qlogp = tf.reduce_mean(input_tensor=tf.reduce_sum(input_tensor=q * logsoftmax(p_logit), axis=1))
     return qlogq - qlogp
 
 
 def entropy_y_x(logit):
     p = tf.nn.softmax(logit)
-    return -tf.reduce_mean(tf.reduce_sum(p * logsoftmax(logit), 1))
+    return -tf.reduce_mean(input_tensor=tf.reduce_sum(input_tensor=p * logsoftmax(logit), axis=1))
 
 
 class VATLoss:
@@ -106,16 +106,16 @@ class VATLoss:
         if mode != tf.estimator.ModeKeys.TRAIN:
             return 0.
         architecture = partial(architecture, reuse=True)
-        with tf.variable_scope(tf.get_variable_scope(), reuse=True):
+        with tf.compat.v1.variable_scope(tf.compat.v1.get_variable_scope(), reuse=True):
             vat_loss = self.virtual_adversarial_loss(features, logits, architecture, mode)
-            tf.summary.scalar("loss_VAT", vat_loss)
-            tf.add_to_collection(tf.GraphKeys.LOSSES, vat_loss)
+            tf.compat.v1.summary.scalar("loss_VAT", vat_loss)
+            tf.compat.v1.add_to_collection(tf.compat.v1.GraphKeys.LOSSES, vat_loss)
             if self.method == 'vat':
                 loss = vat_loss
             elif self.method == 'vatent':
                 ent_loss = entropy_y_x(logits)
-                tf.summary.scalar("loss_entropy", ent_loss)
-                tf.add_to_collection(tf.GraphKeys.LOSSES, ent_loss)
+                tf.compat.v1.summary.scalar("loss_entropy", ent_loss)
+                tf.compat.v1.add_to_collection(tf.compat.v1.GraphKeys.LOSSES, ent_loss)
                 loss = vat_loss + ent_loss
             else:
                 raise ValueError
@@ -125,20 +125,20 @@ class VATLoss:
         r_vadv = self.generate_virtual_adversarial_perturbation(features, logits, architecture, mode)
         logit_p = tf.stop_gradient(logits)
         adversarial_input = features + r_vadv
-        tf.summary.image("Adversarial_Image", adversarial_input)
+        tf.compat.v1.summary.image("Adversarial_Image", adversarial_input)
         logit_m = architecture(adversarial_input, mode=mode)[0]
         loss = kl_divergence_with_logit(logit_p, logit_m)
         return tf.identity(loss, name=name)
 
     def generate_virtual_adversarial_perturbation(self, features, logits, architecture, mode):
-        d = tf.random_normal(shape=tf.shape(features))
+        d = tf.random.normal(shape=tf.shape(input=features))
 
         for _ in range(self.num_power_iterations):
             d = self.xi * get_normalized_vector(d)
             logit_p = logits
             logit_m = architecture(features + d, mode=mode)[0]
             dist = kl_divergence_with_logit(logit_p, logit_m)
-            grad = tf.gradients(dist, [d], aggregation_method=2)[0]
+            grad = tf.gradients(ys=dist, xs=[d], aggregation_method=2)[0]
             d = tf.stop_gradient(grad)
 
         return self.epsilon * get_normalized_vector(d)

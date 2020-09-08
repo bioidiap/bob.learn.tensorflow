@@ -33,8 +33,8 @@ def call_on_frozen_graph(
         List of requested operations. Normally you would use
         ``returned_operations[0].outputs[0]``
     """
-    with tf.gfile.GFile(graph_def_path, "rb") as f:
-        graph_def = tf.GraphDef()
+    with tf.io.gfile.GFile(graph_def_path, "rb") as f:
+        graph_def = tf.compat.v1.GraphDef()
         graph_def.ParseFromString(f.read())
     input_map = {input_name: input}
 

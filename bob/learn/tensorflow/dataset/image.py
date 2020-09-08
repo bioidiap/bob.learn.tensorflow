@@ -99,7 +99,7 @@ def shuffle_data_and_labels_image_augmentation(filenames,
 
     dataset = dataset.shuffle(buffer_size).batch(batch_size).repeat(epochs)
 
-    data, labels = dataset.make_one_shot_iterator().get_next()
+    data, labels = tf.compat.v1.data.make_one_shot_iterator(dataset).get_next()
     return data, labels
 
 
@@ -215,7 +215,7 @@ def load_pngs(img_path, img_shape):
     object
         The loaded png file
     """
-    img_raw = tf.read_file(img_path)
+    img_raw = tf.io.read_file(img_path)
     img_tensor = tf.image.decode_png(img_raw, channels=img_shape[-1])
     img_final = tf.reshape(img_tensor, img_shape)
     return img_final

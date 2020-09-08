@@ -574,7 +574,7 @@ def MultiScaleInceptionResNetV2(
     padding = "SAME" if align_feature_maps else "VALID"
     name = name or "InceptionResnetV2"
 
-    with tf.name_scope(name, "InceptionResnetV2", [img_input]):
+    with tf.compat.v1.name_scope(name, "InceptionResnetV2", [img_input]):
         # convert colors from RGB to a learned color space and batch norm inputs
         # 224, 224, 4
         net = Conv2D_BN(
