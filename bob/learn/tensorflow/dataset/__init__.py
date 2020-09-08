@@ -4,9 +4,9 @@ import os
 import bob.io.base
 
 DEFAULT_FEATURE = {
-    "data": tf.FixedLenFeature([], tf.string),
-    "label": tf.FixedLenFeature([], tf.int64),
-    "key": tf.FixedLenFeature([], tf.string),
+    "data": tf.io.FixedLenFeature([], tf.string),
+    "label": tf.io.FixedLenFeature([], tf.int64),
+    "key": tf.io.FixedLenFeature([], tf.string),
 }
 
 
@@ -32,110 +32,110 @@ def from_filename_to_tensor(filename, extension=None):
     """
 
     if extension == "hdf5":
-        return tf.py_func(from_hdf5file_to_tensor, [filename], [tf.float32])
+        return tf.compat.v1.py_func(from_hdf5file_to_tensor, [filename], [tf.float32])
     else:
-        return tf.cast(tf.image.decode_image(tf.read_file(filename)), tf.float32)
+        return tf.cast(tf.image.decode_image(tf.io.read_file(filename)), tf.float32)
 
 
-def append_image_augmentation(
-    image,
-    gray_scale=False,
-    output_shape=None,
-    random_flip=False,
-    random_brightness=False,
-    random_contrast=False,
-    random_saturation=False,
-    random_rotate=False,
-    per_image_normalization=True,
-    random_gamma=False,
-    random_crop=False,
-):
-    """
-    Append to the current tensor some random image augmentation operation
+# def append_image_augmentation(
+#     image,
+#     gray_scale=False,
+#     output_shape=None,
+#     random_flip=False,
+#     random_brightness=False,
+#     random_contrast=False,
+#     random_saturation=False,
+#     random_rotate=False,
+#     per_image_normalization=True,
+#     random_gamma=False,
+#     random_crop=False,
+# ):
+#     """
+#     Append to the current tensor some random image augmentation operation
 
-    **Parameters**
-       gray_scale:
-          Convert to gray scale?
+#     **Parameters**
+#        gray_scale:
+#           Convert to gray scale?
 
-       output_shape:
-          If set, will randomly crop the image given the output shape
+#        output_shape:
+#           If set, will randomly crop the image given the output shape
 
-       random_flip:
-          Randomly flip an image horizontally  (https://www.tensorflow.org/api_docs/python/tf/image/random_flip_left_right)
+#        random_flip:
+#           Randomly flip an image horizontally  (https://www.tensorflow.org/api_docs/python/tf/image/random_flip_left_right)
 
-       random_brightness:
-           Adjust the brightness of an RGB image by a random factor (https://www.tensorflow.org/api_docs/python/tf/image/random_brightness)
+#        random_brightness:
+#            Adjust the brightness of an RGB image by a random factor (https://www.tensorflow.org/api_docs/python/tf/image/random_brightness)
 
-       random_contrast:
-           Adjust the contrast of an RGB image by a random factor (https://www.tensorflow.org/api_docs/python/tf/image/random_contrast)
+#        random_contrast:
+#            Adjust the contrast of an RGB image by a random factor (https://www.tensorflow.org/api_docs/python/tf/image/random_contrast)
 
-       random_saturation:
-           Adjust the saturation of an RGB image by a random factor (https://www.tensorflow.org/api_docs/python/tf/image/random_saturation)
+#        random_saturation:
+#            Adjust the saturation of an RGB image by a random factor (https://www.tensorflow.org/api_docs/python/tf/image/random_saturation)
 
-       random_rotate:
-           Randomly rotate face images between -5 and 5 degrees
+#        random_rotate:
+#            Randomly rotate face images between -5 and 5 degrees
 
-       per_image_normalization:
-           Linearly scales image to have zero mean and unit norm.
+#        per_image_normalization:
+#            Linearly scales image to have zero mean and unit norm.
 
-    """
+#     """
 
-    # Changing the range from 0-255 to 0-1
-    image = tf.cast(image, tf.float32) / 255
-    # FORCING A SEED FOR THE RANDOM OPERATIONS
-    tf.set_random_seed(0)
+#     # Changing the range from 0-255 to 0-1
+#     image = tf.cast(image, tf.float32) / 255
+#     # FORCING A SEED FOR THE RANDOM OPERATIONS
+#     tf.compat.v1.set_random_seed(0)
 
-    if output_shape is not None:
-        assert len(output_shape) == 2
-        if random_crop:
-            image = tf.random_crop(image, size=list(output_shape) + [3])
-        else:
-            image = tf.image.resize_image_with_crop_or_pad(
-                image, output_shape[0], output_shape[1]
-            )
+#     if output_shape is not None:
+#         assert len(output_shape) == 2
+#         if random_crop:
+#             image = tf.image.random_crop(image, size=list(output_shape) + [3])
+#         else:
+#             image = tf.image.resize_with_crop_or_pad(
+#                 image, output_shape[0], output_shape[1]
+#             )
 
-    if random_flip:
-        image = tf.image.random_flip_left_right(image)
+#     if random_flip:
+#         image = tf.image.random_flip_left_right(image)
 
-    if random_brightness:
-        image = tf.image.random_brightness(image, max_delta=0.15)
-        image = tf.clip_by_value(image, 0, 1)
+#     if random_brightness:
+#         image = tf.image.random_brightness(image, max_delta=0.15)
+#         image = tf.clip_by_value(image, 0, 1)
 
-    if random_contrast:
-        image = tf.image.random_contrast(image, lower=0.85, upper=1.15)
-        image = tf.clip_by_value(image, 0, 1)
+#     if random_contrast:
+#         image = tf.image.random_contrast(image, lower=0.85, upper=1.15)
+#         image = tf.clip_by_value(image, 0, 1)
 
-    if random_saturation:
-        image = tf.image.random_saturation(image, lower=0.85, upper=1.15)
-        image = tf.clip_by_value(image, 0, 1)
+#     if random_saturation:
+#         image = tf.image.random_saturation(image, lower=0.85, upper=1.15)
+#         image = tf.clip_by_value(image, 0, 1)
 
-    if random_gamma:
-        image = tf.image.adjust_gamma(
-            image, gamma=tf.random.uniform(shape=[], minval=0.85, maxval=1.15)
-        )
-        image = tf.clip_by_value(image, 0, 1)
+#     if random_gamma:
+#         image = tf.image.adjust_gamma(
+#             image, gamma=tf.random.uniform(shape=[], minval=0.85, maxval=1.15)
+#         )
+#         image = tf.clip_by_value(image, 0, 1)
 
-    if random_rotate:
-        # from https://stackoverflow.com/a/53855704/1286165
-        degree = 0.08726646259971647  # math.pi * 5 /180
-        random_angles = tf.random.uniform(shape=(1,), minval=-degree, maxval=degree)
-        image = tf.contrib.image.transform(
-            image,
-            tf.contrib.image.angles_to_projective_transforms(
-                random_angles,
-                tf.cast(tf.shape(image)[-3], tf.float32),
-                tf.cast(tf.shape(image)[-2], tf.float32),
-            ),
-        )
+#     if random_rotate:
+#         # from https://stackoverflow.com/a/53855704/1286165
+#         degree = 0.08726646259971647  # math.pi * 5 /180
+#         random_angles = tf.random.uniform(shape=(1,), minval=-degree, maxval=degree)
+#         image = tf.contrib.image.transform(
+#             image,
+#             tf.contrib.image.angles_to_projective_transforms(
+#                 random_angles,
+#                 tf.cast(tf.shape(input=image)[-3], tf.float32),
+#                 tf.cast(tf.shape(input=image)[-2], tf.float32),
+#             ),
+#         )
 
-    if gray_scale:
-        image = tf.image.rgb_to_grayscale(image, name="rgb_to_gray")
+#     if gray_scale:
+#         image = tf.image.rgb_to_grayscale(image, name="rgb_to_gray")
 
-    # normalizing data
-    if per_image_normalization:
-        image = tf.image.per_image_standardization(image)
+#     # normalizing data
+#     if per_image_normalization:
+#         image = tf.image.per_image_standardization(image)
 
-    return image
+#     return image
 
 
 def arrange_indexes_by_label(input_labels, possible_labels):
@@ -343,7 +343,7 @@ def blocks_tensorflow(images, block_size):
     output_size = list(block_size)
     output_size[0] = -1
     output_size[-1] = images.shape[-1]
-    blocks = tf.extract_image_patches(
+    blocks = tf.image.extract_patches(
         images, block_size, block_size, [1, 1, 1, 1], "VALID"
     )
     n_blocks = int(numpy.prod(blocks.shape[1:3]))
@@ -366,11 +366,11 @@ def tf_repeat(tensor, repeats):
     A Tensor. Has the same type as input. Has the shape of tensor.shape *
     repeats
     """
-    with tf.variable_scope("repeat"):
+    with tf.compat.v1.variable_scope("repeat"):
         expanded_tensor = tf.expand_dims(tensor, -1)
         multiples = [1] + repeats
         tiled_tensor = tf.tile(expanded_tensor, multiples=multiples)
-        repeated_tesnor = tf.reshape(tiled_tensor, tf.shape(tensor) * repeats)
+        repeated_tesnor = tf.reshape(tiled_tensor, tf.shape(input=tensor) * repeats)
     return repeated_tesnor
 
 

@@ -19,18 +19,18 @@ def mean_cross_entropy_loss(logits, labels, add_regularization_losses=True):
 
     """
 
-    with tf.variable_scope('cross_entropy_loss'):
+    with tf.compat.v1.variable_scope('cross_entropy_loss'):
         cross_loss = tf.reduce_mean(
-            tf.nn.sparse_softmax_cross_entropy_with_logits(
+            input_tensor=tf.nn.sparse_softmax_cross_entropy_with_logits(
                 logits=logits, labels=labels),
             name="cross_entropy_loss")
 
-        tf.summary.scalar('cross_entropy_loss', cross_loss)
-        tf.add_to_collection(tf.GraphKeys.LOSSES, cross_loss)
+        tf.compat.v1.summary.scalar('cross_entropy_loss', cross_loss)
+        tf.compat.v1.add_to_collection(tf.compat.v1.GraphKeys.LOSSES, cross_loss)
 
         if add_regularization_losses:
-            regularization_losses = tf.get_collection(
-                tf.GraphKeys.REGULARIZATION_LOSSES)
+            regularization_losses = tf.compat.v1.get_collection(
+                tf.compat.v1.GraphKeys.REGULARIZATION_LOSSES)
 
             total_loss = tf.add_n(
                 [cross_loss] + regularization_losses, name="total_loss")
@@ -59,41 +59,41 @@ def mean_cross_entropy_center_loss(logits,
 
     """
     # Cross entropy
-    with tf.variable_scope('cross_entropy_loss'):
+    with tf.compat.v1.variable_scope('cross_entropy_loss'):
         cross_loss = tf.reduce_mean(
-            tf.nn.sparse_softmax_cross_entropy_with_logits(
+            input_tensor=tf.nn.sparse_softmax_cross_entropy_with_logits(
                 logits=logits, labels=labels),
             name="cross_entropy_loss")
-        tf.add_to_collection(tf.GraphKeys.LOSSES, cross_loss)
-        tf.summary.scalar('loss_cross_entropy', cross_loss)
+        tf.compat.v1.add_to_collection(tf.compat.v1.GraphKeys.LOSSES, cross_loss)
+        tf.compat.v1.summary.scalar('loss_cross_entropy', cross_loss)
 
     # Appending center loss
-    with tf.variable_scope('center_loss'):
+    with tf.compat.v1.variable_scope('center_loss'):
         n_features = prelogits.get_shape()[1]
 
-        centers = tf.get_variable(
+        centers = tf.compat.v1.get_variable(
             'centers', [n_classes, n_features],
             dtype=tf.float32,
-            initializer=tf.constant_initializer(0),
+            initializer=tf.compat.v1.constant_initializer(0),
             trainable=False)
 
         # label = tf.reshape(labels, [-1])
         centers_batch = tf.gather(centers, labels)
         diff = (1 - alpha) * (centers_batch - prelogits)
-        centers = tf.scatter_sub(centers, labels, diff)
-        center_loss = tf.reduce_mean(tf.square(prelogits - centers_batch))
-        tf.add_to_collection(tf.GraphKeys.REGULARIZATION_LOSSES,
+        centers = tf.compat.v1.scatter_sub(centers, labels, diff)
+        center_loss = tf.reduce_mean(input_tensor=tf.square(prelogits - centers_batch))
+        tf.compat.v1.add_to_collection(tf.compat.v1.GraphKeys.REGULARIZATION_LOSSES,
                              center_loss * factor)
-        tf.summary.scalar('loss_center', center_loss)
+        tf.compat.v1.summary.scalar('loss_center', center_loss)
 
     # Adding the regularizers in the loss
-    with tf.variable_scope('total_loss'):
-        regularization_losses = tf.get_collection(
-            tf.GraphKeys.REGULARIZATION_LOSSES)
+    with tf.compat.v1.variable_scope('total_loss'):
+        regularization_losses = tf.compat.v1.get_collection(
+            tf.compat.v1.GraphKeys.REGULARIZATION_LOSSES)
         total_loss = tf.add_n(
             [cross_loss] + regularization_losses, name="total_loss")
-        tf.add_to_collection(tf.GraphKeys.LOSSES, total_loss)
-        tf.summary.scalar('loss_total', total_loss)
+        tf.compat.v1.add_to_collection(tf.compat.v1.GraphKeys.LOSSES, total_loss)
+        tf.compat.v1.summary.scalar('loss_total', total_loss)
 
     loss = dict()
     loss['loss'] = total_loss

@@ -28,7 +28,7 @@ def gram_matrix(input_tensor):
             [0., 0., 0., ..., 0., 0., 0.]],
     """
     result = tf.linalg.einsum("bijc,bijd->bcd", input_tensor, input_tensor)
-    input_shape = tf.shape(input_tensor)
+    input_shape = tf.shape(input=input_tensor)
     num_locations = tf.cast(input_shape[1] * input_shape[2], tf.float32)
     return result / (num_locations)
 
@@ -61,17 +61,17 @@ def upper_triangle_and_diagonal(A):
     """
     ones = tf.ones_like(A)
     # Upper triangular matrix of 0s and 1s (including diagonal)
-    mask = tf.matrix_band_part(ones, 0, -1)
-    upper_triangular_flat = tf.boolean_mask(A, mask)
+    mask = tf.linalg.band_part(ones, 0, -1)
+    upper_triangular_flat = tf.boolean_mask(tensor=A, mask=mask)
     return upper_triangular_flat
 
 
 def upper_triangle(A):
     ones = tf.ones_like(A)
     # Upper triangular matrix of 0s and 1s (including diagonal)
-    mask_a = tf.matrix_band_part(ones, 0, -1)
+    mask_a = tf.linalg.band_part(ones, 0, -1)
     # Diagonal
-    mask_b = tf.matrix_band_part(ones, 0, 0)
+    mask_b = tf.linalg.band_part(ones, 0, 0)
     mask = tf.cast(mask_a - mask_b, dtype=tf.bool)
-    upper_triangular_flat = tf.boolean_mask(A, mask)
+    upper_triangular_flat = tf.boolean_mask(tensor=A, mask=mask)
     return upper_triangular_flat

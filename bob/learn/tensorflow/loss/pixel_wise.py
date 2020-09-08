@@ -18,7 +18,7 @@ class PixelWise:
         self.label_smoothing = label_smoothing
 
     def __call__(self, labels, logits):
-        with tf.name_scope("PixelWiseLoss"):
+        with tf.compat.v1.name_scope("PixelWiseLoss"):
             flatten = tf.keras.layers.Flatten()
             logits = flatten(logits)
             n_pixels = logits.get_shape()[-1]
@@ -45,19 +45,19 @@ class PixelWise:
                 # reshape logits too as softmax_cross_entropy is buggy and cannot really
                 # handle higher dimensions
                 logits = tf.reshape(logits, (-1, self.n_one_hot_labels))
-                loss_fn = tf.losses.softmax_cross_entropy
+                loss_fn = tf.compat.v1.losses.softmax_cross_entropy
             else:
                 labels = tf.reshape(labels, (-1, 1))
                 labels = tf_repeat(labels, [n_pixels, 1])
                 labels = tf.reshape(labels, (-1, n_pixels))
-                loss_fn = tf.losses.sigmoid_cross_entropy
+                loss_fn = tf.compat.v1.losses.sigmoid_cross_entropy
 
             loss_pixel_wise = loss_fn(
                 labels,
                 logits=logits,
                 weights=weights,
                 label_smoothing=self.label_smoothing,
-                reduction=tf.losses.Reduction.MEAN,
+                reduction=tf.compat.v1.losses.Reduction.MEAN,
             )
-        tf.summary.scalar("loss_pixel_wise", loss_pixel_wise)
+        tf.compat.v1.summary.scalar("loss_pixel_wise", loss_pixel_wise)
         return loss_pixel_wise

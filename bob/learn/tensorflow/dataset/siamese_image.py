@@ -103,7 +103,7 @@ def shuffle_data_and_labels_image_augmentation(filenames,
         extension=extension)
 
     dataset = dataset.shuffle(buffer_size).batch(batch_size).repeat(epochs)
-    data, labels = dataset.make_one_shot_iterator().get_next()
+    data, labels = tf.compat.v1.data.make_one_shot_iterator(dataset).get_next()
     return data, labels
 
 

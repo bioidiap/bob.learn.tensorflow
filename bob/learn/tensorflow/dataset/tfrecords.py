@@ -77,9 +77,9 @@ def dataset_to_tfrecord(dataset, output):
         return example_proto.SerializeToString()
 
     def tf_serialize_example(*args):
-        args = tf.contrib.framework.nest.flatten(args)
-        args = [tf.serialize_tensor(f) for f in args]
-        tf_string = tf.py_func(serialize_example_pyfunction, args, tf.string)
+        args = tf.nest.flatten(args)
+        args = [tf.io.serialize_tensor(f) for f in args]
+        tf_string = tf.compat.v1.py_func(serialize_example_pyfunction, args, tf.string)
         return tf.reshape(tf_string, ())  # The result is a scalar
 
     dataset = dataset.map(tf_serialize_example)
@@ -122,20 +122,20 @@ def dataset_from_tfrecord(tfrecord, num_parallel_reads=None):
         meta = json.load(f)
     for k, v in meta.items():
         meta[k] = eval(v)
-    output_types = tf.contrib.framework.nest.flatten(meta["output_types"])
-    output_shapes = tf.contrib.framework.nest.flatten(meta["output_shapes"])
+    output_types = tf.nest.flatten(meta["output_types"])
+    output_shapes = tf.nest.flatten(meta["output_shapes"])
     feature_description = {}
     for i in range(len(output_types)):
         key = f"feature{i}"
-        feature_description[key] = tf.FixedLenFeature([], tf.string)
+        feature_description[key] = tf.io.FixedLenFeature([], tf.string)
 
     def _parse_function(example_proto):
         # Parse the input tf.Example proto using the dictionary above.
-        args = tf.parse_single_example(example_proto, feature_description)
-        args = tf.contrib.framework.nest.flatten(args)
-        args = [tf.parse_tensor(v, t) for v, t in zip(args, output_types)]
+        args = tf.io.parse_single_example(serialized=example_proto, features=feature_description)
+        args = tf.nest.flatten(args)
+        args = [tf.io.parse_tensor(v, t) for v, t in zip(args, output_types)]
         args = [tf.reshape(v, s) for v, s in zip(args, output_shapes)]
-        return tf.contrib.framework.nest.pack_sequence_as(meta["output_types"], args)
+        return tf.nest.pack_sequence_as(meta["output_types"], args)
 
     return raw_dataset.map(_parse_function)
 
@@ -161,9 +161,9 @@ def example_parser(serialized_example, feature, data_shape, data_type):
 
   """
     # Decode the record read by the reader
-    features = tf.parse_single_example(serialized_example, features=feature)
+    features = tf.io.parse_single_example(serialized=serialized_example, features=feature)
     # Convert the image data from string back to the numbers
-    image = tf.decode_raw(features["data"], data_type)
+    image = tf.io.decode_raw(features["data"], data_type)
     # Cast label data into int64
     label = tf.cast(features["label"], tf.int64)
     # Reshape image data into the original shape
@@ -193,9 +193,9 @@ def image_augmentation_parser(
 
   """
     # Decode the record read by the reader
-    features = tf.parse_single_example(serialized_example, features=feature)
+    features = tf.io.parse_single_example(serialized=serialized_example, features=feature)
     # Convert the image data from string back to the numbers
-    image = tf.decode_raw(features["data"], data_type)
+    image = tf.io.decode_raw(features["data"], data_type)
 
     # Reshape image data into the original shape
     image = tf.reshape(image, data_shape)
@@ -231,7 +231,7 @@ def read_and_decode(filename_queue, data_shape, data_type=tf.float32, feature=No
     if feature is None:
         feature = DEFAULT_FEATURE
     # Define a reader and read the next record
-    reader = tf.TFRecordReader()
+    reader = tf.compat.v1.TFRecordReader()
     _, serialized_example = reader.read(filename_queue)
     return example_parser(serialized_example, feature, data_shape, data_type)
 
@@ -459,7 +459,7 @@ def shuffle_data_and_labels(
     dataset = create_dataset_from_records(tfrecord_filenames, data_shape, data_type)
     dataset = dataset.shuffle(buffer_size).batch(batch_size).repeat(epochs)
 
-    data, labels, key = dataset.make_one_shot_iterator().get_next()
+    data, labels, key = tf.compat.v1.data.make_one_shot_iterator(dataset).get_next()
     features = dict()
     features["data"] = data
     features["key"] = key
@@ -495,7 +495,7 @@ def batch_data_and_labels(
     dataset = create_dataset_from_records(tfrecord_filenames, data_shape, data_type)
     dataset = dataset.batch(batch_size).repeat(epochs)
 
-    data, labels, key = dataset.make_one_shot_iterator().get_next()
+    data, labels, key = tf.compat.v1.data.make_one_shot_iterator(dataset).get_next()
     features = dict()
     features["data"] = data
     features["key"] = key
@@ -565,7 +565,7 @@ def batch_data_and_labels_image_augmentation(
     dataset = dataset.batch(batch_size, drop_remainder=drop_remainder)
     dataset = dataset.repeat(epochs)
 
-    data, labels, key = dataset.make_one_shot_iterator().get_next()
+    data, labels, key = tf.compat.v1.data.make_one_shot_iterator(dataset).get_next()
     features = dict()
     features["data"] = data
     features["key"] = key
@@ -602,26 +602,26 @@ def describe_tf_record(tf_record_path, shape, batch_size=1):
   """
 
     tf_records = [os.path.join(tf_record_path, f) for f in os.listdir(tf_record_path)]
-    filename_queue = tf.train.string_input_producer(
+    filename_queue = tf.compat.v1.train.string_input_producer(
         tf_records, num_epochs=1, name="input"
     )
 
     feature = {
-        "data": tf.FixedLenFeature([], tf.string),
-        "label": tf.FixedLenFeature([], tf.int64),
-        "key": tf.FixedLenFeature([], tf.string),
+        "data": tf.io.FixedLenFeature([], tf.string),
+        "label": tf.io.FixedLenFeature([], tf.int64),
+        "key": tf.io.FixedLenFeature([], tf.string),
     }
 
     # Define a reader and read the next record
-    reader = tf.TFRecordReader()
+    reader = tf.compat.v1.TFRecordReader()
 
     _, serialized_example = reader.read(filename_queue)
 
     # Decode the record read by the reader
-    features = tf.parse_single_example(serialized_example, features=feature)
+    features = tf.io.parse_single_example(serialized=serialized_example, features=feature)
 
     # Convert the image data from string back to the numbers
-    image = tf.decode_raw(features["data"], tf.uint8)
+    image = tf.io.decode_raw(features["data"], tf.uint8)
 
     # Cast label data into int32
     label = tf.cast(features["label"], tf.int64)
@@ -631,7 +631,7 @@ def describe_tf_record(tf_record_path, shape, batch_size=1):
     image = tf.reshape(image, shape)
 
     # Getting the batches in order
-    data_ph, label_ph, img_name_ph = tf.train.batch(
+    data_ph, label_ph, img_name_ph = tf.compat.v1.train.batch(
         [image, label, img_name],
         batch_size=batch_size,
         capacity=1000,
@@ -640,13 +640,13 @@ def describe_tf_record(tf_record_path, shape, batch_size=1):
     )
 
     # Start the reading
-    session = tf.Session()
-    tf.local_variables_initializer().run(session=session)
-    tf.global_variables_initializer().run(session=session)
+    session = tf.compat.v1.Session()
+    tf.compat.v1.local_variables_initializer().run(session=session)
+    tf.compat.v1.global_variables_initializer().run(session=session)
 
     # Preparing the batches
     thread_pool = tf.train.Coordinator()
-    threads = tf.train.start_queue_runners(coord=thread_pool, sess=session)
+    threads = tf.compat.v1.train.start_queue_runners(coord=thread_pool, sess=session)
 
     logger.info("Counting in %s", tf_record_path)
     labels = set()

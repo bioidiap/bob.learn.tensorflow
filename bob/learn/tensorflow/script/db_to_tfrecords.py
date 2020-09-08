@@ -154,7 +154,7 @@ def db_to_tfrecords(
 
     n_samples = len(samples)
     sample_count = 0
-    with tf.python_io.TFRecordWriter(output) as writer:
+    with tf.io.TFRecordWriter(output) as writer:
         if shuffle:
             logger.info("Shuffling the samples before writing ...")
             random.shuffle(samples)
@@ -258,7 +258,7 @@ def datasets_to_tfrecords(dataset, output, force, **kwargs):
         return
 
     click.echo("Writing tfrecod to: {}".format(output))
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         os.makedirs(os.path.dirname(output), exist_ok=True)
         try:
             sess.run(dataset_to_tfrecord(dataset, output))
@@ -297,9 +297,9 @@ def dataset_to_hdf5(dataset, output, mean, **kwargs):
     """
     log_parameters(logger)
 
-    data, label, key = dataset.make_one_shot_iterator().get_next()
+    data, label, key = tf.compat.v1.data.make_one_shot_iterator(dataset).get_next()
 
-    sess = tf.Session()
+    sess = tf.compat.v1.Session()
 
     extension = ".hdf5"
 

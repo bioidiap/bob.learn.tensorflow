@@ -50,7 +50,7 @@ def input_fn(mode):
         dataset = dataset.repeat(epochs)
     dataset = dataset.batch(batch_size)
 
-    data, label, key = dataset.make_one_shot_iterator().get_next()
+    data, label, key = tf.compat.v1.data.make_one_shot_iterator(dataset).get_next()
     return {'data': data, 'key': key}, label
 
 

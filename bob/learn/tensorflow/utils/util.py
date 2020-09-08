@@ -15,13 +15,13 @@ logger = logging.getLogger(__name__)
 @function.Defun(tf.float32, tf.float32)
 def norm_grad(x, dy):
     return tf.expand_dims(dy, -1) * (
-        x / (tf.expand_dims(tf.norm(x, ord=2, axis=-1), -1) + 1.0e-19)
+        x / (tf.expand_dims(tf.norm(tensor=x, ord=2, axis=-1), -1) + 1.0e-19)
     )
 
 
 @function.Defun(tf.float32, grad_func=norm_grad)
 def norm(x):
-    return tf.norm(x, ord=2, axis=-1)
+    return tf.norm(tensor=x, ord=2, axis=-1)
 
 
 def compute_euclidean_distance(x, y):
@@ -29,7 +29,7 @@ def compute_euclidean_distance(x, y):
     Computes the euclidean distance between two tensorflow variables
     """
 
-    with tf.name_scope("euclidean_distance"):
+    with tf.compat.v1.name_scope("euclidean_distance"):
         # d = tf.sqrt(tf.reduce_sum(tf.square(tf.subtract(x, y)), 1))
         d = norm(tf.subtract(x, y))
         return d
@@ -38,23 +38,23 @@ def compute_euclidean_distance(x, y):
 def pdist_safe(A, metric="sqeuclidean"):
     if metric != "sqeuclidean":
         raise NotImplementedError()
-    r = tf.reduce_sum(A * A, 1)
+    r = tf.reduce_sum(input_tensor=A * A, axis=1)
     r = tf.reshape(r, [-1, 1])
-    D = r - 2 * tf.matmul(A, A, transpose_b=True) + tf.transpose(r)
+    D = r - 2 * tf.matmul(A, A, transpose_b=True) + tf.transpose(a=r)
     return D
 
 
 def cdist(A, B, metric="sqeuclidean"):
     if metric != "sqeuclidean":
         raise NotImplementedError()
-    M1, M2 = tf.shape(A)[0], tf.shape(B)[0]
+    M1, M2 = tf.shape(input=A)[0], tf.shape(input=B)[0]
     # code from https://stackoverflow.com/a/43839605/1286165
     p1 = tf.matmul(
-        tf.expand_dims(tf.reduce_sum(tf.square(A), 1), 1), tf.ones(shape=(1, M2))
+        tf.expand_dims(tf.reduce_sum(input_tensor=tf.square(A), axis=1), 1), tf.ones(shape=(1, M2))
     )
     p2 = tf.transpose(
-        tf.matmul(
-            tf.reshape(tf.reduce_sum(tf.square(B), 1), shape=[-1, 1]),
+        a=tf.matmul(
+            tf.reshape(tf.reduce_sum(input_tensor=tf.square(B), axis=1), shape=[-1, 1]),
             tf.ones(shape=(M1, 1)),
             transpose_b=True,
         )
@@ -102,7 +102,7 @@ def create_mnist_tfrecord(tfrecords_filename, data, labels, n_samples=6000):
     def _int64_feature(value):
         return tf.train.Feature(int64_list=tf.train.Int64List(value=[value]))
 
-    writer = tf.python_io.TFRecordWriter(tfrecords_filename)
+    writer = tf.io.TFRecordWriter(tfrecords_filename)
 
     for i in range(n_samples):
         img = data[i]
@@ -213,14 +213,14 @@ def pdist(A):
     Compute a pairwise euclidean distance in the same fashion
     as in scipy.spation.distance.pdist
     """
-    with tf.name_scope("Pairwisedistance"):
+    with tf.compat.v1.name_scope("Pairwisedistance"):
         ones_1 = tf.reshape(tf.cast(tf.ones_like(A), tf.float32)[:, 0], [1, -1])
-        p1 = tf.matmul(tf.expand_dims(tf.reduce_sum(tf.square(A), 1), 1), ones_1)
+        p1 = tf.matmul(tf.expand_dims(tf.reduce_sum(input_tensor=tf.square(A), axis=1), 1), ones_1)
 
         ones_2 = tf.reshape(tf.cast(tf.ones_like(A), tf.float32)[:, 0], [-1, 1])
         p2 = tf.transpose(
-            tf.matmul(
-                tf.reshape(tf.reduce_sum(tf.square(A), 1), shape=[-1, 1]),
+            a=tf.matmul(
+                tf.reshape(tf.reduce_sum(input_tensor=tf.square(A), axis=1), shape=[-1, 1]),
                 ones_2,
                 transpose_b=True,
             )
@@ -240,8 +240,8 @@ def predict_using_tensors(embedding, labels, num=None):
     inf = tf.cast(tf.ones_like(labels), tf.float32) * numpy.inf
 
     distances = pdist(embedding)
-    distances = tf.matrix_set_diag(distances, inf)
-    indexes = tf.argmin(distances, axis=1)
+    distances = tf.linalg.set_diag(distances, inf)
+    indexes = tf.argmin(input=distances, axis=1)
     return [labels[i] for i in tf.unstack(indexes, num=num)]
 
 
@@ -266,7 +266,7 @@ def compute_embedding_accuracy_tensors(embedding, labels, num=None):
         for p, l in zip(tf.unstack(predictions, num=num), tf.unstack(labels, num=num))
     ]
 
-    return tf.reduce_sum(tf.cast(matching, tf.uint8)) / len(predictions)
+    return tf.reduce_sum(input_tensor=tf.cast(matching, tf.uint8)) / len(predictions)
 
 
 def compute_embedding_accuracy(embedding, labels):
@@ -348,7 +348,7 @@ def to_channels_last(image):
     axis_order = [1, 2, 0]
     shift = ndim - 3
     axis_order = list(range(ndim - 3)) + [n + shift for n in axis_order]
-    return tf.transpose(image, axis_order)
+    return tf.transpose(a=image, perm=axis_order)
 
 
 def to_channels_first(image):
@@ -379,7 +379,7 @@ def to_channels_first(image):
     axis_order = [2, 0, 1]
     shift = ndim - 3
     axis_order = list(range(ndim - 3)) + [n + shift for n in axis_order]
-    return tf.transpose(image, axis_order)
+    return tf.transpose(a=image, perm=axis_order)
 
 
 to_skimage = to_matplotlib = to_channels_last
@@ -439,7 +439,7 @@ def random_choice_no_replacement(one_dim_input, num_indices_to_drop=3, sort=Fals
     """Similar to np.random.choice with no replacement.
     Code from https://stackoverflow.com/a/54755281/1286165
     """
-    input_length = tf.shape(one_dim_input)[0]
+    input_length = tf.shape(input=one_dim_input)[0]
 
     # create uniform distribution over the sequence
     uniform_distribution = tf.random.uniform(

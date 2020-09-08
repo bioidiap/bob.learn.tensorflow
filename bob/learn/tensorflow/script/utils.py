@@ -14,7 +14,7 @@ def eager_execution_option(**kwargs):
             if not value or ctx.resilient_parsing:
                 return
             import tensorflow as tf
-            tf.enable_eager_execution()
+            tf.compat.v1.enable_eager_execution()
             if not tf.executing_eagerly():
                 raise click.ClickException(
                     "Could not enable tensorflow eager execution mode!")

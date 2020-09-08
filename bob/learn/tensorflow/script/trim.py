@@ -39,7 +39,7 @@ def delete_extra_checkpoints(directory, keep_last_n, dry_run):
     all_paths = filter(_existing, ckpt.all_model_checkpoint_paths)
     all_paths = list(map(os.path.basename, all_paths))
     model_checkpoint_path = os.path.basename(ckpt.model_checkpoint_path)
-    tf.train.update_checkpoint_state(
+    tf.compat.v1.train.update_checkpoint_state(
         directory, model_checkpoint_path, all_paths)
 
 

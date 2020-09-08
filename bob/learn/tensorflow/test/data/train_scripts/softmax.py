@@ -32,7 +32,7 @@ loss = MeanSoftMaxLoss()
 learning_rate = constant(base_learning_rate=0.01)
 
 ### SOLVER ###
-optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+optimizer = tf.compat.v1.train.GradientDescentOptimizer(learning_rate)
 
 ### Trainer ###
 trainer = Trainer

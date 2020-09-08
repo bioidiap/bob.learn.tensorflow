@@ -14,7 +14,7 @@ def input_fn(mode):
         num_epochs = 1
         shuffle = True
     data, labels = database.data(groups=groups)
-    return tf.estimator.inputs.numpy_input_fn(
+    return tf.compat.v1.estimator.inputs.numpy_input_fn(
         x={
             "data": data.astype('float32'),
             'key': labels.astype('float32')

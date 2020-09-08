@@ -46,13 +46,13 @@ def cache_dataset(input_fn, mode, **kwargs):
         logger.info("cache_only as True will be passed to input_fn.")
 
     # call the input function manually
-    with tf.Session() as sess:
+    with tf.compat.v1.Session() as sess:
         data = input_fn(mode, **kwargs)
         if isinstance(data, tf.data.Dataset):
-            iterator = data.make_initializable_iterator()
+            iterator = tf.compat.v1.data.make_initializable_iterator(data)
             data = iterator.get_next()
             sess.run(iterator.initializer)
-        sess.run(tf.initializers.global_variables())
+        sess.run(tf.compat.v1.initializers.global_variables())
         try:
             while True:
                 sess.run(data)
