@@ -7,36 +7,36 @@ import tensorflow as tf
 logger = logging.getLogger(__name__)
 
 
-def mean_cross_entropy_loss(logits, labels, add_regularization_losses=True):
-    """
-    Simple CrossEntropy loss.
-    Basically it wrapps the function tf.nn.sparse_softmax_cross_entropy_with_logits.
+# def mean_cross_entropy_loss(logits, labels, add_regularization_losses=True):
+#     """
+#     Simple CrossEntropy loss.
+#     Basically it wrapps the function tf.nn.sparse_softmax_cross_entropy_with_logits.
 
-    **Parameters**
-      logits:
-      labels:
-      add_regularization_losses: Regulize the loss???
+#     **Parameters**
+#       logits:
+#       labels:
+#       add_regularization_losses: Regulize the loss???
 
-    """
+#     """
 
-    with tf.compat.v1.variable_scope('cross_entropy_loss'):
-        cross_loss = tf.reduce_mean(
-            input_tensor=tf.nn.sparse_softmax_cross_entropy_with_logits(
-                logits=logits, labels=labels),
-            name="cross_entropy_loss")
+#     with tf.compat.v1.variable_scope('cross_entropy_loss'):
+#         cross_loss = tf.reduce_mean(
+#             input_tensor=tf.nn.sparse_softmax_cross_entropy_with_logits(
+#                 logits=logits, labels=labels),
+#             name="cross_entropy_loss")
 
-        tf.compat.v1.summary.scalar('cross_entropy_loss', cross_loss)
-        tf.compat.v1.add_to_collection(tf.compat.v1.GraphKeys.LOSSES, cross_loss)
+#         tf.compat.v1.summary.scalar('cross_entropy_loss', cross_loss)
+#         tf.compat.v1.add_to_collection(tf.compat.v1.GraphKeys.LOSSES, cross_loss)
 
-        if add_regularization_losses:
-            regularization_losses = tf.compat.v1.get_collection(
-                tf.compat.v1.GraphKeys.REGULARIZATION_LOSSES)
+#         if add_regularization_losses:
+#             regularization_losses = tf.compat.v1.get_collection(
+#                 tf.compat.v1.GraphKeys.REGULARIZATION_LOSSES)
 
-            total_loss = tf.add_n(
-                [cross_loss] + regularization_losses, name="total_loss")
-            return total_loss
-        else:
-            return cross_loss
+#             total_loss = tf.add_n(
+#                 [cross_loss] + regularization_losses, name="total_loss")
+#             return total_loss
+#         else:
+#             return cross_loss
 
 
 def mean_cross_entropy_center_loss(logits,

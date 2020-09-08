@@ -1,7 +1,4 @@
 setuptools
-bob.blitz
-bob.core
-bob.db.base
 bob.extension
 bob.io.base
 bob.io.image
@@ -15,7 +12,6 @@ bob.sp
 bob.db.mnist
 bob.db.atnt
 gridtk
-bob.bio.base
 numpy
 scipy
 click >= 7

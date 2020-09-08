@@ -7,6 +7,7 @@ import numpy
 import tensorflow as tf
 from tensorflow.python.client import device_lib
 from tensorflow.python.framework import function
+import inspect
 import logging
 
 logger = logging.getLogger(__name__)
@@ -465,3 +466,19 @@ def random_choice_no_replacement(one_dim_input, num_indices_to_drop=3, sort=Fals
     # gather indices from the input array using the filtered actual array
     result = tf.gather(one_dim_input, sorted_indices_to_keep)
     return result
+
+def is_argument_available(argument, method):
+    """
+    Check if an argument (or keyword argument) is available in a method
+
+    Attributes
+    ----------
+    argument: str
+        The name of the argument (or keyword argument).
+
+    method:
+        Pointer to the method
+
+    """
+
+    return argument in inspect.signature(method).parameters.keys()

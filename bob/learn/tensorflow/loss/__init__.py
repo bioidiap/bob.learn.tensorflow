@@ -1,4 +1,4 @@
-from .BaseLoss import mean_cross_entropy_loss, mean_cross_entropy_center_loss
+# from .BaseLoss import mean_cross_entropy_loss, mean_cross_entropy_center_loss
 from .ContrastiveLoss import contrastive_loss
 from .TripletLoss import triplet_loss, triplet_average_loss, triplet_fisher_loss
 from .StyleLoss import linear_gram_style_loss, content_loss, denoising_loss
@@ -27,8 +27,8 @@ def __appropriate__(*args):
 
 
 __appropriate__(
-    mean_cross_entropy_loss,
-    mean_cross_entropy_center_loss,
+    # mean_cross_entropy_loss,
+    # mean_cross_entropy_center_loss,
     contrastive_loss,
     triplet_loss,
     triplet_average_loss,

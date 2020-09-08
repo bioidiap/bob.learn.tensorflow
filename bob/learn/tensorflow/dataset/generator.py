@@ -55,8 +55,8 @@ class Generator:
                 break
         # Creating a "fake" dataset just to get the types and shapes
         dataset = tf.data.Dataset.from_tensors(dlk)
-        self._output_types = dataset.output_types
-        self._output_shapes = dataset.output_shapes
+        self._output_types = tf.compat.v1.data.get_output_types(dataset)
+        self._output_shapes = tf.compat.v1.data.get_output_shapes(dataset)
 
         logger.info(
             "Initializing a dataset with %d %s and %s types and %s shapes",
