@@ -20,9 +20,6 @@ requirements:
   host:
     - python {{ python }}
     - setuptools {{ setuptools }}
-    - bob.blitz
-    - bob.core
-    - bob.db.base
     - bob.extension
     - bob.io.base
     - bob.io.image

@@ -9,7 +9,7 @@ import click
 import tensorflow as tf
 from bob.extension.scripts.click_helper import (
     verbosity_option, ConfigCommand, ResourceOption, log_parameters)
-from bob.bio.base import is_argument_available
+from ..utils import is_argument_available
 
 logger = logging.getLogger(__name__)
 

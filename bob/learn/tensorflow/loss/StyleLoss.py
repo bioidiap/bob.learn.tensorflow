@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 def content_loss(noises, content_features):
-    """
+    r"""
 
     Implements the content loss from:
 
@@ -38,7 +38,7 @@ def content_loss(noises, content_features):
 
 
 def linear_gram_style_loss(noises, gram_style_features):
-    """
+    r"""
 
     Implements the style loss from:
 
