@@ -1,5 +1,4 @@
 setuptools
-docopt
 bob.blitz
 bob.core
 bob.db.base
