@@ -30,7 +30,14 @@ class Generator:
         The shapes of the returned samples.
     """
 
-    def __init__(self, samples, reader, multiple_samples=False, shuffle_on_epoch_end=False, **kwargs):
+    def __init__(
+        self,
+        samples,
+        reader,
+        multiple_samples=False,
+        shuffle_on_epoch_end=False,
+        **kwargs
+    ):
         super().__init__(**kwargs)
         self.reader = reader
         self.samples = list(samples)

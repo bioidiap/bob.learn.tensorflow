@@ -1,6 +1,7 @@
 from __future__ import division
 import numpy
 from keras.utils import Sequence
+
 # documentation imports
 from bob.dap.base.database import PadDatabase, PadFile
 from bob.bio.base.preprocessor import Preprocessor
@@ -22,8 +23,15 @@ class PadSequence(Sequence):
         The preprocessor to be used to load and process the data.
     """
 
-    def __init__(self, files, labels, batch_size, preprocessor,
-                 original_directory, original_extension):
+    def __init__(
+        self,
+        files,
+        labels,
+        batch_size,
+        preprocessor,
+        original_directory,
+        original_extension,
+    ):
         super(PadSequence, self).__init__()
         self.files = files
         self.labels = labels
@@ -43,8 +51,8 @@ class PadSequence(Sequence):
         return int(numpy.ceil(len(self.files) / self.batch_size))
 
     def __getitem__(self, idx):
-        files = self.files[idx * self.batch_size:(idx + 1) * self.batch_size]
-        labels = self.labels[idx * self.batch_size:(idx + 1) * self.batch_size]
+        files = self.files[idx * self.batch_size : (idx + 1) * self.batch_size]
+        labels = self.labels[idx * self.batch_size : (idx + 1) * self.batch_size]
         return self.load_batch(files, labels)
 
     def load_batch(self, files, labels):
@@ -65,7 +73,8 @@ class PadSequence(Sequence):
         data, targets = [], []
         for file_object, target in zip(files, labels):
             loaded_data = self.preprocessor.read_original_data(
-                file_object, self.original_directory, self.original_extension)
+                file_object, self.original_directory, self.original_extension
+            )
             preprocessed_data = self.preprocessor(loaded_data)
             data.append(preprocessed_data)
             targets.append(target)
@@ -104,12 +113,14 @@ def get_pad_files_labels(database, groups):
     return files, labels
 
 
-def get_pad_sequences(database,
-                      preprocessor,
-                      batch_size,
-                      groups=('world', 'dev', 'eval'),
-                      shuffle=False,
-                      limit=None):
+def get_pad_sequences(
+    database,
+    preprocessor,
+    batch_size,
+    groups=("world", "dev", "eval"),
+    shuffle=False,
+    limit=None,
+):
     """Returns a list of :any:`Sequence` objects for the database.
 
     Parameters
@@ -138,7 +149,13 @@ def get_pad_sequences(database,
         if limit is not None:
             files, labels = files[:limit], labels[:limit]
         seqs.append(
-            PadSequence(files, labels, batch_size, preprocessor,
-                        database.original_directory,
-                        database.original_extension))
+            PadSequence(
+                files,
+                labels,
+                batch_size,
+                preprocessor,
+                database.original_directory,
+                database.original_extension,
+            )
+        )
     return seqs

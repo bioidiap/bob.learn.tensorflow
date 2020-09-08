@@ -2,8 +2,7 @@ import tensorflow as tf
 
 
 class LRN(tf.keras.layers.Lambda):
-    """local response normalization with default parameters for GoogLeNet
-    """
+    """local response normalization with default parameters for GoogLeNet"""
 
     def __init__(self, alpha=0.0001, beta=0.75, depth_radius=5, **kwargs):
         self.alpha = alpha
@@ -21,8 +20,8 @@ class LRN(tf.keras.layers.Lambda):
 class InceptionModule(tf.keras.Model):
     """The inception module as it was introduced in:
 
-        C. Szegedy et al., “Going deeper with convolutions,” in Proceedings of the IEEE
-        Conference on Computer Vision and Pattern Recognition, 2015, pp. 1–9.
+    C. Szegedy et al., “Going deeper with convolutions,” in Proceedings of the IEEE
+    Conference on Computer Vision and Pattern Recognition, 2015, pp. 1–9.
     """
 
     def __init__(
@@ -112,7 +111,9 @@ def GoogLeNet(*, num_classes=1000, name="GoogLeNet", **kwargs):
             ),
             tf.keras.layers.MaxPool2D(3, 2, padding="same", name="pool1/3x3_s2"),
             LRN(name="pool1/norm1"),
-            tf.keras.layers.Conv2D(64, 1, padding="same", activation="relu", name="conv2/3x3_reduce"),
+            tf.keras.layers.Conv2D(
+                64, 1, padding="same", activation="relu", name="conv2/3x3_reduce"
+            ),
             tf.keras.layers.Conv2D(
                 192, 3, padding="same", activation="relu", name="conv2/3x3"
             ),

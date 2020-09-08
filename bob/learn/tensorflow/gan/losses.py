@@ -14,26 +14,26 @@ def relativistic_discriminator_loss(
 ):
     """Relativistic (average) loss
 
-  Args:
-    discriminator_real_outputs: Discriminator output on real data.
-    discriminator_gen_outputs: Discriminator output on generated data. Expected
-      to be in the range of (-inf, inf).
-    label_smoothing: The amount of smoothing for positive labels. This technique
-      is taken from `Improved Techniques for Training GANs`
-      (https://arxiv.org/abs/1606.03498). `0.0` means no smoothing.
-    real_weights: Optional `Tensor` whose rank is either 0, or the same rank as
-      `real_data`, and must be broadcastable to `real_data` (i.e., all
-      dimensions must be either `1`, or the same as the corresponding
-      dimension).
-    generated_weights: Same as `real_weights`, but for `generated_data`.
-    scope: The scope for the operations performed in computing the loss.
-    loss_collection: collection to which this loss will be added.
-    reduction: A `tf.compat.v1.losses.Reduction` to apply to loss.
-    add_summaries: Whether or not to add summaries for the loss.
+    Args:
+      discriminator_real_outputs: Discriminator output on real data.
+      discriminator_gen_outputs: Discriminator output on generated data. Expected
+        to be in the range of (-inf, inf).
+      label_smoothing: The amount of smoothing for positive labels. This technique
+        is taken from `Improved Techniques for Training GANs`
+        (https://arxiv.org/abs/1606.03498). `0.0` means no smoothing.
+      real_weights: Optional `Tensor` whose rank is either 0, or the same rank as
+        `real_data`, and must be broadcastable to `real_data` (i.e., all
+        dimensions must be either `1`, or the same as the corresponding
+        dimension).
+      generated_weights: Same as `real_weights`, but for `generated_data`.
+      scope: The scope for the operations performed in computing the loss.
+      loss_collection: collection to which this loss will be added.
+      reduction: A `tf.compat.v1.losses.Reduction` to apply to loss.
+      add_summaries: Whether or not to add summaries for the loss.
 
-  Returns:
-    A loss Tensor. The shape depends on `reduction`.
-  """
+    Returns:
+      A loss Tensor. The shape depends on `reduction`.
+    """
     with tf.compat.v1.name_scope(
         scope,
         "discriminator_relativistic_loss",
@@ -75,8 +75,12 @@ def relativistic_discriminator_loss(
         tf.compat.v1.losses.add_loss(loss, loss_collection)
 
         if add_summaries:
-            tf.compat.v1.summary.scalar("discriminator_gen_relativistic_loss", loss_on_generated)
-            tf.compat.v1.summary.scalar("discriminator_real_relativistic_loss", loss_on_real)
+            tf.compat.v1.summary.scalar(
+                "discriminator_gen_relativistic_loss", loss_on_generated
+            )
+            tf.compat.v1.summary.scalar(
+                "discriminator_real_relativistic_loss", loss_on_real
+            )
             tf.compat.v1.summary.scalar("discriminator_relativistic_loss", loss)
 
     return loss
@@ -96,26 +100,26 @@ def relativistic_generator_loss(
 ):
     """Relativistic (average) loss
 
-  Args:
-    discriminator_real_outputs: Discriminator output on real data.
-    discriminator_gen_outputs: Discriminator output on generated data. Expected
-      to be in the range of (-inf, inf).
-    label_smoothing: The amount of smoothing for positive labels. This technique
-      is taken from `Improved Techniques for Training GANs`
-      (https://arxiv.org/abs/1606.03498). `0.0` means no smoothing.
-    real_weights: Optional `Tensor` whose rank is either 0, or the same rank as
-      `real_data`, and must be broadcastable to `real_data` (i.e., all
-      dimensions must be either `1`, or the same as the corresponding
-      dimension).
-    generated_weights: Same as `real_weights`, but for `generated_data`.
-    scope: The scope for the operations performed in computing the loss.
-    loss_collection: collection to which this loss will be added.
-    reduction: A `tf.compat.v1.losses.Reduction` to apply to loss.
-    add_summaries: Whether or not to add summaries for the loss.
+    Args:
+      discriminator_real_outputs: Discriminator output on real data.
+      discriminator_gen_outputs: Discriminator output on generated data. Expected
+        to be in the range of (-inf, inf).
+      label_smoothing: The amount of smoothing for positive labels. This technique
+        is taken from `Improved Techniques for Training GANs`
+        (https://arxiv.org/abs/1606.03498). `0.0` means no smoothing.
+      real_weights: Optional `Tensor` whose rank is either 0, or the same rank as
+        `real_data`, and must be broadcastable to `real_data` (i.e., all
+        dimensions must be either `1`, or the same as the corresponding
+        dimension).
+      generated_weights: Same as `real_weights`, but for `generated_data`.
+      scope: The scope for the operations performed in computing the loss.
+      loss_collection: collection to which this loss will be added.
+      reduction: A `tf.compat.v1.losses.Reduction` to apply to loss.
+      add_summaries: Whether or not to add summaries for the loss.
 
-  Returns:
-    A loss Tensor. The shape depends on `reduction`.
-  """
+    Returns:
+      A loss Tensor. The shape depends on `reduction`.
+    """
     with tf.compat.v1.name_scope(
         scope,
         "generator_relativistic_loss",
@@ -164,8 +168,12 @@ def relativistic_generator_loss(
         tf.compat.v1.losses.add_loss(loss, loss_collection)
 
         if add_summaries:
-            tf.compat.v1.summary.scalar("generator_gen_relativistic_loss", loss_on_generated)
-            tf.compat.v1.summary.scalar("generator_real_relativistic_loss", loss_on_real)
+            tf.compat.v1.summary.scalar(
+                "generator_gen_relativistic_loss", loss_on_generated
+            )
+            tf.compat.v1.summary.scalar(
+                "generator_real_relativistic_loss", loss_on_real
+            )
             tf.compat.v1.summary.scalar("generator_relativistic_loss", loss)
 
     return loss

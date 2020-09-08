@@ -435,7 +435,9 @@ def generic_predict(
         if last_key == key:
             continue
         else:
-            save_predictions(output_dir, last_key, pred_buffer, video_container, remove_nan)
+            save_predictions(
+                output_dir, last_key, pred_buffer, video_container, remove_nan
+            )
             # delete saved data so we don't run out of RAM
             del pred_buffer[last_key]
             # start saving this new key

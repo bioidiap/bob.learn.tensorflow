@@ -67,7 +67,7 @@ class ConvDecoder(tf.keras.Model):
         name="Decoder",
         **kwargs,
     ):
-        super().__init__(name=name, ** kwargs)
+        super().__init__(name=name, **kwargs)
         self.data_format = data_format
         l2_kw = get_l2_kw(weight_decay)
         layers = []

@@ -22,7 +22,9 @@ class MLP(tf.keras.Model):
         for i, n in enumerate(hidden_layers, start=1):
             sequential_layers.extend(
                 [
-                    tf.keras.layers.Dense(n, use_bias=False, name=f"dense_{i}", **dense_kw),
+                    tf.keras.layers.Dense(
+                        n, use_bias=False, name=f"dense_{i}", **dense_kw
+                    ),
                     tf.keras.layers.BatchNormalization(scale=False, name=f"bn_{i}"),
                     tf.keras.layers.Activation("relu", name=f"relu_{i}"),
                 ]
@@ -77,7 +79,9 @@ class MLPDropout(tf.keras.Model):
         for i, n in enumerate(hidden_layers, start=1):
             sequential_layers.extend(
                 [
-                    tf.keras.layers.Dense(n, use_bias=False, name=f"dense_{i}", **dense_kw),
+                    tf.keras.layers.Dense(
+                        n, use_bias=False, name=f"dense_{i}", **dense_kw
+                    ),
                     tf.keras.layers.Activation("relu", name=f"relu_{i}"),
                     tf.keras.layers.Dropout(rate=drop_rate, name=f"drop_{i}"),
                 ]

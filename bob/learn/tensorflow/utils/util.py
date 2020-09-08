@@ -51,7 +51,8 @@ def cdist(A, B, metric="sqeuclidean"):
     M1, M2 = tf.shape(input=A)[0], tf.shape(input=B)[0]
     # code from https://stackoverflow.com/a/43839605/1286165
     p1 = tf.matmul(
-        tf.expand_dims(tf.reduce_sum(input_tensor=tf.square(A), axis=1), 1), tf.ones(shape=(1, M2))
+        tf.expand_dims(tf.reduce_sum(input_tensor=tf.square(A), axis=1), 1),
+        tf.ones(shape=(1, M2)),
     )
     p2 = tf.transpose(
         a=tf.matmul(
@@ -187,8 +188,7 @@ def compute_accuracy(
 
 
 def debug_embbeding(image, architecture, embbeding_dim=2, feature_layer="fc3"):
-    """
-    """
+    """"""
     import tensorflow as tf
     from bob.learn.tensorflow.utils.session import Session
 
@@ -216,12 +216,16 @@ def pdist(A):
     """
     with tf.compat.v1.name_scope("Pairwisedistance"):
         ones_1 = tf.reshape(tf.cast(tf.ones_like(A), tf.float32)[:, 0], [1, -1])
-        p1 = tf.matmul(tf.expand_dims(tf.reduce_sum(input_tensor=tf.square(A), axis=1), 1), ones_1)
+        p1 = tf.matmul(
+            tf.expand_dims(tf.reduce_sum(input_tensor=tf.square(A), axis=1), 1), ones_1
+        )
 
         ones_2 = tf.reshape(tf.cast(tf.ones_like(A), tf.float32)[:, 0], [-1, 1])
         p2 = tf.transpose(
             a=tf.matmul(
-                tf.reshape(tf.reduce_sum(input_tensor=tf.square(A), axis=1), shape=[-1, 1]),
+                tf.reshape(
+                    tf.reduce_sum(input_tensor=tf.square(A), axis=1), shape=[-1, 1]
+                ),
                 ones_2,
                 transpose_b=True,
             )
@@ -466,6 +470,7 @@ def random_choice_no_replacement(one_dim_input, num_indices_to_drop=3, sort=Fals
     # gather indices from the input array using the filtered actual array
     result = tf.gather(one_dim_input, sorted_indices_to_keep)
     return result
+
 
 def is_argument_available(argument, method):
     """

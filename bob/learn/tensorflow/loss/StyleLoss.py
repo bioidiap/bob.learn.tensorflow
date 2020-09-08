@@ -5,6 +5,7 @@
 import logging
 import tensorflow as tf
 import functools
+
 logger = logging.getLogger(__name__)
 
 
@@ -32,7 +33,7 @@ def content_loss(noises, content_features):
     """
 
     content_losses = []
-    for n,c in zip(noises, content_features):
+    for n, c in zip(noises, content_features):
         content_losses.append((2 * tf.nn.l2_loss(n - c) / c.size))
     return functools.reduce(tf.add, content_losses)
 
@@ -61,11 +62,10 @@ def linear_gram_style_loss(noises, gram_style_features):
     """
 
     style_losses = []
-    for n,s in zip(noises, gram_style_features):
+    for n, s in zip(noises, gram_style_features):
         style_losses.append((2 * tf.nn.l2_loss(n - s)) / s.size)
 
     return functools.reduce(tf.add, style_losses)
-
 
 
 def denoising_loss(noise):
@@ -81,16 +81,25 @@ def denoising_loss(noise):
           Input noise
 
     """
+
     def _tensor_size(tensor):
         from operator import mul
+
         return functools.reduce(mul, (d.value for d in tensor.get_shape()), 1)
 
     shape = noise.get_shape().as_list()
 
-    noise_y_size = _tensor_size(noise[:,1:,:,:])
-    noise_x_size = _tensor_size(noise[:,:,1:,:])
-    denoise_loss = 2 * ( (tf.nn.l2_loss(noise[:,1:,:,:] - noise[:,:shape[1]-1,:,:]) / noise_y_size) +
-                    (tf.nn.l2_loss(noise[:,:,1:,:] - noise[:,:,:shape[2]-1,:]) / noise_x_size))
+    noise_y_size = _tensor_size(noise[:, 1:, :, :])
+    noise_x_size = _tensor_size(noise[:, :, 1:, :])
+    denoise_loss = 2 * (
+        (
+            tf.nn.l2_loss(noise[:, 1:, :, :] - noise[:, : shape[1] - 1, :, :])
+            / noise_y_size
+        )
+        + (
+            tf.nn.l2_loss(noise[:, :, 1:, :] - noise[:, :, : shape[2] - 1, :])
+            / noise_x_size
+        )
+    )
 
     return denoise_loss
-

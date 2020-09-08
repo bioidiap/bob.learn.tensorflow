@@ -135,7 +135,7 @@ def balanced_sigmoid_cross_entropy_loss_weights(labels, dtype="float32"):
     >>> #weights = balanced_sigmoid_cross_entropy_loss_weights(labels, dtype=logits.dtype)
     >>> #loss = tf.losses.sigmoid_cross_entropy(logits=logits, labels=labels, weights=weights)
     """
-    labels = tf.cast(labels, dtype='int32')
+    labels = tf.cast(labels, dtype="int32")
     batch_size = tf.cast(tf.shape(input=labels)[0], dtype=dtype)
     weights = tf.cast(tf.reduce_sum(input_tensor=labels), dtype=dtype)
     weights = tf.convert_to_tensor(value=[batch_size - weights, weights])

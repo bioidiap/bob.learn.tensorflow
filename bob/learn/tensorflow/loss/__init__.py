@@ -14,13 +14,13 @@ from .utils import *
 def __appropriate__(*args):
     """Says object was actually declared here, an not on the import module.
 
-  Parameters:
+    Parameters:
 
-    *args: An iterable of objects to modify
+      *args: An iterable of objects to modify
 
-  Resolves `Sphinx referencing issues
-  <https://github.com/sphinx-doc/sphinx/issues/3048>`
-  """
+    Resolves `Sphinx referencing issues
+    <https://github.com/sphinx-doc/sphinx/issues/3048>`
+    """
 
     for obj in args:
         obj.__module__ = __name__
