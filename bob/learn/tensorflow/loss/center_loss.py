@@ -18,7 +18,7 @@ class CenterLoss:
                 "centers",
                 [n_classes, n_features],
                 dtype=tf.float32,
-                initializer=tf.compat.v1.constant_initializer(0.),
+                initializer=tf.compat.v1.constant_initializer(0.0),
                 trainable=False,
             )
 
@@ -26,8 +26,12 @@ class CenterLoss:
         with tf.compat.v1.name_scope(self.name):
             centers_batch = tf.gather(self.centers, sparse_labels)
             diff = (1 - self.alpha) * (centers_batch - prelogits)
-            self.centers_update_op = tf.compat.v1.scatter_sub(self.centers, sparse_labels, diff)
-            center_loss = tf.reduce_mean(input_tensor=tf.square(prelogits - centers_batch))
+            self.centers_update_op = tf.compat.v1.scatter_sub(
+                self.centers, sparse_labels, diff
+            )
+            center_loss = tf.reduce_mean(
+                input_tensor=tf.square(prelogits - centers_batch)
+            )
         tf.compat.v1.summary.scalar("loss_center", center_loss)
         # Add histogram for all centers
         for i in range(self.n_classes):

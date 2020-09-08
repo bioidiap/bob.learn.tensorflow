@@ -227,5 +227,3 @@ def dataset_from_tfrecord(tfrecord, num_parallel_reads=None):
 #     key = tf.cast(features["key"], tf.string)
 
 #     return image, label, key
-
-

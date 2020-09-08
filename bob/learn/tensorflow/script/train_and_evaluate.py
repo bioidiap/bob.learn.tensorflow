@@ -8,47 +8,52 @@ import tensorflow as tf
 from bob.learn.tensorflow.utils.hooks import EarlyStopException
 import logging
 import click
-from bob.extension.scripts.click_helper import (verbosity_option,
-                                                ConfigCommand, ResourceOption)
+from bob.extension.scripts.click_helper import (
+    verbosity_option,
+    ConfigCommand,
+    ResourceOption,
+)
 
 logger = logging.getLogger(__name__)
 
 
-@click.command(
-    entry_point_group='bob.learn.tensorflow.config', cls=ConfigCommand)
+@click.command(entry_point_group="bob.learn.tensorflow.config", cls=ConfigCommand)
 @click.option(
-    '--estimator',
-    '-e',
+    "--estimator",
+    "-e",
     required=True,
     cls=ResourceOption,
-    entry_point_group='bob.learn.tensorflow.estimator',
-    help='The estimator that will be trained and evaluated.')
+    entry_point_group="bob.learn.tensorflow.estimator",
+    help="The estimator that will be trained and evaluated.",
+)
 @click.option(
-    '--train-spec',
-    '-it',
+    "--train-spec",
+    "-it",
     required=True,
     cls=ResourceOption,
-    entry_point_group='bob.learn.tensorflow.trainspec',
-    help='See :any:`tf.estimator.Estimator.train_and_evaluate`.')
+    entry_point_group="bob.learn.tensorflow.trainspec",
+    help="See :any:`tf.estimator.Estimator.train_and_evaluate`.",
+)
 @click.option(
-    '--eval-spec',
-    '-ie',
+    "--eval-spec",
+    "-ie",
     required=True,
     cls=ResourceOption,
-    entry_point_group='bob.learn.tensorflow.evalspec',
-    help='See :any:`tf.estimator.Estimator.train_and_evaluate`.')
+    entry_point_group="bob.learn.tensorflow.evalspec",
+    help="See :any:`tf.estimator.Estimator.train_and_evaluate`.",
+)
 @click.option(
-    '--exit-ok-exceptions',
+    "--exit-ok-exceptions",
     cls=ResourceOption,
     multiple=True,
-    default=(EarlyStopException, ),
+    default=(EarlyStopException,),
     show_default=True,
-    entry_point_group='bob.learn.tensorflow.exception',
-    help='A list of exceptions to exit properly if they occur. If nothing is '
-    'provided, the EarlyStopException is handled by default.')
+    entry_point_group="bob.learn.tensorflow.exception",
+    help="A list of exceptions to exit properly if they occur. If nothing is "
+    "provided, the EarlyStopException is handled by default.",
+)
 @verbosity_option(cls=ResourceOption)
-def train_and_evaluate(estimator, train_spec, eval_spec, exit_ok_exceptions,
-                       **kwargs):
+def train_and_evaluate(estimator, train_spec, eval_spec, exit_ok_exceptions, **kwargs):
     """Trains and evaluates a network using Tensorflow estimators.
 
     This script calls the estimator.train_and_evaluate function. Please see:
@@ -57,11 +62,11 @@ def train_and_evaluate(estimator, train_spec, eval_spec, exit_ok_exceptions,
     https://www.tensorflow.org/api_docs/python/tf/estimator/EvalSpec
     for more details.
     """
-    logger.debug('estimator: %s', estimator)
-    logger.debug('train_spec: %s', train_spec)
-    logger.debug('eval_spec: %s', eval_spec)
-    logger.debug('exit_ok_exceptions: %s', exit_ok_exceptions)
-    logger.debug('kwargs: %s', kwargs)
+    logger.debug("estimator: %s", estimator)
+    logger.debug("train_spec: %s", train_spec)
+    logger.debug("eval_spec: %s", eval_spec)
+    logger.debug("exit_ok_exceptions: %s", exit_ok_exceptions)
+    logger.debug("kwargs: %s", kwargs)
 
     # Train and evaluate
     try:

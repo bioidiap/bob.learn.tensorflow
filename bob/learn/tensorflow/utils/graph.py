@@ -2,12 +2,7 @@ import tensorflow as tf
 
 
 def call_on_frozen_graph(
-    graph_def_path,
-    input,
-    return_elements,
-    input_name,
-    name=None,
-    **kwargs
+    graph_def_path, input, return_elements, input_name, name=None, **kwargs
 ):
     """Loads a frozen graph def file (.pb) and replaces its input with the given input
     and return the requested output tensors.

@@ -2,8 +2,7 @@ import tensorflow as tf
 
 
 def compute_kernel(x, y):
-    """Gaussian kernel.
-    """
+    """Gaussian kernel."""
     x_size = tf.shape(input=x)[0]
     y_size = tf.shape(input=y)[0]
     dim = tf.shape(input=x)[1]
@@ -14,7 +13,8 @@ def compute_kernel(x, y):
         tf.reshape(y, tf.stack([1, y_size, dim])), tf.stack([x_size, 1, 1])
     )
     return tf.exp(
-        -tf.reduce_mean(input_tensor=tf.square(tiled_x - tiled_y), axis=2) / tf.cast(dim, tf.float32)
+        -tf.reduce_mean(input_tensor=tf.square(tiled_x - tiled_y), axis=2)
+        / tf.cast(dim, tf.float32)
     )
 
 

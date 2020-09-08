@@ -10,9 +10,9 @@ def input_fn(mode):
     from bob.bio.base.test.dummy.database import database as db
 
     if mode == tf.estimator.ModeKeys.TRAIN:
-        groups = 'world'
+        groups = "world"
     elif mode == tf.estimator.ModeKeys.EVAL:
-        groups = 'dev'
+        groups = "dev"
 
     files = db.objects(groups=groups)
 
@@ -33,7 +33,8 @@ def input_fn(mode):
     generator = BioGenerator(db, files, load_data, biofile_to_label)
 
     dataset = tf.data.Dataset.from_generator(
-        generator, generator.output_types, generator.output_shapes)
+        generator, generator.output_types, generator.output_shapes
+    )
 
     def transform(image, label, key):
         # convert to channels last
@@ -51,7 +52,7 @@ def input_fn(mode):
     dataset = dataset.batch(batch_size)
 
     data, label, key = tf.compat.v1.data.make_one_shot_iterator(dataset).get_next()
-    return {'data': data, 'key': key}, label
+    return {"data": data, "key": key}, label
 
 
 def train_input_fn():

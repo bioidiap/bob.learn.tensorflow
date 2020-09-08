@@ -6,8 +6,7 @@ import tensorflow as tf
 import numpy as np
 from click.testing import CliRunner
 from bob.io.base import create_directories_safe
-from bob.learn.tensorflow.script.db_to_tfrecords import (
-    datasets_to_tfrecords)
+from bob.learn.tensorflow.script.db_to_tfrecords import datasets_to_tfrecords
 from bob.learn.tensorflow.utils import load_mnist, create_mnist_tfrecord
 from bob.extension.scripts.click_helper import assert_click_runner_result
 from bob.extension.config import load
@@ -16,7 +15,8 @@ from bob.learn.tensorflow.dataset.tfrecords import dataset_from_tfrecord
 regenerate_reference = False
 
 dummy_config = pkg_resources.resource_filename(
-    'bob.learn.tensorflow', 'test/data/db_to_tfrecords_config.py')
+    "bob.learn.tensorflow", "test/data/db_to_tfrecords_config.py"
+)
 
 
 def compare_datasets(ds1, ds2, sess=None):
@@ -44,19 +44,17 @@ def compare_datasets(ds1, ds2, sess=None):
     return True
 
 
-
-
 def test_datasets_to_tfrecords():
     runner = CliRunner()
     with runner.isolated_filesystem():
-        output_path = './test'
-        args = (dummy_config, '--output', output_path)
-        result = runner.invoke(
-            datasets_to_tfrecords, args=args, standalone_mode=False)
+        output_path = "./test"
+        args = (dummy_config, "--output", output_path)
+        result = runner.invoke(datasets_to_tfrecords, args=args, standalone_mode=False)
         assert_click_runner_result(result)
         # read back the tfrecod
         with tf.compat.v1.Session() as sess:
             dataset2 = dataset_from_tfrecord(output_path)
             dataset1 = load(
-                [dummy_config], attribute_name='dataset', entry_point_group='bob')
+                [dummy_config], attribute_name="dataset", entry_point_group="bob"
+            )
             assert compare_datasets(dataset1, dataset2, sess)

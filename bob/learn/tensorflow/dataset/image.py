@@ -7,22 +7,24 @@ from functools import partial
 from . import append_image_augmentation, from_filename_to_tensor
 
 
-def shuffle_data_and_labels_image_augmentation(filenames,
-                                               labels,
-                                               data_shape,
-                                               data_type,
-                                               batch_size,
-                                               epochs=None,
-                                               buffer_size=10**3,
-                                               gray_scale=False,
-                                               output_shape=None,
-                                               random_flip=False,
-                                               random_brightness=False,
-                                               random_contrast=False,
-                                               random_saturation=False,
-                                               random_rotate=False,
-                                               per_image_normalization=True,
-                                               extension=None):
+def shuffle_data_and_labels_image_augmentation(
+    filenames,
+    labels,
+    data_shape,
+    data_type,
+    batch_size,
+    epochs=None,
+    buffer_size=10 ** 3,
+    gray_scale=False,
+    output_shape=None,
+    random_flip=False,
+    random_brightness=False,
+    random_contrast=False,
+    random_saturation=False,
+    random_rotate=False,
+    per_image_normalization=True,
+    extension=None,
+):
     """
     Dump random batches from a list of image paths and labels:
 
@@ -95,7 +97,8 @@ def shuffle_data_and_labels_image_augmentation(filenames,
         random_saturation=random_saturation,
         random_rotate=random_rotate,
         per_image_normalization=per_image_normalization,
-        extension=extension)
+        extension=extension,
+    )
 
     dataset = dataset.shuffle(buffer_size).batch(batch_size).repeat(epochs)
 
@@ -103,19 +106,21 @@ def shuffle_data_and_labels_image_augmentation(filenames,
     return data, labels
 
 
-def create_dataset_from_path_augmentation(filenames,
-                                          labels,
-                                          data_shape,
-                                          data_type,
-                                          gray_scale=False,
-                                          output_shape=None,
-                                          random_flip=False,
-                                          random_brightness=False,
-                                          random_contrast=False,
-                                          random_saturation=False,
-                                          random_rotate=False,
-                                          per_image_normalization=True,
-                                          extension=None):
+def create_dataset_from_path_augmentation(
+    filenames,
+    labels,
+    data_shape,
+    data_type,
+    gray_scale=False,
+    output_shape=None,
+    random_flip=False,
+    random_brightness=False,
+    random_contrast=False,
+    random_saturation=False,
+    random_rotate=False,
+    per_image_normalization=True,
+    extension=None,
+):
     """
     Create dataset from a list of tf-record files
 
@@ -149,26 +154,29 @@ def create_dataset_from_path_augmentation(filenames,
         random_saturation=random_saturation,
         random_rotate=random_rotate,
         per_image_normalization=per_image_normalization,
-        extension=extension)
+        extension=extension,
+    )
 
     dataset = tf.data.Dataset.from_tensor_slices((filenames, labels))
     dataset = dataset.map(parser)
     return dataset
 
 
-def image_augmentation_parser(filename,
-                              label,
-                              data_shape,
-                              data_type,
-                              gray_scale=False,
-                              output_shape=None,
-                              random_flip=False,
-                              random_brightness=False,
-                              random_contrast=False,
-                              random_saturation=False,
-                              random_rotate=False,
-                              per_image_normalization=True,
-                              extension=None):
+def image_augmentation_parser(
+    filename,
+    label,
+    data_shape,
+    data_type,
+    gray_scale=False,
+    output_shape=None,
+    random_flip=False,
+    random_brightness=False,
+    random_contrast=False,
+    random_saturation=False,
+    random_rotate=False,
+    per_image_normalization=True,
+    extension=None,
+):
     """
     Parses a single tf.Example into image and label tensors.
     """
@@ -179,7 +187,7 @@ def image_augmentation_parser(filename,
     # Reshape image data into the original shape
     image = tf.reshape(image, data_shape)
 
-    #Applying image augmentation
+    # Applying image augmentation
     image = append_image_augmentation(
         image,
         gray_scale=gray_scale,
@@ -189,12 +197,13 @@ def image_augmentation_parser(filename,
         random_contrast=random_contrast,
         random_saturation=random_saturation,
         random_rotate=random_rotate,
-        per_image_normalization=per_image_normalization)
+        per_image_normalization=per_image_normalization,
+    )
 
     label = tf.cast(label, tf.int64)
     features = dict()
-    features['data'] = image
-    features['key'] = filename
+    features["data"] = image
+    features["key"] = filename
 
     return features, label
 

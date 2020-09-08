@@ -13,24 +13,39 @@ def MSUPatch(name="MSUPatch", **kwargs):
     return tf.keras.Sequential(
         [
             tf.keras.layers.Conv2D(
-                50, (5, 5), padding="same", use_bias=False, name="Conv-1", input_shape=(96, 96, 3)
+                50,
+                (5, 5),
+                padding="same",
+                use_bias=False,
+                name="Conv-1",
+                input_shape=(96, 96, 3),
             ),
             tf.keras.layers.BatchNormalization(scale=False, name="BN-1"),
             tf.keras.layers.Activation("relu", name="ReLU-1"),
             tf.keras.layers.MaxPool2D(padding="same", name="MaxPool-1"),
-            tf.keras.layers.Conv2D(100, (3, 3), padding="same", use_bias=False, name="Conv-2"),
+            tf.keras.layers.Conv2D(
+                100, (3, 3), padding="same", use_bias=False, name="Conv-2"
+            ),
             tf.keras.layers.BatchNormalization(scale=False, name="BN-2"),
             tf.keras.layers.Activation("relu", name="ReLU-2"),
             tf.keras.layers.MaxPool2D(padding="same", name="MaxPool-2"),
-            tf.keras.layers.Conv2D(150, (3, 3), padding="same", use_bias=False, name="Conv-3"),
+            tf.keras.layers.Conv2D(
+                150, (3, 3), padding="same", use_bias=False, name="Conv-3"
+            ),
             tf.keras.layers.BatchNormalization(scale=False, name="BN-3"),
             tf.keras.layers.Activation("relu", name="ReLU-3"),
-            tf.keras.layers.MaxPool2D(pool_size=3, strides=2, padding="same", name="MaxPool-3"),
-            tf.keras.layers.Conv2D(200, (3, 3), padding="same", use_bias=False, name="Conv-4"),
+            tf.keras.layers.MaxPool2D(
+                pool_size=3, strides=2, padding="same", name="MaxPool-3"
+            ),
+            tf.keras.layers.Conv2D(
+                200, (3, 3), padding="same", use_bias=False, name="Conv-4"
+            ),
             tf.keras.layers.BatchNormalization(scale=False, name="BN-4"),
             tf.keras.layers.Activation("relu", name="ReLU-4"),
             tf.keras.layers.MaxPool2D(padding="same", name="MaxPool-4"),
-            tf.keras.layers.Conv2D(250, (3, 3), padding="same", use_bias=False, name="Conv-5"),
+            tf.keras.layers.Conv2D(
+                250, (3, 3), padding="same", use_bias=False, name="Conv-5"
+            ),
             tf.keras.layers.BatchNormalization(scale=False, name="BN-5"),
             tf.keras.layers.Activation("relu", name="ReLU-5"),
             tf.keras.layers.MaxPool2D(padding="same", name="MaxPool-5"),
