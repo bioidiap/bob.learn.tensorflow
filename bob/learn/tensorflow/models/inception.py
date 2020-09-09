@@ -132,7 +132,7 @@ def GoogLeNet(*, num_classes=1000, name="GoogLeNet", **kwargs):
             InceptionModule(384, 192, 384, 48, 128, 128, name="inception_5b"),
             tf.keras.layers.GlobalAvgPool2D(name="pool5"),
             tf.keras.layers.Dropout(rate=0.4, name="dropout"),
-            tf.keras.layers.Dense(num_classes, name="output", activation="softmax"),
+            tf.keras.layers.Dense(num_classes, name="output"),
         ],
         name=name,
         **kwargs
