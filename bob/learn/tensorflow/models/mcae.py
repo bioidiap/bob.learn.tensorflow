@@ -51,8 +51,8 @@ class ConvEncoder(tf.keras.Model):
         self.sequential_layers = layers
 
     def call(self, x, training=None):
-        for l in self.sequential_layers:
-            x = l(x)
+        for layer in self.sequential_layers:
+            x = layer(x)
         return x
 
 
@@ -91,8 +91,8 @@ class ConvDecoder(tf.keras.Model):
         self.sequential_layers = layers
 
     def call(self, x, training=None):
-        for l in self.sequential_layers:
-            x = l(x)
+        for layer in self.sequential_layers:
+            x = layer(x)
         return x
 
 

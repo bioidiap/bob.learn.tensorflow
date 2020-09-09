@@ -542,7 +542,7 @@ def InceptionResNetV2(
     if include_top:
         # Classification block
         x = GlobalAvgPool2D(name="avg_pool")(x)
-        x = Dense(classes, activation="softmax", name="predictions")(x)
+        x = Dense(classes, name="predictions")(x)
     else:
         if pooling == "avg":
             x = GlobalAvgPool2D()(x)

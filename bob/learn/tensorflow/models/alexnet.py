@@ -52,7 +52,7 @@ def AlexNet_simplified(name="AlexNet", **kwargs):
             tf.keras.layers.Dense(units=4096, activation="relu", name="F6"),
             tf.keras.layers.Dropout(rate=0.5, name="D7"),
             tf.keras.layers.Dense(units=4096, activation="relu", name="F7"),
-            tf.keras.layers.Dense(units=1000, activation="softmax", name="OUTPUT"),
+            tf.keras.layers.Dense(units=1000, name="OUTPUT"),
         ],
         name=name,
         **kwargs
