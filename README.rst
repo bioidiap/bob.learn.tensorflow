@@ -5,10 +5,10 @@
 
 .. image:: https://img.shields.io/badge/docs-available-orange.svg
    :target: https://www.idiap.ch/software/bob/docs/bob/bob.learn.tensorflow/master/index.html
-.. image:: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/badges/v1.2.1/pipeline.svg
-   :target: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/commits/v1.2.1
-.. image:: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/badges/v1.2.1/coverage.svg
-   :target: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/commits/v1.2.1
+.. image:: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/badges/master/pipeline.svg
+   :target: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/commits/master
+.. image:: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/badges/master/coverage.svg
+   :target: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/commits/master
 .. image:: https://img.shields.io/badge/gitlab-project-0000c0.svg
    :target: https://gitlab.idiap.ch/bob/bob.learn.tensorflow
 
