@@ -42,8 +42,8 @@ def datasets_to_tfrecords(dataset, output, force, **kwargs):
     You can convert the written TFRecord files back to datasets using
     :any:`bob.learn.tensorflow.dataset.tfrecords.dataset_from_tfrecord`.
 
-    To use this script with SGE, change your dataset and output based on the SGE_TASK_ID
-    environment variable in your config file.
+    To use this script with SGE, change your dataset (like shard it) and output a part
+    of the dataset based on the SGE_TASK_ID environment variable in your config file.
     """
     from bob.extension.scripts.click_helper import log_parameters
     import os
