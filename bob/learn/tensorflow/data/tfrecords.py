@@ -5,15 +5,10 @@ from __future__ import division
 from __future__ import print_function
 
 import json
-import logging
-import os
-from functools import partial
 
 import tensorflow as tf
 
-from . import DEFAULT_FEATURE
 
-logger = logging.getLogger(__name__)
 TFRECORDS_EXT = ".tfrecords"
 
 
@@ -140,89 +135,3 @@ def dataset_from_tfrecord(tfrecord, num_parallel_reads=None):
         return tf.nest.pack_sequence_as(meta["output_types"], args)
 
     return raw_dataset.map(_parse_function)
-
-
-# def write_a_sample(writer, data, label, key, feature=None, size_estimate=False):
-#     if feature is None:
-#         feature = {
-#             "data": bytes_feature(data.tostring()),
-#             "label": int64_feature(label),
-#             "key": bytes_feature(key),
-#         }
-
-#     example = tf.train.Example(features=tf.train.Features(feature=feature))
-#     example = example.SerializeToString()
-#     if not size_estimate:
-#         writer.write(example)
-#     return sys.getsizeof(example)
-
-
-# def example_parser(serialized_example, feature, data_shape, data_type):
-#     """
-#     Parses a single tf.Example into image and label tensors.
-
-#     """
-#     # Decode the record read by the reader
-#     features = tf.io.parse_single_example(
-#         serialized=serialized_example, features=feature
-#     )
-#     # Convert the image data from string back to the numbers
-#     image = tf.io.decode_raw(features["data"], data_type)
-#     # Cast label data into int64
-#     label = tf.cast(features["label"], tf.int64)
-#     # Reshape image data into the original shape
-#     image = tf.reshape(image, data_shape)
-#     key = tf.cast(features["key"], tf.string)
-#     return image, label, key
-
-
-# def image_augmentation_parser(
-#     serialized_example,
-#     feature,
-#     data_shape,
-#     data_type,
-#     gray_scale=False,
-#     output_shape=None,
-#     random_flip=False,
-#     random_brightness=False,
-#     random_contrast=False,
-#     random_saturation=False,
-#     random_rotate=False,
-#     per_image_normalization=True,
-#     random_gamma=False,
-#     random_crop=False,
-# ):
-#     """
-#     Parses a single tf.Example into image and label tensors.
-
-#     """
-#     # Decode the record read by the reader
-#     features = tf.io.parse_single_example(
-#         serialized=serialized_example, features=feature
-#     )
-#     # Convert the image data from string back to the numbers
-#     image = tf.io.decode_raw(features["data"], data_type)
-
-#     # Reshape image data into the original shape
-#     image = tf.reshape(image, data_shape)
-
-#     # Applying image augmentation
-#     image = append_image_augmentation(
-#         image,
-#         gray_scale=gray_scale,
-#         output_shape=output_shape,
-#         random_flip=random_flip,
-#         random_brightness=random_brightness,
-#         random_contrast=random_contrast,
-#         random_saturation=random_saturation,
-#         random_rotate=random_rotate,
-#         per_image_normalization=per_image_normalization,
-#         random_gamma=random_gamma,
-#         random_crop=random_crop,
-#     )
-
-#     # Cast label data into int64
-#     label = tf.cast(features["label"], tf.int64)
-#     key = tf.cast(features["key"], tf.string)
-
-#     return image, label, key
