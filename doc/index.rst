@@ -3,11 +3,12 @@
 .. _bob.learn.tensorflow:
 
 =======================
- Tensorflow Bob Bridge
+ Tensorflow Biometrics
 =======================
 
-`bob.learn.tensorflow` is a high-level library, written in Python that runs on top of TensorFlow.
-The goal here is to be able to do fast experimentation with neural networks.
+This package extends the high-level API of Tensorflow to allow biometrics
+experiments. Especially, it provides the tools to train biometrics recognition
+and presentation attack detection deep models.
 
 Users Guide
 ===========
