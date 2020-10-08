@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 """Convert datasets to TFRecords
 """
 from __future__ import absolute_import
@@ -6,17 +5,13 @@ from __future__ import division
 from __future__ import print_function
 
 import logging
-import os
 
 import click
-import tensorflow as tf
 
 from bob.extension.scripts.click_helper import ConfigCommand
 from bob.extension.scripts.click_helper import ResourceOption
-from bob.extension.scripts.click_helper import log_parameters
 from bob.extension.scripts.click_helper import verbosity_option
-from bob.learn.tensorflow.dataset.tfrecords import dataset_to_tfrecord
-from bob.learn.tensorflow.dataset.tfrecords import tfrecord_name_and_json_name
+
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +45,11 @@ def datasets_to_tfrecords(dataset, output, force, **kwargs):
     To use this script with SGE, change your dataset and output based on the SGE_TASK_ID
     environment variable in your config file.
     """
+    from bob.extension.scripts.click_helper import log_parameters
+    import os
+    from bob.learn.tensorflow.data.tfrecords import dataset_to_tfrecord
+    from bob.learn.tensorflow.data.tfrecords import tfrecord_name_and_json_name
+
     log_parameters(logger)
 
     output, json_output = tfrecord_name_and_json_name(output)

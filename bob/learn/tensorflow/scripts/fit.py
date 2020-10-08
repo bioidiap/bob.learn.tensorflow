@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 @click.command(entry_point_group="bob.learn.tensorflow.config", cls=ConfigCommand)
 @click.option(
-    "--model",
+    "--model-fn",
     "-m",
     required=True,
     cls=ResourceOption,
@@ -42,7 +42,7 @@ logger = logging.getLogger(__name__)
 @click.option(
     "--epochs",
     "-e",
-    default=1,
+    default=10,
     type=click.types.INT,
     cls=ResourceOption,
     help="Number of epochs to train model. See " "tf.keras.Model.fit.",
@@ -67,13 +67,6 @@ logger = logging.getLogger(__name__)
     "--class-weight", "-c", cls=ResourceOption, help="See tf.keras.Model.fit."
 )
 @click.option(
-    "--initial-epoch",
-    default=0,
-    type=click.types.INT,
-    cls=ResourceOption,
-    help="See tf.keras.Model.fit.",
-)
-@click.option(
     "--steps-per-epoch",
     type=click.types.INT,
     cls=ResourceOption,
@@ -87,14 +80,13 @@ logger = logging.getLogger(__name__)
 )
 @verbosity_option(cls=ResourceOption)
 def fit(
-    model,
+    model_fn,
     train_input_fn,
     epochs,
     verbose,
     callbacks,
     eval_input_fn,
     class_weight,
-    initial_epoch,
     steps_per_epoch,
     validation_steps,
     **kwargs
@@ -110,6 +102,8 @@ def fit(
     if save_callback:
         model_dir = save_callback[0].filepath
         logger.info("Training a model in %s", model_dir)
+    model = model_fn()
+
     history = model.fit(
         x=train_input_fn(),
         epochs=epochs,
@@ -117,7 +111,6 @@ def fit(
         callbacks=list(callbacks) if callbacks else None,
         validation_data=None if eval_input_fn is None else eval_input_fn(),
         class_weight=class_weight,
-        initial_epoch=initial_epoch,
         steps_per_epoch=steps_per_epoch,
         validation_steps=validation_steps,
     )
