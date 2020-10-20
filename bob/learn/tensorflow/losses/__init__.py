@@ -18,6 +18,6 @@ def __appropriate__(*args):
 
 __appropriate__(
     CenterLoss,
-    CenterLossLayer,
+    CenterLossLayer
 )
 __all__ = [_ for _ in dir() if not _.startswith("_")]

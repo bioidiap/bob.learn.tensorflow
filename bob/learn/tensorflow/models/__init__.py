@@ -1,5 +1,6 @@
 from .alexnet import AlexNet_simplified
 from .densenet import DenseNet
+from .mine import MineModel
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):
@@ -20,5 +21,6 @@ def __appropriate__(*args):
 __appropriate__(
     AlexNet_simplified,
     DenseNet,
+    MineModel
 )
 __all__ = [_ for _ in dir() if not _.startswith("_")]
