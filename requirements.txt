@@ -2,16 +2,5 @@ setuptools
 bob.extension
 bob.io.base
 bob.io.image
-bob.learn.activation
-bob.learn.em
-bob.learn.linear
 bob.ip.base
-bob.math
 bob.measure
-bob.sp
-bob.db.mnist
-bob.db.atnt
-gridtk
-numpy
-scipy
-click >= 7
