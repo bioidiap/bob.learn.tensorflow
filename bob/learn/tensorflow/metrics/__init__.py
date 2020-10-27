@@ -1,4 +1,4 @@
-from .embedding_accuracy import EmbeddingAccuracy
+from .embedding_accuracy import EmbeddingAccuracy, predict_using_tensors
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):

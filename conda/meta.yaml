@@ -23,17 +23,7 @@ requirements:
     - bob.extension
     - bob.io.base
     - bob.io.image
-    - bob.learn.activation
-    - bob.learn.em
-    - bob.learn.linear
-    - bob.ip.base
-    - bob.math
     - bob.measure
-    - bob.sp
-    - bob.db.mnist
-    - bob.db.atnt
-    - bob.bio.base
-    - bob.ip.color
     - click {{ click }}
     - click-plugins {{ click_plugins }}
   run:
