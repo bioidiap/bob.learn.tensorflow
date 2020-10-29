@@ -32,6 +32,7 @@ def Conv2D_BN(
     activation="relu",
     use_bias=False,
     name=None,
+    kernel_regularizer=None,
     **kwargs,
 ):
     """Utility class to apply conv + BN.
@@ -72,6 +73,7 @@ def Conv2D_BN(
             padding=padding,
             use_bias=use_bias,
             name="Conv2D",
+            kernel_regularizer=kernel_regularizer
         )
     ]
 
@@ -147,6 +149,7 @@ class InceptionResnetBlock(tf.keras.layers.Layer):
         activation="relu",
         n=1,
         name=None,
+        kernel_regularizer=None,
         **kwargs,
     ):
         name = name or block_type
@@ -159,24 +162,24 @@ class InceptionResnetBlock(tf.keras.layers.Layer):
         self.n = n
 
         if block_type == "block35":
-            branch_0 = [Conv2D_BN(32 // n, 1, name="Branch_0/Conv2d_1x1")]
-            branch_1 = [Conv2D_BN(32 // n, 1, name="Branch_1/Conv2d_0a_1x1")]
-            branch_1 += [Conv2D_BN(32 // n, 3, name="Branch_1/Conv2d_0b_3x3")]
-            branch_2 = [Conv2D_BN(32 // n, 1, name="Branch_2/Conv2d_0a_1x1")]
-            branch_2 += [Conv2D_BN(48 // n, 3, name="Branch_2/Conv2d_0b_3x3")]
-            branch_2 += [Conv2D_BN(64 // n, 3, name="Branch_2/Conv2d_0c_3x3")]
+            branch_0 = [Conv2D_BN(32 // n, 1, name="Branch_0/Conv2d_1x1", kernel_regularizer=kernel_regularizer)]
+            branch_1 = [Conv2D_BN(32 // n, 1, name="Branch_1/Conv2d_0a_1x1", kernel_regularizer=kernel_regularizer)]
+            branch_1 += [Conv2D_BN(32 // n, 3, name="Branch_1/Conv2d_0b_3x3", kernel_regularizer=kernel_regularizer)]
+            branch_2 = [Conv2D_BN(32 // n, 1, name="Branch_2/Conv2d_0a_1x1", kernel_regularizer=kernel_regularizer)]
+            branch_2 += [Conv2D_BN(48 // n, 3, name="Branch_2/Conv2d_0b_3x3", kernel_regularizer=kernel_regularizer)]
+            branch_2 += [Conv2D_BN(64 // n, 3, name="Branch_2/Conv2d_0c_3x3", kernel_regularizer=kernel_regularizer)]
             branches = [branch_0, branch_1, branch_2]
         elif block_type == "block17":
-            branch_0 = [Conv2D_BN(192 // n, 1, name="Branch_0/Conv2d_1x1")]
-            branch_1 = [Conv2D_BN(128 // n, 1, name="Branch_1/Conv2d_0a_1x1")]
-            branch_1 += [Conv2D_BN(160 // n, (1, 7), name="Branch_1/Conv2d_0b_1x7")]
-            branch_1 += [Conv2D_BN(192 // n, (7, 1), name="Branch_1/Conv2d_0c_7x1")]
+            branch_0 = [Conv2D_BN(192 // n, 1, name="Branch_0/Conv2d_1x1", kernel_regularizer=kernel_regularizer)]
+            branch_1 = [Conv2D_BN(128 // n, 1, name="Branch_1/Conv2d_0a_1x1", kernel_regularizer=kernel_regularizer)]
+            branch_1 += [Conv2D_BN(160 // n, (1, 7), name="Branch_1/Conv2d_0b_1x7", kernel_regularizer=kernel_regularizer)]
+            branch_1 += [Conv2D_BN(192 // n, (7, 1), name="Branch_1/Conv2d_0c_7x1", kernel_regularizer=kernel_regularizer)]
             branches = [branch_0, branch_1]
         elif block_type == "block8":
-            branch_0 = [Conv2D_BN(192 // n, 1, name="Branch_0/Conv2d_1x1")]
-            branch_1 = [Conv2D_BN(192 // n, 1, name="Branch_1/Conv2d_0a_1x1")]
-            branch_1 += [Conv2D_BN(224 // n, (1, 3), name="Branch_1/Conv2d_0b_1x3")]
-            branch_1 += [Conv2D_BN(256 // n, (3, 1), name="Branch_1/Conv2d_0c_3x1")]
+            branch_0 = [Conv2D_BN(192 // n, 1, name="Branch_0/Conv2d_1x1", kernel_regularizer=kernel_regularizer)]
+            branch_1 = [Conv2D_BN(192 // n, 1, name="Branch_1/Conv2d_0a_1x1", kernel_regularizer=kernel_regularizer)]
+            branch_1 += [Conv2D_BN(224 // n, (1, 3), name="Branch_1/Conv2d_0b_1x3", kernel_regularizer=kernel_regularizer)]
+            branch_1 += [Conv2D_BN(256 // n, (3, 1), name="Branch_1/Conv2d_0c_3x1", kernel_regularizer=kernel_regularizer)]
             branches = [branch_0, branch_1]
         else:
             raise ValueError(
@@ -190,7 +193,7 @@ class InceptionResnetBlock(tf.keras.layers.Layer):
         channel_axis = 1 if K.image_data_format() == "channels_first" else 3
         self.concat = Concatenate(axis=channel_axis, name="concatenate")
         self.up_conv = Conv2D_BN(
-            n_channels, 1, activation=None, use_bias=True, name="Conv2d_1x1"
+            n_channels, 1, activation=None, use_bias=True, name="Conv2d_1x1", kernel_regularizer=kernel_regularizer
         )
 
         self.residual = ScaledResidual(scale)
@@ -245,6 +248,7 @@ class ReductionA(tf.keras.layers.Layer):
         n=384,
         use_atrous=False,
         name="reduction_a",
+        kernel_regularizer=None,
         **kwargs,
     ):
         super().__init__(name=name, **kwargs)
@@ -262,18 +266,20 @@ class ReductionA(tf.keras.layers.Layer):
                 strides=1 if use_atrous else 2,
                 padding=padding,
                 name="Branch_0/Conv2d_1a_3x3",
+                kernel_regularizer=kernel_regularizer
             )
         ]
 
         branch_2 = [
-            Conv2D_BN(k, 1, name="Branch_1/Conv2d_0a_1x1"),
-            Conv2D_BN(kl, 3, name="Branch_1/Conv2d_0b_3x3"),
+            Conv2D_BN(k, 1, name="Branch_1/Conv2d_0a_1x1", kernel_regularizer=kernel_regularizer),
+            Conv2D_BN(kl, 3, name="Branch_1/Conv2d_0b_3x3", kernel_regularizer=kernel_regularizer),
             Conv2D_BN(
                 km,
                 3,
                 strides=1 if use_atrous else 2,
                 padding=padding,
                 name="Branch_1/Conv2d_1a_3x3",
+                kernel_regularizer=kernel_regularizer
             ),
         ]
 
@@ -327,6 +333,7 @@ class ReductionB(tf.keras.layers.Layer):
         p=256,
         pq=288,
         name="reduction_b",
+        kernel_regularizer=None,
         **kwargs,
     ):
         super().__init__(name=name, **kwargs)
@@ -340,19 +347,19 @@ class ReductionB(tf.keras.layers.Layer):
         self.pq = pq
 
         branch_1 = [
-            Conv2D_BN(n, 1, name="Branch_0/Conv2d_0a_1x1"),
-            Conv2D_BN(no, 3, strides=2, padding=padding, name="Branch_0/Conv2d_1a_3x3"),
+            Conv2D_BN(n, 1, name="Branch_0/Conv2d_0a_1x1", kernel_regularizer=kernel_regularizer),
+            Conv2D_BN(no, 3, strides=2, padding=padding, name="Branch_0/Conv2d_1a_3x3", kernel_regularizer=kernel_regularizer),
         ]
 
         branch_2 = [
-            Conv2D_BN(p, 1, name="Branch_1/Conv2d_0a_1x1"),
-            Conv2D_BN(pq, 3, strides=2, padding=padding, name="Branch_1/Conv2d_1a_3x3"),
+            Conv2D_BN(p, 1, name="Branch_1/Conv2d_0a_1x1", kernel_regularizer=kernel_regularizer),
+            Conv2D_BN(pq, 3, strides=2, padding=padding, name="Branch_1/Conv2d_1a_3x3", kernel_regularizer=kernel_regularizer),
         ]
 
         branch_3 = [
-            Conv2D_BN(k, 1, name="Branch_2/Conv2d_0a_1x1"),
-            Conv2D_BN(kl, 3, name="Branch_2/Conv2d_0b_3x3"),
-            Conv2D_BN(km, 3, strides=2, padding=padding, name="Branch_2/Conv2d_1a_3x3"),
+            Conv2D_BN(k, 1, name="Branch_2/Conv2d_0a_1x1", kernel_regularizer=kernel_regularizer),
+            Conv2D_BN(kl, 3, name="Branch_2/Conv2d_0b_3x3", kernel_regularizer=kernel_regularizer),
+            Conv2D_BN(km, 3, strides=2, padding=padding, name="Branch_2/Conv2d_1a_3x3", kernel_regularizer=kernel_regularizer),
         ]
 
         branch_pool = [
@@ -387,36 +394,36 @@ class ReductionB(tf.keras.layers.Layer):
 
 
 class InceptionA(tf.keras.layers.Layer):
-    def __init__(self, pool_filters, name="inception_a", **kwargs):
+    def __init__(self, pool_filters, name="inception_a", kernel_regularizer=None, **kwargs):
         super().__init__(name=name, **kwargs)
         self.pool_filters = pool_filters
 
         self.branch1x1 = Conv2D_BN(
-            96, kernel_size=1, padding="same", name="Branch_0/Conv2d_1x1"
+            96, kernel_size=1, padding="same", name="Branch_0/Conv2d_1x1", kernel_regularizer=kernel_regularizer
         )
 
         self.branch3x3dbl_1 = Conv2D_BN(
-            64, kernel_size=1, padding="same", name="Branch_2/Conv2d_0a_1x1"
+            64, kernel_size=1, padding="same", name="Branch_2/Conv2d_0a_1x1", kernel_regularizer=kernel_regularizer
         )
         self.branch3x3dbl_2 = Conv2D_BN(
-            96, kernel_size=3, padding="same", name="Branch_2/Conv2d_0b_3x3"
+            96, kernel_size=3, padding="same", name="Branch_2/Conv2d_0b_3x3", kernel_regularizer=kernel_regularizer
         )
         self.branch3x3dbl_3 = Conv2D_BN(
-            96, kernel_size=3, padding="same", name="Branch_2/Conv2d_0c_3x3"
+            96, kernel_size=3, padding="same", name="Branch_2/Conv2d_0c_3x3", kernel_regularizer=kernel_regularizer
         )
 
         self.branch5x5_1 = Conv2D_BN(
-            48, kernel_size=1, padding="same", name="Branch_1/Conv2d_0a_1x1"
+            48, kernel_size=1, padding="same", name="Branch_1/Conv2d_0a_1x1", kernel_regularizer=kernel_regularizer
         )
         self.branch5x5_2 = Conv2D_BN(
-            64, kernel_size=5, padding="same", name="Branch_1/Conv2d_0b_5x5"
+            64, kernel_size=5, padding="same", name="Branch_1/Conv2d_0b_5x5", kernel_regularizer=kernel_regularizer
         )
 
         self.branch_pool_1 = AvgPool2D(
             pool_size=3, strides=1, padding="same", name="Branch_3/AvgPool_0a_3x3"
         )
         self.branch_pool_2 = Conv2D_BN(
-            pool_filters, kernel_size=1, padding="same", name="Branch_3/Conv2d_0b_1x1"
+            pool_filters, kernel_size=1, padding="same", name="Branch_3/Conv2d_0b_1x1", kernel_regularizer=kernel_regularizer
         )
 
         channel_axis = 1 if K.image_data_format() == "channels_first" else 3
@@ -453,6 +460,7 @@ def InceptionResNetV2(
     bottleneck=False,
     dropout_rate=0.2,
     name="InceptionResnetV2",
+    kernel_regularizer=None,
     **kwargs,
 ):
     """Instantiates the Inception-ResNet v2 architecture.
@@ -499,15 +507,15 @@ def InceptionResNetV2(
 
     layers = [
         # Stem block: 35 x 35 x 192
-        Conv2D_BN(32, 3, strides=2, padding="valid", name="Conv2d_1a_3x3"),
-        Conv2D_BN(32, 3, padding="valid", name="Conv2d_2a_3x3"),
-        Conv2D_BN(64, 3, name="Conv2d_2b_3x3"),
+        Conv2D_BN(32, 3, strides=2, padding="valid", name="Conv2d_1a_3x3", kernel_regularizer=kernel_regularizer),
+        Conv2D_BN(32, 3, padding="valid", name="Conv2d_2a_3x3", kernel_regularizer=kernel_regularizer),
+        Conv2D_BN(64, 3, name="Conv2d_2b_3x3", kernel_regularizer=kernel_regularizer),
         MaxPool2D(3, strides=2, name="MaxPool_3a_3x3"),
-        Conv2D_BN(80, 1, padding="valid", name="Conv2d_3b_1x1"),
-        Conv2D_BN(192, 3, padding="valid", name="Conv2d_4a_3x3"),
+        Conv2D_BN(80, 1, padding="valid", name="Conv2d_3b_1x1", kernel_regularizer=kernel_regularizer),
+        Conv2D_BN(192, 3, padding="valid", name="Conv2d_4a_3x3", kernel_regularizer=kernel_regularizer),
         MaxPool2D(3, strides=2, name="MaxPool_5a_3x3"),
         # Mixed 5b (Inception-A block): 35 x 35 x 320
-        InceptionA(pool_filters=64, name="Mixed_5b"),
+        InceptionA(pool_filters=64, name="Mixed_5b", kernel_regularizer=kernel_regularizer),
     ]
 
     # 10x block35 (Inception-ResNet-A block): 35 x 35 x 320
@@ -519,6 +527,7 @@ def InceptionResNetV2(
                 block_type="block35",
                 block_idx=block_idx,
                 name=f"block35_{block_idx}",
+                kernel_regularizer=kernel_regularizer
             )
         )
 
@@ -532,6 +541,7 @@ def InceptionResNetV2(
             km=384,
             use_atrous=False,
             name="Mixed_6a",
+            kernel_regularizer=kernel_regularizer
         )
     )
 
@@ -544,6 +554,7 @@ def InceptionResNetV2(
                 block_type="block17",
                 block_idx=block_idx,
                 name=f"block17_{block_idx}",
+                kernel_regularizer=kernel_regularizer
             )
         )
 
@@ -559,6 +570,7 @@ def InceptionResNetV2(
             kl=288,
             km=320,
             name="Mixed_7a",
+            kernel_regularizer=kernel_regularizer
         )
     )
 
@@ -571,6 +583,7 @@ def InceptionResNetV2(
                 block_type="block8",
                 block_idx=block_idx,
                 name=f"block8_{block_idx}",
+                kernel_regularizer=kernel_regularizer
             )
         )
     layers.append(
@@ -581,11 +594,12 @@ def InceptionResNetV2(
             block_type="block8",
             block_idx=10,
             name=f"block8_{block_idx+1}",
+            kernel_regularizer=kernel_regularizer
         )
     )
 
     # Final convolution block: 8 x 8 x 1536
-    layers.append(Conv2D_BN(1536, 1, name="Conv2d_7b_1x1"))
+    layers.append(Conv2D_BN(1536, 1, name="Conv2d_7b_1x1", kernel_regularizer=kernel_regularizer))
 
     if (include_top and pooling is None) or (bottleneck):
         pooling = "avg"
@@ -597,7 +611,7 @@ def InceptionResNetV2(
 
     if bottleneck:
         layers.append(Dropout(dropout_rate, name="Dropout"))
-        layers.append(Dense(128, use_bias=False, name="Bottleneck"))
+        layers.append(Dense(128, use_bias=False, name="Bottleneck", kernel_regularizer=kernel_regularizer))
         layers.append(
             BatchNormalization(axis=-1, scale=False, name="Bottleneck/BatchNorm")
         )
