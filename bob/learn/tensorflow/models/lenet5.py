@@ -22,7 +22,7 @@ def LeNet5_simplified(name="LeNet5", **kwargs):
             ),
             tf.keras.layers.Flatten(name="FLATTEN"),
             tf.keras.layers.Dense(units=84, activation="tanh", name="F6"),
-            tf.keras.layers.Dense(units=10, activation="sigmoid", name="OUTPUT"),
+            tf.keras.layers.Dense(units=10, name="OUTPUT"),
         ],
         name=name,
         **kwargs
@@ -32,6 +32,7 @@ def LeNet5_simplified(name="LeNet5", **kwargs):
 
 if __name__ == "__main__":
     import pkg_resources
+
     from bob.learn.tensorflow.utils import model_summary
 
     model = LeNet5_simplified()

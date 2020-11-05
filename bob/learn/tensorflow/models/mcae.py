@@ -51,8 +51,8 @@ class ConvEncoder(tf.keras.Model):
         self.sequential_layers = layers
 
     def call(self, x, training=None):
-        for l in self.sequential_layers:
-            x = l(x)
+        for layer in self.sequential_layers:
+            x = layer(x)
         return x
 
 
@@ -67,7 +67,7 @@ class ConvDecoder(tf.keras.Model):
         name="Decoder",
         **kwargs,
     ):
-        super().__init__(name=name, ** kwargs)
+        super().__init__(name=name, **kwargs)
         self.data_format = data_format
         l2_kw = get_l2_kw(weight_decay)
         layers = []
@@ -91,8 +91,8 @@ class ConvDecoder(tf.keras.Model):
         self.sequential_layers = layers
 
     def call(self, x, training=None):
-        for l in self.sequential_layers:
-            x = l(x)
+        for layer in self.sequential_layers:
+            x = layer(x)
         return x
 
 

@@ -1,6 +1,5 @@
-from .alexnet import AlexNet_simplified
-from .densenet import DenseNet
-from .mine import MineModel
+from .generator import Generator, dataset_using_generator
+from .tfrecords import dataset_to_tfrecord, dataset_from_tfrecord, TFRECORDS_EXT
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):
@@ -19,8 +18,6 @@ def __appropriate__(*args):
 
 
 __appropriate__(
-    AlexNet_simplified,
-    DenseNet,
-    MineModel
+    Generator,
 )
 __all__ = [_ for _ in dir() if not _.startswith("_")]

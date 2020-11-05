@@ -1,9 +1,81 @@
-import tensorflow.keras.backend as K
-from .network import is_trainable
-import tensorflow as tf
+import copy
 import logging
 
+import tensorflow as tf
+import tensorflow.keras.backend as K
+from tensorflow.python.keras import layers as layer_module
+from tensorflow.python.keras.utils import generic_utils
+from tensorflow.python.util import nest
+from tensorflow.python.util import tf_inspect
+
 logger = logging.getLogger(__name__)
+
+SINGLE_LAYER_OUTPUT_ERROR_MSG = (
+    "All layers in a Sequential model should have "
+    "a single output tensor. For multi-output "
+    "layers, use the functional API."
+)
+
+
+class SequentialLayer(tf.keras.layers.Layer):
+    """A Layer that does the same thing as tf.keras.Sequential but
+    its variables can be scoped.
+
+    Parameters
+    ----------
+    layers : list
+        List of layers. All layers must be provided at initialization time
+    """
+
+    def __init__(self, layers, **kwargs):
+        super().__init__(**kwargs)
+        self.sequential_layers = list(layers)
+
+    def call(self, inputs, training=None, mask=None):
+        outputs = inputs
+        for layer in self.sequential_layers:
+            # During each iteration, `inputs` are the inputs to `layer`, and `outputs`
+            # are the outputs of `layer` applied to `inputs`. At the end of each
+            # iteration `inputs` is set to `outputs` to prepare for the next layer.
+            kwargs = {}
+            argspec = tf_inspect.getfullargspec(layer.call).args
+            if "mask" in argspec:
+                kwargs["mask"] = mask
+            if "training" in argspec:
+                kwargs["training"] = training
+
+            outputs = layer(outputs, **kwargs)
+
+            if len(nest.flatten(outputs)) != 1:
+                raise ValueError(SINGLE_LAYER_OUTPUT_ERROR_MSG)
+
+            mask = getattr(outputs, "_keras_mask", None)
+
+        return outputs
+
+    def get_config(self):
+        layer_configs = []
+        for layer in self.sequential_layers:
+            layer_configs.append(generic_utils.serialize_keras_object(layer))
+        config = {"name": self.name, "layers": copy.deepcopy(layer_configs)}
+        return config
+
+    @classmethod
+    def from_config(cls, config, custom_objects=None):
+        if "name" in config:
+            name = config["name"]
+            layer_configs = config["layers"]
+        else:
+            name = None
+            layer_configs = config
+        layers = []
+        for layer_config in layer_configs:
+            layer = layer_module.deserialize(
+                layer_config, custom_objects=custom_objects
+            )
+            layers.append(layer)
+        model = cls(layers, name=name)
+        return model
 
 
 def keras_channels_index():
@@ -21,7 +93,7 @@ def keras_model_weights_as_initializers_for_variables(model):
     model : object
         A Keras model.
     """
-    sess = K.get_session()
+    sess = tf.compat.v1.keras.backend.get_session()
     n = len(model.variables)
     logger.debug("Initializing %d variables with their current weights", n)
     for variable in model.variables:
@@ -29,25 +101,6 @@ def keras_model_weights_as_initializers_for_variables(model):
         initial_value = tf.constant(value=value, dtype=value.dtype.name)
         variable._initializer_op = variable.assign(initial_value)
         variable._initial_value = initial_value
-
-
-def apply_trainable_variables_on_keras_model(model, trainable_variables, mode):
-    """Changes the trainable status of layers in a keras model.
-    It can only turn off the trainable status of layer.
-
-    Parameters
-    ----------
-    model : object
-        A Keras model
-    trainable_variables : list or None
-        See bob.learn.tensorflow.estimators.Logits
-    mode : str
-        One of tf.estimator.ModeKeys
-    """
-    for layer in model.layers:
-        trainable = is_trainable(layer.name, trainable_variables, mode=mode)
-        if layer.trainable:
-            layer.trainable = trainable
 
 
 def _create_var_map(variables, normalizer=None):
@@ -65,10 +118,10 @@ def restore_model_variables_from_checkpoint(
     model, checkpoint, session=None, normalizer=None
 ):
     if session is None:
-        session = tf.keras.backend.get_session()
+        session = tf.compat.v1.keras.backend.get_session()
 
     var_list = _create_var_map(model.variables, normalizer=normalizer)
-    saver = tf.train.Saver(var_list=var_list)
+    saver = tf.compat.v1.train.Saver(var_list=var_list)
     ckpt_state = tf.train.get_checkpoint_state(checkpoint)
     logger.info("Loading checkpoint %s", ckpt_state.model_checkpoint_path)
     saver.restore(session, ckpt_state.model_checkpoint_path)
@@ -76,15 +129,11 @@ def restore_model_variables_from_checkpoint(
 
 def initialize_model_from_checkpoint(model, checkpoint, normalizer=None):
     assignment_map = _create_var_map(model.variables, normalizer=normalizer)
-    tf.train.init_from_checkpoint(checkpoint, assignment_map=assignment_map)
+    tf.compat.v1.train.init_from_checkpoint(checkpoint, assignment_map=assignment_map)
 
 
 def model_summary(model, do_print=False):
-    try:
-        from tensorflow.python.keras.utils.layer_utils import count_params
-    except ImportError:
-        from tensorflow_core.python.keras.utils.layer_utils import count_params
-    nest = tf.nest
+    from tensorflow.keras.backend import count_params
 
     if model.__class__.__name__ == "Sequential":
         sequential_like = True

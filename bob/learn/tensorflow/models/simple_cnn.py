@@ -1,15 +1,14 @@
 """A small CNN used for patch-based Face PAD"""
 
-from tensorflow.python.keras import Sequential, Input
-from tensorflow.python.keras.layers import (
-    Conv2D,
-    BatchNormalization,
-    Activation,
-    MaxPool2D,
-    Flatten,
-    Dense,
-    Dropout,
-)
+from tensorflow.python.keras import Input
+from tensorflow.python.keras import Sequential
+from tensorflow.python.keras.layers import Activation
+from tensorflow.python.keras.layers import BatchNormalization
+from tensorflow.python.keras.layers import Conv2D
+from tensorflow.python.keras.layers import Dense
+from tensorflow.python.keras.layers import Dropout
+from tensorflow.python.keras.layers import Flatten
+from tensorflow.python.keras.layers import MaxPool2D
 
 
 def SimpleCNN(input_shape=(28, 28, 3), inputs=None, name="SimpleCNN", **kwargs):
@@ -44,6 +43,7 @@ def SimpleCNN(input_shape=(28, 28, 3), inputs=None, name="SimpleCNN", **kwargs):
 if __name__ == "__main__":
     import pkg_resources
     from tabulate import tabulate
+
     from bob.learn.tensorflow.utils import model_summary
 
     model = SimpleCNN()

@@ -3,6 +3,7 @@ Reference [Densely Connected Convolutional Networks](https://arxiv.org/abs/1608.
 """
 
 import tensorflow as tf
+
 from bob.extension import rc
 
 l2 = tf.keras.regularizers.l2
@@ -433,21 +434,21 @@ class DeepPixBiS(tf.keras.Model):
             tf.keras.layers.Flatten(
                 data_format=data_format, name="Pixel_Logits_Flatten"
             ),
-            tf.keras.layers.Activation("sigmoid", name="activation"),
         ]
 
     def call(self, x, training=None):
-        for l in self.sequential_layers:
+        for layer in self.sequential_layers:
             try:
-                x = l(x, training=training)
+                x = layer(x, training=training)
             except TypeError:
-                x = l(x)
+                x = layer(x)
         return x
 
 
 if __name__ == "__main__":
     import pkg_resources
     from tabulate import tabulate
+
     from bob.learn.tensorflow.utils import model_summary
 
     def print_model(inputs, outputs):

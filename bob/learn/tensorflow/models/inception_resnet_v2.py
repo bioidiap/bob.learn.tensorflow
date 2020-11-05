@@ -1,29 +1,39 @@
 # -*- coding: utf-8 -*-
 """Inception-ResNet-V2 MultiScale-Inception-ResNet-V2 models for Keras.
 """
-from tensorflow.keras.models import Model
-from tensorflow.keras.layers import (
-    Activation,
-    BatchNormalization,
-    Concatenate,
-    Conv2D,
-    Dense,
-    Dropout,
-    Input,
-    Lambda,
-    MaxPool2D,
-    AvgPool2D,
-    GlobalAvgPool2D,
-    GlobalMaxPool2D,
-)
-from tensorflow.keras import backend as K
-import tensorflow as tf
 import logging
+
+import tensorflow as tf
+from tensorflow.keras import backend as K
+from tensorflow.keras.layers import Activation
+from tensorflow.keras.layers import AvgPool2D
+from tensorflow.keras.layers import BatchNormalization
+from tensorflow.keras.layers import Concatenate
+from tensorflow.keras.layers import Conv2D
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dropout
+from tensorflow.keras.layers import GlobalAvgPool2D
+from tensorflow.keras.layers import GlobalMaxPool2D
+from tensorflow.keras.layers import Input
+from tensorflow.keras.layers import MaxPool2D
+from tensorflow.keras.models import Model
+from tensorflow.keras.models import Sequential
+
+from ..utils import SequentialLayer
 
 logger = logging.getLogger(__name__)
 
 
-class Conv2D_BN(tf.keras.Sequential):
+def Conv2D_BN(
+    filters,
+    kernel_size,
+    strides=1,
+    padding="same",
+    activation="relu",
+    use_bias=False,
+    name=None,
+    **kwargs,
+):
     """Utility class to apply conv + BN.
 
     # Arguments
@@ -54,50 +64,30 @@ class Conv2D_BN(tf.keras.Sequential):
         and `name + '/BatchNorm'` for the batch norm layer.
     """
 
-    def __init__(
-        self,
-        filters,
-        kernel_size,
-        strides=1,
-        padding="same",
-        activation="relu",
-        use_bias=False,
-        name=None,
-        **kwargs,
-    ):
+    layers = [
+        Conv2D(
+            filters,
+            kernel_size,
+            strides=strides,
+            padding=padding,
+            use_bias=use_bias,
+            name="Conv2D",
+        )
+    ]
 
-        self.filters = filters
-        self.kernel_size = kernel_size
-        self.strides = strides
-        self.padding = padding
-        self.activation = activation
-        self.use_bias = use_bias
+    if not use_bias:
+        bn_axis = 1 if K.image_data_format() == "channels_first" else 3
+        layers += [BatchNormalization(axis=bn_axis, scale=False, name="BatchNorm")]
 
-        layers = [
-            Conv2D(
-                filters,
-                kernel_size,
-                strides=strides,
-                padding=padding,
-                use_bias=use_bias,
-                name=name,
-            )
-        ]
+    if activation is not None:
+        layers += [Activation(activation, name="Act")]
 
-        if not use_bias:
-            bn_axis = 1 if K.image_data_format() == "channels_first" else 3
-            bn_name = None if name is None else name + "/BatchNorm"
-            layers += [BatchNormalization(axis=bn_axis, scale=False, name=bn_name)]
-
-        if activation is not None:
-            ac_name = None if name is None else name + "/Act"
-            layers += [Activation(activation, name=ac_name)]
-
-        super().__init__(layers, name=name, **kwargs)
+    return SequentialLayer(layers, name=name, **kwargs)
 
 
-class ScaledResidual(tf.keras.Model):
+class ScaledResidual(tf.keras.layers.Layer):
     """A scaled residual connection layer"""
+
     def __init__(self, scale, name="scaled_residual", **kwargs):
         super().__init__(name=name, **kwargs)
         self.scale = scale
@@ -105,8 +95,13 @@ class ScaledResidual(tf.keras.Model):
     def call(self, inputs, training=None):
         return inputs[0] + inputs[1] * self.scale
 
+    def get_config(self):
+        config = super().get_config()
+        config.update({"scale": self.scale, "name": self.name})
+        return config
 
-class InceptionResnetBlock(tf.keras.Model):
+
+class InceptionResnetBlock(tf.keras.layers.Layer):
     """An Inception-ResNet block.
 
     This class builds 3 types of Inception-ResNet blocks mentioned
@@ -164,32 +159,24 @@ class InceptionResnetBlock(tf.keras.Model):
         self.n = n
 
         if block_type == "block35":
-            branch_0 = [Conv2D_BN(32 // n, 1, name="branch0_conv1")]
-            branch_1 = [Conv2D_BN(32 // n, 1, name="branch1_conv1")]
-            branch_1 += [Conv2D_BN(32 // n, 3, name="branch1_conv2")]
-            branch_2 = [Conv2D_BN(32 // n, 1, name="branch2_conv1")]
-            branch_2 += [Conv2D_BN(48 // n, 3, name="branch2_conv2")]
-            branch_2 += [Conv2D_BN(64 // n, 3, name="branch2_conv3")]
+            branch_0 = [Conv2D_BN(32 // n, 1, name="Branch_0/Conv2d_1x1")]
+            branch_1 = [Conv2D_BN(32 // n, 1, name="Branch_1/Conv2d_0a_1x1")]
+            branch_1 += [Conv2D_BN(32 // n, 3, name="Branch_1/Conv2d_0b_3x3")]
+            branch_2 = [Conv2D_BN(32 // n, 1, name="Branch_2/Conv2d_0a_1x1")]
+            branch_2 += [Conv2D_BN(48 // n, 3, name="Branch_2/Conv2d_0b_3x3")]
+            branch_2 += [Conv2D_BN(64 // n, 3, name="Branch_2/Conv2d_0c_3x3")]
             branches = [branch_0, branch_1, branch_2]
         elif block_type == "block17":
-            branch_0 = [Conv2D_BN(192 // n, 1, name="branch0_conv1")]
-            branch_1 = [Conv2D_BN(128 // n, 1, name="branch1_conv1")]
-            branch_1 += [
-                Conv2D_BN(160 // n, (1, 7), name="branch1_conv2")
-            ]
-            branch_1 += [
-                Conv2D_BN(192 // n, (7, 1), name="branch1_conv3")
-            ]
+            branch_0 = [Conv2D_BN(192 // n, 1, name="Branch_0/Conv2d_1x1")]
+            branch_1 = [Conv2D_BN(128 // n, 1, name="Branch_1/Conv2d_0a_1x1")]
+            branch_1 += [Conv2D_BN(160 // n, (1, 7), name="Branch_1/Conv2d_0b_1x7")]
+            branch_1 += [Conv2D_BN(192 // n, (7, 1), name="Branch_1/Conv2d_0c_7x1")]
             branches = [branch_0, branch_1]
         elif block_type == "block8":
-            branch_0 = [Conv2D_BN(192 // n, 1, name="branch0_conv1")]
-            branch_1 = [Conv2D_BN(192 // n, 1, name="branch1_conv1")]
-            branch_1 += [
-                Conv2D_BN(224 // n, (1, 3), name="branch1_conv2")
-            ]
-            branch_1 += [
-                Conv2D_BN(256 // n, (3, 1), name="branch1_conv3")
-            ]
+            branch_0 = [Conv2D_BN(192 // n, 1, name="Branch_0/Conv2d_1x1")]
+            branch_1 = [Conv2D_BN(192 // n, 1, name="Branch_1/Conv2d_0a_1x1")]
+            branch_1 += [Conv2D_BN(224 // n, (1, 3), name="Branch_1/Conv2d_0b_1x3")]
+            branch_1 += [Conv2D_BN(256 // n, (3, 1), name="Branch_1/Conv2d_0c_3x1")]
             branches = [branch_0, branch_1]
         else:
             raise ValueError(
@@ -203,18 +190,9 @@ class InceptionResnetBlock(tf.keras.Model):
         channel_axis = 1 if K.image_data_format() == "channels_first" else 3
         self.concat = Concatenate(axis=channel_axis, name="concatenate")
         self.up_conv = Conv2D_BN(
-            n_channels, 1, activation=None, use_bias=True, name="up_conv"
+            n_channels, 1, activation=None, use_bias=True, name="Conv2d_1x1"
         )
 
-        # output_shape = (None, None, n_channels)
-        # if K.image_data_format() == "channels_first":
-        #     output_shape = (n_channels, None, None)
-        # self.residual = Lambda(
-        #     lambda inputs, scale: inputs[0] + inputs[1] * scale,
-        #     output_shape=output_shape,
-        #     arguments={"scale": scale},
-        #     name="residual_scale",
-        # )
         self.residual = ScaledResidual(scale)
         self.act = lambda x: x
         if activation is not None:
@@ -236,8 +214,26 @@ class InceptionResnetBlock(tf.keras.Model):
 
         return x
 
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                name: getattr(self, name)
+                for name in [
+                    "n_channels",
+                    "scale",
+                    "block_type",
+                    "block_idx",
+                    "activation",
+                    "n",
+                    "name",
+                ]
+            }
+        )
+        return config
 
-class ReductionA(tf.keras.Model):
+
+class ReductionA(tf.keras.layers.Layer):
     """A Reduction A block for InceptionResnetV2"""
 
     def __init__(
@@ -265,19 +261,19 @@ class ReductionA(tf.keras.Model):
                 3,
                 strides=1 if use_atrous else 2,
                 padding=padding,
-                name="branch1_conv1",
+                name="Branch_0/Conv2d_1a_3x3",
             )
         ]
 
         branch_2 = [
-            Conv2D_BN(k, 1, name="branch2_conv1"),
-            Conv2D_BN(kl, 3, name="branch2_conv2"),
+            Conv2D_BN(k, 1, name="Branch_1/Conv2d_0a_1x1"),
+            Conv2D_BN(kl, 3, name="Branch_1/Conv2d_0b_3x3"),
             Conv2D_BN(
                 km,
                 3,
                 strides=1 if use_atrous else 2,
                 padding=padding,
-                name="branch2_conv3",
+                name="Branch_1/Conv2d_1a_3x3",
             ),
         ]
 
@@ -286,7 +282,7 @@ class ReductionA(tf.keras.Model):
                 3,
                 strides=1 if use_atrous else 2,
                 padding=padding,
-                name="branch3_pool1",
+                name="Branch_2/MaxPool_1a_3x3",
             )
         ]
         self.branches = [branch_1, branch_2, branch_pool]
@@ -306,8 +302,18 @@ class ReductionA(tf.keras.Model):
 
         return self.concat(branch_outputs)
 
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                name: getattr(self, name)
+                for name in ["padding", "k", "kl", "km", "n", "use_atrous", "name"]
+            }
+        )
+        return config
 
-class ReductionB(tf.keras.Model):
+
+class ReductionB(tf.keras.layers.Layer):
     """A Reduction B block for InceptionResnetV2"""
 
     def __init__(
@@ -334,31 +340,23 @@ class ReductionB(tf.keras.Model):
         self.pq = pq
 
         branch_1 = [
-            Conv2D_BN(n, 1, name="branch1_conv1"),
-            Conv2D_BN(
-                no, 3, strides=2, padding=padding, name="branch1_conv2"
-            ),
+            Conv2D_BN(n, 1, name="Branch_0/Conv2d_0a_1x1"),
+            Conv2D_BN(no, 3, strides=2, padding=padding, name="Branch_0/Conv2d_1a_3x3"),
         ]
 
         branch_2 = [
-            Conv2D_BN(p, 1, name="branch2_conv1"),
-            Conv2D_BN(
-                pq, 3, strides=2, padding=padding, name="branch2_conv2"
-            ),
+            Conv2D_BN(p, 1, name="Branch_1/Conv2d_0a_1x1"),
+            Conv2D_BN(pq, 3, strides=2, padding=padding, name="Branch_1/Conv2d_1a_3x3"),
         ]
 
         branch_3 = [
-            Conv2D_BN(k, 1, name="branch3_conv1"),
-            Conv2D_BN(kl, 3, name="branch3_conv2"),
-            Conv2D_BN(
-                km, 3, strides=2, padding=padding, name="branch3_conv3"
-            ),
+            Conv2D_BN(k, 1, name="Branch_2/Conv2d_0a_1x1"),
+            Conv2D_BN(kl, 3, name="Branch_2/Conv2d_0b_3x3"),
+            Conv2D_BN(km, 3, strides=2, padding=padding, name="Branch_2/Conv2d_1a_3x3"),
         ]
 
         branch_pool = [
-            MaxPool2D(
-                3, strides=2, padding=padding, name=f"branch4_pool1"
-            )
+            MaxPool2D(3, strides=2, padding=padding, name="Branch_3/MaxPool_1a_3x3")
         ]
         self.branches = [branch_1, branch_2, branch_3, branch_pool]
         channel_axis = 1 if K.image_data_format() == "channels_first" else 3
@@ -377,23 +375,49 @@ class ReductionB(tf.keras.Model):
 
         return self.concat(branch_outputs)
 
+    def get_config(self):
+        config = super().get_config()
+        config.update(
+            {
+                name: getattr(self, name)
+                for name in ["padding", "k", "kl", "km", "n", "no", "p", "pq", "name"]
+            }
+        )
+        return config
 
-class InceptionA(tf.keras.Model):
+
+class InceptionA(tf.keras.layers.Layer):
     def __init__(self, pool_filters, name="inception_a", **kwargs):
         super().__init__(name=name, **kwargs)
         self.pool_filters = pool_filters
 
-        self.branch1x1 = Conv2D_BN(96, kernel_size=1, padding="same", name="branch1_conv1")
+        self.branch1x1 = Conv2D_BN(
+            96, kernel_size=1, padding="same", name="Branch_0/Conv2d_1x1"
+        )
 
-        self.branch3x3dbl_1 = Conv2D_BN(64, kernel_size=1, padding="same", name="branch2_conv1")
-        self.branch3x3dbl_2 = Conv2D_BN(96, kernel_size=3, padding="same", name="branch2_conv2")
-        self.branch3x3dbl_3 = Conv2D_BN(96, kernel_size=3, padding="same", name="branch2_conv3")
+        self.branch3x3dbl_1 = Conv2D_BN(
+            64, kernel_size=1, padding="same", name="Branch_2/Conv2d_0a_1x1"
+        )
+        self.branch3x3dbl_2 = Conv2D_BN(
+            96, kernel_size=3, padding="same", name="Branch_2/Conv2d_0b_3x3"
+        )
+        self.branch3x3dbl_3 = Conv2D_BN(
+            96, kernel_size=3, padding="same", name="Branch_2/Conv2d_0c_3x3"
+        )
 
-        self.branch5x5_1 = Conv2D_BN(48, kernel_size=1, padding="same", name="branch3_conv1")
-        self.branch5x5_2 = Conv2D_BN(64, kernel_size=5, padding="same", name="branch3_conv2")
+        self.branch5x5_1 = Conv2D_BN(
+            48, kernel_size=1, padding="same", name="Branch_1/Conv2d_0a_1x1"
+        )
+        self.branch5x5_2 = Conv2D_BN(
+            64, kernel_size=5, padding="same", name="Branch_1/Conv2d_0b_5x5"
+        )
 
-        self.branch_pool_1 = AvgPool2D(pool_size=3, strides=1, padding="same", name="branch4_pool1")
-        self.branch_pool_2 = Conv2D_BN(pool_filters, kernel_size=1, padding="same", name="branch4_conv1")
+        self.branch_pool_1 = AvgPool2D(
+            pool_size=3, strides=1, padding="same", name="Branch_3/AvgPool_0a_3x3"
+        )
+        self.branch_pool_2 = Conv2D_BN(
+            pool_filters, kernel_size=1, padding="same", name="Branch_3/Conv2d_0b_1x1"
+        )
 
         channel_axis = 1 if K.image_data_format() == "channels_first" else 3
         self.concat = Concatenate(axis=channel_axis)
@@ -414,6 +438,11 @@ class InceptionA(tf.keras.Model):
         outputs = [branch1x1, branch5x5, branch3x3dbl, branch_pool]
         return self.concat(outputs)
 
+    def get_config(self):
+        config = super().get_config()
+        config.update({"pool_filters": self.pool_filters, "name": self.name})
+        return config
+
 
 def InceptionResNetV2(
     include_top=True,
@@ -421,18 +450,17 @@ def InceptionResNetV2(
     input_shape=None,
     pooling=None,
     classes=1000,
+    bottleneck=False,
+    dropout_rate=0.2,
+    name="InceptionResnetV2",
     **kwargs,
 ):
     """Instantiates the Inception-ResNet v2 architecture.
-    Optionally loads weights pre-trained on ImageNet.
     Note that the data format convention used by the model is
     the one specified in your Keras config at `~/.keras/keras.json`.
     # Arguments
         include_top: whether to include the fully-connected
             layer at the top of the network.
-        weights: one of `None` (random initialization),
-              'imagenet' (pre-training on ImageNet),
-              or the path to the weights file to be loaded.
         input_tensor: optional Keras tensor (i.e. output of `tf.keras.Input()`)
             to use as image input for the model.
         input_shape: optional shape tuple, only to be specified
@@ -469,84 +497,118 @@ def InceptionResNetV2(
         else:
             img_input = input_tensor
 
-    # Stem block: 35 x 35 x 192
-    x = Conv2D_BN(32, 3, strides=2, padding="valid")(img_input)
-    x = Conv2D_BN(32, 3, padding="valid")(x)
-    x = Conv2D_BN(64, 3)(x)
-    x = MaxPool2D(3, strides=2)(x)
-    x = Conv2D_BN(80, 1, padding="valid")(x)
-    x = Conv2D_BN(192, 3, padding="valid")(x)
-    x = MaxPool2D(3, strides=2)(x)
-
-    # Mixed 5b (Inception-A block): 35 x 35 x 320
-    # branch_0 = Conv2D_BN(96, 1)(x)
-    # branch_1 = Conv2D_BN(48, 1)(x)
-    # branch_1 = Conv2D_BN(64, 5)(branch_1)
-    # branch_2 = Conv2D_BN(64, 1)(x)
-    # branch_2 = Conv2D_BN(96, 3)(branch_2)
-    # branch_2 = Conv2D_BN(96, 3)(branch_2)
-    # branch_pool = AvgPool2D(3, strides=1, padding="same")(x)
-    # branch_pool = Conv2D_BN(64, 1)(branch_pool)
-    # branches = [branch_0, branch_1, branch_2, branch_pool]
-    # channel_axis = 1 if K.image_data_format() == "channels_first" else 3
-    # x = Concatenate(axis=channel_axis, name="mixed_5b")(branches)
-    x = InceptionA(pool_filters=64)(x)
+    layers = [
+        # Stem block: 35 x 35 x 192
+        Conv2D_BN(32, 3, strides=2, padding="valid", name="Conv2d_1a_3x3"),
+        Conv2D_BN(32, 3, padding="valid", name="Conv2d_2a_3x3"),
+        Conv2D_BN(64, 3, name="Conv2d_2b_3x3"),
+        MaxPool2D(3, strides=2, name="MaxPool_3a_3x3"),
+        Conv2D_BN(80, 1, padding="valid", name="Conv2d_3b_1x1"),
+        Conv2D_BN(192, 3, padding="valid", name="Conv2d_4a_3x3"),
+        MaxPool2D(3, strides=2, name="MaxPool_5a_3x3"),
+        # Mixed 5b (Inception-A block): 35 x 35 x 320
+        InceptionA(pool_filters=64, name="Mixed_5b"),
+    ]
 
     # 10x block35 (Inception-ResNet-A block): 35 x 35 x 320
     for block_idx in range(1, 11):
-        x = InceptionResnetBlock(
-            n_channels=320, scale=0.17, block_type="block35", block_idx=block_idx,
-            name=f"block35_{block_idx}",
-        )(x)
+        layers.append(
+            InceptionResnetBlock(
+                n_channels=320,
+                scale=0.17,
+                block_type="block35",
+                block_idx=block_idx,
+                name=f"block35_{block_idx}",
+            )
+        )
 
     # Mixed 6a (Reduction-A block): 17 x 17 x 1088
-    x = ReductionA(padding="valid", n=384, k=256, kl=256, km=384, use_atrous=False)(x)
+    layers.append(
+        ReductionA(
+            padding="valid",
+            n=384,
+            k=256,
+            kl=256,
+            km=384,
+            use_atrous=False,
+            name="Mixed_6a",
+        )
+    )
 
     # 20x block17 (Inception-ResNet-B block): 17 x 17 x 1088
     for block_idx in range(1, 21):
-        x = InceptionResnetBlock(
-            n_channels=1088, scale=0.1, block_type="block17", block_idx=block_idx,
-            name=f"block17_{block_idx}",
-        )(x)
+        layers.append(
+            InceptionResnetBlock(
+                n_channels=1088,
+                scale=0.1,
+                block_type="block17",
+                block_idx=block_idx,
+                name=f"block17_{block_idx}",
+            )
+        )
 
     # Mixed 7a (Reduction-B block): 8 x 8 x 2080
-    x = ReductionB(
-        padding="valid", n=256, no=384, p=256, pq=288, k=256, kl=288, km=320
-    )(x)
+    layers.append(
+        ReductionB(
+            padding="valid",
+            n=256,
+            no=384,
+            p=256,
+            pq=288,
+            k=256,
+            kl=288,
+            km=320,
+            name="Mixed_7a",
+        )
+    )
 
     # 10x block8 (Inception-ResNet-C block): 8 x 8 x 2080
     for block_idx in range(1, 10):
-        x = InceptionResnetBlock(
-            n_channels=2080, scale=0.2, block_type="block8", block_idx=block_idx,
-            name=f"block8_{block_idx}",
-        )(x)
-    x = InceptionResnetBlock(
-        n_channels=2080, scale=1.0, activation=None, block_type="block8", block_idx=10,
-        name=f"block8_{block_idx+1}",
-    )(x)
+        layers.append(
+            InceptionResnetBlock(
+                n_channels=2080,
+                scale=0.2,
+                block_type="block8",
+                block_idx=block_idx,
+                name=f"block8_{block_idx}",
+            )
+        )
+    layers.append(
+        InceptionResnetBlock(
+            n_channels=2080,
+            scale=1.0,
+            activation=None,
+            block_type="block8",
+            block_idx=10,
+            name=f"block8_{block_idx+1}",
+        )
+    )
 
     # Final convolution block: 8 x 8 x 1536
-    x = Conv2D_BN(1536, 1, name="conv_7b")(x)
+    layers.append(Conv2D_BN(1536, 1, name="Conv2d_7b_1x1"))
 
+    if (include_top and pooling is None) or (bottleneck):
+        pooling = "avg"
+
+    if pooling == "avg":
+        layers.append(GlobalAvgPool2D())
+    elif pooling == "max":
+        layers.append(GlobalMaxPool2D())
+
+    if bottleneck:
+        layers.append(Dropout(dropout_rate, name="Dropout"))
+        layers.append(Dense(128, use_bias=False, name="Bottleneck"))
+        layers.append(
+            BatchNormalization(axis=-1, scale=False, name="Bottleneck/BatchNorm")
+        )
+
+    # Classification block
     if include_top:
-        # Classification block
-        x = GlobalAvgPool2D(name="avg_pool")(x)
-        x = Dense(classes, activation="softmax", name="predictions")(x)
-    else:
-        if pooling == "avg":
-            x = GlobalAvgPool2D()(x)
-        elif pooling == "max":
-            x = GlobalMaxPool2D()(x)
+        layers.append(Dense(classes, name="logits"))
 
-    # Ensure that the model takes into account
-    # any potential predecessors of `input_tensor`.
-    if input_tensor is not None:
-        inputs = tf.keras.utils.get_source_inputs(input_tensor)
-    else:
-        inputs = img_input
-
-    # Create model.
-    model = Model(inputs, x, name="inception_resnet_v2")
+    # Create model and call it on input to create its variables.
+    model = Sequential(layers, name=name, **kwargs)
+    model(img_input)
 
     return model
 
@@ -574,7 +636,7 @@ def MultiScaleInceptionResNetV2(
     padding = "SAME" if align_feature_maps else "VALID"
     name = name or "InceptionResnetV2"
 
-    with tf.name_scope(name, "InceptionResnetV2", [img_input]):
+    with tf.compat.v1.name_scope(name, "InceptionResnetV2", [img_input]):
         # convert colors from RGB to a learned color space and batch norm inputs
         # 224, 224, 4
         net = Conv2D_BN(
@@ -683,8 +745,8 @@ def MultiScaleInceptionResNetV2(
 
 if __name__ == "__main__":
     import pkg_resources
-    from tabulate import tabulate
     from bob.learn.tensorflow.utils import model_summary
+    from tabulate import tabulate
 
     def print_model(inputs, outputs, name=None):
         print("")

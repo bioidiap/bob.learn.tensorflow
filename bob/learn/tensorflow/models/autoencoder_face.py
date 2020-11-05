@@ -4,6 +4,7 @@ Mohammadi, Amir and Bhattacharjee, Sushil and Marcel, Sebastien, ICASSP 2020
 """
 
 import tensorflow as tf
+
 from bob.learn.tensorflow.models.densenet import densenet161
 
 
@@ -114,6 +115,7 @@ def autoencoder_face(z_dim=256, weight_decay=1e-10, decoder_last_act="tanh"):
 if __name__ == "__main__":
     import pkg_resources
     from tabulate import tabulate
+
     from bob.learn.tensorflow.utils import model_summary
 
     model = ConvDecoder(z_dim=256, weight_decay=1e-9, last_act="tanh", name="Decoder")

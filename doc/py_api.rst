@@ -24,19 +24,6 @@ Estimators
 Architectures
 =============
 
-.. autosummary::
-    bob.learn.tensorflow.network.chopra
-    bob.learn.tensorflow.network.light_cnn9
-    bob.learn.tensorflow.network.dummy
-    bob.learn.tensorflow.network.mlp
-    bob.learn.tensorflow.network.mlp_with_batchnorm_and_dropout
-    bob.learn.tensorflow.network.inception_resnet_v2
-    bob.learn.tensorflow.network.inception_resnet_v1
-    bob.learn.tensorflow.network.inception_resnet_v2_batch_norm
-    bob.learn.tensorflow.network.inception_resnet_v1_batch_norm
-    bob.learn.tensorflow.network.SimpleCNN.slim_architecture
-    bob.learn.tensorflow.network.vgg_19
-    bob.learn.tensorflow.network.vgg_16
 
 
 Data

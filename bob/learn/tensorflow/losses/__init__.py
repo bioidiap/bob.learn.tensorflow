@@ -1,6 +1,4 @@
-from .alexnet import AlexNet_simplified
-from .densenet import DenseNet
-from .mine import MineModel
+from .center_loss import CenterLoss, CenterLossLayer
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):
@@ -19,8 +17,7 @@ def __appropriate__(*args):
 
 
 __appropriate__(
-    AlexNet_simplified,
-    DenseNet,
-    MineModel
+    CenterLoss,
+    CenterLossLayer
 )
 __all__ = [_ for _ in dir() if not _.startswith("_")]
