@@ -34,6 +34,7 @@ requirements:
     - {{ pin_compatible('click') }}
     - {{ pin_compatible('click-plugins') }}
     - tensorflow >=2.2
+    - scikit-learn {{ scikit_learn }}    
 
 test:
   imports:
