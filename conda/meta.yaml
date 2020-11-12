@@ -33,21 +33,14 @@ requirements:
     - scipy
     - {{ pin_compatible('click') }}
     - {{ pin_compatible('click-plugins') }}
-    - tensorflow >=1.4
+    - tensorflow >=2.2
 
 test:
   imports:
     - {{ name }}
   commands:
     - bob tf --help
-    - bob tf compute-statistics --help
-    - bob tf db-to-tfrecords --help
-    - bob tf eval --help
-    - bob tf predict-bio --help
-    - bob tf style-transfer --help
-    - bob tf train --help
-    - bob tf train-and-evaluate --help
-    - bob tf trim --help
+    - bob tf datasets-to-tfrecords --help
     - nosetests --with-coverage --cover-package={{ name }} -sv {{ name }}
     - sphinx-build -aEW {{ project_dir }}/doc {{ project_dir }}/sphinx
     - sphinx-build -aEb doctest {{ project_dir }}/doc sphinx
