@@ -76,12 +76,12 @@ class Generator:
 
     @property
     def output_types(self):
-        "The types of the returned samples in form of (object, object, object)."
+        "The types of the returned samples"
         return self._output_types
 
     @property
     def output_shapes(self):
-        "The shapes of the returned samples in form of (tf.TensorShape, tf.TensorShape, tf.TensorShape)."
+        "The shapes of the returned samples"
         return self._output_shapes
 
     def __call__(self):
@@ -89,8 +89,8 @@ class Generator:
 
         Yields
         ------
-        (data, label, key) : tuple
-            A tuple containing the data, label, and the key.
+        object
+            Samples one by one.
         """
         for sample in self.samples:
             dlk = self.reader(sample)
