@@ -1,9 +1,11 @@
 import tensorflow as tf
+
 from bob.learn.tensorflow.data import dataset_using_generator
 
 mnist = tf.keras.datasets.mnist
 
 (x_train, y_train), (_, _) = mnist.load_data()
+x_train, y_train = x_train[:10], y_train[:10]
 samples = zip(tf.keras.backend.arange(len(x_train)), x_train, y_train)
 
 

@@ -113,7 +113,7 @@ def autoencoder_face(z_dim=256, weight_decay=1e-10, decoder_last_act="tanh"):
 
 
 if __name__ == "__main__":
-    import pkg_resources
+    import pkg_resources  # noqa: F401
     from tabulate import tabulate
 
     from bob.learn.tensorflow.utils import model_summary

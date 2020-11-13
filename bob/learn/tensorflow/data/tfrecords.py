@@ -8,7 +8,6 @@ import json
 
 import tensorflow as tf
 
-
 TFRECORDS_EXT = ".tfrecords"
 
 
@@ -102,7 +101,7 @@ def dataset_from_tfrecord(tfrecord, num_parallel_reads=None):
         A dataset that contains the data from the TFRecord file.
     """
     # these imports are needed so that eval can work
-    from tensorflow import TensorShape
+    from tensorflow import TensorShape  # noqa: F401
 
     if isinstance(tfrecord, str):
         tfrecord = [tfrecord]

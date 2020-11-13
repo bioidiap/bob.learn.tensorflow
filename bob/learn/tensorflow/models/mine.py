@@ -7,6 +7,7 @@ Mutual Information Neural Estimation (https://arxiv.org/pdf/1801.04062.pdf)
 
 import tensorflow as tf
 
+
 class MineModel(tf.keras.Model):
     """
 
@@ -21,7 +22,7 @@ class MineModel(tf.keras.Model):
         super().__init__(name=name, **kwargs)
         self.units = units
         self.is_mine_f = is_mine_f
-        
+
         self.transformer_x = tf.keras.layers.Dense(self.units)
         self.transformer_z = tf.keras.layers.Dense(self.units)
         self.transformer_xz = tf.keras.layers.Dense(self.units)
@@ -32,19 +33,21 @@ class MineModel(tf.keras.Model):
             h1_x = self.transformer_x(x)
             h1_z = self.transformer_z(z)
             h1 = tf.keras.layers.ReLU()(h1_x + h1_z)
-            h2 = self.transformer_output(tf.keras.layers.ReLU()(self.transformer_xz(h1)))
+            h2 = self.transformer_output(
+                tf.keras.layers.ReLU()(self.transformer_xz(h1))
+            )
 
             return h2
 
         def compute_lower_bound(x, z):
-            t_xz = compute(x,z)
+            t_xz = compute(x, z)
             z_shuffle = tf.random.shuffle(z)
             t_x_z = compute(x, z_shuffle)
 
             if self.is_mine_f:
                 lb = -(
                     tf.reduce_mean(t_xz, axis=0)
-                    - tf.reduce_mean(tf.math.exp(t_x_z-1))
+                    - tf.reduce_mean(tf.math.exp(t_x_z - 1))
                 )
             else:
                 lb = -(
@@ -60,9 +63,7 @@ class MineModel(tf.keras.Model):
 
         return compute_lower_bound(x, z)
 
-
     def get_config(self):
         config = super().get_config()
         config.update({"units": self.units})
         return config
-

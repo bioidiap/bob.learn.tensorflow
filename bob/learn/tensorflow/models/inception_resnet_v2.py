@@ -744,9 +744,10 @@ def MultiScaleInceptionResNetV2(
 
 
 if __name__ == "__main__":
-    import pkg_resources
-    from bob.learn.tensorflow.utils import model_summary
+    import pkg_resources  # noqa: F401
     from tabulate import tabulate
+
+    from bob.learn.tensorflow.utils import model_summary
 
     def print_model(inputs, outputs, name=None):
         print("")

@@ -1,15 +1,10 @@
 #!/usr/bin/env python
 # vim: set fileencoding=utf-8 :
 
-import glob
 import os
-import sys
 import time
 
 import pkg_resources
-
-# The theme to use for HTML and HTML Help pages.  See the documentation for
-# a list of builtin themes.
 import sphinx_rtd_theme
 
 # For inter-documentation mapping:
@@ -234,9 +229,9 @@ rst_epilog = """
 autoclass_content = "class"
 autodoc_member_order = "bysource"
 autodoc_default_options = {
-  "members": True,
-  "undoc-members": True,
-  "show-inheritance": True,
+    "members": True,
+    "undoc-members": True,
+    "show-inheritance": True,
 }
 
 
@@ -247,5 +242,3 @@ if os.path.exists(sphinx_requirements):
     )
 else:
     intersphinx_mapping = link_documentation()
-
-

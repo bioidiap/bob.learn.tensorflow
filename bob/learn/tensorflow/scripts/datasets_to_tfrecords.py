@@ -12,7 +12,6 @@ from bob.extension.scripts.click_helper import ConfigCommand
 from bob.extension.scripts.click_helper import ResourceOption
 from bob.extension.scripts.click_helper import verbosity_option
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -45,8 +44,9 @@ def datasets_to_tfrecords(dataset, output, force, **kwargs):
     To use this script with SGE, change your dataset (like shard it) and output a part
     of the dataset based on the SGE_TASK_ID environment variable in your config file.
     """
-    from bob.extension.scripts.click_helper import log_parameters
     import os
+
+    from bob.extension.scripts.click_helper import log_parameters
     from bob.learn.tensorflow.data.tfrecords import dataset_to_tfrecord
     from bob.learn.tensorflow.data.tfrecords import tfrecord_name_and_json_name
 
