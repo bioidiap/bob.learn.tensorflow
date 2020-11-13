@@ -6,6 +6,7 @@ package:
   version: {{ environ.get('BOB_PACKAGE_VERSION', '0.0.1') }}
 
 build:
+  skip: true  # [not linux]
   number: {{ environ.get('BOB_BUILD_NUMBER', 0) }}
   run_exports:
     - {{ pin_subpackage(name) }}
@@ -21,33 +22,29 @@ requirements:
     - python {{ python }}
     - setuptools {{ setuptools }}
     - bob.extension
-    - bob.io.base
-    - bob.io.image
-    - bob.measure
+    - numpy {{ numpy }}
+    - scipy {{ scipy }}
     - click {{ click }}
     - click-plugins {{ click_plugins }}
+    - scikit-learn {{ scikit_learn }}
+    - tensorflow {{ tensorflow }}  # [linux]
   run:
     - python
     - setuptools
-    - numpy
-    - scipy
+    - {{ pin_compatible('numpy') }}
+    - {{ pin_compatible('scipy') }}
     - {{ pin_compatible('click') }}
     - {{ pin_compatible('click-plugins') }}
-    - tensorflow >=1.4
+    - {{ pin_compatible('tensorflow') }}  # [linux]
+  run_constrained:
+    - {{ pin_compatible('scikit-learn') }}
 
 test:
   imports:
     - {{ name }}
   commands:
     - bob tf --help
-    - bob tf compute-statistics --help
-    - bob tf db-to-tfrecords --help
-    - bob tf eval --help
-    - bob tf predict-bio --help
-    - bob tf style-transfer --help
-    - bob tf train --help
-    - bob tf train-and-evaluate --help
-    - bob tf trim --help
+    - bob tf datasets-to-tfrecords --help
     - nosetests --with-coverage --cover-package={{ name }} -sv {{ name }}
     - sphinx-build -aEW {{ project_dir }}/doc {{ project_dir }}/sphinx
     - sphinx-build -aEb doctest {{ project_dir }}/doc sphinx
@@ -59,10 +56,9 @@ test:
     - coverage
     - sphinx
     - sphinx_rtd_theme
-    - bob.io.image
     - bob.db.atnt
     - matplotlib
-    - gridtk
+    - scikit-learn
 
 about:
   home: https://www.idiap.ch/software/bob/

@@ -6,10 +6,12 @@ class CenterLossLayer(tf.keras.layers.Layer):
 
     Attributes
     ----------
-    centers : tf.Variable
+    centers
         The variable that keeps track of centers.
+
     n_classes : int
         Number of classes of the task.
+
     n_features : int
         The size of prelogits.
     """
@@ -49,12 +51,17 @@ class CenterLoss(tf.keras.losses.Loss):
 
     Attributes
     ----------
-    alpha : float
+    alpha: float
         The moving average coefficient for updating centers in each batch.
-    centers : tf.Variable
+
+    centers
         The variable that keeps track of centers.
+
     centers_layer
         The layer that keeps track of centers.
+
+    update_centers: bool
+        Update the centers? Used at training
     """
 
     def __init__(

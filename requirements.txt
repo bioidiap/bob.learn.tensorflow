@@ -1,8 +1,6 @@
 setuptools
 bob.extension
-bob.io.base
-bob.io.image
-bob.measure
 numpy
-click >= 7
 scipy
+click >= 7
+click-plugins

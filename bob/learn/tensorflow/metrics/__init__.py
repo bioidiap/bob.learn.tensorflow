@@ -1,4 +1,6 @@
-from .embedding_accuracy import EmbeddingAccuracy, predict_using_tensors
+from .embedding_accuracy import EmbeddingAccuracy
+from .embedding_accuracy import predict_using_tensors  # noqa: F401
+
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):

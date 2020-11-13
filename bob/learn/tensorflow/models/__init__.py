@@ -2,6 +2,7 @@ from .alexnet import AlexNet_simplified
 from .densenet import DenseNet
 from .mine import MineModel
 
+
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):
     """Says object was actually declared here, an not on the import module.
@@ -18,9 +19,5 @@ def __appropriate__(*args):
         obj.__module__ = __name__
 
 
-__appropriate__(
-    AlexNet_simplified,
-    DenseNet,
-    MineModel
-)
+__appropriate__(AlexNet_simplified, DenseNet, MineModel)
 __all__ = [_ for _ in dir() if not _.startswith("_")]

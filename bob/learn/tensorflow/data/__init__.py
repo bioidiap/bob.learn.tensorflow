@@ -1,5 +1,9 @@
-from .generator import Generator, dataset_using_generator
-from .tfrecords import dataset_to_tfrecord, dataset_from_tfrecord, TFRECORDS_EXT
+from .generator import Generator
+from .generator import dataset_using_generator  # noqa: F401
+from .tfrecords import TFRECORDS_EXT  # noqa: F401
+from .tfrecords import dataset_from_tfrecord  # noqa: F401
+from .tfrecords import dataset_to_tfrecord  # noqa: F401
+
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):

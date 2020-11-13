@@ -1,10 +1,11 @@
 import pkg_resources
 import tensorflow as tf
+from click.testing import CliRunner
+
 from bob.extension.config import load
 from bob.extension.scripts.click_helper import assert_click_runner_result
 from bob.learn.tensorflow.data.tfrecords import dataset_from_tfrecord
 from bob.learn.tensorflow.scripts.datasets_to_tfrecords import datasets_to_tfrecords
-from click.testing import CliRunner
 
 regenerate_reference = False
 

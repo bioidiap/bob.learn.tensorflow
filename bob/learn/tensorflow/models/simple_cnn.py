@@ -41,7 +41,7 @@ def SimpleCNN(input_shape=(28, 28, 3), inputs=None, name="SimpleCNN", **kwargs):
 
 
 if __name__ == "__main__":
-    import pkg_resources
+    import pkg_resources  # noqa: F401
     from tabulate import tabulate
 
     from bob.learn.tensorflow.utils import model_summary

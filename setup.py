@@ -43,29 +43,16 @@ setup(
     entry_points={
         # main entry for bob tf cli
         "bob.cli": [
-            "tf = bob.learn.tensorflow.script.tf:tf",
-            "keras = bob.learn.tensorflow.script.keras:keras",
+            "tf = bob.learn.tensorflow.scripts.tf:tf",
+            "keras = bob.learn.tensorflow.scripts.keras:keras",
         ],
         # bob tf scripts
         "bob.learn.tensorflow.cli": [
-            "cache-dataset = bob.learn.tensorflow.script.cache_dataset:cache_dataset",
-            "compute-statistics = bob.learn.tensorflow.script.compute_statistics:compute_statistics",
-            "dataset-to-hdf5 = bob.learn.tensorflow.script.db_to_tfrecords:dataset_to_hdf5",
-            "datasets-to-tfrecords = bob.learn.tensorflow.script.db_to_tfrecords:datasets_to_tfrecords",
-            "db-to-tfrecords = bob.learn.tensorflow.script.db_to_tfrecords:db_to_tfrecords",
-            "describe-tfrecord = bob.learn.tensorflow.script.db_to_tfrecords:describe_tfrecord",
-            "distance-matrix = bob.learn.tensorflow.script.cgm:distance_matrix",
-            "eval = bob.learn.tensorflow.script.eval:eval",
-            "predict = bob.learn.tensorflow.script.predict_bio:predict",
-            "predict-bio = bob.learn.tensorflow.script.predict_bio:predict_bio",
-            "style-transfer = bob.learn.tensorflow.script.style_transfer:style_transfer",
-            "train = bob.learn.tensorflow.script.train:train",
-            "train-and-evaluate = bob.learn.tensorflow.script.train_and_evaluate:train_and_evaluate",
-            "trim = bob.learn.tensorflow.script.trim:trim",
+            "datasets-to-tfrecords = bob.learn.tensorflow.scripts.datasets_to_tfrecords:datasets_to_tfrecords",
         ],
         # bob keras scripts
         "bob.learn.tensorflow.keras_cli": [
-            "fit = bob.learn.tensorflow.script.fit:fit",
+            "fit = bob.learn.tensorflow.scripts.fit:fit",
         ],
     },
     # Classifiers are important if you plan to distribute this package through

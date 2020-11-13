@@ -6,7 +6,6 @@ import logging
 import tensorflow as tf
 from tensorflow.keras import backend as K
 from tensorflow.keras.layers import Activation
-from tensorflow.keras.layers import AvgPool2D
 from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.layers import Concatenate
 from tensorflow.keras.layers import Conv2D
@@ -14,9 +13,7 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Dropout
 from tensorflow.keras.layers import GlobalAvgPool2D
 from tensorflow.keras.layers import GlobalMaxPool2D
-from tensorflow.keras.layers import Input
 from tensorflow.keras.layers import MaxPool2D
-from tensorflow.keras.models import Model
 from tensorflow.keras.models import Sequential
 
 from bob.learn.tensorflow.utils import SequentialLayer
@@ -240,7 +237,7 @@ class ReductionA(tf.keras.layers.Layer):
         self,
         padding,
         k=256,
-        l=256,
+        l=256,  # noqa: E741
         m=384,
         n=384,
         use_atrous=False,
@@ -250,7 +247,7 @@ class ReductionA(tf.keras.layers.Layer):
         super().__init__(name=name, **kwargs)
         self.padding = padding
         self.k = k
-        self.l = l
+        self.l = l  # noqa: E741
         self.m = m
         self.n = n
         self.use_atrous = use_atrous
@@ -448,7 +445,6 @@ def InceptionResNetV1(
         Conv2D_BN(80, 1, padding="valid", name="Conv2d_3b_1x1"),
         Conv2D_BN(192, 3, padding="valid", name="Conv2d_4a_3x3"),
         Conv2D_BN(256, 3, strides=2, padding="valid", name="Conv2d_4b_3x3"),
-        
     ]
 
     # 5x block35 (Inception-ResNet-A block): 35 x 35 x 320
@@ -503,7 +499,6 @@ def InceptionResNetV1(
         )
     )
 
-    
     # 5x block8 (Inception-ResNet-C block): 8 x 8 x 2080
     for block_idx in range(1, 5):
         layers.append(
@@ -515,7 +510,7 @@ def InceptionResNetV1(
                 name=f"block8_{block_idx}",
             )
         )
-    
+
     layers.append(
         InceptionResnetBlock(
             n_channels=1792,
@@ -523,10 +518,10 @@ def InceptionResNetV1(
             activation=None,
             block_type="block8",
             block_idx=5,
-            name=f"block8_5",
+            name="block8_5",
         )
     )
-    
+
     if (include_top and pooling is None) or (bottleneck):
         pooling = "avg"
 
@@ -545,7 +540,7 @@ def InceptionResNetV1(
     # Classification block
     if include_top:
         layers.append(Dense(classes, name="logits"))
-    
+
     # Create model and call it on input to create its variables.
     model = Sequential(layers, name=name, **kwargs)
     model(img_input)
@@ -554,9 +549,10 @@ def InceptionResNetV1(
 
 
 if __name__ == "__main__":
-    import pkg_resources
-    from bob.learn.tensorflow.utils import model_summary
+    import pkg_resources  # noqa: F401
     from tabulate import tabulate
+
+    from bob.learn.tensorflow.utils import model_summary
 
     def print_model(inputs, outputs, name=None):
         print("")
@@ -568,7 +564,9 @@ if __name__ == "__main__":
         del rows[-2]
         print(tabulate(rows, headers="firstrow", tablefmt="latex"))
 
-    model = InceptionResNetV1(input_shape=(160, 160, 3), bottleneck=True, include_top=False)
+    model = InceptionResNetV1(
+        input_shape=(160, 160, 3), bottleneck=True, include_top=False
+    )
     inputs = tf.keras.Input((160, 160, 3))
     outputs = model.call(inputs)
     model.summary()

@@ -2,7 +2,6 @@ import json
 import os
 
 import tensorflow as tf
-from tensorflow.keras import callbacks
 
 
 class CustomBackupAndRestore(tf.keras.callbacks.experimental.BackupAndRestore):
