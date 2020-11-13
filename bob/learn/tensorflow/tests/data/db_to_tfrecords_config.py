@@ -4,10 +4,7 @@ from bob.learn.tensorflow.data import dataset_using_generator
 mnist = tf.keras.datasets.mnist
 
 (x_train, y_train), (_, _) = mnist.load_data()
-samples = [
-    [a, b, c]
-    for a, b, c in zip(tf.keras.backend.arange(len(x_train)), x_train, y_train)
-]
+samples = zip(tf.keras.backend.arange(len(x_train)), x_train, y_train)
 
 
 def reader(sample):
