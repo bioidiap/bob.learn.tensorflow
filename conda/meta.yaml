@@ -22,13 +22,11 @@ requirements:
     - python {{ python }}
     - setuptools {{ setuptools }}
     - bob.extension
-    - bob.io.base
-    - bob.io.image
-    - bob.measure
     - numpy {{ numpy }}
     - scipy {{ scipy }}
     - click {{ click }}
     - click-plugins {{ click_plugins }}
+    - scikit-learn {{ scikit_learn }}
     - tensorflow {{ tensorflow }}  # [linux]
   run:
     - python
@@ -37,8 +35,9 @@ requirements:
     - {{ pin_compatible('scipy') }}
     - {{ pin_compatible('click') }}
     - {{ pin_compatible('click-plugins') }}
-    - {{ pin_compatible('scikit-learn') }}
     - {{ pin_compatible('tensorflow') }}  # [linux]
+  run_constrained:
+    - {{ pin_compatible('scikit-learn') }}
 
 test:
   imports:
@@ -57,10 +56,9 @@ test:
     - coverage
     - sphinx
     - sphinx_rtd_theme
-    - bob.io.image
     - bob.db.atnt
     - matplotlib
-    - gridtk
+    - scikit-learn
 
 about:
   home: https://www.idiap.ch/software/bob/
