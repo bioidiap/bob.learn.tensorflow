@@ -6,7 +6,7 @@ class CenterLossLayer(tf.keras.layers.Layer):
 
     Attributes
     ----------
-    centers:
+    centers
         The variable that keeps track of centers.
 
     n_classes : int
