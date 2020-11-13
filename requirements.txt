@@ -6,3 +6,4 @@ bob.measure
 numpy
 click >= 7
 scipy
+scikit-learn
