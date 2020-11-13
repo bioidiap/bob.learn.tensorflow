@@ -76,6 +76,7 @@ If you are working with Bob databases, below is an example of converting them to
 
     >>> dataset = dataset_using_generator(samples, reader)
     >>> dataset
+    <FlatMapDataset shapes: ((112, 92), ()), types: (tf.uint8, tf.int32)>
 
 Create TFRecords from tf.data.Datasets
 ======================================
@@ -91,6 +92,7 @@ TFRecords:
     >>> dataset_to_tfrecord(dataset, path)
     >>> dataset = dataset_from_tfrecord(path)
     >>> dataset
+    <MapDataset shapes: ((112, 92), ()), types: (tf.uint8, tf.int32)>
 
 There is also a script called ``bob tf dataset-to-tfrecord`` that wraps the
 :any:`bob.learn.tensorflow.data.dataset_to_tfrecord` for easy Grid job
