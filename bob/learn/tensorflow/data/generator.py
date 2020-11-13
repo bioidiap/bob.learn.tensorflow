@@ -14,21 +14,21 @@ class Generator:
     ----------
     epoch : int
         The number of epochs that have been passed so far.
+
     multiple_samples : :obj:`bool`, optional
         If true, it assumes that the bio database's samples actually contain
         multiple samples. This is useful for when you want to for example treat
         video databases as image databases.
+
     reader : :obj:`object`, optional
         A callable with the signature of ``data, label, key = reader(sample)``
         which takes a sample and loads it.
+
     samples : [:obj:`object`]
         A list of samples to be given to ``reader`` to load the data.
+
     shuffle_on_epoch_end : :obj:`bool`, optional
         If True, it shuffle the samples at the end of each epoch.
-    output_types : (object, object, object)
-        The types of the returned samples.
-    output_shapes : ``(tf.TensorShape, tf.TensorShape, tf.TensorShape)``
-        The shapes of the returned samples.
     """
 
     def __init__(

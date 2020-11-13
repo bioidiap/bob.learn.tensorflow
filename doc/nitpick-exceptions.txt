@@ -2,3 +2,5 @@ py:class list
 py:exc ValueError
 py:class tensorflow.python.estimator.estimator.Estimator
 py:class tensorflow_estimator.python.estimator.estimator.Estimator
+py:class tensorflow.python.keras.losses.Loss
+py:class tensorflow.python.keras.engine.base_layer.Layer
