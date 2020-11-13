@@ -76,12 +76,12 @@ class Generator:
 
     @property
     def output_types(self):
-        "The types of the returned samples."
+        "The types of the returned samples in form of (object, object, object)."
         return self._output_types
 
     @property
     def output_shapes(self):
-        "The shapes of the returned samples."
+        "The shapes of the returned samples in form of (tf.TensorShape, tf.TensorShape, tf.TensorShape)."
         return self._output_shapes
 
     def __call__(self):
