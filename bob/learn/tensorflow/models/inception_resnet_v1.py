@@ -441,7 +441,7 @@ def InceptionResNetV1(
         Conv2D_BN(32, 3, strides=2, padding="valid", name="Conv2d_1a_3x3"),
         Conv2D_BN(32, 3, padding="valid", name="Conv2d_2a_3x3"),
         Conv2D_BN(64, 3, name="Conv2d_2b_3x3"),
-        MaxPool2D(3, strides=2, name="MaxPool_3a_3x3"),
+        MaxPool2D(3, strides=2, name="MaxPool_3a_3x3", padding="valid"),
         Conv2D_BN(80, 1, padding="valid", name="Conv2d_3b_1x1"),
         Conv2D_BN(192, 3, padding="valid", name="Conv2d_4a_3x3"),
         Conv2D_BN(256, 3, strides=2, padding="valid", name="Conv2d_4b_3x3"),
@@ -500,7 +500,7 @@ def InceptionResNetV1(
     )
 
     # 5x block8 (Inception-ResNet-C block): 8 x 8 x 2080
-    for block_idx in range(1, 5):
+    for block_idx in range(1, 6):
         layers.append(
             InceptionResnetBlock(
                 n_channels=1792,
@@ -517,8 +517,8 @@ def InceptionResNetV1(
             scale=1.0,
             activation=None,
             block_type="block8",
-            block_idx=5,
-            name="block8_5",
+            block_idx=6,
+            name="block8_6",
         )
     )
 
