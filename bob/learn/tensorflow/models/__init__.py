@@ -1,5 +1,7 @@
 from .alexnet import AlexNet_simplified
+from .densenet import DeepPixBiS
 from .densenet import DenseNet
+from .densenet import densenet161  # noqa: F401
 from .mine import MineModel
 
 
@@ -19,5 +21,5 @@ def __appropriate__(*args):
         obj.__module__ = __name__
 
 
-__appropriate__(AlexNet_simplified, DenseNet, MineModel)
+__appropriate__(AlexNet_simplified, DenseNet, DeepPixBiS, MineModel)
 __all__ = [_ for _ in dir() if not _.startswith("_")]

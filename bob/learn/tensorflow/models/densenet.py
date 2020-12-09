@@ -180,25 +180,35 @@ class TransitionBlock(tf.keras.Model):
 class DenseNet(tf.keras.Model):
     """Creating the Densenet Architecture.
 
-    Arguments:
-        depth_of_model: number of layers in the model.
-        growth_rate: number of filters to add per conv block.
-        num_of_blocks: number of dense blocks.
-        output_classes: number of output classes.
-        num_layers_in_each_block: number of layers in each block.
-                                  If -1, then we calculate this by (depth-3)/4.
-                                  If positive integer, then the it is used as the
-                                    number of layers per block.
-                                  If list or tuple, then this list is used directly.
-        data_format: "channels_first" or "channels_last"
-        bottleneck: boolean, to decide which part of conv block to call.
-        compression: reducing the number of inputs(filters) to the transition block.
-        weight_decay: weight decay
-        rate: dropout rate.
-        pool_initial: If True add a 7x7 conv with stride 2 followed by 3x3 maxpool
-                      else, do a 3x3 conv with stride 1.
-        include_top: If true, GlobalAveragePooling Layer and Dense layer are
-                     included.
+    Parameters
+    ----------
+    depth_of_model
+        number of layers in the model.
+    growth_rate
+        number of filters to add per conv block.
+    num_of_blocks
+        number of dense blocks.
+    output_classes
+        number of output classes.
+    num_layers_in_each_block
+        number of layers in each block. If -1, then we calculate this by
+        (depth-3)/4. If positive integer, then the it is used as the number of
+        layers per block. If list or tuple, then this list is used directly.
+    data_format
+        "channels_first" or "channels_last"
+    bottleneck
+        boolean, to decide which part of conv block to call.
+    compression
+        reducing the number of inputs(filters) to the transition block.
+    weight_decay
+        weight decay
+    rate
+        dropout rate.
+    pool_initial
+        If True add a 7x7 conv with stride 2 followed by 3x3 maxpool else, do a
+        3x3 conv with stride 1.
+    include_top
+        If true, GlobalAveragePooling Layer and Dense layer are included.
     """
 
     def __init__(
@@ -401,7 +411,9 @@ def densenet161(
 class DeepPixBiS(tf.keras.Model):
     """DeepPixBiS"""
 
-    def __init__(self, weight_decay=1e-5, data_format="channels_last", **kwargs):
+    def __init__(
+        self, weight_decay=1e-5, data_format="channels_last", weights=None, **kwargs
+    ):
         super().__init__(**kwargs)
 
         model = densenet161(
@@ -410,6 +422,10 @@ class DeepPixBiS(tf.keras.Model):
             weight_decay=weight_decay,
             data_format=data_format,
         )
+        if weights == "imagenet":
+            status = model.load_weights(rc["bob.learn.tensorflow.densenet161"])
+            if status is not None:
+                status.expect_partial()
 
         # create a new model with needed layers
         self.sequential_layers = [

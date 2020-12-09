@@ -1,7 +1,10 @@
 import json
+import logging
 import os
 
 import tensorflow as tf
+
+logger = logging.getLogger(__name__)
 
 
 class CustomBackupAndRestore(tf.keras.callbacks.experimental.BackupAndRestore):
@@ -44,9 +47,9 @@ class CustomBackupAndRestore(tf.keras.callbacks.experimental.BackupAndRestore):
     def on_train_begin(self, logs=None):
         super().on_train_begin(logs=logs)
         if self.restore():
-            print(f"Restored callbacks from {self.callbacks_backup_path}")
+            logger.info(f"Restored callbacks from {self.callbacks_backup_path}")
         else:
-            print("Did not restore callbacks")
+            logger.info("Did not restore callbacks")
 
     def on_epoch_end(self, epoch, logs=None):
         super().on_epoch_end(epoch, logs=logs)

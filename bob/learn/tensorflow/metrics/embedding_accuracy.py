@@ -35,5 +35,5 @@ class EmbeddingAccuracy(MeanMetricWrapper):
     available from each class(identity).
     """
 
-    def __init__(self, name="embedding_accuracy", dtype=None):
-        super().__init__(accuracy_from_embeddings, name, dtype=dtype)
+    def __init__(self, name="embedding_accuracy", dtype=None, **kwargs):
+        super().__init__(accuracy_from_embeddings, name, dtype=dtype, **kwargs)

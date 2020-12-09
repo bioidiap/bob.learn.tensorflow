@@ -2,13 +2,13 @@ import tensorflow as tf
 
 
 def gram_matrix(input_tensor):
-    """Computes the gram matrix
+    """Computes the gram matrix.
 
     Parameters
     ----------
-    input_tensor : object
-        The input tensor. Usually it's the activation of a conv layer. The input shape
-        must be ``BHWC``.
+    input_tensor
+        The input tensor. Usually it's the activation of a conv layer. The input
+        shape must be ``BHWC``.
 
     Returns
     -------
@@ -17,15 +17,9 @@ def gram_matrix(input_tensor):
 
     Example
     -------
-    >>>> gram_matrix(tf.zeros((32, 4, 6, 12)))
-    <tf.Tensor: id=53, shape=(32, 12, 12), dtype=float32, numpy=
-    array([[[0., 0., 0., ..., 0., 0., 0.],
-            [0., 0., 0., ..., 0., 0., 0.],
-            [0., 0., 0., ..., 0., 0., 0.],
-            ...,
-            [0., 0., 0., ..., 0., 0., 0.],
-            [0., 0., 0., ..., 0., 0., 0.],
-            [0., 0., 0., ..., 0., 0., 0.]],
+    >>> from bob.learn.tensorflow.utils import gram_matrix
+    >>> gram_matrix(tf.zeros((32, 4, 6, 12))).numpy().shape
+    (32, 12, 12)
     """
     result = tf.linalg.einsum("bijc,bijd->bcd", input_tensor, input_tensor)
     input_shape = tf.shape(input=input_tensor)
@@ -51,13 +45,14 @@ def upper_triangle_and_diagonal(A):
 
     Example
     -------
+    >>> from bob.learn.tensorflow.utils import upper_triangle_and_diagonal
     >>> A = [
     ...  [1, 2, 3],
     ...  [4, 5, 6],
     ...  [7, 8, 9],
     ... ]
-    >>> upper_triangle_and_diagonal(A)
-    [1,2,3,5,6,9]
+    >>> upper_triangle_and_diagonal(A).numpy()
+    array([1, 2, 3, 5, 6, 9], dtype=int32)
     """
     ones = tf.ones_like(A)
     # Upper triangular matrix of 0s and 1s (including diagonal)
