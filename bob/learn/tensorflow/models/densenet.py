@@ -401,7 +401,9 @@ def densenet161(
 class DeepPixBiS(tf.keras.Model):
     """DeepPixBiS"""
 
-    def __init__(self, weight_decay=1e-5, data_format="channels_last", **kwargs):
+    def __init__(
+        self, weight_decay=1e-5, data_format="channels_last", weights=None, **kwargs
+    ):
         super().__init__(**kwargs)
 
         model = densenet161(
@@ -410,6 +412,10 @@ class DeepPixBiS(tf.keras.Model):
             weight_decay=weight_decay,
             data_format=data_format,
         )
+        if weights == "imagenet":
+            status = model.load_weights(rc["bob.learn.tensorflow.densenet161"])
+            if status is not None:
+                status.expect_partial()
 
         # create a new model with needed layers
         self.sequential_layers = [
