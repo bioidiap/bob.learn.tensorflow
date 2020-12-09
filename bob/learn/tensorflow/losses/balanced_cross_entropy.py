@@ -28,7 +28,7 @@ def balanced_softmax_cross_entropy_loss_weights(labels, dtype="float32"):
     --------
     >>> import numpy
     >>> import tensorflow as tf
-    >>> from bob.learn.tensorflow.loss import balanced_softmax_cross_entropy_loss_weights
+    >>> from bob.learn.tensorflow.losses import balanced_softmax_cross_entropy_loss_weights
     >>> labels = numpy.array([[1, 0, 0],
     ...                 [1, 0, 0],
     ...                 [0, 0, 1],
@@ -111,13 +111,12 @@ def balanced_sigmoid_cross_entropy_loss_weights(labels, dtype="float32"):
     --------
     >>> import numpy
     >>> import tensorflow as tf
-    >>> from bob.learn.tensorflow.loss import balanced_sigmoid_cross_entropy_loss_weights
+    >>> from bob.learn.tensorflow.losses import balanced_sigmoid_cross_entropy_loss_weights
     >>> labels = numpy.array([1, 1, 0, 0, 0, 1, 1, 0, 1, 1, 1, 1, 1, 1, 0, 1, 0, 1, 0, 0, 1, 0,
     ...                 1, 1, 0, 1, 1, 1, 0, 1, 0, 1], dtype="int32")
     >>> sum(labels), len(labels)
     (20, 32)
-    >>> session = tf.Session() # Eager execution is also possible check https://www.tensorflow.org/guide/eager
-    >>> session.run(balanced_sigmoid_cross_entropy_loss_weights(labels, dtype='float32'))
+    >>> balanced_sigmoid_cross_entropy_loss_weights(labels, dtype='float32').numpy()
     array([0.8      , 0.8      , 1.3333334, 1.3333334, 1.3333334, 0.8      ,
            0.8      , 1.3333334, 0.8      , 0.8      , 0.8      , 0.8      ,
            0.8      , 0.8      , 1.3333334, 0.8      , 1.3333334, 0.8      ,
