@@ -1,6 +1,7 @@
 import numbers
 
 import tensorflow as tf
+import math
 
 
 def _check_input(
@@ -160,3 +161,143 @@ def Normalize(mean, std=1.0, **kwargs):
     return tf.keras.layers.experimental.preprocessing.Rescaling(
         scale=scale, offset=offset, **kwargs
     )
+
+
+class SphereFaceLayer(tf.keras.layers.Layer):
+    """
+    Implements the SphereFace loss from equation (7) of `SphereFace: Deep Hypersphere Embedding for Face Recognition <https://arxiv.org/abs/1704.08063>`_
+
+    If the parameter `original` is set to `True` it will computes exactly what's written in eq (7): :math:`\\text{soft}(x_i) = \\frac{exp(||x_i||\\text{cos}(\\psi(\\theta_{yi})))}{exp(||x_i||\\text{cos}(\\psi(\\theta_{yi}))) + \sum_{j;j\\neq yi}  exp(||x_i||\\text{cos}(\psi(\\theta_{j}))) }`.
+    Where :math:`\\psi(\\theta) = -1^k \\text{cos}(m\\theta)-2k`.
+
+    Parameters
+    ----------
+
+      n_classes: int
+        Number of classes
+
+      m: float
+         Margin
+            
+    """
+
+    def __init__(self, n_classes=10, m=0.5):
+        super(SphereFaceLayer, self).__init__(name="sphere_face_logits")
+        self.n_classes = n_classes
+        self.m = m
+
+    def build(self, input_shape):
+        super(SphereFaceLayer, self).build(input_shape[0])
+        shape = [input_shape[-1], self.n_classes]
+
+        self.W = self.add_variable("W", shape=shape)
+        self.pi = tf.constant(math.pi)
+
+    def call(self, X, training=None):
+
+        # normalize feature
+        X = tf.nn.l2_normalize(X, axis=1)
+        W = tf.nn.l2_normalize(self.W, axis=0)
+
+        # cos between X and W
+        cos_yi = tf.matmul(X, W)
+
+        # cos(m \theta)
+        theta = tf.math.acos(cos_yi)
+        cos_theta_m = tf.math.cos(self.m * theta)
+
+        # ||x||
+        x_norm = tf.norm(X, axis=-1, keepdims=True)
+
+        # phi = -1**k * cos(m \theta) - 2k
+        k = self.m * (theta / self.pi)
+        phi = ((-(1 ** k)) * cos_theta_m) - 2 * k
+
+        logits = x_norm * phi
+
+        return logits
+
+
+class ModifiedSoftMaxLayer(tf.keras.layers.Layer):
+    """
+    Implements the modified logit from equation (5) of `SphereFace: Deep Hypersphere Embedding for Face Recognition <https://arxiv.org/pdf/1704.08063.pdf>`_
+
+    It basically transforms the regular logit function to :math:`||x_i||cos(\\theta_{yi})`, where :math:`\\theta_{yi}=||x_i||_2^2||W||_2^2`
+
+    Parameters
+    ----------
+    
+    n_classes: int
+        Number of classes for the new logit function
+    """
+
+    def __init__(self, n_classes=10):
+
+        super(ModifiedSoftMaxLayer, self).__init__(name="modified_softmax_logits")
+        self.n_classes = n_classes
+
+    def build(self, input_shape):
+        super(ModifiedSoftMaxLayer, self).build(input_shape[0])
+        shape = [input_shape[-1], self.n_classes]
+
+        self.W = self.add_variable("W", shape=shape)
+
+    def call(self, X, training=None):
+
+        # normalize feature
+        W = tf.nn.l2_normalize(self.W, axis=0)
+
+        # cos between X and W
+        cos_yi = tf.nn.l2_normalize(X, axis=1) @ W
+
+        logits = tf.norm(X) * cos_yi
+
+        return logits
+
+
+from tensorflow.keras.layers import (
+    BatchNormalization,
+    Dropout,
+    Dense,
+    Concatenate,
+    GlobalAvgPool2D,
+)
+
+
+def add_bottleneck(model, bottleneck_size=128, dropout_rate=0.2):
+    """
+    Amend a bottleneck layer to a Keras Model
+
+    Parameters
+    ----------
+
+      model:
+        Keras model
+
+      bottleneck_size: int
+         Size of the bottleneck
+
+      dropout_rate: float
+         Dropout rate
+    """
+    if not isinstance(model, tf.keras.models.Sequential):
+        new_model = tf.keras.models.Sequential(model, name="bottleneck")
+    else:
+        new_model = model
+
+    new_model.add(GlobalAvgPool2D())
+    new_model.add(Dropout(dropout_rate, name="Dropout"))
+    new_model.add(Dense(128, use_bias=False, name="embeddings"))
+    new_model.add(BatchNormalization(axis=-1, scale=False, name="embeddings/BatchNorm"))
+
+    return new_model
+
+
+def add_top(model, n_classes):
+    if not isinstance(model, tf.keras.models.Sequential):
+        new_model = tf.keras.models.Sequential(model, name="logits")
+    else:
+        new_model = model
+
+    new_model.add(Dense(n_classes, name="logits"))
+    return new_model
