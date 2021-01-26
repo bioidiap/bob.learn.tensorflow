@@ -201,6 +201,7 @@ class SphereFaceLayer(tf.keras.layers.Layer):
 
         # cos between X and W
         cos_yi = tf.matmul(X, W)
+        cos_yi = tf.clip_by_value(cos_yi, -1, 1)
 
         # cos(m \theta)
         theta = tf.math.acos(cos_yi)
