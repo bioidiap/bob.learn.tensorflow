@@ -287,7 +287,7 @@ def add_bottleneck(model, bottleneck_size=128, dropout_rate=0.2):
 
     new_model.add(GlobalAvgPool2D())
     new_model.add(Dropout(dropout_rate, name="Dropout"))
-    new_model.add(Dense(128, use_bias=False, name="embeddings"))
+    new_model.add(Dense(bottleneck_size, use_bias=False, name="embeddings"))
     new_model.add(BatchNormalization(axis=-1, scale=False, name="embeddings/BatchNorm"))
 
     return new_model
