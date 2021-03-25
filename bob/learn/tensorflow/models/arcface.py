@@ -1,7 +1,10 @@
-import tensorflow as tf
-from .embedding_validation import EmbeddingValidation
-from bob.learn.tensorflow.metrics.embedding_accuracy import accuracy_from_embeddings
 import math
+
+import tensorflow as tf
+
+from bob.learn.tensorflow.metrics.embedding_accuracy import accuracy_from_embeddings
+
+from .embedding_validation import EmbeddingValidation
 
 
 class ArcFaceModel(EmbeddingValidation):
@@ -48,10 +51,10 @@ class ArcFaceLayer(tf.keras.layers.Layer):
         Number of classes
 
       m: float
-         Margin  
+         Margin
 
       s: int
-         Scale  
+         Scale
     """
 
     def __init__(self, n_classes=10, s=30, m=0.5):
@@ -102,9 +105,9 @@ class ArcFaceLayer(tf.keras.layers.Layer):
 class ArcFaceLayer3Penalties(tf.keras.layers.Layer):
     """
     Implements the ArcFace loss from equation (4) of `ArcFace: Additive Angular Margin Loss for Deep Face Recognition <https://arxiv.org/abs/1801.07698>`_
-    
+
     Defined as:
-    
+
       :math:`s(cos(m_1\\theta_i + m_2) -m_3`
     """
 
@@ -148,4 +151,3 @@ class ArcFaceLayer3Penalties(tf.keras.layers.Layer):
         logits = self.s * logits
 
         return logits
-

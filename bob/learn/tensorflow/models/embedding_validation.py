@@ -1,16 +1,18 @@
 import tensorflow as tf
+
 from bob.learn.tensorflow.metrics.embedding_accuracy import accuracy_from_embeddings
 
 
 class EmbeddingValidation(tf.keras.Model):
     """
     Use this model if the validation step should validate the accuracy with respect to embeddings.
-    
+
     In this model, the `test_step` runs the function `bob.learn.tensorflow.metrics.embedding_accuracy.accuracy_from_embeddings`
     """
 
     def compile(
-        self, **kwargs,
+        self,
+        **kwargs,
     ):
         """
         Compile
@@ -29,7 +31,6 @@ class EmbeddingValidation(tf.keras.Model):
             logits, _ = self(X, training=True)
             loss = self.loss(y, logits)
 
-        trainable_vars = self.trainable_variables
         self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
 
         self.compiled_metrics.update_state(y, logits, sample_weight=None)

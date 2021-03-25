@@ -1,10 +1,13 @@
 from .alexnet import AlexNet_simplified
+from .arcface import ArcFaceLayer
+from .arcface import ArcFaceLayer3Penalties
+from .arcface import ArcFaceModel
 from .densenet import DeepPixBiS
 from .densenet import DenseNet
 from .densenet import densenet161  # noqa: F401
-from .mine import MineModel
 from .embedding_validation import EmbeddingValidation
-from .arcface import ArcFaceLayer, ArcFaceLayer3Penalties, ArcFaceModel
+from .mine import MineModel
+
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):

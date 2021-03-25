@@ -1,7 +1,11 @@
+import math
 import numbers
 
 import tensorflow as tf
-import math
+from tensorflow.keras.layers import BatchNormalization
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.layers import Dropout
+from tensorflow.keras.layers import GlobalAvgPool2D
 
 
 def _check_input(
@@ -164,7 +168,7 @@ def Normalize(mean, std=1.0, **kwargs):
 
 
 class SphereFaceLayer(tf.keras.layers.Layer):
-    """
+    r"""
     Implements the SphereFace loss from equation (7) of `SphereFace: Deep Hypersphere Embedding for Face Recognition <https://arxiv.org/abs/1704.08063>`_
 
     If the parameter `original` is set to `True` it will computes exactly what's written in eq (7): :math:`\\text{soft}(x_i) = \\frac{exp(||x_i||\\text{cos}(\\psi(\\theta_{yi})))}{exp(||x_i||\\text{cos}(\\psi(\\theta_{yi}))) + \sum_{j;j\\neq yi}  exp(||x_i||\\text{cos}(\psi(\\theta_{j}))) }`.
@@ -178,7 +182,7 @@ class SphereFaceLayer(tf.keras.layers.Layer):
 
       m: float
          Margin
-            
+
     """
 
     def __init__(self, n_classes=10, m=0.5):
@@ -227,7 +231,7 @@ class ModifiedSoftMaxLayer(tf.keras.layers.Layer):
 
     Parameters
     ----------
-    
+
     n_classes: int
         Number of classes for the new logit function
     """
@@ -254,15 +258,6 @@ class ModifiedSoftMaxLayer(tf.keras.layers.Layer):
         logits = tf.norm(X) * cos_yi
 
         return logits
-
-
-from tensorflow.keras.layers import (
-    BatchNormalization,
-    Dropout,
-    Dense,
-    Concatenate,
-    GlobalAvgPool2D,
-)
 
 
 def add_bottleneck(model, bottleneck_size=128, dropout_rate=0.2):

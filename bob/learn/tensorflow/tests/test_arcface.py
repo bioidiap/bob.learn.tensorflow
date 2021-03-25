@@ -1,15 +1,9 @@
-from bob.learn.tensorflow.models import (
-    EmbeddingValidation,
-    ArcFaceLayer,
-    ArcFaceModel,
-    ArcFaceLayer3Penalties,
-)
-from bob.learn.tensorflow.layers import (
-    SphereFaceLayer,
-    ModifiedSoftMaxLayer,
-)
-
 import numpy as np
+
+from bob.learn.tensorflow.layers import ModifiedSoftMaxLayer
+from bob.learn.tensorflow.layers import SphereFaceLayer
+from bob.learn.tensorflow.models import ArcFaceLayer
+from bob.learn.tensorflow.models import ArcFaceLayer3Penalties
 
 
 def test_arcface_layer():
