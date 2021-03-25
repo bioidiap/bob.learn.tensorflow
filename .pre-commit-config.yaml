@@ -2,16 +2,16 @@
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
   - repo: https://github.com/timothycrosley/isort
-    rev: 5.6.4
+    rev: 5.8.0
     hooks:
-    - id: isort
-      args: [--sl, --line-length, "88"]
+      - id: isort
+        args: [--sl, --line-length, "88"]
   - repo: https://github.com/psf/black
     rev: 20.8b1
     hooks:
       - id: black
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v3.3.0
+    rev: v3.4.0
     hooks:
       - id: check-ast
       - id: check-case-conflict
@@ -20,7 +20,7 @@ repos:
       - id: debug-statements
       - id: check-added-large-files
   - repo: https://gitlab.com/pycqa/flake8
-    rev: 3.8.4
+    rev: 3.9.0
     hooks:
       - id: flake8
         args: [--ignore, "E203,W503,E501,E302,E111,E114,E121,E402"]
