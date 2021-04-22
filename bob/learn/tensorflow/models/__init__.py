@@ -8,6 +8,8 @@ from .densenet import densenet161  # noqa: F401
 from .embedding_validation import EmbeddingValidation
 from .mine import MineModel
 
+from .arcface import ArcFaceLayer, ArcFaceLayer3Penalties, ArcFaceModel
+from .resnet50_modified import resnet50_modified, resnet101_modified
 
 # gets sphinx autodoc done right - don't remove it
 def __appropriate__(*args):
