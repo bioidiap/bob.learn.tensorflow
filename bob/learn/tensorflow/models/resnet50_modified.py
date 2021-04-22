@@ -9,10 +9,11 @@ This resnet 50 implementation provides a cleaner version
 """
 
 import tensorflow as tf
-
-from tensorflow.keras.regularizers import l2
-from tensorflow.keras.layers import Conv2D, Activation, BatchNormalization
+from tensorflow.keras.layers import Activation
+from tensorflow.keras.layers import BatchNormalization
+from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import MaxPooling2D
+from tensorflow.keras.regularizers import l2
 
 global weight_decay
 weight_decay = 1e-4
@@ -24,15 +25,15 @@ class IdentityBlock(tf.keras.layers.Layer):
     ):
 
         """Block that has no convolutianal layer as skip connection
-        
+
         Parameters
         ----------
-            kernel_size: 
+            kernel_size:
                The kernel size of middle conv layer at main path
-            
-            filters: 
+
+            filters:
                 list of integers, the filterss of 3 conv layer at main path
-            stage: 
+            stage:
               Current stage label, used for generating layer names
 
             block:
@@ -94,8 +95,8 @@ class IdentityBlock(tf.keras.layers.Layer):
     def call(self, input_tensor, training=None):
 
         x = input_tensor
-        for l in self.layers:
-            x = l(x, training=training)
+        for lay in self.layers:
+            x = lay(x, training=training)
 
         x = tf.keras.layers.add([x, input_tensor])
         x = Activation("relu")(x)
@@ -115,15 +116,15 @@ class ConvBlock(tf.keras.layers.Layer):
         name=None,
         **kwargs,
     ):
-        """ Block that has a conv layer AS shortcut.
+        """Block that has a conv layer AS shortcut.
         Parameters
         ----------
-            kernel_size: 
+            kernel_size:
                The kernel size of middle conv layer at main path
-            
-            filters: 
+
+            filters:
                 list of integers, the filterss of 3 conv layer at main path
-            stage: 
+            stage:
               Current stage label, used for generating layer names
 
             block:
@@ -200,12 +201,12 @@ class ConvBlock(tf.keras.layers.Layer):
 
     def call(self, input_tensor, training=None):
         x = input_tensor
-        for l in self.layers:
-            x = l(x, training=training)
+        for lay in self.layers:
+            x = lay(x, training=training)
 
         x_s = input_tensor
-        for l in self.shortcut:
-            x_s = l(x_s, training=training)
+        for lay in self.shortcut:
+            x_s = lay(x_s, training=training)
 
         x = tf.keras.layers.add([x, x_s])
         x = Activation("relu")(x)
@@ -348,4 +349,3 @@ if __name__ == "__main__":
 
     print(len(model.variables))
     print(model.summary())
-

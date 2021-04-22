@@ -12,6 +12,7 @@ class EmbeddingValidation(tf.keras.Model):
 
     def compile(
         self,
+        single_precision=False,
         **kwargs,
     ):
         """
@@ -27,14 +28,20 @@ class EmbeddingValidation(tf.keras.Model):
         """
 
         X, y = data
+
         with tf.GradientTape() as tape:
             logits, _ = self(X, training=True)
             loss = self.loss(y, logits)
+
+        # trainable_vars = self.trainable_variables
 
         self.optimizer.minimize(loss, self.trainable_variables, tape=tape)
 
         self.compiled_metrics.update_state(y, logits, sample_weight=None)
         self.train_loss(loss)
+
+        tf.summary.scalar("training_loss", data=loss, step=self._train_counter)
+
         return {m.name: m.result() for m in self.metrics + [self.train_loss]}
 
         # self.optimizer.apply_gradients(zip(gradients, trainable_vars))
