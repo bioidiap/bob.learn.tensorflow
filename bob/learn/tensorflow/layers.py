@@ -5,7 +5,6 @@ import tensorflow as tf
 from tensorflow.keras.layers import BatchNormalization
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Dropout
-from tensorflow.keras.layers import GlobalAvgPool2D
 
 
 def _check_input(
@@ -260,7 +259,12 @@ class ModifiedSoftMaxLayer(tf.keras.layers.Layer):
         return logits
 
 
-def add_bottleneck(model, bottleneck_size=128, dropout_rate=0.2):
+from tensorflow.keras.layers import Flatten
+
+
+def add_bottleneck(
+    model, bottleneck_size=128, dropout_rate=0.2, w_decay=5e-4, use_bias=True
+):
     """
     Amend a bottleneck layer to a Keras Model
 
@@ -276,15 +280,31 @@ def add_bottleneck(model, bottleneck_size=128, dropout_rate=0.2):
       dropout_rate: float
          Dropout rate
     """
+
     if not isinstance(model, tf.keras.models.Sequential):
         new_model = tf.keras.models.Sequential(model, name="bottleneck")
     else:
         new_model = model
 
-    new_model.add(GlobalAvgPool2D())
+    new_model.add(BatchNormalization())
     new_model.add(Dropout(dropout_rate, name="Dropout"))
-    new_model.add(Dense(bottleneck_size, use_bias=False, name="embeddings"))
-    new_model.add(BatchNormalization(axis=-1, scale=False, name="embeddings/BatchNorm"))
+    new_model.add(Flatten())
+
+    if w_decay is None:
+        regularizer = None
+    else:
+        regularizer = tf.keras.regularizers.l2(w_decay)
+
+    new_model.add(
+        Dense(
+            bottleneck_size,
+            use_bias=use_bias,
+            kernel_regularizer=regularizer,
+        )
+    )
+
+    new_model.add(BatchNormalization(axis=-1, name="embeddings"))
+    # new_model.add(BatchNormalization())
 
     return new_model
 

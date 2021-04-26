@@ -7,6 +7,8 @@ from .densenet import DenseNet
 from .densenet import densenet161  # noqa: F401
 from .embedding_validation import EmbeddingValidation
 from .mine import MineModel
+from .resnet50_modified import resnet50_modified  # noqa: F401
+from .resnet50_modified import resnet101_modified  # noqa: F401
 
 
 # gets sphinx autodoc done right - don't remove it
