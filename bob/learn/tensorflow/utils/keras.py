@@ -1,12 +1,8 @@
-import copy
 import logging
 
 import tensorflow as tf
 import tensorflow.keras.backend as K
-from tensorflow.python.keras import layers as layer_module
-from tensorflow.python.keras.utils import generic_utils
 from tensorflow.python.util import nest
-from tensorflow.python.util import tf_inspect
 
 logger = logging.getLogger(__name__)
 
@@ -15,67 +11,6 @@ SINGLE_LAYER_OUTPUT_ERROR_MSG = (
     "a single output tensor. For multi-output "
     "layers, use the functional API."
 )
-
-
-class SequentialLayer(tf.keras.layers.Layer):
-    """A Layer that does the same thing as tf.keras.Sequential but
-    its variables can be scoped.
-
-    Parameters
-    ----------
-    layers : list
-        List of layers. All layers must be provided at initialization time
-    """
-
-    def __init__(self, layers, **kwargs):
-        super().__init__(**kwargs)
-        self.sequential_layers = list(layers)
-
-    def call(self, inputs, training=None, mask=None):
-        outputs = inputs
-        for layer in self.sequential_layers:
-            # During each iteration, `inputs` are the inputs to `layer`, and `outputs`
-            # are the outputs of `layer` applied to `inputs`. At the end of each
-            # iteration `inputs` is set to `outputs` to prepare for the next layer.
-            kwargs = {}
-            argspec = tf_inspect.getfullargspec(layer.call).args
-            if "mask" in argspec:
-                kwargs["mask"] = mask
-            if "training" in argspec:
-                kwargs["training"] = training
-
-            outputs = layer(outputs, **kwargs)
-
-            if len(nest.flatten(outputs)) != 1:
-                raise ValueError(SINGLE_LAYER_OUTPUT_ERROR_MSG)
-
-            mask = getattr(outputs, "_keras_mask", None)
-
-        return outputs
-
-    def get_config(self):
-        layer_configs = []
-        for layer in self.sequential_layers:
-            layer_configs.append(generic_utils.serialize_keras_object(layer))
-        config = {"name": self.name, "layers": copy.deepcopy(layer_configs)}
-        return config
-
-    @classmethod
-    def from_config(cls, config, custom_objects=None):
-        if "name" in config:
-            name = config["name"]
-            layer_configs = config["layers"]
-        else:
-            name = None
-            layer_configs = config
-        layers = []
-        for layer_config in layer_configs:
-            layer = layer_module.deserialize(
-                layer_config, custom_objects=custom_objects
-            )
-            layers.append(layer)
-        model = cls(layers, name=name)
-        return model
 
 
 def keras_channels_index():
