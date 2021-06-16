@@ -52,7 +52,6 @@ Keras Utilities
 ===============
 
 .. autosummary::
-    bob.learn.tensorflow.utils.keras.SequentialLayer
     bob.learn.tensorflow.utils.keras.keras_channels_index
     bob.learn.tensorflow.utils.keras.keras_model_weights_as_initializers_for_variables
     bob.learn.tensorflow.utils.keras.restore_model_variables_from_checkpoint

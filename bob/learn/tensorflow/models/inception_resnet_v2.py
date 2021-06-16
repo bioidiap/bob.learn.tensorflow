@@ -19,8 +19,6 @@ from tensorflow.keras.layers import MaxPool2D
 from tensorflow.keras.models import Model
 from tensorflow.keras.models import Sequential
 
-from ..utils import SequentialLayer
-
 logger = logging.getLogger(__name__)
 
 
@@ -63,6 +61,8 @@ def Conv2D_BN(
         name of the ops; will become `name + '/Act'` for the activation
         and `name + '/BatchNorm'` for the batch norm layer.
     """
+    if name is None:
+        raise ValueError("name cannot be None!")
 
     layers = [
         Conv2D(
@@ -71,18 +71,20 @@ def Conv2D_BN(
             strides=strides,
             padding=padding,
             use_bias=use_bias,
-            name="Conv2D",
+            name=f"{name}/Conv2D",
         )
     ]
 
     if not use_bias:
         bn_axis = 1 if K.image_data_format() == "channels_first" else 3
-        layers += [BatchNormalization(axis=bn_axis, scale=False, name="BatchNorm")]
+        layers += [
+            BatchNormalization(axis=bn_axis, scale=False, name=f"{name}/BatchNorm")
+        ]
 
     if activation is not None:
-        layers += [Activation(activation, name="Act")]
+        layers += [Activation(activation, name=f"{name}/Act")]
 
-    return SequentialLayer(layers, name=name, **kwargs)
+    return tf.keras.Sequential(layers, name=name, **kwargs)
 
 
 class ScaledResidual(tf.keras.layers.Layer):
@@ -159,24 +161,32 @@ class InceptionResnetBlock(tf.keras.layers.Layer):
         self.n = n
 
         if block_type == "block35":
-            branch_0 = [Conv2D_BN(32 // n, 1, name="Branch_0/Conv2d_1x1")]
-            branch_1 = [Conv2D_BN(32 // n, 1, name="Branch_1/Conv2d_0a_1x1")]
-            branch_1 += [Conv2D_BN(32 // n, 3, name="Branch_1/Conv2d_0b_3x3")]
-            branch_2 = [Conv2D_BN(32 // n, 1, name="Branch_2/Conv2d_0a_1x1")]
-            branch_2 += [Conv2D_BN(48 // n, 3, name="Branch_2/Conv2d_0b_3x3")]
-            branch_2 += [Conv2D_BN(64 // n, 3, name="Branch_2/Conv2d_0c_3x3")]
+            branch_0 = [Conv2D_BN(32 // n, 1, name=f"{name}/Branch_0/Conv2d_1x1")]
+            branch_1 = [Conv2D_BN(32 // n, 1, name=f"{name}/Branch_1/Conv2d_0a_1x1")]
+            branch_1 += [Conv2D_BN(32 // n, 3, name=f"{name}/Branch_1/Conv2d_0b_3x3")]
+            branch_2 = [Conv2D_BN(32 // n, 1, name=f"{name}/Branch_2/Conv2d_0a_1x1")]
+            branch_2 += [Conv2D_BN(48 // n, 3, name=f"{name}/Branch_2/Conv2d_0b_3x3")]
+            branch_2 += [Conv2D_BN(64 // n, 3, name=f"{name}/Branch_2/Conv2d_0c_3x3")]
             branches = [branch_0, branch_1, branch_2]
         elif block_type == "block17":
-            branch_0 = [Conv2D_BN(192 // n, 1, name="Branch_0/Conv2d_1x1")]
-            branch_1 = [Conv2D_BN(128 // n, 1, name="Branch_1/Conv2d_0a_1x1")]
-            branch_1 += [Conv2D_BN(160 // n, (1, 7), name="Branch_1/Conv2d_0b_1x7")]
-            branch_1 += [Conv2D_BN(192 // n, (7, 1), name="Branch_1/Conv2d_0c_7x1")]
+            branch_0 = [Conv2D_BN(192 // n, 1, name=f"{name}/Branch_0/Conv2d_1x1")]
+            branch_1 = [Conv2D_BN(128 // n, 1, name=f"{name}/Branch_1/Conv2d_0a_1x1")]
+            branch_1 += [
+                Conv2D_BN(160 // n, (1, 7), name=f"{name}/Branch_1/Conv2d_0b_1x7")
+            ]
+            branch_1 += [
+                Conv2D_BN(192 // n, (7, 1), name=f"{name}/Branch_1/Conv2d_0c_7x1")
+            ]
             branches = [branch_0, branch_1]
         elif block_type == "block8":
-            branch_0 = [Conv2D_BN(192 // n, 1, name="Branch_0/Conv2d_1x1")]
-            branch_1 = [Conv2D_BN(192 // n, 1, name="Branch_1/Conv2d_0a_1x1")]
-            branch_1 += [Conv2D_BN(224 // n, (1, 3), name="Branch_1/Conv2d_0b_1x3")]
-            branch_1 += [Conv2D_BN(256 // n, (3, 1), name="Branch_1/Conv2d_0c_3x1")]
+            branch_0 = [Conv2D_BN(192 // n, 1, name=f"{name}/Branch_0/Conv2d_1x1")]
+            branch_1 = [Conv2D_BN(192 // n, 1, name=f"{name}/Branch_1/Conv2d_0a_1x1")]
+            branch_1 += [
+                Conv2D_BN(224 // n, (1, 3), name=f"{name}/Branch_1/Conv2d_0b_1x3")
+            ]
+            branch_1 += [
+                Conv2D_BN(256 // n, (3, 1), name=f"{name}/Branch_1/Conv2d_0c_3x1")
+            ]
             branches = [branch_0, branch_1]
         else:
             raise ValueError(
@@ -188,15 +198,15 @@ class InceptionResnetBlock(tf.keras.layers.Layer):
         self.branches = branches
 
         channel_axis = 1 if K.image_data_format() == "channels_first" else 3
-        self.concat = Concatenate(axis=channel_axis, name="concatenate")
+        self.concat = Concatenate(axis=channel_axis, name=f"{name}/concatenate")
         self.up_conv = Conv2D_BN(
-            n_channels, 1, activation=None, use_bias=True, name="Conv2d_1x1"
+            n_channels, 1, activation=None, use_bias=True, name=f"{name}/Conv2d_1x1"
         )
 
         self.residual = ScaledResidual(scale)
         self.act = lambda x: x
         if activation is not None:
-            self.act = Activation(activation, name="act")
+            self.act = Activation(activation, name=f"{name}/act")
 
     def call(self, inputs, training=None):
         branch_outputs = []
@@ -261,19 +271,19 @@ class ReductionA(tf.keras.layers.Layer):
                 3,
                 strides=1 if use_atrous else 2,
                 padding=padding,
-                name="Branch_0/Conv2d_1a_3x3",
+                name=f"{name}/Branch_0/Conv2d_1a_3x3",
             )
         ]
 
         branch_2 = [
-            Conv2D_BN(k, 1, name="Branch_1/Conv2d_0a_1x1"),
-            Conv2D_BN(kl, 3, name="Branch_1/Conv2d_0b_3x3"),
+            Conv2D_BN(k, 1, name=f"{name}/Branch_1/Conv2d_0a_1x1"),
+            Conv2D_BN(kl, 3, name=f"{name}/Branch_1/Conv2d_0b_3x3"),
             Conv2D_BN(
                 km,
                 3,
                 strides=1 if use_atrous else 2,
                 padding=padding,
-                name="Branch_1/Conv2d_1a_3x3",
+                name=f"{name}/Branch_1/Conv2d_1a_3x3",
             ),
         ]
 
@@ -282,7 +292,7 @@ class ReductionA(tf.keras.layers.Layer):
                 3,
                 strides=1 if use_atrous else 2,
                 padding=padding,
-                name="Branch_2/MaxPool_1a_3x3",
+                name=f"{name}/Branch_2/MaxPool_1a_3x3",
             )
         ]
         self.branches = [branch_1, branch_2, branch_pool]
@@ -340,23 +350,31 @@ class ReductionB(tf.keras.layers.Layer):
         self.pq = pq
 
         branch_1 = [
-            Conv2D_BN(n, 1, name="Branch_0/Conv2d_0a_1x1"),
-            Conv2D_BN(no, 3, strides=2, padding=padding, name="Branch_0/Conv2d_1a_3x3"),
+            Conv2D_BN(n, 1, name=f"{name}/Branch_0/Conv2d_0a_1x1"),
+            Conv2D_BN(
+                no, 3, strides=2, padding=padding, name=f"{name}/Branch_0/Conv2d_1a_3x3"
+            ),
         ]
 
         branch_2 = [
-            Conv2D_BN(p, 1, name="Branch_1/Conv2d_0a_1x1"),
-            Conv2D_BN(pq, 3, strides=2, padding=padding, name="Branch_1/Conv2d_1a_3x3"),
+            Conv2D_BN(p, 1, name=f"{name}/Branch_1/Conv2d_0a_1x1"),
+            Conv2D_BN(
+                pq, 3, strides=2, padding=padding, name=f"{name}/Branch_1/Conv2d_1a_3x3"
+            ),
         ]
 
         branch_3 = [
-            Conv2D_BN(k, 1, name="Branch_2/Conv2d_0a_1x1"),
-            Conv2D_BN(kl, 3, name="Branch_2/Conv2d_0b_3x3"),
-            Conv2D_BN(km, 3, strides=2, padding=padding, name="Branch_2/Conv2d_1a_3x3"),
+            Conv2D_BN(k, 1, name=f"{name}/Branch_2/Conv2d_0a_1x1"),
+            Conv2D_BN(kl, 3, name=f"{name}/Branch_2/Conv2d_0b_3x3"),
+            Conv2D_BN(
+                km, 3, strides=2, padding=padding, name=f"{name}/Branch_2/Conv2d_1a_3x3"
+            ),
         ]
 
         branch_pool = [
-            MaxPool2D(3, strides=2, padding=padding, name="Branch_3/MaxPool_1a_3x3")
+            MaxPool2D(
+                3, strides=2, padding=padding, name=f"{name}/Branch_3/MaxPool_1a_3x3"
+            )
         ]
         self.branches = [branch_1, branch_2, branch_3, branch_pool]
         channel_axis = 1 if K.image_data_format() == "channels_first" else 3
@@ -392,31 +410,37 @@ class InceptionA(tf.keras.layers.Layer):
         self.pool_filters = pool_filters
 
         self.branch1x1 = Conv2D_BN(
-            96, kernel_size=1, padding="same", name="Branch_0/Conv2d_1x1"
+            96, kernel_size=1, padding="same", name=f"{name}/Branch_0/Conv2d_1x1"
         )
 
         self.branch3x3dbl_1 = Conv2D_BN(
-            64, kernel_size=1, padding="same", name="Branch_2/Conv2d_0a_1x1"
+            64, kernel_size=1, padding="same", name=f"{name}/Branch_2/Conv2d_0a_1x1"
         )
         self.branch3x3dbl_2 = Conv2D_BN(
-            96, kernel_size=3, padding="same", name="Branch_2/Conv2d_0b_3x3"
+            96, kernel_size=3, padding="same", name=f"{name}/Branch_2/Conv2d_0b_3x3"
         )
         self.branch3x3dbl_3 = Conv2D_BN(
-            96, kernel_size=3, padding="same", name="Branch_2/Conv2d_0c_3x3"
+            96, kernel_size=3, padding="same", name=f"{name}/Branch_2/Conv2d_0c_3x3"
         )
 
         self.branch5x5_1 = Conv2D_BN(
-            48, kernel_size=1, padding="same", name="Branch_1/Conv2d_0a_1x1"
+            48, kernel_size=1, padding="same", name=f"{name}/Branch_1/Conv2d_0a_1x1"
         )
         self.branch5x5_2 = Conv2D_BN(
-            64, kernel_size=5, padding="same", name="Branch_1/Conv2d_0b_5x5"
+            64, kernel_size=5, padding="same", name=f"{name}/Branch_1/Conv2d_0b_5x5"
         )
 
         self.branch_pool_1 = AvgPool2D(
-            pool_size=3, strides=1, padding="same", name="Branch_3/AvgPool_0a_3x3"
+            pool_size=3,
+            strides=1,
+            padding="same",
+            name=f"{name}/Branch_3/AvgPool_0a_3x3",
         )
         self.branch_pool_2 = Conv2D_BN(
-            pool_filters, kernel_size=1, padding="same", name="Branch_3/Conv2d_0b_1x1"
+            pool_filters,
+            kernel_size=1,
+            padding="same",
+            name=f"{name}/Branch_3/Conv2d_0b_1x1",
         )
 
         channel_axis = 1 if K.image_data_format() == "channels_first" else 3
