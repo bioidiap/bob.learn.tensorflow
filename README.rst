@@ -3,12 +3,12 @@
 .. Thu 30 Jan 08:46:53 2014 CET
 
 
-.. image:: https://img.shields.io/badge/docs-v3.0.0-orange.svg
-   :target: https://www.idiap.ch/software/bob/docs/bob/bob.learn.tensorflow/v3.0.0/index.html
-.. image:: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/badges/v3.0.0/pipeline.svg
-   :target: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/commits/v3.0.0
-.. image:: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/badges/v3.0.0/coverage.svg
-   :target: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/commits/v3.0.0
+.. image:: https://img.shields.io/badge/docs-latest-orange.svg
+   :target: https://www.idiap.ch/software/bob/docs/bob/bob.learn.tensorflow/master/index.html
+.. image:: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/badges/master/pipeline.svg
+   :target: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/commits/master
+.. image:: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/badges/master/coverage.svg
+   :target: https://gitlab.idiap.ch/bob/bob.learn.tensorflow/commits/master
 .. image:: https://img.shields.io/badge/gitlab-project-0000c0.svg
    :target: https://gitlab.idiap.ch/bob/bob.learn.tensorflow
 
