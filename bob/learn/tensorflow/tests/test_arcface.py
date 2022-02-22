@@ -8,12 +8,13 @@ from bob.learn.tensorflow.models import ArcFaceLayer3Penalties
 
 def test_arcface_layer():
 
-    layer = ArcFaceLayer()
+    layer = ArcFaceLayer(n_classes=10)
     np.random.seed(10)
     X = np.random.rand(10, 50)
     y = [np.random.randint(10) for i in range(10)]
+    output = layer(X, y)
 
-    assert layer(X, y).shape == (10, 10)
+    assert output.shape == (10, 10), output.shape
 
 
 def test_arcface_layer_3p():

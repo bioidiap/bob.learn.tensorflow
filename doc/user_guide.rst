@@ -123,6 +123,13 @@ It is important that custom metrics and losses do not average their results by t
 size as the values should be averaged by the global batch size:
 https://www.tensorflow.org/tutorials/distribute/custom_training Take a look at custom
 metrics and losses in this package for examples of correct implementations.
+It is best not to override ``train_step`` and ``test_step`` in your model to avoid
+the details of distributed training.
 
+Also, see the distributed training example in the repository of this package in:
+``examples/mnist_multi_worker_mixed_precision.py`` which uses dask. It can be
+executed using::
+
+    bob keras fit -vvv mnist_multi_worker_mixed_precision.py
 
 .. _tensorflow: https://www.tensorflow.org/

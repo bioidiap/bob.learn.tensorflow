@@ -1,5 +1,10 @@
+import json
 import logging
+import os
+import re
+from json import JSONEncoder
 
+import numpy as np
 import tensorflow as tf
 import tensorflow.keras.backend as K
 from tensorflow.python.util import nest
@@ -11,6 +16,60 @@ SINGLE_LAYER_OUTPUT_ERROR_MSG = (
     "a single output tensor. For multi-output "
     "layers, use the functional API."
 )
+
+
+class FloatValuesEncoder(JSONEncoder):
+    """Code from https://stackoverflow.com/a/64155446"""
+
+    def default(self, obj):
+        if isinstance(obj, (np.float16, np.float32, np.float64)):
+            return float(obj)
+        return super().default(obj)
+
+
+def compute_tf_config_from_dask_client(client, reference_tf_port=2222):
+    """
+    This function will compute the tensorflow TF_CONFIG from a dask client
+
+    Check here for more info on how to setup this info:
+
+    https://www.tensorflow.org/tutorials/distribute/multi_worker_with_keras#multi-worker_configuration
+
+    Parameters
+    ----------
+    client:
+        Dask client
+
+    reference_tf_port:
+        Port used in the TF distributed
+
+    Returns
+    -------
+    tf_configs : list
+        A list of tf configs. Each tf config will be for one worker.
+    """
+
+    clients = list(sorted(client.scheduler_info()["workers"].keys()))
+
+    port = reference_tf_port
+    tf_clients, workers_ips = [], []
+    for client in clients:
+        index = re.search("[0-9]:[0-9]", client)
+        host = client[0 : index.start() + 1] + f":{port}"
+        host = host.split("://")[-1]
+
+        tf_clients.append(host)
+        workers_ips.append(host.split(":")[0])
+        port += 1
+
+    # cluster config
+    cluster = {"worker": tf_clients}
+
+    tf_configs = []
+    for i, _ in enumerate(tf_clients):
+        tf_configs.append({"cluster": cluster, "task": {"type": "worker", "index": i}})
+
+    return tf_configs, workers_ips
 
 
 def keras_channels_index():
@@ -65,6 +124,25 @@ def restore_model_variables_from_checkpoint(
 def initialize_model_from_checkpoint(model, checkpoint, normalizer=None):
     assignment_map = _create_var_map(model.variables, normalizer=normalizer)
     tf.compat.v1.train.init_from_checkpoint(checkpoint, assignment_map=assignment_map)
+
+
+def get_number_of_workers():
+    """Returns the number of workers in a distributed strategy.
+    Can be used to increase the batch size dynamically in distributed training.
+
+    Returns
+    -------
+    int
+        The number of workers present in a strategy.
+    """
+    num_workers = 1
+
+    tf_config = os.environ.get("TF_CONFIG")
+    if tf_config is not None:
+        tf_config = json.loads(tf_config)
+        num_workers = len(tf_config["cluster"]["worker"])
+
+    return num_workers
 
 
 def model_summary(model, do_print=False):

@@ -263,7 +263,14 @@ from tensorflow.keras.layers import Flatten
 
 
 def add_bottleneck(
-    model, bottleneck_size=128, dropout_rate=0.2, w_decay=5e-4, use_bias=True
+    model,
+    bottleneck_size=128,
+    dropout_rate=0.2,
+    w_decay=5e-4,
+    use_bias=True,
+    batch_norm_decay=0.99,
+    batch_norm_epsilon=1e-3,
+    batch_norm_scale=True,
 ):
     """
     Amend a bottleneck layer to a Keras Model
@@ -286,7 +293,13 @@ def add_bottleneck(
     else:
         new_model = model
 
-    new_model.add(BatchNormalization())
+    new_model.add(
+        BatchNormalization(
+            momentum=batch_norm_decay,
+            epsilon=batch_norm_epsilon,
+            scale=batch_norm_scale,
+        )
+    )
     new_model.add(Dropout(dropout_rate, name="Dropout"))
     new_model.add(Flatten())
 
@@ -300,11 +313,19 @@ def add_bottleneck(
             bottleneck_size,
             use_bias=use_bias,
             kernel_regularizer=regularizer,
+            dtype="float32",
         )
     )
 
-    new_model.add(BatchNormalization(axis=-1, name="embeddings"))
-    # new_model.add(BatchNormalization())
+    new_model.add(
+        BatchNormalization(
+            name="embeddings",
+            momentum=batch_norm_decay,
+            epsilon=batch_norm_epsilon,
+            scale=batch_norm_scale,
+            dtype="float32",
+        )
+    )
 
     return new_model
 
