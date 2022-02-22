@@ -1,11 +1,9 @@
 from .alexnet import AlexNet_simplified
 from .arcface import ArcFaceLayer
 from .arcface import ArcFaceLayer3Penalties
-from .arcface import ArcFaceModel
 from .densenet import DeepPixBiS
 from .densenet import DenseNet
 from .densenet import densenet161  # noqa: F401
-from .embedding_validation import EmbeddingValidation
 from .mine import MineModel
 from .resnet50_modified import resnet50_modified  # noqa: F401
 from .resnet50_modified import resnet101_modified  # noqa: F401
@@ -34,7 +32,5 @@ __appropriate__(
     MineModel,
     ArcFaceLayer,
     ArcFaceLayer3Penalties,
-    ArcFaceModel,
-    EmbeddingValidation,
 )
 __all__ = [_ for _ in dir() if not _.startswith("_")]

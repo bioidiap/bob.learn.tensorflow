@@ -34,7 +34,7 @@ extensions = [
 ]
 
 # Be picky about warnings
-nitpicky = True
+nitpicky = False
 
 # Ignores stuff we can't easily resolve on other project's sphinx manuals
 nitpick_ignore = []
@@ -233,6 +233,7 @@ autodoc_default_options = {
     "undoc-members": True,
     "show-inheritance": True,
 }
+autodoc_inherit_docstrings = False
 
 
 sphinx_requirements = "extra-intersphinx.txt"

@@ -2,48 +2,6 @@ import math
 
 import tensorflow as tf
 
-from bob.learn.tensorflow.metrics.embedding_accuracy import accuracy_from_embeddings
-
-from .embedding_validation import EmbeddingValidation
-
-
-class ArcFaceModel(EmbeddingValidation):
-    def train_step(self, data):
-        X, y = data
-
-        with tf.GradientTape() as tape:
-
-            logits, _ = self((X, y), training=True)
-            loss = self.compiled_loss(
-                y, logits, sample_weight=None, regularization_losses=self.losses
-            )
-            reg_loss = tf.reduce_sum(self.losses)
-            total_loss = loss + reg_loss
-
-        trainable_vars = self.trainable_variables
-
-        self.optimizer.minimize(total_loss, trainable_vars, tape=tape)
-
-        self.compiled_metrics.update_state(y, logits, sample_weight=None)
-
-        tf.summary.scalar("arc_face_loss", data=loss, step=self._train_counter)
-        tf.summary.scalar("total_loss", data=total_loss, step=self._train_counter)
-
-        self.train_loss(loss)
-        return {m.name: m.result() for m in self.metrics + [self.train_loss]}
-
-    def test_step(self, data):
-        """
-        Test Step
-        """
-
-        images, labels = data
-
-        # No worries, labels not used in validation
-        _, embeddings = self((images, labels), training=False)
-        self.validation_acc(accuracy_from_embeddings(labels, embeddings))
-        return {m.name: m.result() for m in [self.validation_acc]}
-
 
 class ArcFaceLayer(tf.keras.layers.Layer):
     """
@@ -69,18 +27,29 @@ class ArcFaceLayer(tf.keras.layers.Layer):
          If `True`, uses arcface loss. If `False`, it's a regular dense layer
     """
 
-    def __init__(self, n_classes=10, s=30, m=0.5, arc=True):
-        super(ArcFaceLayer, self).__init__(name="arc_face_logits")
+    def __init__(
+        # don't forget to fix get_config when you change init params
+        self,
+        n_classes,
+        s=30,
+        m=0.5,
+        arc=True,
+        kernel_initializer=None,
+        name="arc_face_logits",
+        **kwargs,
+    ):
+        super().__init__(name=name, **kwargs)
         self.n_classes = n_classes
         self.s = s
         self.arc = arc
         self.m = m
+        self.kernel_initializer = kernel_initializer
 
     def build(self, input_shape):
         super(ArcFaceLayer, self).build(input_shape[0])
         shape = [input_shape[-1], self.n_classes]
 
-        self.W = self.add_variable("W", shape=shape)
+        self.W = self.add_weight("W", shape=shape, initializer=self.kernel_initializer)
 
         self.cos_m = tf.identity(math.cos(self.m), name="cos_m")
         self.sin_m = tf.identity(math.sin(self.m), name="sin_m")
@@ -100,14 +69,21 @@ class ArcFaceLayer(tf.keras.layers.Layer):
             sin_yi = tf.clip_by_value(tf.math.sqrt(1 - cos_yi ** 2), 0, 1)
 
             # cos(x+m) = cos(x)*cos(m) - sin(x)*sin(m)
-            cos_yi_m = cos_yi * self.cos_m - sin_yi * self.sin_m
+            dtype = cos_yi.dtype
+            cos_m = tf.cast(self.cos_m, dtype=dtype)
+            sin_m = tf.cast(self.sin_m, dtype=dtype)
+            th = tf.cast(self.th, dtype=dtype)
+            mm = tf.cast(self.mm, dtype=dtype)
 
-            cos_yi_m = tf.where(cos_yi > self.th, cos_yi_m, cos_yi - self.mm)
+            cos_yi_m = cos_yi * cos_m - sin_yi * sin_m
+
+            cos_yi_m = tf.where(cos_yi > th, cos_yi_m, cos_yi - mm)
 
             # Preparing the hot-output
             one_hot = tf.one_hot(
                 tf.cast(y, tf.int32), depth=self.n_classes, name="one_hot_mask"
             )
+            one_hot = tf.cast(one_hot, dtype=dtype)
 
             logits = (one_hot * cos_yi_m) + ((1.0 - one_hot) * cos_yi)
             logits = self.s * logits
@@ -115,6 +91,21 @@ class ArcFaceLayer(tf.keras.layers.Layer):
             logits = tf.matmul(X, self.W)
 
         return logits
+
+    def get_config(self):
+        config = dict(super().get_config())
+        config.update(
+            {
+                "n_classes": self.n_classes,
+                "s": self.s,
+                "arc": self.arc,
+                "m": self.m,
+                "kernel_initializer": tf.keras.initializers.serialize(
+                    self.kernel_initializer
+                ),
+            }
+        )
+        return config
 
 
 class ArcFaceLayer3Penalties(tf.keras.layers.Layer):
@@ -126,8 +117,17 @@ class ArcFaceLayer3Penalties(tf.keras.layers.Layer):
       :math:`s(cos(m_1\\theta_i + m_2) -m_3`
     """
 
-    def __init__(self, n_classes=10, s=30, m1=0.5, m2=0.5, m3=0.5):
-        super(ArcFaceLayer3Penalties, self).__init__(name="arc_face_logits")
+    def __init__(
+        self,
+        n_classes=10,
+        s=30,
+        m1=0.5,
+        m2=0.5,
+        m3=0.5,
+        name="arc_face_logits",
+        **kwargs,
+    ):
+        super().__init__(name=name, **kwargs)
         self.n_classes = n_classes
         self.s = s
         self.m1 = m1
@@ -170,3 +170,16 @@ class ArcFaceLayer3Penalties(tf.keras.layers.Layer):
 
         logits = self.s * logits
         return logits
+
+    def get_config(self):
+        config = dict(super().get_config())
+        config.update(
+            {
+                "n_classes": self.n_classes,
+                "s": self.s,
+                "m1": self.m1,
+                "m2": self.m2,
+                "m3": self.m3,
+            }
+        )
+        return config

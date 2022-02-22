@@ -54,6 +54,11 @@ setup(
         "bob.learn.tensorflow.keras_cli": [
             "fit = bob.learn.tensorflow.scripts.fit:fit",
         ],
+        # entry points for bob keras fit --strategy-fn option
+        "bob.learn.tensorflow.strategy": [
+            "multi-worker-mirrored-strategy = bob.learn.tensorflow.configs.MultiWorkerMirroredStrategy:strategy_fn",
+            "mirrored-strategy = bob.learn.tensorflow.configs.MirroredStrategy:strategy_fn",
+        ],
     },
     # Classifiers are important if you plan to distribute this package through
     # PyPI. You can find the complete list of classifiers that are valid and
